@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="pvltodb" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+      Map a Pvl file to a database table record
+  </brief>
+
+  <description>
+      <p>
+          pvltodb will extract the contents of a Pvl formatted file (FROM)
+          such as a PDS EDR label, an ISIS label or a resulting file from
+          an ISIS application and insert them into a database table.  
+      </p>
+      <p>
+          A database map configuration (DBMAP) file contains the specific
+          of what keywords in the input Pvl file are mapped to individual fields
+          in a database table.  The format of this map configuration file is also
+          Pvl.
+      </p>
+      <p>
+          Access to a database is generalized in an externally managed
+          file in Pvl format.  The  database configuration (DBCONFIG) file
+          contains access profiles that gives users a flexible framework
+          with which access and application parameters can be
+          specified.
+      </p>
+   </description>
+
+   <category>
+       <categoryItem>System</categoryItem>   
+   </category>
+
+  <history>
+    <change name="Kris Becker" date="2007-01-24">
+      Original version
+    </change>
+    <change name="Brendan George" date="2007-06-05">
+        Modified to work with iString/StringTools merge
+    </change>
+    <change name="Steven Lambright" date="2007-07-27">
+        Changed category from Utility to System
+    </change>
+    <change name="Kris Becker" date="2007-09-11">
+        Fixed bug when processing more than one table mapped into the
+        database.  It needed a persistant database connection.  Also changed
+        how data is added to the database - it now uses an update/insert
+        sequence.
+    </change>
+    <change  name="Kris Becker" date="2007-10-31">
+        Added the ToFormalCase functor to capitalize first characters of
+        words; added the type of operation (INSERT, UPDATE, SELECT) 
+        performed to status report; changed format of verbose to report
+        and write results as a formal group to print file and/or terminal.
+    </change>
+    <change  name="Kris Becker" date="2007-11-13">
+        Modified SQL string quoting to properly handle embedded single
+        quotes (excluding Geometry footprints)
+    </change>
+    <change  name="Kris Becker" date="2008-02-06"> 
+        Added the IsEqual(arg1,arg2) functor to compare a value with
+        another, without regard to case.  This functor returns TRUE if
+        the strings are equal, FALSE if not.
+    </change>
+    <change  name="Kris Becker" date="2008-03-19"> 
+        Added the Numeric(arg1[,arg2]) functor to validate a numeric value from 
+        a PVL input file keyword or expression.  By default it returns NULL if 
+        it is not a numeric value.  The user can provide a second argument 
+        (arg2) of their choosing if NULL is not desired (Note that whatever 
+        value it is inserts into the database with that value).
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Pvl file to map to a database table
+        </brief>
+        <description>
+            This is a file that contains Pvl statements.   This file could be 
+            any Pvl file including PDS EDR/RDR labels, ISIS cubes and
+            output files in Pvl form.
+        </description>
+        <filter>
+          *.*
+        </filter>
+      </parameter>
+
+      <parameter name="DBMAP">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>
+          File that maps Pvl keywords to database table fields
+        </brief>
+        <description>
+            This file is a Pvl file that contains "key = value" entries. 
+            The "key" is a database field name and "value" is of the
+            form "/Object/Group/Keyword".  Generally, what ever
+            nested form is supported by ISIS is allowed in the keyword
+            "path".  Also provided is an integer index in any element in
+            the path so that the nth occurance of the object, group of
+            value of a keyword can be directly accessed.
+        </description>
+      </parameter>
+
+      <parameter name="DBCONFIG">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>
+          Database configuration file to use to access database
+        </brief>
+        <description>
+            <p>
+                The contents of this file contain access information to database
+                such as the IP address or host name, database name, user and
+                password.  It can also contain application specific information
+                that may vary for each application.  It is really completely up to
+                the application developer what sort of information can exist and
+                its purpose.  The sky's the limit, really.
+            </p>
+            <p>
+                The following is an example of a DBCONFIG file format:
+                <PRE>
+  Object = Database
+    Name = UPC
+    Dbname = upc
+    Type = PostgreSQL
+    Host = "upcdb0.wr.usgs.gov"
+    Port = 3309
+    Description = "UPC provides GIS-capable image searches"
+    AlternateHosts = "upcdb1.wr.usgs.gov"
+    DefaultProfile = "upcread"
+
+    Group = Profile
+      Name = "upcread"
+      User = "upcread"
+      Password = "public"
+    EndGroup
+  EndObject
+                </PRE>
+            </p>
+            <p>
+                This can be set up automatically by using the IsisPreferences file.
+                If you have to set up your own, specify it here using, if necessary,
+                the <B>PROFILE</B> parameter to use a named access profile.
+            </p>
+        </description>
+      </parameter>
+     </group>
+
+    <group name="Options">
+        <parameter name="PROFILE">
+          <type>string</type>
+          <brief>
+              Name of access profile to specify connect options to the database
+          </brief>
+          <description>
+              A named profile from the DBCONFIG file that is used to access the
+               database.  This can also be specified in the config file using the
+                <B>DefaultProfile</B> keyword in the DBCONFIG file.
+          </description>
+          <internalDefault>None</internalDefault>
+        </parameter>
+
+      <parameter name="TABLES">
+        <type>string</type>
+        <internalDefault>All</internalDefault>
+        <brief>Specifies the name of the database table or tables to insert or update</brief>
+        <description>
+            <p>
+              This option can be used to select one or more tables in the DBMAP file
+              to update as defined in the DBMAP file.  The default is to apply an insert or
+              update to all tables defined in the map definition file.
+            </p>
+            <p>
+                Tables are defined by GROUPs in the DBMAP file.  The name of
+                a database table directly corresponds to a named GROUP in the
+                Pvl file.  To specify one or more tables, enter them as a string
+                with each table (group name) separated by a comma.
+            </p>
+            <p>
+                Should the table not exist, an error will be issued and the application
+                will abort with no action taken.
+            </p>
+        </description>
+      </parameter>
+
+      <parameter name="MISSING">
+        <type>string</type>
+        <default><item>EXCLUDE</item></default>
+        <brief>Action to take when a keyword cannot be resolved</brief>
+        <description>
+            If the keyword in the DBMAP cannot be found in the FROM Pvl source,
+            this parameter will determine what type of action to take.  In general,
+            this means a value for the field in the database table does not
+            exist.  You can require the keyword to exist for every one specified
+            by using the ERROR option.  The database field can be NULLed or
+            an ERROR may be signaled as well.
+        </description>
+        <list>
+           <option value="EXCLUDE">
+               <brief>Exclude the field map and keyword value from database operation</brief>
+               <description>
+                   This option will exclude all database map fields resulting the processing
+                   of the DBMAP that do not have a Pvl keyword/value in the FROM file from
+                   the INSERT or UPDATE SQL query.  Using this option allows processing
+                   to continue if even one field parameter resolves to a value from the FROM
+                   file Pvl source.
+               </description>
+           </option>
+           <option value="NULL">
+               <brief>Set the database field to NULL</brief>
+               <description>
+                   This option will set unresolved database field map keywords to the SQL
+                   NULL value.  Using this option requires that any database field that
+                   is set to NULL must not be qualified with the "NOT NULL" column
+                   constraint, otherwise the SQL INSERT or UPDATE will fail.  Obviously,
+                   this requires thorough knowledge of how tables are created.
+               </description>
+           </option>
+           <option value="ERROR">
+               <brief>Issue an error and abort the application</brief>
+               <description>
+                   This option ensures that all database map fields have resolved
+                   the keyword parameters as specified in the DBMAP file.  If any
+                   one of the keywords fails to resolve to a Pvl keyword in the
+                   FROM Pvl file, this would result in an error.
+               </description>
+           </option>
+        </list>
+      </parameter>
+
+      <parameter name="MODE">
+        <type>string</type>
+        <default><item>COMMIT</item></default>
+        <brief>Specifies if the result is to be commited to the database or validated for correctness</brief>
+        <description>
+            This parameter can be used to determine the validity of the input files and
+            processing performed on the data.  The COMMIT mode will actually attempt
+            to access the database and insert or update the results to the specified
+            database table configuration.  One can also VALIDATE the input data
+            without accessing the database (unless there are database references
+            contained within the input configuration files).
+        </description>
+        <list>
+           <option value="COMMIT">
+               <brief>Commit the processing by inserting result into the database</brief>
+               <description>
+                   The normal mode of operation is to insert the resulting processing into
+                   the database.  This MODE indicates to commit the insert to the database
+                   if no fatal errors are encountered.
+               </description>
+           </option>
+           <option value="VALIDATE">
+               <brief>Runs a check on the input files for correctness without inserting result into database</brief>
+               <description>
+                   To ensure the input configuration is correct, this option can be used to
+                   check the results for validity.  The result of this selected mode will
+                   generate and output the actual SQL command that inserts or updates
+                   the result of the processing.  Users knowledgeable in SQL can
+                   verify it's correctness.
+               </description>
+           </option>
+        </list>
+      </parameter>
+
+      <parameter name="VERBOSE">
+        <type>string</type>
+        <default><item>NO</item></default>
+        <brief> Optionally generate details on some aspects (results) of the processing</brief>
+        <description>
+            This option provides user control over the amount of detail that is generated as
+            a result of the processing.
+        </description>
+        <list>
+            <option value="NO">
+                <brief> Processing results are not reported, program operates silently</brief>
+                <description>
+                    This will not produce output of the requested processing with the exception
+                    of errors that are encountered.
+                </description>
+            </option>
+           <option value="YES">
+               <brief>Report aspects of processing</brief>
+               <description>
+                   This option will report the actual SQL statement resulting from the processing
+                   and the number of rows affected by the COMMIT, if so selected.
+               </description>
+           </option>
+        </list>
+      </parameter>
+
+      <parameter name="SHOWSQL">
+        <type>string</type>
+        <default><item>NO</item></default>
+        <brief> Allows option printing of SQL INSERT or UPDATE (to be) issued</brief>
+        <description>
+            This option was added to provide an explicit level of control when printing
+            the SQL INSERT or UPDATE query generated by processing.
+        </description>
+        <list>
+            <option value="NO">
+                <brief> SQL query results are not reported</brief>
+                <description>
+                    This will not show the SQL query
+                </description>
+            </option>
+           <option value="YES">
+               <brief>Show me the query</brief>
+               <description>
+                   This option will print  the actual SQL statement.
+               </description>
+           </option>
+        </list>
+      </parameter>
+    </group>
+  </groups>
+</application>
+

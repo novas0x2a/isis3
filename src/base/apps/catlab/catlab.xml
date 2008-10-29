@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="catlab" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Outputs the label from a cube
+  </brief>
+
+  <description>
+    This program will output the label from a cube.  If it is run in gui mode, the label will be written to the gui log screen.  
+    Otherwise, it will be written to the terminal window.
+  </description>
+
+  <category>
+    <categoryItem>Utility</categoryItem>
+  </category>
+
+  <seeAlso>
+    <applications>
+      <item>cathist</item>
+      <item>editlab</item>
+    </applications>
+  </seeAlso>
+
+  <oldName>
+      <item>labels</item>
+  </oldName>
+
+  <history>
+    <change name="Elizabeth Ribelin" date="2005-01-10">
+      Original version
+    </change>
+    <change name="Elizabeth Miller" date="2006-03-01">
+      Modified to output label to gui if it is in interactive mode
+    </change>
+    <change name="Brendan George" date="2006-09-26">
+        Documentation fixes
+    </change>
+      <change name="Steven Koechle" date="2008-05-20"> 
+        Added TO parameter
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input file the label is needed from 
+        </brief>
+        <description>
+          The cube file the label is to be extracted from. 
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+        <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          The text to append result Pvl
+        </brief>
+        <internalDefault>
+            No Output file will be created
+        </internalDefault>
+        <description>
+          The text file in which the Result Pvl created is either appended or 
+          written to.
+        </description>
+        <filter>
+          *.txt *.prt *.pvl
+        </filter>
+      </parameter>
+    </group>
+  </groups>
+
+  <examples>
+    <example>
+      <brief> peaks.cub label </brief>
+      <description>
+        This example shows how the catlab application works.  There are no defaults.
+        <pre>
+Object = Label
+  Bytes = 65536
+End_Object
+
+Object = IsisCube
+  Object = Core
+    /* Location of the core
+    StartByte   = 65537
+    Format      = Tile
+    TileSamples = 128
+    TileLines   = 128
+
+    Group = Dimensions
+      Samples = 1024
+      Lines   = 1024
+      Bands   = 7
+    End_Group
+
+    Group = Pixels
+      Type       = Real
+      ByteOrder  = LSB
+      Base       = 0.0
+      Multiplier = 1.0
+    End_Group
+  End_Object
+
+  Group = Bogus
+    Key = Wow
+  End_Group
+End_Object
+End
+        </pre>
+      </description>
+      <terminalInterface>
+        <commandLine> from=peaks.cub 
+        </commandLine>
+        <description>
+        Just run catlab on a .cub file.
+        </description>
+      </terminalInterface>
+     </example>
+  </examples>
+
+</application>

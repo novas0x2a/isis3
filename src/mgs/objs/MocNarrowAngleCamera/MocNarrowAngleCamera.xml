@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<class name="IsisMgsMocNarrowAngleCamera" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Object/object.xsd">
+
+  <brief>Camera model for MGS/MOC Narrow Angle</brief>
+  <description>
+    This class handles the camera model for the MGS/MOC narrow angle
+    instrument.  To create an IsisMocNarrowAngle camera object use
+    the IsisCameraManager class and invoke the Camera method passing
+    in a moc na cube.
+  </description>
+
+  <history>
+    <change name="Jeff Anderson" date="2000-10-01">
+      Original Version
+    </change>
+    <change name="Jeff Anderson" date="2004-04-01">
+      Converted to Isis 3.0
+    </change>
+  </history>
+
+  <includes>
+    <item>IsisMgsMocNarrowAngleCamera.h</item>
+  </includes>
+
+  <category>
+    <missionItem>Mars Global Surveyor</missionItem>
+  </category>
+
+  <inherits>
+    <internalClass>IsisLineScanCamera</internalClass>
+    <internalClass>IsisCamera</internalClass>
+    <internalClass>IsisSensor</internalClass>
+    <internalClass>IsisSpice</internalClass>
+  </inherits>
+
+  <public>
+    <function name="IsisMgsMocNarrowAngleCamera" type="constructor">
+      <description>
+        Constructs a camera model for the MGS MOC narrow angle
+        camera
+      </description>
+
+      <argumentList>
+        <argument name="lab">
+          <type>IsisPvl &amp;</type>
+            <description>
+              A PVL object containing valid MGS MOC narrow angle
+              labels
+            </description>
+        </argument>
+      </argumentList>
+    </function>
+
+    <function name="~IsisMgsMocNarrowAngleCamera" type="destructor">
+      <description>
+        Destroys the object
+      </description>
+    </function>
+  </public>
+</class>

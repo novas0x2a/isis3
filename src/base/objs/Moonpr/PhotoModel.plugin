@@ -1,0 +1,4 @@
+Group = Moonpr
+  Library = Moonpr
+  Routine = MoonprPlugin
+End_Group

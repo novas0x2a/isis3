@@ -1,0 +1,5 @@
+Group = Clementine_1/Uvvis
+  Library = UvvisCamera
+  Routine = UvvisCameraPlugin
+EndGroup
+ 

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="histitch" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Merge a HiRISE channel pair to make a single image
+  </brief>
+
+  <description>
+      <p>
+    The program allows the user to combine two HiRISE channels to form a 
+    single CCD image. Histitch will typically be run after radiometric
+    correction and prior to geometric processing. The two input files 
+    must be the individual channel files (channels 0 and 1) of the 
+    same CCD observation.   The program will test to make sure the 
+    Observation IDs and CCD IDs of the input cubes match, and that one
+    cube is channel 0  and the other is channel 1. The program is clever enough 
+     to figure out the channels associated with each input file and correctly
+    order them in the output file.  Any ancillary data "blobs" 
+    will not be propagated to the output file.  The channel number on 
+    the output cube is set to 2 to signify that it is the combination of channels 
+    0 and 1.
+      </p>
+      <p>
+     histitch can create a CCD image if when only one channel is provided.
+     The proper placement, left half of CCD for channel 1 images, right half for
+     channel 0, is determined from the input file and the remainder of the CCD
+     is filled with Nulls.
+      </p>
+  </description>
+
+  <category>
+    <missionItem>Mars Reconnaissance Orbiter</missionItem>
+  </category>
+
+  <history>
+    <change name="Eric Eliason" date="2004-07-31">
+      Original version
+    </change>
+    <change name="Elizabeth Ribelin" date="2005-02-22">
+        Added obsevation id, ccd id, and channel number tests
+    </change>
+    <change name="Kris Becker" date="2006-02-22">
+        Made FROM2 optional and allow creation of full CCD with just one
+        channel file.
+    </change> 
+    <change name="Brendan George" date="2006-08-24">
+        Added StitchedChannels keyword to Instrument Group, to identify
+        which channels were used.
+    </change>
+    <change name="Brendan George" date="2006-09-01">
+        Added StitchedProductIds keyword to Instrument group, to identify
+        which images were used.
+    </change>
+    <change name="Brendan George" date="2006-09-28">
+        Documentation fixes
+    </change>
+    <change name="Stacy Alley" date="2007-08-16">
+        Added the balance option.
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      Removed references to CubeInfo 
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM1">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          First HiRISE Channel file.
+        </brief>
+        <description>
+          This is the first of a pair of input HiRISE channel
+          image files. This file can be either the channel 0
+          or 1 file. The pair of input files must correspond
+          to the the same observation of a HiRISE CCD.
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+      <parameter name="FROM2">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>
+          Second HiRISE Channel file.
+        </brief>
+        <description>
+            <p>
+          This is the second of a pair of input HiRISE channel
+          image files. This file can be either the channel 0
+          or 1 file. The pair of input files must correspond
+          to the the same observation of a HiRISE CCD.
+            </p>
+            <p>
+              If the user does not provide a file for the second file, histitch
+              will create a full CCD and map the FROM1 file into the proper
+              location in the CCD.  This allows creation of the full CCD without
+              both channels being required.
+            </p>
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output HiRISE CCD image.
+        </brief>
+        <description>
+          The output cube is a HiRISE CCD image with the two channel
+          files combined. The channel number for this cube is set  to 2.
+         </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+    </group>
+    <group name="Balance Channels">
+      <parameter name="BALANCE">
+        <type>string</type>
+        <default><item>FALSE</item></default>
+        <brief>Option to balance channel 0 and channel 1</brief>
+        <description>
+            A feature which calculates the average on each channel and multiplies one side with
+            the ratio of the averages
+        </description>
+       <list>
+          <option value="TRUE">
+            <brief>Balance On</brief>
+            <description>
+                Enables balance feature.
+            </description>
+          </option>
+          <option value="FALSE">
+            <brief>Balance Off</brief>
+            <description>
+               Disables balance feature.
+            </description>
+            <exclusions>
+              <item>SEAMSIZE</item>
+              <item>SKIP</item>
+            </exclusions>
+          </option>
+        </list>
+      </parameter>
+      <parameter name="SKIP">
+        <type>integer</type>
+        <default>
+          <item> 7 </item>
+        </default>
+        <brief> Number of Pixels to skip on the edges of the image. </brief>
+        <description>
+          Number of pixels to skip on each side of the seam before the program starts to accumulate pixel DN's to calculate the seam average value.  
+        </description>
+      </parameter>
+    <parameter name="SEAMSIZE">
+        <type>integer</type>
+        <default>
+          <item> 11 </item>
+        </default>
+        <brief> Number of Pixels on the seam </brief>
+        <description>
+          Number of pixels (after skipping 'SKIP' number of pixels) used to compute the averages on each 
+          side of the seam.
+        </description>
+      </parameter>    
+    </group>
+  </groups>
+  <examples>
+    <example>
+      <brief> HiRISE image </brief>
+      <description>
+        This example shows the hiStitch application.
+      </description>
+      <terminalInterface>
+        <commandLine> from1=IN/Channel0.cub from2=IN/Channel1.cub to=OUT/output.cub balance=true skip=7 seamsize=11
+        </commandLine>
+        <description>
+         hiStitch gui example
+        </description>
+      </terminalInterface>
+
+      <inputImages>
+        <image src="assets/image/oldStitch.JPG" width="500" height="500">
+          <brief> Input images for hiStitch</brief>
+          <description>These are input images stitched together without the balance option on.
+          </description>
+          <thumbnail caption=" Input HiRISE images" src="assets/thumb/oldStitch.JPG" width="200" height="200"/>
+          <parameterName>FROM1,FROM2</parameterName>
+        </image>
+      </inputImages>
+
+      <outputImages>
+        <image src="assets/image/newStitch.JPG" width="500" height="500">
+          <brief> Output image for hiStitch</brief>
+          <description> This is the output image with the balance option TRUE.
+          </description>
+          <thumbnail caption="Output image showing results of the hiStitch application." src="assets/thumb/newStitch.JPG" width="200" height="200"/>
+          <parameterName>TO</parameterName>
+        </image>
+      </outputImages>
+
+      <guiInterfaces>
+        <guiInterface>
+          <image width="741" height="841" src="assets/image/hiStitchGUI.JPG">
+            <brief>Example Gui</brief>
+            <description>Screenshot of GUI with parameters filled in to perform a hiStitch operation on the input images. </description>
+            <thumbnail width="200" height="300" caption="hiStitch Gui" src="assets/thumb/hiStitchGUI.JPG" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+    </example>
+  </examples>
+</application>

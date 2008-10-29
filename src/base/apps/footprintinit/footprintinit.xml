@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application name="footprintinit" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    This program uses a text-based list of cubes to create polygons and stores those polygons in blobs inside the cube.
+  </brief>
+
+  <description>
+    This program creates a latitude/longitude geometric polygon that determines the footprint of the image. This footprint is used in other programs such as autoseed.
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <history>
+    <change name="Tracie Sucharski" date="2005-07-19">
+       Original version 
+    </change>
+    <change name="Jacob Danton" date="2006-02-10">
+       Changed input from a list of cube files to a single cube and added appTest.
+    </change>
+    <change name="Brendan George" date="2006-06-30">
+        Fixed application test
+    </change>
+    <change name="Brendan George" date="2006-09-19">
+        Added call to propagate and modify the history blob
+    </change>
+    <change name="Tracie Sucharski" date="2007-05-09">
+        Added error check to insure spiceinit has been run.
+    </change>
+    <change name="Brendan George" date="2007-05-21">
+        Moved from Geometry category to Control Network category
+    </change>
+    <change name="Steven Lambright" date="2007-07-26">
+        Moved Control Network category to Control Networks Category (Control Network category is invalid) and updated program description.
+    </change>
+    <change name="Steven Koechle" date="2007-10-19">
+        Changed name from polyinit to footprint init
+    </change>
+    <change name="Steven Koechle" date="2008-08-19">
+        Updated to work with Geos3.0.0
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input cube
+        </brief>
+        <description>
+          The cube to initialize polygons.  
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+    </group>
+
+    <group name="Options">
+      <parameter name="PIXINCREMENT">
+        <type>integer</type>
+        <default>
+            <item>100</item>
+        </default>
+        <brief>
+          Pixel increment for polygon creation
+        </brief>
+        <description>
+          The pixel increment used to create polygons.
+        </description>
+      </parameter>
+    </group>
+  </groups>
+</application>

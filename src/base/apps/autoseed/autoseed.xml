@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="autoseed" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Creates a control network for a list of images
+  </brief>
+
+  <description>
+    <p>
+      <div style="background-color:gold; border:2pxsolidred; fort-weight:bold;">
+        This program is being released for a very specific purpose for which it seems to work.
+        It is only a preliminary version, and most likely contains errors. It is not ready for general 
+        purpose use. Please do not report errors. The documentation is not complete and may
+        be inaccurate. USE AT YOUR OWN RISK.
+      </div>
+    </p>
+    <p>
+      This program creates a first guess control network with tie points between
+      overlapping images. The control network is based on the available pointing information
+      for each image (most likely SPICE).
+    </p>
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <history>
+    <change name="Stuart Sides" date="2005-08-20">
+      Original version
+    </change>
+
+    <change name="Steven Lambright" date="2007-07-27">
+      Changed category from Geometry to Control Networks
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROMLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          List of Input cubes to create a control network for
+        </brief>
+        <description>
+          Use this parameter to select the filename which contains a list of
+          cube filename to be used to create the control network.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="SEEDDEF">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          PVL file containing the description of the autoseed plugin
+        </brief>
+        <description>
+          Use this parameter to select the filename which contains the
+          definition of the type of autoseeding to be preformed. This file
+          must contain a valid Autoseed plugin definition in PVL format.
+        </description>
+        <filter>
+          *.api
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output control network
+        </brief>
+        <description>
+          This file will contain the autoseeded control network
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Control">
+      <parameter name="NETWORKID">
+        <type>string</type>
+        <brief>
+            Name of this control network
+        </brief>
+        <description>
+            The ID or name of this particular control network. This string
+            should be unique.
+        </description>
+      </parameter>
+
+      <parameter name="POINTID">
+        <type>string</type>
+        <brief>
+            The pattern to be used to create point ids.
+        </brief>
+        <description>
+            A string with one and only one set of question marks ("?").
+            This string will be used to create unique IDs for each control
+            point created by this program. The question marks will be replaced
+            with a number beginning with zero. For example the pattern
+            "User????" would create point IDs "User0001" through 
+            "User9999". Note: Make sure there are enough "?"s for all the control
+            points that may be created during this run. If all question marks are
+            exausted the program will throw an error.
+        </description>
+      </parameter>
+
+      <parameter name="DESCRIPTION">
+        <type>string</type>
+        <brief>
+            The description of the network.
+        </brief>
+        <description>
+            A string describing purpose of this control network.
+        </description>
+      </parameter>
+
+    </group>
+  </groups>
+</application>

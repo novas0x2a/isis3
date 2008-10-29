@@ -1,0 +1,73 @@
+include $(ISISROOT)/make/isismake.macros
+
+.SUFFIXES:
+.SUFFIXES: .cpp .o
+.SUFFIXES: .c .o
+.SUFFIXES: .xml .html
+
+app: $(BINS)
+
+$(BINS): $(OBJS)
+	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ $(OBJS) $(ALLLIBS)
+
+.cpp.o :
+	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) $(CPPFLAGS) -c -o $@ $?
+
+.c.o :
+	$(CC) $(ALLINCDIRS) $(ISISCFLAGS) $(CFLAGS) -c -o $@ $?
+
+.xml.html :
+	$(XALAN) -v -o $@ $? $(ISISROOT)/src/docsys/Application/presentation/ProgTester/IsisApplicationDocStyle.xsl
+
+clean:
+	-$(RM) $(OBJS) $(BINS) `basename $(CURDIR)`.html appTest.sh
+	if [ "$(shell cat Makefile | grep cleanlocal | wc -l)" -ne 0 ]; \
+	then \
+	  $(MAKE) cleanlocal; \
+	fi
+
+
+install: app
+	if [ ! -d "$(ISISROOT)/bin/xml" ]; \
+	then \
+	  mkdir -p $(ISISROOT)/bin/xml; \
+	fi
+	cp -p $(BINS) $(ISISROOT)/bin
+	cp -p $(BINS).xml $(ISISROOT)/bin/xml
+	chmod 644 $(ISISROOT)/bin/xml/$(BINS).xml
+
+docs:
+	mkdir -p $(ISISROOT)/src/docsys/Application/data/`basename $(CURDIR)`
+	cp -p `basename $(CURDIR)`.xml $(ISISROOT)/src/docsys/Application/data/`basename $(CURDIR)`
+	if [ -d assets ]; \
+	then \
+	  cp -pr assets $(ISISROOT)/src/docsys/Application/data/`basename $(CURDIR)`; \
+	fi
+	chmod -R +w $(ISISROOT)/src/docsys/Application/data/`basename $(CURDIR)`
+
+test:
+	if [ ! -d "tsts" ]; \
+	then \
+	  echo ""; \
+	  printf %-6s ""; \
+	  echo "no tsts folder"; \
+	elif [ -f "tsts/Makefile" ]; \
+	then \
+	  cd tsts; $(MAKE) tests; \
+	else \
+	  echo ""; \
+	  printf %-6s ""; \
+	  echo "no makefile"; \
+	fi
+
+testdir:
+	if [ ! -d "tsts" ]; \
+	then \
+	  $(MKDIR) tsts; \
+	  $(CP) $(ISISROOT)/make/Makefile.appstststree tsts/Makefile; \
+	else \
+	  echo ""; \
+	  printf %-6s ""; \
+	  echo "tsts folder already exists"; \
+	fi
+

@@ -1,0 +1,18 @@
+Unit Test for LeastSquares:
+Number of Knowns = 3
+one = 3.08
+  residual = 0.08
+two = 0.94
+  residual = -0.06
+three = 1.9
+  residual = -0.1
+---
+Test from Linear Algebra with Applications, 2nd Edition
+Steven J. Leon, page 191, 83/50=1.66 71/50=1.42
+1.66
+1.42
+---
+Solution with unknown two weighted
+one = 3.09671
+two = 0.997099
+three = 1.87911

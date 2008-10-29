@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<application name="pointreg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Point Registration
+  </brief>
+
+  <description>
+    This program takes a control network and a registration algorithm and 
+    returns a refined control network based on the algorithm.
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>  
+
+  <seeAlso>
+      <applications>
+          <item>autoregtemplate</item>
+          <item>coreg</item>
+      </applications>
+      <documents>
+          <document>
+              <title>Automatic Registration in Isis 3.0</title>
+          </document>
+      </documents>
+  </seeAlso>
+
+  <history>
+     <change name="Jacob Danton" date="2006-01-11">
+         Original Version
+     </change>
+     <change name="Brendan George" date="2006-10-02">
+         Modified call to get current time to use Time class, instead of Application class
+     </change>
+     <change name="Steven Lambright" date="2007-07-23">
+         Fixed typos, changed category to Control Networks and removed example
+     </change>
+     <change name="Steven Lambright" date="2008-06-23">
+         Fixed memory leak, progress, updated to work with AutoReg change
+     </change>
+  </history>
+
+  <groups>
+    <group name="Input">
+      <parameter name="FILES">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input File List
+        </brief>
+        <description>
+          This file contains all the files used in the control network.
+        </description>
+        <filter>
+          *.txt *.lis *.lst
+        </filter>
+      </parameter>
+
+      <parameter name="CNET">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input ControlNet
+        </brief>
+        <description>
+          This file contains the initial control network.
+        </description>
+        <filter>
+          *.txt *.lis *.lst
+        </filter>
+      </parameter>
+
+      <parameter name="IGNORED">
+        <type>boolean</type>
+        <brief>
+          Keep Ignored ControlPoints
+        </brief>
+        <description>
+          Specifies if Ignored ControlPoints will remain in the ControlNet.
+        </description>
+        <default><item>True</item></default>
+      </parameter>
+
+      <parameter name="UNMEASURED">
+        <type>boolean</type>
+        <brief>
+          Keep Unmeasured ControlMeasures
+        </brief>
+        <description>
+          Specifies if Unmeasured ControlMeasures will remain in the ControlNet.
+        </description>
+        <default><item>True</item></default>
+      </parameter>
+
+      <parameter name="TEMPLATE">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Auto Regestration Template
+        </brief>
+        <description>
+          This is the auto regestration template file which contains all the information
+          on the registration algorithm to be used.
+        </description>
+        <filter>
+          *.txt *.lis *.lst
+        </filter>
+      </parameter>
+    </group>
+
+    <group name="Output">
+        <parameter name="TO">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>
+            Resulting ControlNet
+          </brief>
+          <description>
+            This is the output ControlNet file containing the registered information.
+          </description>
+          <filter>
+          *.txt *.lis *.lst
+        </filter>
+        </parameter>
+       </group>
+  </groups>
+
+</application>

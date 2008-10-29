@@ -1,0 +1,5 @@
+Group = Mars_Odyssey/Themis_Vis
+  Library = ThemisVisCamera
+  Routine = ThemisVisCameraPlugin
+EndGroup
+ 

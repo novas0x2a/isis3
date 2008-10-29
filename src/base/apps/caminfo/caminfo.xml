@@ -1,0 +1,421 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="caminfo" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Outputs a PVL file that contains camera infomation. 
+  </brief>
+
+  <description>
+    This program requires the user supply a "level 1" cube.  That is, a cube in raw camera geometry.
+    The user can choose to run spiceinit on the input cube.  Spiceinit will use the system kernels,
+    so any user updates to SPICE information will be lost.  The default is to <b>not</b> run spiceinit.
+    This program will output various spacecraft and insrument related information.   Some of the
+    output information will be a compilation of all bands, this will be put in the "Common" object of the 
+    PVL.  Other infomation will be for a given band and placed in the "BandSet" object. the user
+    can use the "output options" check boxes to control the infomation that will be output to the 
+    PVL.  if the polygon option is chosen, the image polygon is output in well known text format.  
+    The following is an example of  the output given when caminfo is ran:
+
+<pre>
+  Object = Common
+    IsisId  = MGS/MOC-NA/641932858:47
+    From    = /home/bsucharski/isis/src/base/apps/caminfo/m1500250.cub
+    Lines   = 5760
+    Samples = 1024
+    Bands   = 1
+
+    Group = CubeCamStats
+      MinimumLatitude   = 1.6945049786511
+      MaximumLatitude   = 2.1185063092
+      MinimumLongitude  = 3.7540343798398
+      MaximumLongitude  = 3.8580857617475
+      MinimumResolution = 2.9146512614459
+      MaximumResolution = 2.9164026353144
+      MinimumPhase      = 19.379452089995
+      MaximumPhase      = 19.936334382221
+      MinimumEmission   = 0.15936555403382
+      MaximumEmission   = 0.43399775584188
+      MinimumIncidence  = 19.632717400426
+      MaximumIncidence  = 19.827343689002
+      LocalTimeMinimum  = 13.209552496928
+      LocalTimeMaximum  = 13.214237336569
+    End_Group
+  End_Object
+
+  Object = OriginalLabel
+    PDS_VERSION_ID               = PDS3
+    FILE_NAME                    = /moc2isis100000.img
+    RECORD_TYPE                  = FIXED_LENGTH
+    RECORD_BYTES                 = 1024
+    FILE_RECORDS                 = 5762
+    LABEL_RECORDS                = 2
+    ^IMAGE                       = 3
+    SPACECRAFT_NAME              = MARS_GLOBAL_SURVEYOR
+    MISSION_PHASE_NAME           = MAPPING
+ End_Object
+
+  Object = BandSet
+    Group = Band
+      BandNumber             = 1
+      StartTime              = 2000-05-04T18:40:31.0109131
+      EndTime                = 2000-05-04T18:40:39.3410251
+      CenterLatitude         = 1.9060771045244
+      CenterLongitude        = 3.8061446305923
+      NorthAzimuth           = 100.70761963532
+      OffNadir               = 0.2021671019663
+      SolarLongitude         = 346.22325638167
+      LocalTime              = 13.211900358555
+      TargetCenterDistance   = 3783.0260771125
+      SlantDistance          = 388.7570030421
+      SubSolarAzimuth        = 346.38655846205
+      SubSolarLatitude       = -5.8177028320409
+      SubSolarLongitude      = 345.62763925227
+      SubSpacecraftAzimuth   = 42.539906045373
+      SubSpacecraftLatitude  = 1.9233520978592
+      SubSpacecraftLongitude = 3.790717852625
+      ParallaxX              = -0.02935148348207
+      ParallaxY              = -0.22732713411495
+      ShadowX                = -0.83200658176895
+      ShadowY                = 0.87638064622615
+      MeanValue              = 179.11143154666
+      MedianValue            = 184.0
+      StandardDeviation      = 29.154860810386
+      MinimumValue           = 96.0
+      MaximumValue           = 254.0
+      PercentHIS             = 0.0
+      PercentHRS             = 3.0517578125e-04
+      PercentLIS             = 0.0
+      PercentLRS             = 0.0
+      PercentNull            = 0.0
+      MinimumLatitude        = 1.6945049786511
+      MaximumLatitude        = 2.1185063092
+      MinimumLongitude       = 3.7540343798398
+      MinimumLongitude       = 3.8580857617475
+      MinimumResolution      = 2.9146512614459
+      MaximumResolution      = 2.9164026353144
+      MinimumPhase           = 19.379452089995
+      MaximumPhase           = 19.936334382221
+      MinimumEmission        = 0.15936555403382
+      MaximumEmission        = 0.43399775584188
+      MinimumIncidence       = 19.632717400426
+      MaximumIncidence       = 19.827343689002
+      LocalTimeMinimum       = 13.209552496928
+      LocalTimeMaximum       = 13.214237336569
+      GisFootprint                   = "MULTIPOLYGON (((3.8580857617475282 1.7029466691178021, 
+                                                                                   3.8580857617475282 1.6969397060439704)))"
+    End_Group  
+  End_Object
+</pre>
+
+    <p>
+    Output values that are not a range are calculated at the center of the 
+    image.  The <b> SubSpacecraftLatitude</b> and 
+    <b>SubSpacecraftLongitude</b> make up the subspacecraft point, which is 
+    the point on a body which lies directly beneath the spacecraft.  The 
+    <b>SubSolarLatitude</b> and <b>SubSolarLongitude</b> make up the subsolar 
+    point, which is the point on a body's refernce surface where a line from 
+    the body center to the sun center intersects that surface.  The 
+    <b>NorthAzimuth, SpacecraftAzimuth</b> and <b>SubSolarAzimuth</b> are the 
+    values of the angle between a line from the image center to the relative 
+    point (North pole, SubSpacecraftLatitude/Longitude, SubSolar 
+    Latitude/Longitude respectively) and a reference line in the image plane.  
+    The reference line is a horizontal line from the image center to the 
+    middle right edge of the image.  The angles increase in a clockwise 
+    direction.  The <b>LocalTime</b> is the time at the current longitude 
+    relative to the subsolar longitude, which has a time of 12 o'clock.  The 
+    <b>SolarLongitude</b> is LSubS, or the seasonal angle.  
+    </p>
+  </description>
+
+  <history>
+    <change name="Robert Sucharski" date="2007-04-10">
+      Original version
+    </change>
+    <change name="Steven Lambright" date="2007-08-10">
+      Added an application test
+    </change>
+    <change name="Steven Koechle" date="2007-11-01">
+      Fixed WKT calls
+    </change>
+    <change name="Tracie Sucharski" date="2007-11-09">
+        Remove ToWKT calls and PolygonTools.h inclusion.  The geos package now 
+        has a method to return a WKT string, so the ToWKT method has been 
+        removed from the PolygonTools class.
+    </change>
+      <change name="Kris Becker" date="2007-12-07"> 
+          Made the following modifications:  fixed typo in PercentNull and 
+          MaximumLongitude keywords; use the base file name for generation of 
+          temporary files to further ensure uniqueness; run camstats once if 
+          there is only one band - doubles execution speed for single band 
+          images when CAMSTATS option is used; substitute the NULL string for 
+          all special pixel values; added corner pixel keywords for PDS 
+          compatability; added phase, emission, incidence angles and line and 
+          sample pixel resolution at the center pixel; added test for 
+          intersection of longitude domain, north and south poles and keywords 
+          that report them; added option to output ISIS cube labels; corrected 
+          computations for parallax and shadow keywords.
+       </change>
+       <change name="Kris Becker" date="2007-12-19"> 
+           Renamed the HasLongitudeDomain keyword to HasLongitudeBoundary.  
+           Makes more sense.
+       </change>
+       <change name="Kris Becker" date="2008-02-27"> 
+           Corrected method call to compute polygon with proper parameters as 
+           well as correct band number.  Added code to better honor specific 
+           cube attributes (such as band numbers) in computations.  Also will 
+           produce NULL valued keywords where NULLs are a produced instead of 
+           the real value for the ISIS NULL pixel value.
+       </change>
+     <change name="Steven Lambright" date="2008-05-12">
+          Removed references to CubeInfo 
+     </change>
+     <change name="Bob Sucharski" date="2008-07-31">
+         Added Camera Test option  to test for a valid camera at center of image 
+         and return an error and end if a valid camera cannot be created.
+     </change>
+  </history>
+
+  <category>
+    <categoryItem>Cameras</categoryItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Filename of a cube
+        </brief>
+        <description>
+          Input cube with appropriate camera labels (Instrument and kernel groups).  This file must be in raw
+          camera space, which is a "level 1" cube.
+          cube
+        </description>
+        <filter>
+          *.cub *.CUB
+        </filter>
+      </parameter>
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          output PVL filename
+        </brief>
+        <internalDefault>None</internalDefault>
+        <description>
+          A text file in label format (PVL) which will contain the results of this program.  This file can
+          be used in conjunction with the 'getkey" program in order to pass the results to another
+          program when developing scripts.
+        </description>
+        <filter>
+          *.txt
+        </filter>
+      </parameter>
+      </group>
+    
+    <group name="Output Options">
+      <parameter name="GEOMETRY">
+        <type>boolean</type>
+        <brief>
+          Get Geometry Information
+        </brief>
+        <description>
+          Get geometry information from the camera at the center of the image.  Output values are:
+          <p>
+            Start Time<br/>
+            End Time<br/>
+            Center Latitude<br/>
+            Center Longitude <br/>
+              Phase Angle<br/>
+              Emission Angle<br/>
+              Incidence Angle<br/>
+              Sample Resolution<br/>
+              Line Resolution<br/>
+              Pixel Resolution<br/>
+            Solar Longitude<br/>
+            North Azimuth<br/>
+            Off Nader<br/>
+            Subspacecraft Latitude<br/>
+            Subspacecraft Longitude<br/>
+            Subspacecraft Azimuth<br/>
+            Subsolar Latitude<br/>
+            Subsolar Longitude<br/>
+            Subsolar Azimuth<br/>
+            Local Time<br/>
+            Target Center Distance<br/>
+            Slant Distance<br/>
+            ParallaxX<br/>
+            ParallaxY<br/>
+            ShadowX<br/>
+            ShadowY<br/>
+              IntersectsLongitudeDomain
+          </p>
+            <p>
+                In addition, latitude and longitude values are provided at the 
+                corners pixel locations:
+            </p>
+            <p>
+                UpperLeftLongitude<br/> 
+                UpperLeftLatitude<br/> 
+                LowerLeftLongitude<br/> 
+                LowerLeftLatitude<br/>
+                LowerRightLongitude<br/> 
+                LowerRightLatitude<br/> 
+                UpperRightLongitude<br/> 
+                UpperRightLatitude<br/>
+            </p>
+        </description>
+        <default><item>TRUE</item></default>
+      </parameter>
+
+
+      <parameter name="ISISLABEL">
+        <type>boolean</type>
+        <brief>
+          Write the ISIS label to the output file
+        </brief>
+        <description>
+          This option will extract the ISIS label and write it to the output PVL
+          file.
+        </description>
+        <default><item>FALSE</item></default>
+      </parameter>
+
+      <parameter name="ORIGINALLABEL">
+        <type>boolean</type>
+        <brief>
+          Get the Original Label 
+        </brief>
+        <description>
+          Get the original label blob and add it to the PVL.
+        </description>
+        <default><item>FALSE</item></default>
+      </parameter>
+
+      <parameter name="STATISTICS">
+        <type>boolean</type>
+        <brief>
+          Gather DN Statistics.
+        </brief>
+        <description>
+          Get DN statistics for each band.  Output values are:
+          <p>
+            Mean<br/>
+            Median<br/>
+            Standard Deviation<br/>
+            Minimum<br/>
+            Maximum<br/>
+            Percent HIS<br/>
+            Percent HRS<br/>
+            Percent LIS<br/>
+            Percent LRS<br/>
+            Percent null
+          </p>
+        </description>
+        <default><item>FALSE</item></default>
+      </parameter>
+
+      <parameter name="CAMSTATS">
+        <type>boolean</type>
+        <brief>
+          Get Camera Statistics Information
+        </brief>
+        <description>
+          Run camstats to get camera information that can be expressed as a range.  
+          Camstats will run on the entire cube (common object), and  then for each band(bandset object).
+          The default linc and sinc for camstats will is "1", the user can select a different linc and sinc.
+          Output values are:
+          <p>
+            Minimum Latitude<br/>
+            Maximum Latitude<br/>
+            Minimum Longitude<br/>
+            Maximum Longitude<br/>
+            Minimum Resolution<br/>
+            Maximum Resolution<br/>
+            Minimum Phase <br/>
+            Maximum Phase<br/>
+            Minimum Emission<br/>
+            Maximum Emission<br/>
+            Minimum Incidence<br/>
+            Maximum Incidence<br/>
+            Minimum Local Time<br/>
+            Maximum Local Time
+          </p>
+        </description>
+        <inclusions>
+          <item>SINC</item>
+          <item>LINC</item>
+        </inclusions>
+        <default><item>FALSE</item></default>
+      </parameter>
+
+      <parameter name="LINC">
+        <type>integer</type>
+        <brief>
+          LINC for camstats
+        </brief>
+        <description>
+          This is the line incrument used by camstats.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="SINC">
+        <type>integer</type>
+        <brief>
+          SINC for camstats
+        </brief>
+        <description>
+          This is the sample incrument used by camstats.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="POLYGON">
+        <type>boolean</type>
+        <brief>
+          Creates polygon information 
+        </brief>
+        <description>
+          use the imagePolygon class to gather ploygon information.  The output polygon
+          will be in well known text format (WKT).
+        </description>
+        <default><item>FALSE</item></default>
+      </parameter>
+      </group>
+
+      <group name="SPICE Option">
+        <parameter name="SPICE">
+          <type>boolean</type>
+          <brief>
+            Run spiceinit on the input
+          </brief>
+          <description>
+              If the user sets this to true then the spiceinit program will be 
+              run on the input file.  Spiceinit will use the system SPICE kernels, 
+              so any updates to SPICE information will be lost.  Spiceinit is in 
+              this program to facilitate UPC processing.
+          </description>
+          <default><item>FALSE</item></default>
+        </parameter>
+      </group>
+
+    <group name="Camera Test">
+      <parameter name="VCAMERA">
+        <type> boolean </type>
+        <brief>
+          Test image center for valid camera 
+        </brief>
+        <description>
+          If the user sets this parameter to true, a test will determain if a 
+          valid camera can be created at the center of the image band.  if a 
+          valid camera cannot be created the program will end.  The default is
+          to not test the camera and output any available information.
+        </description>
+        <default><item>FALSE</item></default>
+      </parameter>
+    </group>
+   </groups>
+</application>

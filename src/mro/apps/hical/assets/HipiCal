@@ -1,0 +1,582 @@
+#!/usr/bin/env perl
+##########################################################################
+# $Id: HipiCal,v 1.1 2007/07/07 00:12:25 kbecker Exp $
+##########################################################################
+
+##########################################################################
+# Setup
+##########################################################################
+   $| = 1;
+   use strict;
+   use Getopt::Long;
+   use File::Basename;
+   use Math::Trig;
+   use POSIX qw(ceil floor);
+   
+   my $ERROR_STRING = "*** ERROR *** HipiCal ";
+
+##########################################################################
+# List Error messages
+##########################################################################
+   my $SUCCESS      = 0;    # Success value
+   my $ERR_PARM     = 1;    # Command line error parameter
+   my $ERR_IMATRIX  = 2;    # Input matrix file does not exist
+   my $ERR_IFILE    = 3;    # Input Cube file does not exist
+   my $ERR_HIPICAL  = 4;    # hipical failed to run
+   my $ERR_CONF     = 5;    # configuration file does not exists
+   my $ERR_ENV      = 6;    # Environment variable not set
+   my $ERR_MPATH    = 7;    # Matrix path does not exist
+   my $ERR_LT       = 8;    # Linetime correction failed
+   my $ERR_IF       = 9;    # I/F correction failed
+   
+
+use vars qw($ifile $ofileo $ofileg $ofile $ofilea $ioption $matrix 
+            $iconf $HipiCal_Matrix_Path $HipiCal_Matrix_Operation
+            $binning_mode $tdi_mode $ofilel $line_time $l_t_corr 
+            $tdi_bin_gain_corr $Ls $au);
+##########################################################################
+# Define the root directory
+##########################################################################
+   my $HiRISE_ROOT = $ENV{"HiRISE_ROOT"};
+   my $ret;
+
+   if ($HiRISE_ROOT eq "")
+   {
+      print STDERR "HiRISE_ROOT environment variable is not defined\n";
+      exit $ERR_ENV
+   }
+   my $ROOT_DIR = $HiRISE_ROOT;
+
+##########################################################################
+# Get the input command line parameters
+##########################################################################
+   GetOptions("input=s"         => \my $ifile,
+              "output=s"        => \my $ofile,
+              "configuration=s" => \my $iconf,
+	            "minnorm=f"       => \my $minnorm,
+              "maxnorm=f"       => \my $maxnorm,
+	            "pixeltype=s"     => \my $pixtype,
+              "step=s"          => \my $step,
+              "delete=s"        => \my $delete,
+              "help"            => \my $help
+             );
+	     	      	      
+   if ($help) 
+   {
+      print STDERR "HipiCal ";
+      print STDERR "-input in.cub -output out.cub [-minnorm xx] [-maxnorm xx] [-pixeltype xx] [-conf Hipical.conf] [-help]\n";
+      exit 0;
+   }
+   if ($ifile eq "") 
+   {
+      print STDERR "$ERROR_STRING\n";
+      print STDERR "HipiCal ";
+      print STDERR "-input in.cub -output out.cub [-minnorm xx] [-maxnorm xx] [-pixeltype xx][-conf Hipical.conf] [-help]\n";
+      exit $ERR_PARM;   
+   }  
+   if ($ofile eq "") 
+   {
+      print STDERR "$ERROR_STRING\n";
+      print STDERR "HipiCal ";
+      print STDERR "-input in.cub -output out.cub [-minnorm xx] [-maxnorm xx] [-pixeltype xx][-conf Hipical.conf] [-help]\n";
+      exit $ERR_PARM;   
+   }  
+
+##########################################################################
+# Experiment with allowing one to specify which step of HipiCal to apply
+# Possible steps: ALL, B0, A, G, IF.  Default: ALL
+##########################################################################
+   if ($step eq "") {$step="ALL"};
+   
+   if ($pixtype eq "") {$pixtype = "Real";}
+   my $pixtest = $pixtype;
+   $pixtest =~ tr/a-z/A-Z/;
+   
+   if ($pixtest ne "UNSIGNEDBYTE" && $pixtest ne "SIGNEDWORD" && $pixtest ne "REAL") 
+   {
+      print STDERR "$ERROR_STRING\n";
+      print STDERR "-pixeltype must be \"UnsignedByte\", \"SignedWord\", or \"Real\"\n";
+      exit $ERR_PARM;     
+   }
+   
+   if ($delete eq "") {$delete = "yes";}
+   if ($minnorm eq "") {$minnorm = -0.1;}
+   if ($maxnorm eq "") {$maxnorm = 1.5;}
+   
+########################################################################
+# Check to see if the configuration file exists.
+########################################################################
+   if ($iconf eq "")
+   {
+      $iconf = "$ROOT_DIR/Configuration/HiCal/HipiCal.conf";
+   }
+   if (!(-e $iconf))
+   {
+      print STDERR "$ERROR_STRING\n";
+      print STDERR "Configuration file does not exist: $iconf\n";
+      exit $ERR_CONF;
+   }
+
+########################################################################
+# Path to matrix files is in HipiCal.conf
+########################################################################
+  my $HipiCal_Matrix_Path = PvlGetKeyval($iconf,"HipiCal/HipiCal_Matrix_Path","Configuration",0,0);
+  if ( !(-e $HipiCal_Matrix_Path))
+  {
+    print STDERR $ERROR_STRING;
+    print STDERR "Path to matrices does not exist: $HipiCal_Matrix_Path\n";
+    exit $ERR_MPATH;
+  }
+
+#########################################################################
+# Does the input file exist?
+#########################################################################   
+   if (!(-e $ifile)) 
+   {
+      print STDERR $ERROR_STRING;
+      print STDERR "Input ISIS Cubefile can not be found: $ifile\n";
+      exit $ERR_IFILE;  
+   }
+
+#########################################################################
+# Constants.  This place is as good as any for defining them.
+#########################################################################
+my $deg2rad = 0.0174532925;
+my $rad2deg = 57.29577958;
+
+#########################################################################
+# Gather the information for which matrix file to use.  
+#########################################################################
+
+sub WhichMatrix
+{
+  my ($op) = @_;
+  $binning_mode = PvlGetKeyval($ifile,"Instrument/Summing","getkey",0,0);
+  $tdi_mode = PvlGetKeyval($ifile,"Instrument/Tdi","getkey",0,0);
+  my $matrix_version = PvlGetKeyval($iconf,"HipiCal/HipiCal_Matrix_Version","getkey",0,0);
+  my $matrix = $HipiCal_Matrix_Path."/".$op."_TDI".$tdi_mode."_BIN" . $binning_mode . "_" . $matrix_version . ".cub";
+  if (!(-e $matrix)) 
+  {
+     print STDERR $ERROR_STRING;
+     print STDERR "Input Matrix File can not be found: $matrix\n";
+     exit $ERR_IMATRIX;  
+  }
+  return ($matrix);
+}
+
+######################################################################
+#  Calculate Modified Julian Date from Gregorian date given in 
+# Image headers.  Uses "StartTime" as its source for the image
+# date.  The differences between the values in the headers are small
+# enough not to matter.
+######################################################################
+sub MJD 
+{   # returns mjd from yyyymmdd or y,m,d
+    my ($image_time) = @_;
+    my ($y, $m, $d, $h, $mn, $s) = split(/:/,$image_time);
+
+    # Modulo operator; perl's % operator doesn't work.
+    my $a = floor((14-$m)/12);
+    $y = $y + 4800 - $a;
+    $m = $m + 12*$a - 3;
+    my $mjd = $d + floor((153*$m + 2)/5) + 365*$y+floor($y/4) - floor($y/100) + floor ($y/400) - 32045 +
+              ($h-12)/24 + $mn/1440 + ($s)/86400;
+    $mjd = $mjd - 2451545.0;
+    return ($mjd);
+}
+
+
+######################################################################
+#  Convert the Modified Julian Date to Ls.  
+# Uses the algorithm (and values) as given in Allison and McEwen, 2000.
+######################################################################
+sub MJD2Ls
+{
+
+  my ($mjd) = @_;
+  #my $dmjd = $mjd - 2451545.0;
+  my $dmjd = $mjd ;
+
+  # Mean anomaly:
+  # In degrees.
+  my $meanan = 19.3870 + 0.52402075*$dmjd;
+
+  # angle of fictious mean sun
+  # In degrees.
+  my $afms = 270.3863 + 0.52403840*$dmjd;
+
+  # perturberations.
+  # In radians.
+  my @ai = $deg2rad*(0.0071, 0.0057, 0.0039, 0.0037, 0.0021, 0.0020, 0.0018);
+  my @ti = (2.2353, 2.7543, 1.1177, 15.7866, 2.1354, 2.4694, 32.8493);
+  my @thi = $deg2rad*(49.409, 168.173, 191.837, 21.736, 15.704, 95.528, 49.095);
+  my $PBS = 0;
+  my $degs = $deg2rad*(360/365.25);
+  my $r_dmjd = $deg2rad*$dmjd;
+  for (my $it=0; $it < 7; $it++)
+  {
+    $PBS = $PBS + $ai[$it]*cos(($degs*$r_dmjd/$ti[$it])+$thi[$it]);
+  }
+
+  # Equation of center 
+  # Ridiculous mixing of degrees and radians.  Stupid Allison et al, 2000.
+  my $r_meanan = $deg2rad*$meanan;
+  my $eqc = (10.691 + 3e-7*$dmjd)*sin($r_meanan)+
+             0.623*sin(2*$r_meanan)+
+             0.050*sin(3*$r_meanan)+
+             0.005*sin(4*$r_meanan)+
+             0.00005*sin(5*$r_meanan)+
+             $PBS;
+
+  # Ls
+  my $Ls = $afms + $eqc;
+  # Modulo 360; perl's % operator doesn't work.
+  my $Ls = $Ls - 360*floor($Ls/360);
+
+  return ($Ls);
+}
+
+######################################################################
+# Run hipical with B0, A, and G matrices.  Then correct for linetime
+#  and generate I/F values.
+######################################################################
+   my $bname = basename($ifile);
+   ($bname) = split('\.',$bname);
+
+   print "\n######################################################################\n";
+
+   ######################################################################
+   # Divide by line time to get units in terms of "per second"
+   ######################################################################
+   if (($step eq "ALL") || ($step eq "B0"))
+   {
+     my $line_time = PvlGetKeyval($ifile,"Instrument/ScanExposureDuration","getkey",0,0);
+     my $l_t_corr = 1/($line_time);
+  
+     $ofilel = "/tmp/" . $bname . "." .$$.".linetime.cub";
+     if (-e $ofilel) {unlink($ofilel);}
+     print "Line time correction: \n";
+     print "algebra from1=$ifile to=$ofilel op=unary a=$l_t_corr\n";
+     my $ret = system("time algebra from1=$ifile to=$ofilel op=unary a=$l_t_corr");
+     if ($ret != 0) 
+     {
+        print STDERR $ERROR_STRING;
+        print STDERR "hipical error for input file: $ifile\n";
+        exit $ERR_HIPICAL;
+     } 
+
+     my $ioption = "OFFSET";
+     my $op = "B";
+     my $matrix = WhichMatrix($op);
+
+     $ofileo = "/tmp/" . $bname . "." .$$.".offset.cub";
+     if ($step eq "B0")
+     {
+       $ofileo=$ofile;
+     }
+     if (-e $ofileo) {unlink($ofileo);}
+     print "Offset Correction: \n";
+     print "hipical from=$ofilel to=$ofileo option=$ioption matrix=$matrix\n";
+     my $ret = system("time hipical from=$ofilel to=$ofileo option=$ioption matrix=$matrix");
+     if ($ret != 0) 
+     {
+        print STDERR $ERROR_STRING;
+        print STDERR "hipical error for input file: $ifile\n";
+        exit $ERR_HIPICAL;
+     } 
+     if (-e $ofilel) {unlink($ofilel);}
+   }
+
+   if (($step eq "ALL") || ($step eq "A"))
+   {
+     my $ioption = "GAIN";
+     my $op = "A";
+     my $matrix = WhichMatrix($op);
+     $ofilea  = "/tmp/" . $bname . "." .$$.".flat.cub";
+     if ($step eq "A")
+     {
+       $ofilea = $ofile;
+     }
+     if (-e $ofilea) {unlink($ofilea);}
+     print "Flatfield Correction: \n";
+     print "hipical from=$ofileo to=$ofilea option=$ioption matrix=$matrix\n";
+     my $ret = system("time hipical from=$ofileo to=$ofilea option=$ioption matrix=$matrix");
+     if ($ret != 0) 
+     {
+        print STDERR $ERROR_STRING;
+        print STDERR "hipical error for input file: $ofileo\n";
+        exit $ERR_HIPICAL;
+     } 
+     if (-e $ofileo) {unlink($ofileo);}
+   }
+   
+   if (($step eq "ALL") || ($step eq "G"))
+   {
+     my $ioption = "GAIN";
+     my $op = "G";
+     my $matrix = WhichMatrix($op);
+     print "Gain Correction: \n";
+     
+     $ofileg = "/tmp/" . $bname . "." .$$.".gain.cub";
+     if ($step eq "G")
+     {
+       $ofileg = $ofile;
+     }
+     if (-e $ofileg) {unlink($ofileg);}
+     print "hipical from=$ofilea to=$ofile option=$ioption matrix=$matrix\n";
+     my $ret = system("time hipical from=$ofilea to=$ofileg option=$ioption matrix=$matrix");
+     if ($ret != 0) 
+     {
+        print STDERR $ERROR_STRING;
+        print STDERR "hipical error for input file: $ofilea\n";
+        exit $ERR_HIPICAL;
+     } 
+     if (-e $ofilea) {unlink($ofilea);}
+   }
+   
+   if (($step eq "ALL") || ($step eq "IF"))
+   {
+     # I/F calculation.
+     my $image_time = PvlGetKeyval($ifile,"Instrument/StartTime","getkey",0,0);
+     # Replace - and T with : so this can easily be parsed in subroutines.
+     $image_time =~ s/-/:/g;
+     $image_time =~ s/T/:/g;
+  
+     # Get Julian date from given start time.
+     my $image_jd = MJD($image_time);
+  
+     # Get Ls.
+     ($Ls) = MJD2Ls($image_jd);
+  
+     # Orbital and conversion Constants
+     my $sm = 1.52368;
+     my $e = 0.09340;
+  
+     # Convert Ls into radians.
+     my $Lsr = $Ls * $deg2rad;
+  
+     # Calculate distance from Sun.
+     $au = $sm*sqrt(1-$e**2)/(1+$e*cos($Lsr));
+  
+     # Correction to solar constant:
+     my $aucorr = (1.5/$au)**2;
+  
+     # Have correction to Patrick's values.  Now get those values from the
+     #   configuration file and apply the corrrection. 
+     # Use grep because getkey and pvl_report don't work correctly; the parameter
+     # value is at the bottom of the image cube..
+     my $FILT = PvlGetKeyval($ifile,"INSTRUMENT_SETTING_PARAMETERS/FILTER_NAME","grep",0,0);
+     my $img_gainstr = "HipiCal/HipiCal_IF_Correction_".$FILT;
+     my $image_gain = PvlGetKeyval($iconf,$img_gainstr,"getkey",0,0);
+     my $tdibin_gains = PvlGetKeyval($iconf,"HipiCal/HipiCal_IF_".$FILT."_TDI_BIN_".$tdi_mode,"getkey",0,0);
+     # gather all, but will only use one.
+     my ($bin1gain, $bin2gain, $bin4gain, $bin8gain, $bin16gain) = split(/,/,$tdibin_gains);
+     # Poorman's switch statement...
+     for ($binning_mode)
+     {
+       if (1 == $binning_mode) {$tdi_bin_gain_corr=$bin1gain;}
+       elsif(2 == $binning_mode) {$tdi_bin_gain_corr=$bin2gain;}
+       elsif(4 == $binning_mode) {$tdi_bin_gain_corr=$bin4gain;}
+       elsif(8 == $binning_mode) {$tdi_bin_gain_corr=$bin8gain;}
+       elsif(16 == $binning_mode) {$tdi_bin_gain_corr=$bin16gain;}
+       else 
+       {  
+         print STDERR "Cannot comprehend the tdi/binning mode correction.\n";
+         exit $ERR_IF;
+       }
+     }
+  
+     #  Apply correction.
+     # The values I get from Patrick are in DN/s.  We have DN/microsecond.  Multiply the
+     # value given by Patrick by 1e-6. (1e6 ms / S)
+     # Also invert the result of that since ISIS knows how to multiply--but not divide--by a constant.
+     # This could be done before placing the value in the configuration file, but it's just
+     # as convenient to do it here and I never have to remember to do it in the configuration.
+  
+     my $IF_corr = 1/($image_gain*$tdi_bin_gain_corr*$aucorr*1e-6);
+     
+     # Now apply that value to the image cube and we have our I/F calibrated image!
+     print "I/F correction: \n";
+     if ($pixtest ne "REAL") {$ofile = $ofile . "+$pixtype+$minnorm:$maxnorm";}
+     print "algebra from1=$ofileg to=$ofile op=unary a=$IF_corr\n";
+     my $ret = system("time algebra from1=$ofileg to=$ofile op=unary a=$IF_corr");
+     if ($ret != 0) 
+     {
+        print STDERR $ERROR_STRING;
+        print STDERR "hipical error for input file: $ofileg\n";
+        exit $ERR_IF;
+     } 
+     if (-e $ofileg) {unlink($ofileg);}
+  }
+  
+  
+   # Unless we're specifically directed not to delete the files,
+   # go ahead and delete them.
+   unless ($delete = "no")
+   {
+     if (-e $ofileo) {unlink($ofileo);}
+     if (-e $ofilea) {unlink($ofilea);}
+     if (-e $ofileg) {unlink($ofileg);}
+   }
+
+
+#########################################################################
+# Print the goods
+#########################################################################
+   print "-------------------------------------------------------------------------\n";
+   print "Input file: $ifile\n";
+   print "Output at end of HipiCal Pipe: $ofile\n";
+   print "Configuration file: $iconf\n";
+   print "Observation_Id: $ifile\n";
+   print "HipiCal_Matrix_Path: $HipiCal_Matrix_Path\n";
+   print "Binning: $binning_mode\n";
+   print "TDI: $tdi_mode\n";
+   print "Ls: $Ls\n";
+   print "AU: $au\n";
+   print "-------------------------------------------------------------------------\n";
+   print "#########################################################################\n";
+   print "\n";
+   
+   exit $SUCCESS;
+
+
+sub PvlGetKeyval() {
+##############################################################################
+# PvlGetKeyval - extract the keyword value from a PVL string.
+#
+#  $keyval = PvlGetKeyval($pvl_file, $grpkey, $prog, $unitstrip, $uppercase)
+#
+#  Passed Parameters
+#  -----------------
+#
+#  $keyval = returned keyword value. If this is a null string then the script
+#            was unable to successfuly find and process the keyword specified.
+#
+#  $pvl_file = PVL file name to access
+#
+# 
+#  $grpkey = Group/Keyword to access, group & keyword to access, such as:
+#            "GroupName/Keyword"
+#
+#  $prog = Program to access the PVL file 
+#          ("Configuration", "ppvl_report", "getkey", or "grep" )
+#
+#  $unitstrip = option to strip off unitized value if it exists 
+#               0 = do not strip unitized value from keyword value
+#               1 = strip unitized value
+#
+# $uppercase = option to make the result an upper case string
+#              0 = do not make the result uppercase only characters
+#              1 = make the resulting keyword value uppercase
+#
+##############################################################################
+   my $ERROR_STRING = "PvlGetKeyval ";
+   my $SUCCESS   = 0;
+   my $ERR_ERROR = 99;
+   
+   my $file      = $_[0]; # name of PVL File to query
+   my $key       = $_[1]; # object/group/keyword string
+   my $exec      = $_[2]; # Name program to use (Configuration or ppvl_report)
+   my $unitstrip = $_[3]; # Flag to strip the unitized values
+   my $uppercase = $_[4]; # Convert result to upper case string
+   
+   my $keyval;
+   my $keyword;
+   
+   if ($exec ne "Configuration" && $exec ne "ppvl_report" && $exec ne "getkey" && $exec ne "grep") {
+      print STDERR "$ERROR_STRING\n";
+      print STDERR "Invalid executalbe name: \"$exec\" must be \"Configuration\" or \"ppvl_report\" or \"getkey\" or \"grep\"\n";
+      exit $ERR_ERROR;        
+   } 
+
+   if ($exec eq "grep") 
+   {
+      (my $group, my $keyw) = split("/",$key);
+      my $line = `grep -ai -m1 $keyw $file`;
+      (my $group,$keyval) = split(/=/,$line);
+      chomp($keyval);
+      $keyval =~ s/^ //g;
+      $keyval =~ s/ $//g;
+   } elsif ($exec eq "getkey") 
+   {
+      (my $group, my $keyw) = split("/",$key);
+      my @lines = `getkey from=$file GRPNAME=$group KEYWORD=$keyw`;
+      if ($#lines < 0) {
+         print STDERR "$ERROR_STRING\n";
+         print STDERR  "getkey did not return a keyword value for: $key \n";
+         return "";     
+      }
+      $keyval = @lines[0];
+      chomp($keyval);
+   }
+   else {
+      my $str = `$exec -q $key $file`;
+      chomp($str);
+      if ($str eq "") {
+         print STDERR "$ERROR_STRING\n";
+         print STDERR "Can not find $key\n";
+         print STDERR "File: $file\n";
+         return "";     
+       }
+    
+##############################################################################
+# Better make sure that we have keyword=value string.
+##############################################################################   
+      if (index($str,"=") <= 0) {
+         print STDERR "$ERROR_STRING\n";
+         print STDERR "PVL string: \"$str\" does not have \"=\" in string\n";
+         return "";
+      }
+#################################################################################
+# Split out the keyword from the key value
+#################################################################################
+      ($keyword,$keyval) = split(/=/,$str);
+
+      if (length($keyval) <= 0) {
+         print STDERR "$ERROR_STRING\n";
+         print STDERR "Empty keyword value in PVL string: $str\n";
+         return "";
+      }
+   
+#################################################################################
+# Get rid of leading and trailing blanks, double quotes, or single quotes.
+# Get rid of any semicolons and carriage-return at the end
+################################################################################# 
+      while (length($keyval) >= 1 && 
+            (substr($keyval,0,1) eq ' ' ||
+            substr($keyval,0,1) eq '"' ||
+            substr($keyval,0,1) eq "\'")) {
+         $keyval = substr($keyval,1);
+      }
+   
+      if (length($keyval) <= 0) {
+         print STDERR "$ERROR_STRING\n";
+         print STDERR "Invalid syntax in PVL string: $str\n";
+         return "";
+      }
+   
+      while (length($keyval) >= 1 && 
+             (substr($keyval,length($keyval)-1,1) eq ' '  ||
+             substr($keyval,length($keyval)-1,1) eq '"'  ||
+             substr($keyval,length($keyval)-1,1) eq "\'" ||
+             substr($keyval,length($keyval)-1,1) eq "\r" ||
+             substr($keyval,length($keyval)-1,1) eq ";")) { 
+         $keyval = substr($keyval,0,length($keyval)-1);
+      }
+################################################################################
+# Hopefully we've got a reslut 
+#################################################################################     
+      if (length($keyval) <= 0) {
+          print STDERR "$ERROR_STRING\n";
+          print STDERR "Invalid syntax in PVL string: $str\n";
+          return "";
+      }
+   }
+#######################################################################
+# Should the unitized field be stripped if it exists?
+# Convert to uppercase?
+#######################################################################
+   if ($unitstrip == 1) {($keyval) = split("<",$keyval);}
+   if ($uppercase == 1) {$keyval =~ tr/a-z/A-Z/;}    
+   return ($keyval);
+} 

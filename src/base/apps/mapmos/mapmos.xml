@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="mapmos" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Create a mosaic using map projected cubes
+  </brief>
+
+  <description>
+      This program allows the user to create a mosaic using map projected cubes.  An individual cube can be placed in a pre-existing mosaic.  
+      An option exists to create the mosaic by allowing the user to specify the latitude/longitude range for the output mosaic.
+      Note that the input cube and mosaic must have the same ProjectionName, PixelResolution, EquatorialRadius, PolarRadius, LatitudeType, 
+      and LongitudeDirection as well as projection specific keywords (e.g., CenterLatitude, CenterLongitude).
+  </description>
+
+  <category>
+    <categoryItem>Map Projection</categoryItem>
+  </category>
+
+  <history>
+    <change name="Eric Eliason" date="1986-01-02">
+       Original version 
+    </change>
+    <change name="Jeff Anderson" date="2004-02-24">
+       Converted to Isis 3.0 
+    </change>
+    <change name="Jeff Anderson" date="2004-02-26">
+       Modified to not propagate input labels to the output mosaic
+    </change>
+    <change name="Jeff Anderson" date="2005-11-15">
+       Fixed bug with mapping groups not properly initialized or copied 
+    </change>
+    <change name="Jacob Danton" date="2005-12-05">
+       Added appTest 
+    </change>
+    <change name="Elizabeth Miller" date="2006-05-18">
+      Depricated CubeProjection and ProjectionManager to ProjectionFactory
+    </change>
+    <change name="Elizabeth Miller" date="2006-09-01">
+      Added the MATCHBANDBIN option that checks to make sure the input
+      cube bandbin group matches the mosaic bandbin group.  The default is true.
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      This program now utilizes ProcessMapMosaic
+    </change>
+  </history>
+
+  <oldName>
+    <item>mosaic</item>
+  </oldName>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Cube to place in the mosaic
+        </brief>
+        <description>
+          This is the cube which will be placed into the mosaic.  It must have a Mapping group which sufficiently matches the mosaic.
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="MOSAIC">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Mosaic output cube
+        </brief>
+        <description>
+          The mosaic cube which will have the input cube placed into it.  
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+    
+      <parameter name="PRIORITY">
+        <type>string</type>
+        <default>
+          <item>ONTOP</item>
+        </default>
+        <brief>The priority of pixel placement</brief>
+        <description>
+          This parameter is used to select one of two ways to mosaic the
+          pixels in areas of overlap.
+        </description>
+
+        <list>
+          <option value="ONTOP">
+            <brief> Input cube will be placed on top of the mosaic </brief>
+            <description>
+              When the input pixel is not NULL, the input
+              pixel value will be written to the output cube. Otherwise the
+              output is unchanged.
+            </description>
+          </option>
+          <option value="BENEATH">
+            <brief>Input cube will be placed beneath the mosaic </brief>
+            <description>
+              When the mosaic pixel is not NULL it will be left
+              unchanged. If the mosaic pixel is NULL
+              the input pixel will be written to the output cube.
+            </description>
+          </option>
+        </list>
+      </parameter>
+    </group>
+
+    <group name="Initialization">
+      <parameter name="CREATE">
+        <type>boolean</type>
+        <default>
+          <item>NO</item>
+        </default>
+        <brief>Create the output mosaic</brief>
+        <description>
+          This parameter is used to specify if the mosaic needs to be created.
+        </description>
+        <inclusions>
+            <item>SLAT</item>
+            <item>ELAT</item>
+            <item>SLON</item>
+            <item>ELON</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="SLAT">
+        <type>double</type>
+        <minimum inclusive="yes">-90.0</minimum>
+        <brief>Starting latitude</brief>
+        <description>
+            This parameter specifies the minimum latitude to determine the bounding box of the mosaic
+        </description>
+        <inclusions>
+            <item>CREATE</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="ELAT">
+        <type>double</type>
+        <maximum inclusive="yes">90.0</maximum>
+        <brief>Ending latitude</brief>
+        <description>
+            This parameter specifies the maximum latitude to determine the bounding box of the mosaic
+        </description>
+        <greaterThan>
+            <item>SLAT</item>
+        </greaterThan>
+        <inclusions>
+            <item>CREATE</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="SLON">
+        <type>double</type>
+        <brief>Starting longitude</brief>
+        <description>
+            This parameter specifies the minimum longitude to determine the bounding box of the mosaic
+        </description>
+        <inclusions>
+            <item>CREATE</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="ELON">
+        <type>double</type>
+        <brief>Ending longitude</brief>
+        <description>
+            This parameter specifies the maximum longitude to determine the bounding box of the mosaic
+        </description>
+        <greaterThan>
+            <item>SLON</item>
+        </greaterThan>
+        <inclusions>
+            <item>CREATE</item>
+        </inclusions>
+      </parameter>
+    </group>
+
+    <group name="BandBin Option">
+      <parameter name="MATCHBANDBIN">
+        <type>boolean</type>
+        <brief>Enforce BandBin Group Match</brief>
+        <description>
+          This option causes the application to fail if the input bandbin group does not 
+          match the mosaic bandbin group.
+        </description>
+        <default><item>TRUE</item></default>
+      </parameter>
+    </group>
+  </groups>
+</application>

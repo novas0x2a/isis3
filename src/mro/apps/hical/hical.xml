@@ -1,0 +1,341 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- $Id: hical.xml,v 1.5 2008/05/13 23:37:03 slambright Exp $ -->
+
+<application name="hical" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Performs radiometric calibration of HiRISE channel images
+  </brief>
+
+  <description>
+      <p>
+        <b>hical</b> appiles radiometric calibration correction to HiRISE images
+        as described here at a high level. A detailed description will be provided
+        in a  future HiRISE calibration paper. The radiometric calibration
+        correction is performed on each individual HiRISE channel file (EDR)
+        correcting for instrument offset, dark current, gain, then converting to I/F
+        reflectance. 
+    </p>
+    <p>
+        The first step in the calibration, carried out by the ISIS hiclean2
+        program, corrects for instrument dark current and offset.  The hiclean2
+        program uses the ancillary calibration data (dark and mask pixels) that
+        accompany the science data to compute corrections in both the column
+        (sample) and row (line) directions. The mask pixels, positioned at the
+        start of the instrument output, provide dark current information for each 
+         column.  The dark pixels, positioned at the end of each image row, 
+         capture the time dependent dark current and offset instrument 
+         drift.
+      </p>
+      <p>
+        This program then applies an intra-channel B (additive 
+        dark current matrix) and A (multiplicative gain matrix) 
+        correction for each column in the image array. Then, pixel 
+        values are converted to I/F (intensity/flux, I/F = 1 for a 
+        100% ideal lambertian reflector viewed normal to the surface) as 
+        described below:
+      </p>
+      <PRE>
+  For:
+
+  H  = dark current and offset corrected image, output of hiclean2
+  B = intra-channel dark current correction (TDI and BIN dependent)
+  A = intra-channel gain correction (TDI and BIN dependent)
+  G  = global gain correction, normalizes CCD/channels
+  L  = observation line time
+  I  = I/F conversion factor at Sun-Target distance of 1.5 AU
+  AU = Mars-to-Sun distance (AU) at time of observation
+  Z  = radiometrically corrected image in I/F units
+
+  The correction is:
+  
+  Z = (( (H/L -B) *A)*G /(I*(1.5/AU)2)
+      </PRE>
+     <p>
+       Instrument instabilities result in radiometric mismatches requiring 
+       additional corrections for the varying column-to-column, channel-to-
+       channel, and CCD-to-CCD sensitivities. The <b>cubenorm</b>
+       application is indicated in these cases.  <b>cubenorm</b> determines
+       residual column-to-column variations corrections by first computing the
+       mean value for each column in an image array. The mean-value 
+       one-dimensional array is then subtracted from the image array.
+     </p>
+     <p>
+        Individual CCD channels may also require adjustments to radiometrically
+        match at the seam where the two channels come together.   The
+        <b>histitich</b> application combines the two adjacent channel CCDs while
+        taking into account any residual seam mismatches.
+     </p>
+  </description>
+
+  <history>
+    <change name="Drew Davidson" date="2005-06-27">
+      Original version
+    </change>
+    <change name="Drew Davidson" date="2005-06-27">
+      Wrote application test
+    </change>
+    <change name="Drew Davidson" date="2005-08-17">
+      Added examples
+    </change>
+    <change name="Kris Becker" date="2005-10-03">
+      Added processing of DarkPixel object data.  The median of the 16 dark pixels in
+      subtracted from the original DN. 
+      Also added the DARKSTATS output file.
+    </change>
+   <change name="Kris Becker" date="2007-07-02">
+       Extensively modified to implement latest state of HiRISE calibration. 
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      Removed references to CubeInfo 
+    </change>
+  </history>
+
+  <category>
+    <missionItem>Mars Reconnaissance Orbiter</missionItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>Input cube to calibrate</brief>
+        <description>
+          The name of the cube to which the correction will be applied. The 
+  	      correction will apply to every non-special pixel in the image.  The
+          <b>hiclean2</b> application is ran on this file creating a temporary
+          file.  This temporary file is then input into <b>hical</b> that applies
+          further radiometric calibration.  The temporary file is then deleted.
+        </description>
+        <filter>*.cub</filter>
+      </parameter>
+
+      <parameter name="CONF">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <defaultPath>$mro/calibration</defaultPath>
+        <default><item>$mro/calibration/hical.????.conf</item></default>   
+        <brief>
+            File containing HiRISE calibration and matrix configuration parameters
+        </brief>
+	    <filter>*.conf</filter>
+        <description>
+            <p>
+                This important file provides all parameters used
+                in the calibration process.  It contains references to
+                calibration matrices (such as flat fields, instrument gains,
+                etc...), label keywords and parameter constants used in the
+                radiometric calibration process.  
+            </p>
+            <p>
+                The format of this PVL file is highly flexible for managing 
+                HiRISE calibration data.  It provides three main elements
+                in this interface:  matrices, scalars (or constants) and
+                keywords.
+            </p>
+            <p>
+                Matrices are currently multi-band ISIS cube files that contain
+                one line and up to 1024 samples.  There are expected to be
+                28 bands in each one of thes calibration matrices, one for each
+                CCD channel.  There are 14 different CCDs with 2 channels each
+                for a total of 28 channels.  (Note that channels are the basic
+                HiRISE image product where calibration is applied.)  There will
+                always be one line for these cubes since HiRISE detectors are
+                line scan instruments.  There will be a minimum of 128 (for
+                summing mode of 16) and a maximum of 1024 (summing mode of
+                1) samples in these cubes.  The content of these matrix files are
+                dependant upon summing mode and the time delay integration
+                (TDI) mode used during image acquisition.  TDI allows varying
+                number of line scans, in conjunction with exposure time, to pass
+                over the same point on the surface of Mars to increase the
+                signal-to-noise ration (SNR) as well as resolution.  There are 4
+                selectable modes of TDI:  128, 64, 32 and 8.  Coupled with 6
+                difference summing modes (1, 2, 3, 4, 8, and 16), there are at
+                least 24 calibration cubes per set of matrices.  These matrices
+                are referenced as file paths of the form:
+                <PRE>
+ A = $mro/calibration/matrices/A_TDI{TDI}_BIN{BIN}_????.cub
+                </PRE>
+                Here, {TD} and {BIN} correspond to the TDI and summming mode
+                used during image acquisition, respectively.  (More on how these
+                values are determined is provided in the follow text.)  Matrix variables
+                are equated to file references using the <b>Matrix</b> keyword in
+                the configuration file.   Matrix file paths are also subjected to
+                pattern replacement in the same fashion as profiles.  This will
+                minimize the content management aspect of the configuration
+                file and encourage consistant file naming schemes.
+            </p>
+            <p>
+                In addition to Matrices, the PVL configuration file provides the
+                the specification of constants or Scalars.  These are evaluated
+                as a single double floating point value as read directly from the
+                configuration file.  They have the following form:
+                <PRE>
+ IFTdiBinFactor = 1.0
+                </PRE>
+                There can be any number of scalars specified via the
+                <b>Scalars</b> keyword in the configuration file.  These
+                keywords must exist in the main object keyword section and/or
+                in one or more Profiles that are subsequently loaded.
+            </p>
+            <p>
+                In addition to Matrices and Scalars, the configuration file 
+                provides a
+                mechanism to map HiRISE label keywords to values that can
+                be used in the calibration equation.  Currently the equation is
+                fixed as described in the program section, but plans are for
+                different equations to be defined as needed to further provide
+                flexibility and adaptability to the calibration process as needed.
+                These keywords are defined as a named keyword in the label
+                followed by an optional Group specification, which is typically
+                always required.  These keywords are defined in the
+                <b>Keywords</b> Profile group.  They are of the following form:
+                <PRE>
+ScanExposureDuration = ("ScanExposureDuration", "Instrument")
+                </PRE>
+                This names the keyword <b>ScanExposureDuration</b> and specifies
+                it is found in the <b>ScanExposureDuration</b> keyword in the 
+                <b>Instrument</b> group in the HiRISE image label.  Keywords used
+                in this manner are specified in the <b>Keywords</b> keyword in the
+                configuration file.
+            </p>
+            <p>
+                The real power of the configuration file is its use of named Profiles.
+                Profiles are groups of keywords that can be associated to a
+                unique definition.  The hical PVL configuration file consists of a
+                single <b>Hical</b> object with numerous named <b>Profile</b>
+                groups.  Each of the Profile groups must contain a <b>Name</b>
+                keyword that uniquely identifies it within the Hical object.  
+                This allows us to create Profiles that pertain to particular
+                combinations of filter (RED, IR, BG), CCD (RED0-9, IR10/11,
+                or BG12/13), TDI (128, 64, 32, 8), BIN (1, 2, 3, 4, 8, 16)  or
+                CHANNEL (1 or 2).  These values are determined from the
+                content of the HiRISE label.  Combinations of profiles that are
+                added <i>after</i> the initial default are specified in the
+                <b>ProfileOptions</b> keyword.  Profile combinations can 
+                consist of any combination or use of these defined values.
+                These defined values are specified as or with the <b>Name</b>
+                keyword in Profile groups delimited by curly braces.  Given
+                this definition one can specify a particular group of calibration
+                parameters for a specific CCD channel with the pattern
+                {FILTER}{CCD}_{CHANNEL}.   Then, one can define a special
+                collection of calibration matrices, keywords or scalars for any
+                one (or none) of the filters.  So, for the problematic BG13, you
+                can have a named profile called BG13_1 whose keywords in the
+                profile are loaded when calibrating a BG13_1 channel, thus
+                overriding any defaulted keywords.  Should named
+                profiles using this option not exist, they are ignored.  Also,
+                Profiles specified in this manner are loaded in the
+                order specified in the <b>ProfileOptions</b> keyword, thus
+                creating a hierarchy of calibration specification configurations.
+            </p>
+            <p>
+                Below is an example of a complete PVL configuration file that
+                demonstrates some of the features described:
+            </p>
+            <PRE>
+Object = Hical
+
+/* Default profile name */
+  Name           = "HiMatrices"
+  DefaultProfile = "HiMatrices"
+
+/* Define matrices, constants and keywords */
+  Matrices = ("A", "B", "G")
+  Scalars  = ("FilterGainCorrection", "IFTdiBinFactor")
+  Keywords = ScanExposureDuration
+
+/* Additional profile combinations and order loaded in hierarchy */
+  ProfileOptions = ("{FILTER}", "TDI{TDI}", "BIN{BIN}", "TDI{TDI}/BIN{BIN}",
+                    "{FILTER}{CCD}_{CHANNEL}", 
+                    "{FILTER}{CCD}_{CHANNEL}/TDI{TDI}/BIN{BIN}")
+
+/* Set defaults.  All subject to profile filtering operations as defined */
+/* above */
+  A = "$mro/calibration/matrices/A_TDI{TDI}_BIN{BIN}_????.cub"
+  B = "$mro/calibration/matrices/B_TDI{TDI}_BIN{BIN}_????.cub"
+  G = "$mro/calibration/matrices/G_TDI{TDI}_BIN{BIN}_????.cub"
+
+/* I/F correction for tdi/bin - currently set at 1.0 for all tdi/bin */
+/* combinations.  One can use the ProfileOptions scheme when they become */
+/* better defined */
+  IFTdiBinFactor = 1.0
+
+/* Label Keyword maps.  Order/form:  Keyword = (Keyword[, Group]) */
+  Group = Profile
+    Name = Keywords
+    ScanExposureDuration = ("ScanExposureDuration", "Instrument")
+  End_Group
+
+/* Here are the filter profiles.  All keywords that pertain to a filter set */
+/* should be specified here.  FilterGainCorrection are I/F corrections in */
+/* units of DN/s */
+  Group = Profile
+    Name = RED
+    FilterGainCorrection = 175613029.0
+  End_Group
+
+  Group = Profile
+    Name = IR
+    FilterGainCorrection  =  58571990.0
+  End_Group
+
+  Group = Profile
+    Name = BG
+    FilterGainCorrection  =  93575312.0
+  End_Group
+
+End_Object
+            </PRE>
+            The filter profiles each contain a scalar constant of the same name
+            for each of the three filter sets.  The <b>ProfileOrder</b> keyword
+            contains the <i>{FILTER}</i> pattern that will select the appropriate
+            filter gleened from the label.  Other profiles that satisfy the remaining
+            patterns are excluded but can be added when necessary.
+            <p>
+                The final resutling matrices, constants and keywords used in
+                the calibration equation are recorded in the 
+                <b>RadiometricCalibration</b> group of the output label.
+            </p>
+        </description>
+      </parameter>
+      
+      <parameter name="TO">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output radiometrically corrected cube file
+        </brief>
+        <description>
+	      Use this parameter to specify the name of the output cube.
+          If you do not include an extension of ".cub" it will be added 
+	      automatically.
+        </description>
+      </parameter>
+    </group>
+
+      <group name="Options">
+        <parameter name="PROFILE">
+          <type>string</type>
+          <internalDefault>None</internalDefault>
+          <brief>
+            Name of specific configuration profile to use
+          </brief>
+          <description>
+              <p>
+                  This is the name of a named Profile group in the hical matrix
+                  configuration file that users can choose for specific
+                  selection of HiRISE calibration parameters and matrix files.
+              </p>
+              <p>
+                  Note that when using this option, the additional profiles
+                  specified in the <b>ProfileOptions</b> key are not applied.
+                  This option is primarily to assist in testing and specific
+                  application conditions.
+              </p>
+          </description>
+        </parameter>
+      </group>
+    </groups>
+</application>

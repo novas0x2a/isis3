@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="specdivfilter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Apply spedivfilter to a cube
+  </brief>
+
+  <description>
+    This program applies a specdivfilter to a cube. 
+  </description>
+
+  <category>
+    <categoryItem>Filters</categoryItem>
+  </category>
+
+  <seeAlso>
+    <applications>
+      <item>speclowpass</item>
+      <item>spechighpassr</item>
+      
+    </applications>
+  </seeAlso>
+
+  <oldName>
+    <item>boxfilter</item>
+  </oldName>
+
+  <history>
+    <change name="Stacy Alley" date="2008-09-02">
+      Original version
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input file
+        </brief>
+        <description>
+	        Input cube to filter
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+      <parameter name="TO">
+        <type>cube</type>
+        <pixelType>real</pixelType>
+        <fileMode>output</fileMode>
+        <brief>
+          Output specdivfilter cube
+        </brief>
+        <description>
+	        The resultant filtered cube
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Boxcar Size">
+      <parameter name="BANDS">
+        <type>integer</type>
+        <brief>
+          Number of bands in boxcar
+        </brief>
+
+        <description>
+	        This is the total number of bands in the boxcar.  It must be odd and
+          can not exceed twice the number of samples in the cube.  In general, the
+          size of the boxcar does not cause the program to operate significantly
+          slower.
+        </description>
+        <odd />
+        <minimum inclusive="yes">1</minimum>
+      </parameter>
+    </group>
+
+    <group name="Boxcar Settings">
+      <parameter name="LOW">
+        <type>double</type>
+        <brief>
+          Minimum valid DN
+        </brief>
+        <description>
+          Valid minimum pixel value that will be used in boxcar computation.  If
+          a pixel value is less than LOW then it will not be used when computing
+          the average.
+        </description>
+        <internalDefault>
+          Use all pixels
+        </internalDefault>
+        <lessThan>
+          <item>HIGH</item>
+        </lessThan>
+      </parameter>
+
+      <parameter name="HIGH">
+        <type>double</type>
+        <brief>
+          Maximum valid DN
+        </brief>
+        <description>
+          Valid maximum pixel value that will be used in boxcar computation.  If
+          a pixel value is greater than HIGH then it will not be used when
+          computing the average.
+        </description>
+        <internalDefault>
+          Use all pixels
+        </internalDefault>
+        <greaterThan>
+          <item>LOW</item>
+        </greaterThan>
+      </parameter>    
+    </group>
+  </groups>
+</application>

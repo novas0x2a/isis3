@@ -1,0 +1,367 @@
+Simple Pipe
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=/work1/out.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=/work1/out.cub
+spiceinit FROM=/work1/out.cub SHAPE=ELLIPSOID
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+Simple Pipe 2
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+cubeatt FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cubeatt FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cam2map FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+PIPELINE -------> unitTest2 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.cub SHAPE=ELLIPSOID
+cubeatt FROM=./out.lev1.cub+2,4-5 TO=/work1/out.cub
+rm ./out.lev1.cub
+PIPELINE -------> unitTest2 <------- PIPELINE
+
+Non-Merging Branching Pipe
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+cubeatt FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+cubeatt FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+cubeatt FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+cubeatt FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=/work1/out.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=/work1/out.even.cub
+cam2map FROM=./out.cal.odd.cub TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=/work1/out.even.cub
+cam2map FROM=./out.cal.odd.cub TO=/work1/out.odd.cub MAP=/work1/out.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=./out.lev2.even.cub
+cam2map FROM=./out.cal.odd.cub TO=./out.lev2.odd.cub MAP=./out.lev2.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+echo  ./out.lev2.even.cub ./out.lev2.odd.cub > ./out.lis
+automos FROMLIST=./out.lis TO=/work1/out.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+rm ./out.lev2.even.cub
+rm ./out.lev2.odd.cub
+rm ./out.lis
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=./out.lev2.even.cub
+cam2map FROM=./out.cal.odd.cub TO=./out.lev2.odd.cub MAP=./out.lev2.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+echo  ./out.lev2.even.cub ./out.lev2.odd.cub > ./out.lis
+automos FROMLIST=./out.lis TO=/work1/out.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+rm ./out.lev2.even.cub
+rm ./out.lev2.odd.cub
+rm ./out.lis
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=./out.lev2.even.cub
+cam2map FROM=./out.cal.odd.cub TO=./out.lev2.odd.cub MAP=./out.lev2.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+echo  ./out.lev2.even.cub ./out.lev2.odd.cub > ./out.lis
+automos FROMLIST=./out.lis TO=/work1/out.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+rm ./out.lev2.even.cub
+rm ./out.lev2.odd.cub
+rm ./out.lis
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+Standard Branching Pipe
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+cubeatt FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+cubeatt FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+cubeatt FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+cubeatt FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=/work1/out.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=/work1/out.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=/work1/out.even.cub
+cam2map FROM=./out.cal.odd.cub TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=/work1/out.even.cub
+cam2map FROM=./out.cal.odd.cub TO=/work1/out.odd.cub MAP=/work1/out.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=./out.lev2.even.cub
+cam2map FROM=./out.cal.odd.cub TO=./out.lev2.odd.cub MAP=./out.lev2.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+echo  ./out.lev2.even.cub ./out.lev2.odd.cub > ./out.lis
+automos FROMLIST=./out.lis TO=/work1/out.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+rm ./out.lev2.even.cub
+rm ./out.lev2.odd.cub
+rm ./out.lis
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=./out.cal.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=./out.cal.odd.cub
+cam2map FROM=./out.cal.even.cub TO=./out.lev2.even.cub
+cam2map FROM=./out.cal.odd.cub TO=./out.lev2.odd.cub MAP=./out.lev2.even.cub PIXRES=MAP DEFAULTRANGE=MAP
+echo  ./out.lev2.even.cub ./out.lev2.odd.cub > ./out.lis
+automos FROMLIST=./out.lis TO=/work1/out.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+rm ./out.cal.even.cub
+rm ./out.cal.odd.cub
+rm ./out.lev2.even.cub
+rm ./out.lev2.odd.cub
+rm ./out.lis
+PIPELINE -------> unitTest1 <------- PIPELINE
+
+PIPELINE -------> unitTest1 <------- PIPELINE
+thm2isis FROM=$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub TO=./out.lev1.cub
+spiceinit FROM=./out.lev1.even.cub SHAPE=ELLIPSOID
+spiceinit FROM=./out.lev1.odd.cub SHAPE=ELLIPSOID
+thmvisflat FROM=./out.lev1.even.cub+2,4-5 TO=./out.flat.even.cub
+thmvisflat FROM=./out.lev1.odd.cub+2,4-5 TO=./out.flat.odd.cub
+thmvistrim FROM=./out.flat.even.cub TO=/work1/out.even.cub
+thmvistrim FROM=./out.flat.odd.cub TO=/work1/out.odd.cub
+rm ./out.lev1.even.cub
+rm ./out.lev1.odd.cub
+rm ./out.flat.even.cub
+rm ./out.flat.odd.cub
+PIPELINE -------> unitTest1 <------- PIPELINE
+

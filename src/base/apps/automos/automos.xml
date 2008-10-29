@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="automos" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Create a mosaic using a list of map projected cubes
+  </brief>
+
+  <description>
+    This program uses a text-based list of cubes, all in the same map projection and equivalent projection
+    parameters (PixelResolution, CenterLongitude, LatitudeSystem, etc), to generate a mosaic.  By default,
+    The program automatically determines the size of the mosaic by examining each cube.  The user also
+    has the option of entering their own lat/lon range to use for the mosaic.
+  </description>
+
+  <category>
+    <categoryItem>Map Projection</categoryItem>
+  </category>
+
+  <history>
+    <change name="Jim Mathews" date="1992-01-01">
+       Original version 
+    </change>
+    <change name="Jeff Anderson" date="2004-02-26">
+       Converted to Isis 3.0 
+    </change>
+    <change name="Jeff Anderson" date="2004-07-28">
+       Fixed bug caused by PVL refactor
+    </change>
+    <change name="Elizabeth Miller" date="2005-11-15">
+      Added appTest, and fixed fromlist filter
+    </change>
+    <change name="Elizabeth Miller" date="2006-05-18">
+      Depricated CubeProjection and ProjectionManager to ProjectionFactory
+    </change>
+    <change name="Elizabeth Miller" date="2006-08-03">
+      Added user entered range and helper button
+    </change>
+    <change name="Elizabeth Miller" date="2006-09-01">
+      Added the MATCHBANDBIN option that checks to make sure the input
+      cube bandbin group matches the mosaic bandbin group.  The default is true.
+    </change>
+    <change name="Sean Crosby" date="2007-02-28">
+      Added an exception that reports which input cube is causing a problem while mosaicking. 
+    </change>
+    <change name="Sean Crosby" date="2007-03-06">
+      Program no longer throws an exception when an input cube does not fit into the output mosaic.  Instead, any 
+      files that are not included in the output are listed in the application log.
+    </change>
+    <change name="Sean Crosby" date="2007-03-20">
+      Corrected bug in determining if an image fits into the output mosaic
+    </change>
+    <change name="Sean Crosby" date="2007-03-20">
+      Fixed one of the application tests 
+    </change>
+    <change name="Stuart Sides" date="2007-04-16">
+      Fixed bug where input cubes where incorrectly not processed.
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      This program now utilizes ProcessMapMosaic
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROMLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          List of cubes to mosaic
+        </brief>
+        <description>
+          A list of map projected cubes to mosaic.  The Mapping groups 
+          must match in order to mosaic the cubes. 
+        </description>
+        <filter>
+          *.txt *.lis *.lst
+        </filter>
+      </parameter>
+
+      <parameter name="MOSAIC">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Mosaic output cube
+        </brief>
+        <description>
+          The mosaic cube which will have the input cube placed
+          into it.  
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+    
+      <parameter name="PRIORITY">
+        <type>string</type>
+        <default>
+          <item>ONTOP</item>
+        </default>
+        <brief>The priority of pixel placement</brief>
+        <description>
+          This parameter is used to select one of two ways to mosaic the
+          pixels in areas of overlap.
+        </description>
+
+        <list>
+          <option value="ONTOP">
+            <brief> Input cube will be placed on top of the mosaic </brief>
+            <description>
+              When the input pixel is not NULL, the input
+              pixel value will be written to the output cube. Otherwise the
+              output is unchanged.
+            </description>
+          </option>
+          <option value="BENEATH">
+            <brief>Input cube will be placed beneath the mosaic </brief>
+            <description>
+              When the mosaic pixel is not NULL it will be left
+              unchanged. If the mosaic pixel is NULL
+              the input pixel will be written to the output cube.
+            </description>
+          </option>
+        </list>
+      </parameter>
+    </group>
+
+    <group name="Ground Range">
+      <parameter name="GRANGE">
+      <type>string</type>
+      <default><item>AUTO</item></default>
+      <brief>Ground Range Options</brief>
+      <description>
+        The ground range can either be calculated automatically or entered by the user.  
+        If the USER option is selected, values must be entered for the MINLAT, MAXLAT, 
+        MINLON, and MAXLON parameters.  AUTO is the default for this parameter.
+      </description>
+      <list>
+        <option value="AUTO">
+          <brief>Automatically Calculate Range</brief>
+          <description>
+            The program will automatically calculate the groundrange for the
+            mosaic by examining all the cubes in the FROMLIST.  This is the 
+            default option.
+          </description>
+          <exclusions>
+            <item>MINLAT</item>
+            <item>MAXLAT</item>
+            <item>MINLON</item>
+            <item>MAXLON</item>
+          </exclusions>
+        </option>
+        <option value="USER">
+          <brief>User Entered Range</brief>
+          <description>
+            The program will use the user entered ground range values for
+            the mosaic.  
+          </description>
+          <inclusions>
+            <item>MINLAT</item>
+            <item>MAXLAT</item>
+            <item>MINLON</item>
+            <item>MAXLON</item>
+          </inclusions>
+        </option>
+      </list>
+      </parameter>
+      <parameter name="MINLAT">
+        <type>double</type>
+        <brief>Minimum Latitude</brief>
+        <description>
+          The minimum latitude value to use in the mosaic.
+        </description>
+        <helpers>
+          <helper name="H1">
+            <function>helperButtonCalcRange</function>
+            <brief>Calculate Ranges using FROMLIST</brief>
+            <description>
+              This button will calculate the latitude and longitude range using the files in the FROMLIST.
+            </description>
+            <icon>$ISIS3DATA/base/icons/exec.png</icon>
+          </helper>
+        </helpers>
+      </parameter>
+      <parameter name="MAXLAT">
+        <type>double</type>
+        <brief>Maximum Latitude</brief>
+        <description>
+          The maximum latitude value to use in the mosaic.
+        </description>
+      </parameter>
+      <parameter name="MINLON">
+        <type>double</type>
+        <brief>Minimum Longitude</brief>
+        <description>
+          The minimum longitude value to use in the mosaic.
+        </description>
+      </parameter>
+      <parameter name="MAXLON">
+        <type>double</type>
+        <brief>Maximum Longitude</brief>
+        <description>
+          The maximum longitude value to use in the mosaic.
+        </description>
+      </parameter>
+    </group>
+
+    <group name="BandBin Option">
+      <parameter name="MATCHBANDBIN">
+        <type>boolean</type>
+        <brief>Enforce BandBin Group Match</brief>
+        <description>
+          This option causes the application to fail if the input bandbin group does not 
+          match the mosaic bandbin group.
+        </description>
+        <default><item>TRUE</item></default>
+      </parameter>
+    </group>
+  </groups>
+</application>

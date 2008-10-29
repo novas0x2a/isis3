@@ -1,0 +1,444 @@
+This software system is designed to integrate the Integrated Software for Imagers and Spectrometers {\tt (ISIS)} version 3 with Research Systems, INC Interactive Data Language (IDL) system. This software system is composed to two distinct parts. The first part is the Idl DLM toolkit, {\em Idl\-Dlm\/}.
+
+Idl\-Dlm is a toolkit designed to manage the IDL DLM interface as an abstract layer. It hides all the complicated peculiarities inherent to writing an IDL DLM.
+
+
+
+ {\em Note routines return 0 if successful, non-zero if it was unable to complete its designed operation. This is standard for all routines unless otherwise indicated. \/} 
+
+ \label{isis_open}
+ \section{ISIS\_\-OPEN}\label{ISIS_OPEN}
+Opens an ISIS cube or a PVL file. This routine accepts the name of a file and will open for READONLY or READWRITE access. It returns a unique ISIS IDentifier, {\em IID\/}, that can be used in other Isis\-Dlm functions.
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_OPEN(FILENAME, IID, [,/LABEL] [,/READONLY] [,/READWRITE])
+\end{verbatim}\normalsize
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+STRING &FILENAME &Input &Name of file to open for specified operations. The unique ISIS identifier is returned in the IID parameter. This file remains open until {\bf ISIS\_\-CLOSE } is called or the IDL session terminates, at which time all opened files are closed.   \\\hline
+ULONG &IID &Output &{\em IID\/} returns the unique ISIS identifier for this file. It is to be used in other Isis\-DLM routines for subsequent access.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-OPEN Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+BOOLEAN &LABEL &Input &This option should be used when the caller is only interested in the accessing the PVL label portion of the file. It can be used with ISIS cube files or for any file that conforms to PVL syntax. This option is know to work for version 2 ISIS files and PDS files.   \\\hline
+BOOLEAN &READONLY &Input &IDL caller request the file be opened for read only access   \\\hline
+BOOLEAN &READWRITE &Input &IDL caller request the file be opened for read and write access.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-OPEN Keywords}
+\end{table}
+See also {\bf ISIS\_\-CREATE}.
+
+The implementation of this routine in {\bf ISISDLM::isis\_\-open}.
+
+
+
+ \label{isis_create}
+ \section{ISIS\_\-CREATE}\label{ISIS_CREATE}
+Creates and ISIS cube file or a PVL file. The default operation of this routine is to create an ISIS cube file. If no parameters are provided, the ISIS system provides the defaults.
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_CREATE(FILENAME, IID, [,DIMS=[ns,nl,nb] [,PROPID=pid]
+                     [,/LABEL] [,/DETACHED] [,/BSQ] [,/FLOAT] [,/SHORT]
+                     [,/BYTE])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+STRING &FILENAME &Input &Name of file to create. The unique ISIS identifier is returned in the IID parameter. This file remains open until {\bf ISIS\_\-CLOSE } is called or the IDL session terminates, at which time all opened files are closed.   \\\hline
+ULONG &IID &Output &{\em IID\/} returns the unique ISIS identifier for this newly created file. It is to be used in other Isis\-DLM routines for subsequent access.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-CREATE Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+INT &DIMS &Input &If creating an ISIS cube file, this parameter specifies the dimensions of the ISIS cube data. This should be a 3 element array where the first element is the number of {\bf SAMPLES} (ns), the second is {\bf LINES} (nl) and the third elements is the number of {\bf BANDS} (nl).   \\\hline
+ULONG &PROPID &Input &The caller can provide the Isis identifier of a file that is already opened by Isis\-Dlm from which to propagate labels from. This is useful for creating files from existing files whilst preserving label content.
+
+Note this option really only pertains to ISIS cubes and is therefore ignored when the {\em LABEL\/} option is specified and when the {\em PROPID\/} is not opened as an ISIS cube file.
+
+{\bf Note this option is not currenly implemented for this release!}   \\\hline
+BOOLEAN &LABEL &Input &Isis\-Dlm provides the capability to create PVL files. This is useful for creating custom PVL files. Operations are restricted to label reading and writing operations if a file is created in this mode.   \\\hline
+BOOLEAN &DETACHED &Input &ISIS files can either have their labels and data objects created as a single file or the labels can be detached from the data. If the caller provides this option, then a label file will be created with a .cub extension and the data is created with a .dat extension.
+
+The default is to create an attached ISIS file.   \\\hline
+BOOLEAN &BSQ &Input &ISIS 3 cube files use a tiling scheme to physically store cube data. The creator of ISIS cubes may choose to create Band Se\-Quential (BSQ) core data objects in the same fashion of version 2 ISIS cubes. This is useful when access by external methods are anticipated where the BSQ form is more easily supported.
+
+The default is determined by the ISIS system and will typically be tiled data organization. This organization has shown to be efficient for map projections within the ISIS system.   \\\hline
+BOOLEAN &FLOAT &Input &Specifies the raw core data values to be stored in {\em Real\/} format. See this {\bf table} for ISIS pixel types.   \\\hline
+BOOLEAN &SHORT &Input &Specifies the raw core data values to be stored in {\em Signed\-Word\/} format. See this {\bf table} for ISIS pixel types.   \\\hline
+BOOLEAN &BYTE &Input &Specifies the raw core data values to be stored in {\em Unsigned\-Byte\/} format. See this {\bf table} for ISIS pixel types.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-CREATE Keywords}
+\end{table}
+
+
+The implementation of this routine in {\bf ISISDLM::isis\_\-create}.
+
+
+
+ \label{isis_close}
+ \section{ISIS\_\-CLOSE}\label{ISIS_CLOSE}
+This routine closes an ISIS cube file or a PVL file that was opened or created by other routines in the Isis\-Dlm toolkit. See also {\bf ISIS\_\-OPEN} {\bf ISIS\_\-CREATE}.
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_CLOSE(IID)
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+ULONG &IID &Input &Specifies the ISIS identifier of the file to close.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-CLOSE Parameters}
+\end{table}
+
+
+The implementation of this routine in {\bf ISISDLM::isis\_\-close}. 
+
+ \label{isis_query}
+ \section{ISIS\_\-QUERY}\label{ISIS_QUERY}
+Provides a programmable interface to files that are currently open and maintained by the Isis\-Dlm.
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_QUERY([IID=iid]  [,FILENAME=filename] [,DIMS=[ns,nl,nb]]
+                    [,DTYPE=dtype] [,BASE=base] [,MULT=mult]  [,/SHOWALL])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+ULONG &IID &Input &Isis Identifier associated with an open file. If provided, the information requested in other keywords will be characteristics of this file.   \\\hline
+STRING &FILENAME &Output &Returns the name of the file if {\em IID\/} is specified by the caller. This file may have been opened by {\bf ISIS\_\-OPEN} or some other Isis\-DLM routine.  \\\hline
+LONG &DIMS &Output &Returns the dimensions of the ISIS cube core data associated with the file refered to by {\em IID\/}. It will a 3-dimensional array where the first array element is {\bf SAMPLES}, the second is {\bf LINES} and the third is {\bf BANDS} in the ISIS cube file core.   \\\hline
+STRING &DTYPE &Output &Returns the type of data stored in the ISIS core. Possible return values are listed in the following table:
+
+\label{isis_pixel_types}
+ \begin{table}[h]\begin{TabularC}{2}
+\hline
+Value &Description  \\\hline
+None &No type or invalid  \\\hline
+Unsigned\-Byte &8-bit Unsigned Byte/Integer (BYTE)  \\\hline
+Signed\-Byte &8-bit Signed Byte/Integer (BYTE)  \\\hline
+Signed\-Word &16-bit Signed Integer (INT)  \\\hline
+Signed\-Word &16-bit Unsigned Integer (UINT)  \\\hline
+Signed\-Integer &32-bit Signed Integer (LONG)  \\\hline
+Unsigned\-Integer &32-bit Unsigned Integer (ULONG)  \\\hline
+Real &32-bit Float (FLOAT)  \\\hline
+Double &64-bit Double Float (DOUBLE)  \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS Core Data Types}
+\end{table}
+\\\hline
+DOUBLE &BASE &Output &Returns the base offset added to the stored core data value after the {\em MULT\/} value is applied to it. This value is used in the following equation to compute the double representation of a pixel value: 
+
+\footnotesize\begin{verbatim}        value = ((stored core value) * MULT) + BASE
+\end{verbatim}\normalsize
+\\\hline
+DOUBLE &MULT &Output &Returns the multiplier value applied to the stored core data value and the {\em BASE\/} value to compute the actual pixel value. This value is used in the following equation to compute the double representation of a pixel value: 
+
+\footnotesize\begin{verbatim}        value = ((stored core value) * MULT) + BASE
+\end{verbatim}\normalsize
+\\\hline
+SWITCH &SHOWALL &Input &This switch will result in the information for the file specified in {\em IID\/} being printed to the screen. This is mainly used for the interactive IDL user to see the state of the file or files currently open and accessable in the Isis\-DLM system.
+
+If {\em IID\/} is not provided, it lists information about all the files currently open. If a valid {\em IID\/} is given, only information for that particular file is printed.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-QUERY Keywords (No Parameters!)}
+\end{table}
+
+
+The implementation of this routine in {\bf ISISDLM::isis\_\-query}.
+
+
+
+ \label{isis_read}
+ \section{ISIS\_\-READ}\label{ISIS_READ}
+ISIS\_\-READ provides access to core data within an ISIS cube file. It will read the entire core, all bands in either DOUBLE or raw format. Raw format is either 8-bit unsigned integer, 16-bit signed integer, or 32-bit floating point data.
+
+The general form of the call is:
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_READ(FILE, DATA, [,OID=oid] [,/RAW])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+STRING &FILE &Input &Name of file to open and read the core from. If OID is given, a unique identifier is returned in OID and the file remains open for further access by data I/O routines or label routines. If OID is not provided, the file is closed prior to returning from this routine.   \\\hline
+DOUBLE, FLOAT, INT, BYTE &DATA &Output &The core data is returned in this parameter. This parameter will either be 2-dimensional if there is only one band, or 3-dimensional if there is more than one band in the cube.
+
+If /RAW is specified, then the return type will be FLOAT, INT or BYTE if the raw storage data type of the cube is 32-bit float, 16-bit signed integer, or 8-bit unsigned integer, respectively.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+ULONG &OID &Output &If specified by the caller (i.e., oid=oid), this parameter will return a unique identifier for {\em FILE\/}. The file will remain open. If this parameter is not provided by the caller, the file will be closed prior to returning to the calling IDL environment. See also {\bf ISIS\_\-CLOSE}.   \\\hline
+SWITCH &RAW &Input &If the caller provides /RAW in the calling list, the data will be returned in the actual storage type. See the DATA parameter for a description of possible types   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ Keywords}
+\end{table}
+
+
+See also {\bf ISIS\_\-OPEN}, {\bf ISIS\_\-READ\_\-IMAGE}, {\bf ISIS\_\-READ\_\-BRICK}.
+
+The implementation of this routine is found at {\bf ISISDLM::isis\_\-read}.
+
+
+
+ \label{isis_read_image}
+ \section{ISIS\_\-READ\_\-IMAGE}\label{ISIS_READ_IMAGE}
+ISIS\_\-READ\_\-IMAGE provides access to individual core plane data within an ISIS cube file. It will read a singal plane from the core, in either DOUBLE or raw format. Raw format is either 8-bit unsigned integer, 16-bit signed integer, or 32-bit floating point data.
+
+The general form of the call is:
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_READ_IMAGE(DATA, [,FILE=filename] [,IID=iid] [,BAND=band] 
+                         [,/RAW] [,OID=oid])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+DOUBLE, FLOAT, INT, BYTE &DATA &Output &The core plane is returned in this parameter. This parameter will be a 2-dimensional array of the data in the requested format - either DOUBLE or RAW.
+
+If /RAW is specified, then the return type will be FLOAT, INT or BYTE if the raw storage data type of the cube is 32-bit float, 16-bit signed integer, or 8-bit unsigned integer, respectively.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ\_\-IMAGE Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+STRING &FILE &Input &Name of file to open and read the core plane from. This keyword provides the option of reading a single band from a file that is not yet opened. If {\em OID\/} is provided, the band is read, a unique ISIS identifier is returned in {\em OID\/} and the file remains open upon return.
+
+If {\em OID\/} is not provided, only the requested band is read and the file is closed prior to returning to the IDL caller.   \\\hline
+ULONG &IID &Input &Isis Identifier associated with an open file. If provided, the requested {\em BAND\/} is read in from the file.   \\\hline
+INT &BAND &Input &Specifies the band number to read in from the cube. It should range from 1 to the number of bands in the cube core.  
+
+\\\hline
+SWITCH &RAW &Input &If the caller provides /RAW in the calling list, the data will be returned in the actual storage type. See the DATA parameter for a description of possible types   \\\hline
+ULONG &OID &Output &If specified by the caller (i.e., OID=oid), this parameter will return a unique identifier for {\em FILE\/}. The file will remain open. If this parameter is not provided by the caller, the file will be closed prior to returning to the calling IDL environment.
+
+This parameter should be used in conjunction with the {\em FILE\/} keyword.
+
+See also {\bf ISIS\_\-CLOSE}.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ\_\-IMAGE Keywords}
+\end{table}
+
+
+See also {\bf ISIS\_\-OPEN}, {\bf ISIS\_\-READ}, {\bf ISIS\_\-READ\_\-BRICK}.
+
+The implementation of this routine is found at {\bf ISISDLM::isis\_\-read\_\-image}.
+
+
+
+ \label{isis_read_brick}
+ \section{ISIS\_\-READ\_\-BRICK}\label{ISIS_READ_BRICK}
+ISIS\_\-READ\_\-BRICK provides access to a 3-dimensional section of the ISIS core data within an ISIS cube file. It will read datae from the core in either DOUBLE or raw format. Raw format is either 8-bit unsigned integer, 16-bit signed integer, or 32-bit floating point data.
+
+The general form of the call is:
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_READ_BRICK(DATA, [,FILE=filename] [,IID=iid] 
+                         [,SBAND=sband] [,NBANDS=nbands]
+                         [,SSAMP=ssamp] [,NSAMPS=nsamps]
+                         [,SLINE=sline] [,NLINES=nlines]
+                         [,/RAW] [,OID=oid])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+DOUBLE, FLOAT, INT, BYTE &DATA &Output &The core section is returned in this parameter. This parameter will be a 2-dimensional array if the net number of bands or {\em NBANDS\/} is 1. It will return a 3-dimensional array if the number of bands is more than 1. The data will be return in the requested format - either DOUBLE or RAW.
+
+If /RAW is specified, then the return type will be FLOAT, INT or BYTE if the raw storage data type of the cube is 32-bit float, 16-bit signed integer, or 8-bit unsigned integer, respectively.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ\_\-BRICK Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+STRING &FILE &Input &Name of file to open and read the core section from. This keyword provides the option of reading a from a file that is not yet opened. If {\em OID\/} is provided, the requested core section is read, a unique ISIS identifier is returned in {\em OID\/} and the file remains open upon return.
+
+If {\em OID\/} is not provided, only the requested section of the core is read and the file is closed prior to returning to the IDL caller.
+
+Note it is in error to provide both {\em FILE\/} and {\em IID\/}. Only one of these keywords should be specified.   \\\hline
+ULONG &IID &Input &Isis Identifier associated with an open file. If provided, the requested section of the core data is read in from a previously opened file via one of the Isis\-Dlm routines ({\bf ISIS\_\-OPEN} for example).   \\\hline
+LONG &SBAND &Input &Specifies the starting band to read from the cube. It should range from 1 to the number of bands in the cube core. If this value is not provided, the default is 1.   \\\hline
+LONG &NBANDS &Input &Specifies the number of bands to read from the cube. The number of bands specified is subject to the starting band as specified in {\em SBAND\/}. {\em SBAND\/} + {\em NBANDS\/} - 1 cannot exceed the total number of bands in the ISIS cube core.
+
+If this keyword is not provided, the default is to read all bands from {\em SBAND\/} to the maximum number of bands in the cube core.  
+
+\\\hline
+LONG &SSAMP &Input &Specifies the starting sample to read from the cube. It should range from 1 to the number of samples in the cube core. If this value is not provided, the default is 1.   \\\hline
+LONG &NSAMPS &Input &Specifies the number of samples to read from the cube. The number of samples specified is subject to the starting sample as specified in {\em SSAMP\/}. {\em SSAMP\/} + {\em NSAMPS\/} - 1 cannot exceed the total number of samples in the ISIS cube core.
+
+If this keyword is not provided, the default is to read all samples from {\em SSAMP\/} to the maximum number of samples in the cube core.   \\\hline
+LONG &SLINE &Input &Specifies the starting line to read from the cube. It should range from 1 to the number of lines in the cube core. If this value is not provided, the default is 1.   \\\hline
+LONG &NLINES &Input &Specifies the number of lines to read from the cube. The number of lines specified is subject to the starting line as specified in {\em SLINE\/}. {\em SLINE\/} + {\em NLINES\/} - 1 cannot exceed the total number of lines in the ISIS cube core.
+
+If this keyword is not provided, the default is to read all samples from {\em SSAMP\/} to the maximum number of samples in the cube core.   \\\hline
+SWITCH &RAW &Input &If the caller provides /RAW in the calling list, the data will be returned in the actual storage type. See the DATA parameter for a description of possible types   \\\hline
+ULONG &OID &Output &If specified by the caller (i.e., OID=oid), this parameter will return a unique identifier for {\em FILE\/}. The file will remain open. If this parameter is not provided by the caller, the file will be closed prior to returning to the calling IDL environment.
+
+This parameter should be used in conjunction with the {\em FILE\/} keyword.
+
+See also {\bf ISIS\_\-CLOSE}.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ\_\-BRICK Keywords}
+\end{table}
+
+
+See also {\bf ISIS\_\-OPEN}, {\bf ISIS\_\-READ}, {\bf ISIS\_\-READ\_\-IMAGE}.
+
+The implementation of this routine is found at {\bf ISISDLM::isis\_\-read\_\-brick}.
+
+
+
+ \label{isis_read_blob}
+ \section{ISIS\_\-READ\_\-BLOB}\label{ISIS_READ_BLOB}
+ISIS\_\-READ\_\-BLOB will read the a field from a Binary Large OBject (BLOB) that is contained within an ISIS cube. The caller must know the name of the table the BLOB is contained and the name of the field within that table.
+
+The general form of the call is:
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_READ_BLOB(IID, TABLE, FIELD, DATA)
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+ULONG &IID &Input &Isis Identifier associated with an open file.   \\\hline
+STRING &TABLE &Input &This is the name of a TABLE object within an ISIS file. This will be the value of the {\em NAME\/} keyword in the object.   \\\hline
+STRING &FIELD &Input &This is the name of a FIELD group within a TABLE object in the ISIS file. This will be the value of the {\em NAME\/} keyword in the group   \\\hline
+DOUBLE, LONG, STRING &DATA &Output &This will return the requested FIELD from the BLOB. It will typically be a vector containing the data.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-READ\_\-BLOB Parameters}
+\end{table}
+\subsection{BLOBs In an ISIS File\char`\"{}}\label{Finding}
+There is no real distinct way to determine if an ISIS file contains a particular BLOB. There is a way using the {\bf ISIS\_\-GET\_\-KEY} routine. This IDL code will determine the names of the BLOBS in an ISIS cube file:
+
+
+
+\footnotesize\begin{verbatim};  Now lets see how many tables are in the file and then their names
+occurs = 0
+kspec = 'Table/Name'
+status = 0
+while (status eq 0) do begin
+  status = isis_get_key(iid, kspec, name, occurs=occurs)
+  if (status eq 0) then begin
+    print, '  Table Name: ', name
+  endif
+  occurs = occurs + 1
+endwhile
+\end{verbatim}\normalsize
+
+
+Note that the {\em kspec\/} string contains a \char`\"{}path\char`\"{} to the {\em Table\/} OBJECT and the keyword {\em Name\/} within that OBJECT. All ISIS BLOBs are in {\em Table\/} OBJECTs and the name of the BLOB is in the {\em Name\/} keyword within that OBJECT.
+
+See also {\bf ISIS\_\-OPEN},
+
+The implementation of this routine is found at {\bf ISISDLM::isis\_\-read\_\-blob}.
+
+
+
+ \label{isis_write}
+ \section{ISIS\_\-WRITE}\label{ISIS_WRITE}
+ISIS\_\-WRITE will create a new ISIS file and write a 2-D or 3-D array of data to the ISIS core object.
+
+The general form of the call is:
+
+
+
+\footnotesize\begin{verbatim}result = ISIS_WRITE(FILE, DATA, [,OID=oid] [,PROPID=iid])
+\end{verbatim}\normalsize
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description 
+
+\\\hline
+STRING &FILE &Input &Name of file to create and write the core to. If OID is given, a unique identifier is returned in OID and the file remains open for further access by data I/O routines or label routines. If OID is not provided, the file is closed prior to returning from this routine.   \\\hline
+DOUBLE, FLOAT, INT, BYTE &DATA &Output &The core data is provided by the caller in this parameter. This parameter can be either be 2-dimensional if there is only one band, or 3-dimensional if there is more than one band to write to the ISIS cube specified by {\em FILE\/}.
+
+If the array is not DOUBLE, then it must be FLOAT (32-bit float), INT (16-bit signed integer) or BYTE (8-bit unsigned integer). It is written in RAW format.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-WRITE Parameters}
+\end{table}
+
+
+\begin{table}[h]\begin{TabularC}{4}
+\hline
+Type &Name &I/O &Description  \\\hline
+ULONG &OID &Output &If specified by the caller (i.e., OID=oid), this parameter will return a unique identifier for {\em FILE\/}. The file will remain open. If this parameter is not provided by the caller, the file will be closed prior to returning to the calling IDL environment. See also {\bf ISIS\_\-CLOSE}.   \\\hline
+ULONG &PROPID &Input &If specified by the caller, this is taken to be the Isis Identifier of an open file where the label content will be propagated from it to the file created by this routine.   \\\hline
+\end{TabularC}
+\centering
+\caption{ISIS\_\-WRITE Keywords}
+\end{table}
+
+
+See also {\bf ISIS\_\-CREATE}, {\bf ISIS\_\-WRITE\_\-IMAGE},
+
+The implementation of this routine is found at {\bf ISISDLM::isis\_\-write}. 

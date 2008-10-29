@@ -1,0 +1,365 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="autoregtemplate" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+      Create autoregistration group template
+  </brief>
+
+  <description>
+      This program creates an autoregistration group template for autoregs.  Given
+      a specific algorithm name, it will create that specific algorithm group template.
+      If you are unsure of what algorithm name you want to use, running the application
+      with an 'unknown' algorithm name will give you an error box containing a list of the
+      possible algorithm names.  If a tolerance is specified, the application will automatically
+      insert the tolerance keyword and value into the autoreg template.  The user must enter 
+      values for the chip sizes of both the pattern and search chips.  The output templates 
+      can be used in applications that use autoregistrations, such as coreg, coregpr, findrx, etc.
+  </description>
+
+  <history>
+    <change name="Elizabeth Miller" date="2005-09-28">
+      Original Version
+    </change>
+    <change name="Jacob Danton" date="2006-01-05">
+      Added SubpixelAccuracy option.
+    </change>
+    <change name="Jacob Danton" date="2006-05-17">
+      Added MinimumPatternZScore option and updated appTest.
+    </change>
+    <change name="Brendan George" date="2006-07-19">
+        Moved MininmumPatternZScore keyword to PatternChip Group
+    </change>
+  </history>
+
+  <seeAlso>
+      <applications>
+          <item>coreg</item>
+          <item>coregpr</item>
+          <item>findrx</item>
+      </applications>
+  </seeAlso>
+
+  <category>
+    <categoryItem>Registration and Pattern Matching</categoryItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output text file containing autoreg template
+        </brief>
+        <description>
+          This file will contain the autoregistration group template.
+        </description>
+      </parameter>
+
+    </group>
+
+    <group name="Algorithm">
+
+      <parameter name="ALGORITHM">
+        <type>string</type>
+        <brief>
+            Name of Algorithm to create autoregistration group for
+        </brief>
+        <description>
+            This is the name of the algorithm for the autoregistration group being 
+            created.  If left as unknown, an error will be reported listing all possible
+            options for the algorithm name.
+        </description>
+        <default><item>Unknown</item></default>
+      </parameter>
+
+      <parameter name="TOLERANCE">
+          <type>double</type>
+          <brief>
+              Tolerance Value 
+          </brief>
+          <description>
+              This is the value of the tolerance for the autoregistration.  If the user enters a value here,
+              the Tolerance keyword will be set to that value in  the template.  If left blank, the keyword
+              will be added with a value of Null.
+          </description>
+          <internalDefault>None</internalDefault>
+      </parameter>
+
+      <parameter name="SAMPLING">
+          <type>integer</type>
+          <brief>
+              Sampling Percent Value for the Algorithm
+          </brief>
+          <description>
+          </description>
+          <internalDefault>None</internalDefault>
+      </parameter>
+
+      <parameter name="SUBPIXELACCURACY">
+          <type>boolean</type>
+          <brief>
+              Use sub-pixel accuracy
+          </brief>
+          <description>
+            This option allows the user to specify if sub-pixel accuracy will be used in
+            the registration.
+          </description>
+          <default><item>TRUE</item></default>
+      </parameter>
+
+      <parameter name="MINIMUMPATTERNZSCORE">
+          <type>double</type>
+          <brief>
+              minimum pattern chip zscore range
+          </brief>
+          <description>
+            This option allows the user to specify the minimum z-score range for the minimum
+            and maximum values for the pattern chip that will be used in the registration.
+          </description>
+          <default><item>1.0</item></default>
+      </parameter>
+
+    </group>
+
+    <group name="PatternChip">
+
+        <parameter name="PSAMP">
+            <type>integer</type>
+            <brief>
+                Pattern Chip Sample Size
+            </brief>
+            <description>
+                The sample size of the pattern chip for the autoregistration.
+                The Sample keyword in the PatternChip group will be set to
+                this value in the autoreg template.  
+            </description>
+        </parameter>
+
+        <parameter name="PLINE">
+            <type>integer</type>
+            <brief>
+                Pattern Chip Line Size
+            </brief>
+            <description>
+                The line size of the pattern chip for the autoregistration.
+                The Line keyword in the PatternChip group will be set to
+                this value in the autoreg template.  
+            </description>
+        </parameter>
+
+        <parameter name="PMIN">
+            <type>integer</type>
+            <brief>
+                Pattern Chip Valid Minimum Pixel Value
+            </brief>
+            <description> 
+                The minimum value a pixel must have in order to be considered valid and used
+                in the autoregistration.  This parameter is optional, and does not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+        <parameter name="PMAX">
+            <type>integer</type>
+            <brief>
+                Pattern Chip Valid Maximum Pixel Value
+            </brief>
+            <description>
+                The maximum value a pixel must have in order to be considered valid and used
+                in the autoregistration.  This parameter is optional, and does not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+        <parameter name="PPERCENT">
+            <type>integer</type>
+            <brief>
+                Pattern Chip Valid Pixel Percent Value
+            </brief>
+            <description>
+                The minimum percent of pixels in the pattern chip that must be valid in order for 
+                the autoregistration of the chip to be used.  This parameter is optional, and does
+                not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+    </group>
+
+    <group name="SearchChip">
+
+        <parameter name="SSAMP">
+            <type>integer</type>
+            <brief>
+                Search Chip Sample Size
+            </brief>
+            <description>
+                The sample size of the search chip for the autoregistration.
+                The Sample keyword in the SearchChip group will be set to
+                this value in the autoreg template.  
+            </description>
+        </parameter>
+
+        <parameter name="SLINE">
+            <type>integer</type>
+            <brief>
+                Search Chip Line Size
+            </brief>
+            <description>
+                The line size of the search chip for the autoregistration.
+                The Line keyword in the SearchChip group will be set to
+                this value in the autoreg template.
+            </description>
+        </parameter>
+
+        <parameter name="SMIN">
+            <type>integer</type>
+            <brief>
+                Search Chip Minimum Valid Pixel Value
+            </brief>
+            <description>
+                The minimum value a pixel must have in order to be considered valid and used
+                in the autoregistration.  This parameter is optional, and does not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+        <parameter name="SMAX">
+            <type>integer</type>
+            <brief>
+                Search Chip Maximum Valid Pixel Value
+            </brief>
+            <description>
+                The maximum value a pixel must have in order to be considered valid and used
+                in the autoregistration.  This parameter is optional, and does not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+        <parameter name="SPERCENT">
+            <type>integer</type>
+            <brief>
+                Search Chip Valid Pixel Percent Value
+            </brief>
+            <description>
+                The minimum percent of pixels in the pattern chip that must be valid in order for 
+                the autoregistration of the chip to be used.  This parameter is optional, and does
+                not have to be set.
+            </description>
+            <internalDefault>None</internalDefault>
+        </parameter>
+
+        <parameter name="SINC">
+            <type>integer</type>
+            <brief>
+                Sample Increment for Search Chip Density
+            </brief>
+            <description>
+                This is the sample increment value for the search chip.  It is used for the density
+                keyword. Defaults to 1.
+            </description>
+            <default><item>1</item></default>
+        </parameter>
+
+        <parameter name="LINC">
+            <type>integer</type>
+            <brief>
+                Line Increment for Search Chip Density
+            </brief>
+            <description>
+                This is the line increment value for the search chip. It is used for the density
+                keyword.  Defaults to 1.
+            </description>
+            <default><item>1</item></default>
+        </parameter>
+        
+    </group>
+
+  </groups>
+
+  <examples>
+    <example>
+      <brief> MaximumCorrelation Autoreg Template w/ no Defaults</brief>
+      <description>
+        This example shows how the autoregtemplate application works.  This example only
+        enters the required parameters.
+        <pre>
+Object = AutoRegistration
+  Group = Algorithm
+    Name      = MaximumCorrelation
+  End_Group
+
+  Group = PatternChip
+    Samples = 15
+    Lines   = 15
+  End_Group
+
+  Group = SearchChip
+    Samples = 31
+    Lines   = 31
+  End_Group
+End_Object
+End
+        </pre>
+        The above output is the text file resulting when the following command line is run.  
+      </description>
+      <terminalInterface>
+        <commandLine> algorithm=MaximumCorrelation  psamp=15 pline=15 ssamp=31 sline=31 to=out.txt
+        </commandLine>
+        <description>
+        Run autoregtemplate with an algorithm name and output file name, and search and pattern chip sizes.
+        </description>
+      </terminalInterface>
+     </example>
+    <example>
+      <brief> MinimumCorrelation Map Template w/ all Parameters used</brief>
+      <description>
+        This example shows how the autoregtemplate application works.  The parameters are all enterd by
+        the user for this example.
+        <pre> 
+Object = AutoRegistration
+  Group = Algorithm
+    Name      = MinimumDifference
+    Tolerance = 0.7
+    Sampling  = 50 &lt;percent&gt;
+  End_Group
+
+  Group = PatternChip
+    Samples      = 15
+    Lines        = 15
+    ValidMinimum = 1200
+    ValidMaximum = 2800
+    ValidPercent = 75
+  End_Group
+
+  Group = SearchChip
+    Samples      = 31
+    Lines        = 31
+    ValidMinimum = 1200
+    ValidMaximum = 2800
+    ValidPercent = 75
+    Density      = (4,6)
+  End_Group
+End_Object
+End
+       </pre>
+        The above output is the text file resulting when the following command line is run.  
+      </description>
+      <terminalInterface>
+        <commandLine> algorithm=MinimumDifference tolerance=0.7 sampling=50 psamp=15 pline=15 
+                pmin=1200 pmax=2800 ppercent=75 ssamp=31 sline=31 smin=1200 smax=2800
+                spercent=75 sinc=4 linc=6 to=out.txt  
+        </commandLine>
+        <description>
+        Run autoregtemplate with all parameters overridden by the user.
+        </description>
+      </terminalInterface>
+     </example>
+
+  </examples>
+
+</application>
+

@@ -1,0 +1,137 @@
+#include "Pvl.h"
+#include "Plugin.h"
+#include "iException.h"
+#include "PolynomialBivariate.h"
+#include "LeastSquares.h"
+#include "Filename.h"
+#include "ProjectionFactory.h"
+#include "PolygonTools.h"
+
+#include "PolygonSeeder.h"
+
+
+namespace Isis {
+  /**
+   * Create PolygonSeeder object.  Because this is a pure virtual class you can
+   * not create an PolygonSeeder class directly.  Instead, see the 
+   * PolygonSeederFactory class.
+   * 
+   * @param pvl  A pvl object containing a valid PolygonSeeder specification
+   * 
+   * @todo
+   */
+  PolygonSeeder::PolygonSeeder (Pvl &pvl) {
+    p_algorithmName = "Unknown";
+
+    Parse(pvl);
+  }
+
+  //! Destroy PolygonSeeder object
+  PolygonSeeder::~PolygonSeeder() {}
+
+
+  /** 
+   * Initialize parameters in the PolygonSeeder class using a PVL specification.
+   * An example of the PVL required for this is:
+   * 
+   * @code
+   * Object = AutoSeed
+   *   Group = Algorithm
+   *     Name      = Grid
+   *     Tolerance = 0.7
+   *   EndGroup
+   * EndObject
+   * @endcode
+   * 
+   * There are many other options that can be set via the pvl and are
+   * described in other documentation (see below).
+   * 
+   * @param pvl The pvl object containing the specification
+   **/
+  void PolygonSeeder::Parse(Pvl &pvl) {
+
+    std::string errorSpot;
+
+    try {
+      // Get info from Algorithm group
+      errorSpot = "Algorithm";
+      PvlGroup &algo = pvl.FindGroup("PolygonSeederAlgorithm",Pvl::Traverse);
+
+      // Set the algorithm name
+      errorSpot = "Name";
+      p_algorithmName = (std::string) algo["Name"];
+
+      // Set the minimum thickness (Area / max(extent X, extent Y)**2
+      errorSpot = "MinimumThickness";
+      p_minimumThickness = 0.0;
+      if (algo.HasKeyword("MinimumThickness")) {
+        p_minimumThickness = (double) algo["MinimumThickness"];
+      }
+
+      // Set the minimum area 
+      errorSpot = "MinimumArea";
+      p_minimumArea = 0.0;
+      if (algo.HasKeyword("MinimumArea")) {
+        p_minimumArea = (double) algo["MinimumArea"];
+      }  
+    }
+    catch (iException &e) {
+      std::string msg = "Improper format for PolygonSeeder PVL [";
+      msg +=  pvl.Filename() + "]. Location [" + errorSpot + "]";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+
+    return;
+  }
+
+
+  /**
+   * Check the polygon to see if it meets standard criteria.
+   *
+   * @param xymp The multipoly containing the coordinates in x/y units instead
+   *             of lon/lat
+   * @param xyBoundBox The bounding box of the multipoly
+   * 
+   * @return std::string A string with an appropriate message to throw if
+   * a test was unsuccessful or an empty string if all tests passed.
+   */
+  std::string PolygonSeeder::StandardTests(const geos::geom::MultiPolygon *xymp,
+                                           const geos::geom::Envelope *xyBoundBox) {
+    if (xymp->getArea() < MinimumArea()) {
+      std::string msg = "Polygon did not meet the minimum area of [";
+      msg += Isis::iString(MinimumArea()) + "]";
+      return msg;
+    }
+
+    double thickness = 
+        xymp->getArea() /
+        pow(std::max(xyBoundBox->getWidth(), xyBoundBox->getHeight()), 2.0);
+    if (thickness < MinimumThickness()) {
+      std::string msg = "Polygon did not meet the minimum thickness ratio of [";
+      msg += Isis::iString(MinimumThickness()) + "]";
+      return msg;
+    }
+
+    return "";
+  }
+
+
+  /**
+   * Return the minimum allowed thickness of the polygon. This value is set
+   * from the "MinimumThickness" keyword in the PVL. The seeding algorithm 
+   * will not seed polygons that have a thickness ratio less than this
+   */
+  double PolygonSeeder::MinimumThickness() {
+    return p_minimumThickness;
+  }
+
+
+  /**
+   * Return the minimum allowed area of the polygon. This value is set
+   * from the "MinimumArea" keyword in the PVL. The seeding algorithm will
+   * not seed polygons that have an area less than this.
+   */
+  double PolygonSeeder::MinimumArea() {
+    return p_minimumArea;
+  }
+}

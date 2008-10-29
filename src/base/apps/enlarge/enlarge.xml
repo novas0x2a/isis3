@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="enlarge" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Enlarge an image by any amount
+  </brief>
+
+  <description>
+    This program will enlarge an image any amount in both the sample and line
+    directions.
+  </description>
+
+  <history>
+    <change name="Stuart Sides" date="2002-12-13">
+      Original version
+    </change>
+    <change name="Stuart Sides" date="2003-01-28">
+      Fixed documentation error. The application name was rotate
+      instead of enlarge.
+    </change>
+    <change name="Kim Sides" date="2003-05-13">
+      Added application test
+    </change>
+    <change name="Stuart Sides" date="2003-05-16">
+      Modified schema location from astogeology... to isis.astrogeology..."
+    </change>
+    <change name="Stuart Sides" date="2003-05-30">
+      Fixed compiler error with uninitialized variable after adding -O1 flag
+    </change>
+    <change name="Stuart Sides" date="2003-07-29">
+      Modified filename parameters to be cube parameters where necessary
+    </change>
+    <change name="Drew Davidson" date="2005-08-17">
+      Added example
+    </change>
+    <change name="Brendan George" date="2005-10-31">
+      Fixed application test
+    </change>
+    <change name="Sean Crosby" date="2007-02-28">
+      Program now updates output file's mapping keywords
+    </change>
+    <change name="Steven Lambright" date="2007-06-22">
+      Fixed typo in the user documentation
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      Removed references to CubeInfo 
+    </change> 
+    <change name="Steven Koechle" date="2008-05-28">
+        Fixed problems with the way the Alpha Cube was handled
+    </change>
+  </history>
+
+  <category>
+    <categoryItem>Geometry</categoryItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input cube to enlarge
+        </brief>
+        <description>
+          Use this parameter to select the filename. All bands within the file
+          will be enlarged unless a specific band is specified.
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <fileMode>output</fileMode>
+        <type>cube</type>
+        <brief>
+          Output cube
+        </brief>
+        <description>
+          This file will contain the results of the enlargement.
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Scaling">
+      <parameter name="SMAG">
+        <type>double</type>
+        <brief>Sample magnification factor</brief>
+        <description>
+          This determines new size of the cube in the sample direction only.
+          The number of samples will be multiplied by this number.
+        </description>
+        <minimum inclusive="yes">1.0</minimum>
+      </parameter>
+
+      <parameter name="LMAG">
+        <type>double</type>
+        <brief>Line magnification factor</brief>
+        <description>
+          This determines new size of the cube in the line direction only.
+          The number of linees will be multiplied by this number.
+        </description>
+        <minimum inclusive="yes">1.0</minimum>
+      </parameter>
+    </group>
+
+    <group name="Interpolation">
+      <parameter name="INTERP">
+        <type>string</type>
+        <default>
+          <item>CUBICCONVOLUTION</item>
+        </default>
+        <brief>Type of interpolation</brief>
+        <description>
+          This is the type of interpolation to be performed on the input.
+        </description>
+        <list>
+          <option value="NEARESTNEIGHBOR">
+            <brief>Nearest Neighbor</brief>
+            <description>
+              Each output pixel will be set to the pixel nearest the
+              calculated input pixel.
+            </description>
+          </option>
+          <option value="BILINEAR">
+            <brief>Bi-Linear interpolation</brief>
+            <description>
+              Each output pixel will be set to the value calculated by
+              a bi-linear interpolation of the calculated input pixel.
+            </description>
+          </option>
+          <option value="CUBICCONVOLUTION">
+            <brief>Cubic Convolution interpolation</brief>
+            <description>
+              Each output pixel will be set to the value calculated by
+              a cubic convolution interpolation of the calculated input pixel.
+            </description>
+          </option>
+        </list>
+      </parameter>
+    </group>
+  </groups>
+  
+  <examples>
+    <example>
+      <brief>
+       Enlarge 2x1 
+      </brief>
+      <description>
+      This invocation of the enlarge application enlarges an image by a factor 
+      of 2 in the horizontal direction and a factor of 1 in the vertical 
+      direction. The effective result is a horizontal stretch and a larger
+      image.
+      </description>
+      <terminalInterface>
+        <commandLine>
+	  from= peaks.cub
+	  to=enlargedPeaks.cub
+	  smag=2
+	  lmag=1
+	</commandLine>
+	<description>
+	  As one can see, the sample magnitude is twice the line magnitude. 
+	  Since no interpolation has been specified, the application will 
+	  default to nearest neighbor.
+	</description>
+      </terminalInterface>
+      
+      <guiInterfaces>
+        <guiInterface>
+	  <image width="440" height="625" src="assets/images/horzGui.jpg">
+	    <brief>
+	    Example GUI
+	    </brief>
+	    <description>
+	      Screenshot of the GUI with parameters set to perform an enlargement
+	      of the samples.
+	    </description>
+	    <thumbnail width="220" height="312" caption="enlarge gui" 
+	     src="assets/thumbs/horzGui.jpg" />
+	  </image>
+	</guiInterface>
+      </guiInterfaces>
+      
+      <inputImages>
+        <image width="500" height="500" src="assets/images/peaks.jpg">
+	  <brief>
+	    Input image before enlarge.
+	  </brief>
+	  <description>
+	    This is the image as it was taken originally. It is important to 
+	    realize that this image has been scaled down to fit on an web 
+	    browser. At full size, the image would be 1024 x 1024 pixels.
+	  </description>
+	  <thumbnail caption= "The image before the filter" 
+	   src="assets/thumbs/peaks.jpg" width="200" height="200"/>
+	  <parameterName>FROM</parameterName>
+	</image>
+      </inputImages>
+      
+      <outputImages>
+        <image width="500" height="255" src="assets/images/horz.jpg">
+	  <brief>
+	  Output image after horizontal stretch using enlarge
+	  </brief>
+	  <description>
+	    The enlarged image. Though it has been scaled down to fit in a web
+	    browser, one can realize the impact of the enlargement on the samples
+	    alone. At full size, the image would be 2048 x 1024 pixels. 
+	  </description>
+	  <thumbnail caption= "The image after the filter" 
+	  src="assets/thumbs/horz.jpg" width="200" height="102"/>
+	  <parameterName>TO</parameterName>
+	</image>
+      </outputImages>
+    </example>
+  </examples>
+
+</application>
+

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="qnet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Create and edit control networks
+  </brief>
+
+  <description>
+     <p>
+      <div style="background-color:gold; border:2pxsolidred; fort-weight:bold;">
+        This program is a prototype version and may contain errors.  
+        Please do not report errors. The documentation is not complete and may
+        be inaccurate. USE AT YOUR OWN RISK.
+      </div>
+    </p>
+    <p>
+   This program will create and edit control networks. 
+    </p>
+    <p>
+    To run qnet, you will need to create a text file containing a list of all cubes in the control network.
+    </p>
+    <p>
+    The main window of qnet is similar to the program "qview".  You will see many of the same tools
+    such as zoom, pan, stretch, etc.  The Tie tool will be the default tool selected (the bottom button along
+    the right hand toolbar) when qnet is launched.
+    </p>
+    <p>
+    Once qnet is up, select the "Open network" button or the open action (from File menu), and open the file
+    containing the list of cubes in the network.  You will then be prompted for the
+    control network file.  If you are editing an existing one, choose that file.  If you are
+    creating a new control network, choose the "Cancel" button.
+    </p>
+    <p>
+      The Control Network Navigator allows you to filter cubes or points on different attributes.   If filtering cubes,
+      you can then view the cube(s) chosen from the filtered list.  If filtering points, you can view the cube(s) for 
+      the chosen points from the list or edit a chosen point.
+    </p>
+    <p>
+    Cubes are displayed in the main window, with control points displayed as green "+", 
+    yellow "+" (points set to "Ignored") or red "+" (point currently being edited).
+    When the Tie tool is the chosen tool, the mouse buttons have the following function in the cube viewports
+                of the main qnet window:
+    </p>
+    <pre>
+
+                Left Button:  Modify the closest control point
+                Middle Button:  Delete the closest control point
+                Right Button:  Create new control point
+
+    </pre>
+    <p>
+        If modifying or creating a point, the Point Editor dialog will be displayed, which will display the
+        cube that is the "Reference" cube on the left and the next cube in the control point on the right.
+        Only the control measure on the right hand side can be moved.  The measure can be adjusted by:
+    </p>
+    <pre>
+
+                       1)  clicking the left mouse button will move that cursor position under the crosshair
+                       2)  move 1 pixel at a time using arrow keys on the keyboard
+                       3)  move 1 pixel at a time using arrow buttons on the Point Editor dialog
+
+        Other Point Editor functions / options:
+
+               Geom:  Geom the right view to match the left view
+
+               Rotate:  Rotate the right view
+    
+               Blink controls (buttons below left view):  Blink the left and right view in the left view window.
+                             Using the arrow keys to move the right view will update the blinking in real time.
+    
+               Find:   Center the right view so that the same latitude / longitude is under the crosshair as
+                          the left view.
+
+               Register:  Sub-pixel register the the right view to the left view.
+
+               Save Point:  Save the control measure under the right view in the control network.
+
+               Add Measure(s) to Point:  Add control measure(s) to the current control point.
+               
+                        
+    </pre>
+
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+    <categoryItem>Display</categoryItem>
+  </category>
+
+  <history>
+    <change name="Jeff Anderson, Elizabeth Miller, Stuart Sides, Tracie Sucharski" date="2006-11-01">
+      Original version
+    </change>
+    <change name="Steven Lambright" date="2007-07-23">
+      Added to Control Networks category
+    </change>
+  </history>
+</application>

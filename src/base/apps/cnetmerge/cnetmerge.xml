@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="cnetmerge" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Merges 2 ControlNets into one.
+  </brief>
+
+  <description>
+    <p>
+    Merges 2 ControlNets into a single one.  Each ControlNet must share the same 
+    target, and be of the same type (i .e. Singleton, ImageToImage, 
+    ImageToGround ).  If the ControlNets contain the same ControlPoint, the merge
+    can be forced.
+    </p>
+  </description>
+
+  <history>
+    <change name="Christpher Austin" date="2008-04-04">
+      Original version
+    </change>
+    <change name="Christopher Austin" date="2008-06-24">
+      Clarified error messages and added documentation.  (Removed netmerge from
+      the system, because it did the same thing, just not quite as clean)
+    </change>
+    <change name="Christopher Austin" date="2008-08-05">
+      Fix xml app name error
+    </change>
+  </history> 
+  
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <groups>
+    
+    <group name="Files">
+      
+      <parameter name="FROM1">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input ControlNet
+        </brief>
+        <description>
+          The first ControlNet to be merged.
+        </description>
+        <filter>
+          *.ctl *.pvl
+        </filter>
+      </parameter>
+
+      <parameter name="FROM2">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input ControlNet
+        </brief>
+        <description>
+          The second ControlNet to be merged.
+        </description>
+        <filter>
+          *.ctl *.pvl
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Merged ControlNet
+        </brief>
+        <description>
+          The output ControlNet, which is the merged result of the two input 
+          ControlNets.
+        </description>
+        <filter>
+          *.ctl *.pvl
+        </filter>
+      </parameter> 
+
+      <parameter name="FORCE">
+        <type>boolean</type>
+        <default><item>FALSE</item></default>
+        <brief>
+          Forces the merge of the input ControlNets
+        </brief>
+        <description>
+          If left false, cnetmerge will throw errors upon the two input 
+          ControlNets containing a ControlPoint with the same Id.  If set to 
+          false, the merge will be forced, reguardless of ControlPoint ids.
+        </description>
+      </parameter>
+
+      <parameter name="ID">
+        <type>string</type>
+        <brief>
+          The NetworkId for the merged ControlNet
+        </brief>
+        <description>
+          The NetworkId keyword for the new merged ControlNet will be set to the 
+          given value.
+        </description>
+      </parameter>
+
+      <parameter name="DESCRIPTION">
+        <type>string</type>
+        <brief>
+          The Description for the merged ControlNet
+        </brief>
+        <description>
+          TheDescrition keyword for the new merged ControlNet will be set to the 
+          given value.
+        </description>
+      </parameter>
+      
+    </group>
+
+  </groups>
+
+</application>

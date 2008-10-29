@@ -1,0 +1,158 @@
+\section{ISISDLM::File\-Handler Class Reference}
+\label{classISISDLM_1_1FileHandler}\index{ISISDLM::FileHandler@{ISISDLM::FileHandler}}
+{\tt \#include $<$File\-Handler.h$>$}
+
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf File\-Handler} ()
+\item 
+virtual {\bf $\sim$File\-Handler} ()
+\item 
+void {\bf set\-Tiled\-Core} ()
+\item 
+void {\bf set\-Bsq\-Core} ()
+\item 
+void {\bf set\-Attached} ()
+\item 
+void {\bf set\-Detached} ()
+\item 
+void {\bf set\-Cube\-Dims} (int ns, int nl, int nb=1)
+\item 
+void {\bf set\-Core\-Type} (Isis::Pixel\-Type ctype)
+\item 
+void {\bf set\-Core\-Base} (double base)
+\item 
+void {\bf set\-Core\-Mult} (double mult)
+\item 
+void {\bf set\-Cube\-Specs} (const Isis::Cube \&icube)
+\item 
+Isis::Cube $\ast$ {\bf Open\-Cube} (const std::string \&filename, bool readonly=true)
+\item 
+Isis::Cube $\ast$ {\bf Create\-Cube} (const std::string \&filename)
+\item 
+Isis::Pvl $\ast$ {\bf Open\-Pvl} (const std::string \&filename, bool readonly=true)
+\item 
+Isis::Pvl $\ast$ {\bf Create\-Pvl} (const std::string \&filename)
+\end{CompactItemize}
+\subsection*{Static Public Attributes}
+\begin{CompactItemize}
+\item 
+const char $\ast$const {\bf ID} = \char`\"{}\$Revision: 1.2 \$ \$Date: 2004/11/02 15:38:53 \$\char`\"{}
+\begin{CompactList}\small\item\em Class version. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Private Attributes}
+\begin{CompactItemize}
+\item 
+Isis::Cube $\ast$ {\bf cube}
+\begin{CompactList}\small\item\em Store cube being created. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Specification for opening, creating and closing ISIS related files The {\em {\bf File\-Handler}\/} class handles opening of ISIS cube files and PVL files. It provides the ability to open an existing file for read-only access or for read-write access.
+
+The class supports creating new ISIS files or a PVL file for the express purpose of writing PVL files in an ISIS consistant manner. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!FileHandler@{FileHandler}}
+\index{FileHandler@{FileHandler}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::File\-Handler::File\-Handler ()\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1FileHandler_a0}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!~FileHandler@{$\sim$FileHandler}}
+\index{~FileHandler@{$\sim$FileHandler}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}virtual ISISDLM::File\-Handler::$\sim${\bf File\-Handler} ()\hspace{0.3cm}{\tt  [inline, virtual]}}\label{classISISDLM_1_1FileHandler_a1}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!CreateCube@{CreateCube}}
+\index{CreateCube@{CreateCube}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Cube $\ast$ ISISDLM::File\-Handler::Create\-Cube (const std::string \& {\em filename})}\label{classISISDLM_1_1FileHandler_a12}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!CreatePvl@{CreatePvl}}
+\index{CreatePvl@{CreatePvl}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Pvl $\ast$ ISISDLM::File\-Handler::Create\-Pvl (const std::string \& {\em filename})}\label{classISISDLM_1_1FileHandler_a14}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!OpenCube@{OpenCube}}
+\index{OpenCube@{OpenCube}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Cube $\ast$ ISISDLM::File\-Handler::Open\-Cube (const std::string \& {\em filename}, bool {\em readonly} = true)}\label{classISISDLM_1_1FileHandler_a11}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!OpenPvl@{OpenPvl}}
+\index{OpenPvl@{OpenPvl}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Pvl $\ast$ ISISDLM::File\-Handler::Open\-Pvl (const std::string \& {\em filename}, bool {\em readonly} = true)}\label{classISISDLM_1_1FileHandler_a13}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setAttached@{setAttached}}
+\index{setAttached@{setAttached}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Attached ()}\label{classISISDLM_1_1FileHandler_a4}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setBsqCore@{setBsqCore}}
+\index{setBsqCore@{setBsqCore}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Bsq\-Core ()}\label{classISISDLM_1_1FileHandler_a3}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setCoreBase@{setCoreBase}}
+\index{setCoreBase@{setCoreBase}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Core\-Base (double {\em base})}\label{classISISDLM_1_1FileHandler_a8}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setCoreMult@{setCoreMult}}
+\index{setCoreMult@{setCoreMult}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Core\-Mult (double {\em mult})}\label{classISISDLM_1_1FileHandler_a9}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setCoreType@{setCoreType}}
+\index{setCoreType@{setCoreType}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Core\-Type (Isis::Pixel\-Type {\em ctype})}\label{classISISDLM_1_1FileHandler_a7}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setCubeDims@{setCubeDims}}
+\index{setCubeDims@{setCubeDims}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Cube\-Dims (int {\em ns}, int {\em nl}, int {\em nb} = 1)}\label{classISISDLM_1_1FileHandler_a6}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setCubeSpecs@{setCubeSpecs}}
+\index{setCubeSpecs@{setCubeSpecs}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Cube\-Specs (const Isis::Cube \& {\em icube})}\label{classISISDLM_1_1FileHandler_a10}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setDetached@{setDetached}}
+\index{setDetached@{setDetached}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Detached ()}\label{classISISDLM_1_1FileHandler_a5}
+
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!setTiledCore@{setTiledCore}}
+\index{setTiledCore@{setTiledCore}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::File\-Handler::set\-Tiled\-Core ()}\label{classISISDLM_1_1FileHandler_a2}
+
+
+
+
+\subsection{Member Data Documentation}
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!cube@{cube}}
+\index{cube@{cube}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Cube$\ast$ {\bf ISISDLM::File\-Handler::cube}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1FileHandler_r0}
+
+
+Store cube being created. 
+
+\index{ISISDLM::FileHandler@{ISISDLM::File\-Handler}!ID@{ID}}
+\index{ID@{ID}!ISISDLM::FileHandler@{ISISDLM::File\-Handler}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}const char $\ast$const {\bf ISISDLM::File\-Handler::ID} = \char`\"{}\$Revision: 1.2 \$ \$Date: 2004/11/02 15:38:53 \$\char`\"{}\hspace{0.3cm}{\tt  [static]}}\label{classISISDLM_1_1FileHandler_s0}
+
+
+Class version. 
+
+
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+{\bf File\-Handler.h}\item 
+{\bf File\-Handler.cpp}\end{CompactItemize}

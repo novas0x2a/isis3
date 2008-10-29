@@ -1,0 +1,17 @@
+LongKeyword = "This is a very long keyword value which was causing some 
+              problems when the Pvl was output. The fist couple of lines 
+              looked good, but after that things went south. Some lines get 
+              nothing, others get bad indenting, most were too short"
+LongKeyword = "This is a very long keyword value which was causing some 
+              problems when the Pvl was output. The fist couple of lines 
+              looked good, but after that things went south. Some lines get 
+              nothing, others get bad indenting, most were too short"
+
+Group = Test
+  Keyword = Value
+End_Group
+
+Group = Test
+  Keyword = Value
+End_Group
+End

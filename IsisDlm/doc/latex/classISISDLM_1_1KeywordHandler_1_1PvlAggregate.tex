@@ -1,0 +1,191 @@
+\section{ISISDLM::Keyword\-Handler::Pvl\-Aggregate Class Reference}
+\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate}\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::KeywordHandler::PvlAggregate}}
+Collaboration diagram for ISISDLM::Keyword\-Handler::Pvl\-Aggregate:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=126pt]{classISISDLM_1_1KeywordHandler_1_1PvlAggregate__coll__graph}
+\end{center}
+\end{figure}
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf Pvl\-Aggregate} ()
+\item 
+{\bf Pvl\-Aggregate} (const {\bf Key\-Spec} \&kspec)
+\item 
+{\bf Pvl\-Aggregate} (Isis::Pvl\-Object $\ast$obj, int occurs=0)
+\item 
+{\bf Pvl\-Aggregate} (Isis::Pvl\-Container $\ast$grp, int occurs=0)
+\item 
+{\bf Pvl\-Aggregate} (Isis::Pvl\-Keyword $\ast$key, int occurs=0)
+\item 
+{\bf $\sim$Pvl\-Aggregate} ()
+\item 
+std::string {\bf name} () const
+\item 
+bool {\bf is\-Object} () const
+\item 
+bool {\bf is\-Group} () const
+\item 
+bool {\bf is\-Keyword} () const
+\item 
+bool {\bf is\-Defined} () const
+\item 
+Isis::Pvl\-Object $\ast$ {\bf get\-Object} () const
+\item 
+Isis::Pvl\-Container $\ast$ {\bf get\-Group} () const
+\item 
+Isis::Pvl\-Keyword $\ast$ {\bf get\-Keyword} () const
+\item 
+int {\bf get\-Occurance} () const
+\item 
+void {\bf Release} ()
+\item 
+void {\bf Destroy} ()
+\end{CompactItemize}
+\subsection*{Private Attributes}
+\begin{CompactItemize}
+\item 
+{\bf Key\-Spec} {\bf \_\-spec}
+\begin{CompactList}\small\item\em Keyword name and occur. \item\end{CompactList}\item 
+Isis::Pvl\-Object $\ast$ {\bf \_\-obj}
+\begin{CompactList}\small\item\em Pvl Object Aggregate pointer. \item\end{CompactList}\item 
+Isis::Pvl\-Container $\ast$ {\bf \_\-grp}
+\begin{CompactList}\small\item\em Pvl Group Aggregate pointer. \item\end{CompactList}\item 
+Isis::Pvl\-Keyword $\ast$ {\bf \_\-key}
+\begin{CompactList}\small\item\em Pvl Keyword Aggregate pointer. \item\end{CompactList}\end{CompactItemize}
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!PvlAggregate@{PvlAggregate}}
+\index{PvlAggregate@{PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Pvl\-Aggregate ()\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a0}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!PvlAggregate@{PvlAggregate}}
+\index{PvlAggregate@{PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Pvl\-Aggregate (const {\bf Key\-Spec} \& {\em kspec})\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a1}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!PvlAggregate@{PvlAggregate}}
+\index{PvlAggregate@{PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Pvl\-Aggregate (Isis::Pvl\-Object $\ast$ {\em obj}, int {\em occurs} = 0)\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a2}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!PvlAggregate@{PvlAggregate}}
+\index{PvlAggregate@{PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Pvl\-Aggregate (Isis::Pvl\-Container $\ast$ {\em grp}, int {\em occurs} = 0)\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a3}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!PvlAggregate@{PvlAggregate}}
+\index{PvlAggregate@{PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Pvl\-Aggregate (Isis::Pvl\-Keyword $\ast$ {\em key}, int {\em occurs} = 0)\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a4}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!~PvlAggregate@{$\sim$PvlAggregate}}
+\index{~PvlAggregate@{$\sim$PvlAggregate}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::Keyword\-Handler::Pvl\-Aggregate::$\sim${\bf Pvl\-Aggregate} ()\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a5}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!Destroy@{Destroy}}
+\index{Destroy@{Destroy}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Destroy ()\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a16}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!getGroup@{getGroup}}
+\index{getGroup@{getGroup}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Container$\ast$ ISISDLM::Keyword\-Handler::Pvl\-Aggregate::get\-Group () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a12}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!getKeyword@{getKeyword}}
+\index{getKeyword@{getKeyword}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Keyword$\ast$ ISISDLM::Keyword\-Handler::Pvl\-Aggregate::get\-Keyword () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a13}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!getObject@{getObject}}
+\index{getObject@{getObject}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Object$\ast$ ISISDLM::Keyword\-Handler::Pvl\-Aggregate::get\-Object () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a11}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!getOccurance@{getOccurance}}
+\index{getOccurance@{getOccurance}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}int ISISDLM::Keyword\-Handler::Pvl\-Aggregate::get\-Occurance () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a14}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!isDefined@{isDefined}}
+\index{isDefined@{isDefined}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool ISISDLM::Keyword\-Handler::Pvl\-Aggregate::is\-Defined () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a10}
+
+
+
+
+Here is the call graph for this function:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=315pt]{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a10_cgraph}
+\end{center}
+\end{figure}
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!isGroup@{isGroup}}
+\index{isGroup@{isGroup}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool ISISDLM::Keyword\-Handler::Pvl\-Aggregate::is\-Group () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a8}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!isKeyword@{isKeyword}}
+\index{isKeyword@{isKeyword}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool ISISDLM::Keyword\-Handler::Pvl\-Aggregate::is\-Keyword () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a9}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!isObject@{isObject}}
+\index{isObject@{isObject}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool ISISDLM::Keyword\-Handler::Pvl\-Aggregate::is\-Object () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a7}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!name@{name}}
+\index{name@{name}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string ISISDLM::Keyword\-Handler::Pvl\-Aggregate::name () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a6}
+
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!Release@{Release}}
+\index{Release@{Release}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::Keyword\-Handler::Pvl\-Aggregate::Release ()\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_a15}
+
+
+
+
+\subsection{Member Data Documentation}
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!_grp@{\_\-grp}}
+\index{_grp@{\_\-grp}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Container$\ast$ {\bf ISISDLM::Keyword\-Handler::Pvl\-Aggregate::\_\-grp}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_r2}
+
+
+Pvl Group Aggregate pointer. 
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!_key@{\_\-key}}
+\index{_key@{\_\-key}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Keyword$\ast$ {\bf ISISDLM::Keyword\-Handler::Pvl\-Aggregate::\_\-key}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_r3}
+
+
+Pvl Keyword Aggregate pointer. 
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!_obj@{\_\-obj}}
+\index{_obj@{\_\-obj}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl\-Object$\ast$ {\bf ISISDLM::Keyword\-Handler::Pvl\-Aggregate::\_\-obj}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_r1}
+
+
+Pvl Object Aggregate pointer. 
+
+\index{ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}!_spec@{\_\-spec}}
+\index{_spec@{\_\-spec}!ISISDLM::KeywordHandler::PvlAggregate@{ISISDLM::Keyword\-Handler::Pvl\-Aggregate}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf Key\-Spec} {\bf ISISDLM::Keyword\-Handler::Pvl\-Aggregate::\_\-spec}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1KeywordHandler_1_1PvlAggregate_r0}
+
+
+Keyword name and occur. 
+
+
+
+The documentation for this class was generated from the following file:\begin{CompactItemize}
+\item 
+{\bf Keyword\-Handler.h}\end{CompactItemize}

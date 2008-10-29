@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="hipical" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Performs calibration on a HiRISE cube
+  </brief>
+
+  <description>
+    This program will calibrate a HiRISE cube applying a gain (multiplied) 
+    and/or offset (subtracted) matrix.  The program applies the entered
+    or default matrix cube(s) and selects the band to apply based on the
+    ccd and channel.  If no value for MATRIX is entered, the default
+    matrix cube(s) are used.   The file specification for the default(s) are
+    based on the FROM cube label values for tdi and bin and the directory
+    used is $mro/calibration.  A single line (all samples) is read from the
+    matrix file and applied to each line in the input cube.  The following
+    equations are used:
+
+    <pre>
+    GAIN:      out = from * A-matrix
+    OFFSET: out = from - B-matrix
+    BOTH:     out = from * A-matrix -  B-matrix
+    </pre>
+
+    The FROM cube must have the same number of samples as the MATRIX
+    cube.
+  </description>
+
+  <history>
+    <change name="Debbie A. Cook" date="2006-08-22">
+      Original version
+    </change>
+    <change name="Debbie A. Cook" date="2006-09-19">
+       Changed user inputs.
+     </change>
+    <change name="Deborah Lee Soltesz" date="2006-11-13" hidden="true">
+      Fixed typo.
+    </change>
+    <change name="Steven Lambright" date="2008-05-12">
+          Removed references to CubeInfo 
+    </change>
+  </history>
+
+   <category>
+      <missionItem>Mars Reconnaissance Orbiter</missionItem>
+  </category>
+  <seeAlso>
+    <applications>
+      <item>ratio</item>
+      <item>poly</item>
+      <item>algebra</item>
+    </applications>
+  </seeAlso>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input cube
+        </brief>
+        <description>
+          Use this parameter to select the HiRISE single-band cube to be calibrated
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="MATRIX">
+         <type>cube</type>
+         <fileMode>input</fileMode>
+         <brief>
+           Matrix cube
+         </brief>
+         <internalDefault>
+             None
+         </internalDefault>
+         <description>
+           This file should be a 28-band cube where each band contains the gain or offsets corresponding to the 
+           samples in the input cube.  Each band should contain a single line that will be applied to every line of the
+           input cube as specified by the selected option.  
+
+           If no value is entered the default matrix file(s) will be read from the directory $mro/calibration.  The filename(s)
+           are built based on the value of OPTION and the ccd and channel keyword values read from the FROM cube.
+           The A-matrix cube will have the form A_matrix_tdi##_bin#.cub and the B-matrix cube will have the form
+           B_matrix_tdi##_bin#.cub, where ## is replaced by the tdi number and # is replaced by the bin number.
+
+           The application will select the band to apply based on the ccd and the channel keyword values read from the
+           labels of the FROM cube.  The number of samples in this cube must match the number of samples in the input cube.
+         </description>
+         <filter>
+           *.cub
+         </filter>
+       </parameter>
+
+      <parameter name="TO">
+        <type>cube</type>
+        <pixelType>real</pixelType>
+        <fileMode>output</fileMode>
+        <brief>
+          Output cube
+        </brief>
+        <description>
+          This file will contain the resulting  calibrated cube.
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Option">
+      <parameter name="OPTION">
+        <type>string</type>
+        <default><item>GAIN</item></default>
+        <brief>
+          Calibration mode option
+        </brief>
+        <description>
+          Select the calibration mode to be performed on the input cube.
+        </description>
+        <list>
+          <option value="GAIN">
+            <brief>Multiply the A-matrix</brief>
+            <description>
+              Multiply each sample value in each line of the input cube by the corresponding sample value in the A-matrix
+              cube band that matches the tdi/bin/ccd/channel of the input cube, FROM.   Apply the following equation:
+                out = A * from
+            </description>
+          </option>
+          <option value="OFFSET">
+            <brief>Subtract the B-matrix</brief>
+            <description>
+             Subtract each sample value in the B-matrix band corresponding to the tdi/bin/ccd/channel of the input cube, 
+             from each corresponding sample in every line of the input cube.  Offset the input cube (from) using the
+             following equation:
+		        out = from - B
+            </description>
+          </option>
+          <option value="BOTH">
+            <brief>Both gain and offset</brief>
+            <description>
+              Apply the both the offset (subtract the B-matrix line) and the gain (multiply A-matrix line) to each line in
+              FROM using the following equation:
+                out = (from  - B) * A
+              The default matrix files must be used in this option (see MATRIX or program help for more information on
+              the defaults).
+            </description>
+          </option>
+        </list>
+      </parameter>
+
+    </group>
+  </groups>
+</application>

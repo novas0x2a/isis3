@@ -1,0 +1,47 @@
+include $(ISISROOT)/make/isismake.macros
+
+	OBJECTS = $(filter-out CVS Makefile , $(wildcard *))
+
+api: 
+	if [ "$(OBJECTS)" != "" ]; \
+	then \
+	for i in $(OBJECTS); do \
+	  echo "    Adding API object [$$i]"; \
+	  cd $$i; $(MAKE) install; cd ..; \
+	done \
+	fi
+
+objects:
+	if [ "$(OBJECTS)" != "" ]; \
+	then \
+	for i in $(OBJECTS); do \
+	  echo "    Building object [$$i]"; \
+	  cd $$i; $(MAKE) object; cd ..; \
+	done \
+	fi
+
+includes:
+	if [ "$(OBJECTS)" != "" ]; \
+	then \
+	for i in $(OBJECTS); do \
+	  echo "    Installing includes [$$i]"; \
+	  cd $$i; $(MAKE) incs; cd ..; \
+	done \
+	fi
+
+clean:
+	if [ "$(OBJECTS)" != "" ]; \
+	then \
+	for i in $(OBJECTS); do \
+	  cd $$i; $(MAKE) clean; cd ..; \
+	done \
+	fi
+
+test: 
+	if [ "$(OBJECTS)" != "" ]; \
+	then \
+	for i in $(OBJECTS); do \
+	  printf %-44s "    Testing [$$i]"; \
+	  cd $$i; $(MAKE) test; cd ..; \
+	done \
+	fi

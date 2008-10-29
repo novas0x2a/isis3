@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="gllssi2isis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Import a Galileo solid state imager (SSI) image EDR into Isis cube format
+  </brief>
+
+  <description>
+    Converts a PDS formatted Galileo solid state imager (SSI) image EDR
+    into an Isis Cube.  The required instrument labels will be propagated 
+    into the instrument group.
+  </description>
+
+  <history>
+    <change name="Janet Barrett" date="2002-02-25">
+      Original version
+    </change>
+    <change name="Robert Sucharski" date="2005-12-30">
+      Converted to Isis 3.0
+    </change>
+    <change name="Steven Koechle" date="2007-10-30">
+      Added Summing Keyword, Moved most hardcoded translations into a translation table.  Modified tests to check the lables.
+      Removed ImageID keyword.
+    </change>
+    <change name="Steven Lambright" date="2007-12-31">
+      Removed the hard coded Instrument Mode ID keyword translation
+    </change>
+    <change name="Steven Lambright" date="2007-01-08">
+      Added summing options. Output summed images will now only be a quarter of 
+      the size for calibration (the upper-left data in the input is preserved).
+    </change>
+    <change name="Christopher Austin" date="2008-03-18">
+      Checks if input file is rdr.
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      Removed references to CubeInfo 
+    </change>
+  </history>
+
+  <category>
+    <missionItem>Galileo</missionItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input PDS Galileo SSI file
+        </brief>
+        <description>
+          Use this parameter to select the PDS filename.  This file must
+          contain the PDS labels, however the image data can be detached
+          and will be automatically obtained from the PDS image pointer keyword.
+        </description>
+        <filter>
+          *.lbl *.LBL
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+         <type>cube</type>
+         <fileMode>output</fileMode>
+         <brief>
+           Output Isis cube
+         </brief>
+         <description>
+           Use this parameter to select the output filename
+         </description>
+         <filter>
+           *.cub
+         </filter>
+       </parameter>
+    </group>
+
+    <group name="SETTINGS">
+      <parameter name="FRAMEMODE">
+        <type>string</type>
+        <brief>Summing mode of the input image</brief>
+        <description>Summing mode of the input image</description>
+        <default><item>AUTO</item></default>
+        <list>
+          <option value="AUTO">
+            <brief>Automatically Detect</brief>
+            <description>
+              This will attempt to automatically detect the summing mode of the 
+              input image based on the frame mode ID.
+            </description>
+          </option>
+          <option value="SUMMED">
+            <brief>The image is summed</brief>
+            <description>
+              This will treat the input image as if it has a summing mode of 2 
+              in both the sample and line direction.
+            </description>
+          </option>
+          <option value="FULL">
+            <brief>The image is not summed</brief>
+            <description>
+              This will treat the input image as if it has no summing.
+            </description>
+          </option>
+        </list>
+      </parameter>
+    </group>
+        
+   </groups>
+</application>

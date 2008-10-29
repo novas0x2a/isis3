@@ -1,0 +1,55 @@
+                            ISIS DLM Quick Reference
+				September 4, 2004
+
+
+This document provides a brief reference of available routines in the ISIS DLM
+library.  These routines are available from the IDL calling environment.
+
+-->  High level query routine
+result = ISIS_QUERY([FILE=filename] [,IID=id] [,DIMS=[ns,nl,nb]]
+                    [,DTYPE=dtype] [,DBYTE=dbytes] [,BASE=base] [,MULT=mult] 
+		    [,BLOBS=blobs] [,OID=oid] [,/SHOWALL])
+		    
+-->  ISIS Read routine options
+result = ISIS_READ(filename, array [,OID=id] [,/RAW])
+result = ISIS_READ_IMAGE(array [, FILE=filename] [,IID=id] [,BAND=bandno] 
+                         [,OID=oid ] [,/RAW])
+result = ISIS_READ_BRICK(array [,FILE=filename] [,IID=id] [,SBAND=bandno] 
+                         [,NBANDS=nb] [,SSAMP=sampno] [,NSAMPS=ns]
+			 [,SLINE=lineno] [,NLINES=nl] [,/RAW])
+			 
+result = ISIS_READ_BLOB(iid, table, field, blob)
+
+-->  ISIS Write routine options
+result = ISIS_WRITE(filename, array [,OID=OID])
+result = ISIS_WRITE_IMAGE(array [,FILE=filename] [,IID=id] [,BAND=bandno]
+                           [,OID=oid])
+
+
+-->  ISIS Special pixels
+result = ISIS_SPECIAL_PIXELS(specials [,NAMES=names] [,DTYPE=array] [,/DOUBLE] 
+                             [,/FLOAT], [,/SHORT] [,/BYTE])
+			     
+			
+-->  Generalized ISIS routines
+result = ISIS_OPEN(filename, iid [,/LABEL] [,/READONLY] [,/READWRITE])
+result = ISIS_CREATE(filename, iid [,DIMS=dims[ns,nl,nb]] [,PROPID=id]
+                     [,/LABEL] [,/DETACHED] [,/BSQ]
+		     [,/FLOAT] [,/SHORT] [,/BYTE])
+result = ISIS_CLOSE(iid)     
+
+
+-->  ISIS PVL/keyword/label routines
+;  Note that a KEYWORD spec is of the form:
+;    KSPEC = "ISISCUBE/CORE/DIMENSIONS/SAMPLES"
+
+result = ISIS_QUERY_KEY(iid, kspec [,NVALS=n] [, OCCURS=array], [,/EXISTS] 
+                        [,/KEY] [,/OBJECT] [,/GROUP])
+result = ISIS_ADD_AGGREGATE(iid, kspec [,OCCURS=array] [,/KEY] [,/OBJECT] 
+                            [,/GROUP] )
+result = ISIS_DELETE_AGGREGATE(iid, kspec, [,OCCURS=array] [,/KEY] [,/OBJECT]
+                               [,/GROUP]			    
+result = ISIS_GET_KEY(iid, kspec, values [UNIT=unit] [,OCCURS=array]
+                      [,/STRING] [,/DOUBLE] [,/INT])
+result = ISIS_ADD_KEY(iid, kspec, values [UNIT=unit] [,OCCURS=array])
+

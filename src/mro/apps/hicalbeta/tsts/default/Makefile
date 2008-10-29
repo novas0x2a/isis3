@@ -1,0 +1,11 @@
+APPNAME = hicalbeta
+
+output.txt.SKIPLINES = 7
+
+include $(ISISROOT)/make/isismake.tsts
+
+commands:
+	$(APPNAME) FROM=$(INPUT)/PSP_001446_1790_RED2_0.cub \
+	TO=$(OUTPUT)/output.cub > /dev/null;
+	$(MV) PSP_001446_1790_RED2_0.hicalbeta.log \
+	$(OUTPUT)/output.txt;

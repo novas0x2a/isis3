@@ -1,0 +1,27 @@
+Object = AutoReg
+  Group = Algorithm
+    Name                 = MinimumDifference
+    Tolerance            = 5.0
+    SubpixelAccuracy     = True
+    MinimumPatternZScore = 1
+  End_Group
+
+  Group = PatternChip
+    Samples      = (25, 20, 15)
+    Lines        = (25, 20, 15)
+    FloatPercent = (50, 25)
+  End_Group
+
+  Group = SearchChip
+    Samples = 50
+    Lines   = 50
+  End_Group
+
+  Group = SurfaceModel
+    DistanceTolerance = 1.0
+    WindowSize        = 3
+  End_Group
+End_Object
+End
+Register = 0
+Position = 120 45

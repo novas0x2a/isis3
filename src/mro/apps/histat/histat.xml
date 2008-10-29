@@ -1,0 +1,370 @@
+<?xml version="1.0"?>
+<application name="histat" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Generates statistics about a HiRISE cube and ancillary data
+  </brief>
+
+  <description>
+    This program computes statistics about the HiRISE image and it's 
+    associated ancillary data including the calibration image, 
+    dark reference pixels, and buffer pixels.   There are ten sets
+    of statistics that will be produced using:   
+    <pre>
+    1) Lines postramp, the first 30 lines of image data
+    1) Remaining lines of image data
+    2) Image dark reference pixels (16 pixels per line)
+    3) Image buffer pixels (12 pixels per line)
+    4) Calibration image dark reference pixels (16 pixels per line) 
+    5) The calibration image buffer pixels (12 pixels per line)
+    6) Calibration image reverse lines (First 20 lines of calibration image)
+    7) Calibration masked lines (From 5 - 20 lines after reverse depending on TDI)
+    8) Calibration ramp(Remaining lines after masked lines)
+    </pre>
+    The following statistics for each data set will be produced:
+    <pre>
+        Average
+        Standard deviation
+        Variance
+        Minimum
+        Maximum
+        Total pixels
+        Valid pixels
+        Null pixels
+        Low instrument saturation pixels
+        Low representation saturation pixels
+        High instrument saturation pixels
+        High representation saturation pixels
+   </pre>
+    The statistics will be output to the print file and additionally, if the user specifies, a file using the
+    TO parameter, the statistics will be written to the file in a standard PVL format which can then be read using
+    the getkey program. Because the very edges of several parts of the image are
+    often inaccurate, histat also has the ability to disregard some pixels. 
+    The first and last line of the calibration image is not regarded, nor are the
+    first and last samples of any line in the calibration image. For this reason,
+    an image with a calibration image of 62 lines by 512 samples will be broken 
+    down as follows:
+    <br></br><br></br>
+    Last 19 lines of the reverse readout pixels (all but the first)
+    <br></br>
+    All 6 (in this case) lines of the masked pixels
+    <br>
+    First 33 lines of the ramp pixels (all but the last)
+    </br>
+    
+    Since the first and last samples of each of these lines is disregarded 
+    automatically, the user is left statistics for the three sections of a
+    60 line by 510 sample calbration image.
+    
+    <p>
+    The user is given much more flexibility in excluding samples from the 
+    calibration and dark reference areas of the actual (not calibration)
+    image. The specific parameters used are described in the "Parameters" 
+    section.
+    </p>
+  </description>
+
+  <category>
+    <missionItem>Mars Reconnaissance Orbiter</missionItem>
+  </category>
+
+  <history>
+    <change name="Jeff Anderson" date="2004-06-18">
+      Original version
+    </change>
+    <change name="Stuart Sides" date="2005-07-06">
+      Fixed reporting of special pixels within the HiRISE tables. Special pixels were
+      not being converted from 16 bit signed word to 32 bit double values before
+      being sent to the Statistics objects.
+    </change>
+    <change name="Drew Davidson" date="2006-01-18">
+      Added the ability to use offsets so that edges of the calibration data may
+      be disregarded.
+    </change>
+    <change name="Drew Davidson" date="2006-01-23">
+      Seperated calibration image into reverse, masked, and ramp groups.
+    </change>
+    <change name="Drew Davidson" date="2006-05-25">
+      Changed the default offsets, keywords, and internal offsets, Also added
+      the CAL_DARK_RAMP group and the IMAGE_POSTRAMP group
+    </change>
+    <change name="Stuart Sides" date="2006-10-06">
+      Fixed bug where the number of mask lines was calculated. This also
+      effected the number of ramp lines.
+    </change>
+    <change name="Stuart Sides" date="2006-10-06">
+      Modified brief and full descriptions of the keywords for ignoring left and
+      right edges of the different calibration and main image portions of the 
+      observation to eliminate identical descriptions.
+    </change>    
+    <change name="Kris Becker" date="2007-01-18">
+        Merged the changes made by Drew Davidson with the USGS version
+        to provide single source code management.  Changed how the data
+        is recorded.  When a TO file is given output is not written to the terminal
+        or the log file.  If TO is not given, output is written to the terminal and
+        the log file (default: print.prt).
+    </change>
+    <change name="Steven Lambright" date="2008-05-13">
+      Removed references to CubeInfo 
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+            A HiRISE cube from the "hirise2isis" program.
+        </brief>
+        <description>
+  	      The file specification for the input HiRISE cube.
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+      
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output file to contain statistics
+        </brief>
+        <internalDefault>
+          No Output file will be created
+        </internalDefault>
+        <description>
+          This ascii file will contain the statistics of the various HiRISE components.
+          It is written in such a format that the values can be read using the getkey program. 
+          This is useful for when developing
+          scripts.
+        </description>
+        <filter>
+          *.txt
+        </filter>
+      </parameter>
+    </group>
+    <group name="use offsets">
+      <parameter name="USEOFFSETS">
+        <type>boolean</type>
+	<brief>crop the edge columns of regions</brief>
+	<description>
+	  Boolean option to include offsets to disregard the edge columns (true)
+	  or to include all columns from all buffers (false).
+	</description>
+	<default><item>TRUE</item></default>
+	<inclusions>
+	  <item>LEFTIMAGE</item>
+	  <item>RIGHTIMAGE</item>
+	  <item>LEFTCALBUFFER</item>
+	  <item>RIGHTCALBUFFER</item>
+	  <item>LEFTCALDARK</item>
+	  <item>RIGHTCALDARK</item>
+	  <item>LEFTDARK</item>
+	  <item>RIGHTDARK</item>
+	  <item>LEFTBUFFER</item>
+	  <item>RIGHTBUFFER</item>
+	</inclusions>
+	
+      </parameter>
+    </group>
+    <group name="offsets">
+      <parameter name="LEFTIMAGE">
+        <type>integer</type>
+	<brief>Offset for the left side of the image area</brief>
+	<internalDefault>0</internalDefault>	
+	<default><item>0</item></default>
+	<description>
+	  this number of pixels will be ignored on the right side of the
+	  ramp, lines postramp, and image areas
+	</description>
+      </parameter>
+      <parameter name="RIGHTIMAGE">
+        <type>integer</type>
+	<brief>Offset for the right side of the image area</brief>
+	<internalDefault>1</internalDefault>	
+	<default><item>1</item></default>
+	<description>
+	  this number of pixels will be ignored on the right side of the
+	  ramp, lines postramp, and image areas
+	</description>
+      </parameter>
+      <parameter name="LEFTCALBUFFER">
+        <type>integer</type>
+	<brief>Offset for the left side of the calibration buffer</brief>
+	<internalDefault>3</internalDefault>	
+	<default><item>3</item></default>
+	<description>
+          This number of pixels will be ignored on the left side of the
+          buffer area of the calibration image
+	</description>
+      </parameter>
+      <parameter name="RIGHTCALBUFFER">
+        <type>integer</type>
+	<brief>Offset for the right side of the calibration buffer</brief>
+	<default><item>1</item></default>	
+	<description>
+         This number of pixels will be ignored on the right side of the
+          buffer area of the calibration image
+	</description>
+      </parameter>
+      <parameter name="LEFTCALDARK">
+        <type>integer</type>
+	<brief>Offset for the left side of the calibration dark pixels</brief>
+	<default><item>3</item></default>
+	<description>
+          This number of pixels will be ignored on the left side of the
+          dark area of the calibration image
+	</description>
+      </parameter>
+      <parameter name="RIGHTCALDARK">
+        <type>integer</type>
+	<brief>Offset for the right side of the calibration dark pixels</brief>
+	<default><item>1</item></default>
+	<description>
+          This number of pixels will be ignored on the right side of the
+          dark area of the calibration image
+	</description>
+      </parameter>
+      <parameter name="LEFTBUFFER">
+        <type>integer</type>
+	<brief>Offset for the left side of the image buffer</brief>
+	<default><item>3</item></default>
+	<description>
+          This number of pixels will be ignored on the left side of the
+          buffer area of the main image
+	</description>
+      </parameter>
+      <parameter name="RIGHTBUFFER">
+        <type>integer</type>
+	<brief>Offset for the right side of the image buffer</brief>
+	<default><item>1</item></default>	
+	<description>
+            This number of pixels will be ignored on the right side of the
+            buffer area of the main image
+	</description>
+      </parameter>
+      <parameter name="LEFTDARK">
+        <type>integer</type>
+	<brief>Offset for the left side of the image dark pixels</brief>
+	<default><item>3</item></default>
+	<description>
+          This number of pixels will be ignored on the left side of the
+          dark area of the main image
+	</description>
+      </parameter>
+      <parameter name="RIGHTDARK">
+        <type>integer</type>
+	<brief>Offset for the right side of the image dark pixels</brief>
+	<default><item>1</item></default>	
+	<description>
+          This number of pixels will be ignored on the right side of the
+          dark area of the main image
+	</description>
+      </parameter>
+    </group>
+  </groups>
+  
+  <examples>
+    <example>
+      <brief>No offsets used</brief>
+      <description>
+        Gathering statistics including all buffer and dark pixel values.
+      </description>
+      <terminalInterface>
+        <commandLine> from=histatExample.cub to=histatExampleStats.log useoffsets=false
+        </commandLine>
+        <description>
+        In this example we disregard the ability to use offsets on the buffers. 
+		  Since the default is to include offset values, we must explicitly set 
+		  <pre>useoffsets</pre> to false.
+        </description>
+      </terminalInterface>
+
+      <inputImages>
+        <image src="assets/image/histatExample.jpg" width="500" height="500">
+          <brief> HiRISE input image for histat</brief>
+          <description>This is the input image for which we will gather statistics. Note that it has 
+			 been run through higlob so that the buffers and ramp are part of the image.
+          </description>
+          <thumbnail caption=" Input image" src="assets/thumb/histatExample.jpg" width="200" height="200"/>
+          <parameterName>FROM</parameterName>
+        </image>
+      </inputImages>
+
+		<dataFiles>
+		  <dataFile path="assets/histatExampleStats.log">
+		    <brief>
+			   Output from histats without offsets
+			 </brief>
+			 <description>
+			   This is the output file from running histats without any offsets.
+			 </description>
+		  </dataFile>
+		</dataFiles>
+
+      <guiInterfaces>
+        <guiInterface>
+          <image width="472" height="388" src="assets/image/histatNoOffsetGui.jpg">
+            <brief>Example Gui</brief>
+            <description>Screenshot of GUI with parameters set to gather stats without offsets.</description>
+            <thumbnail width="200" height="165" caption="histat Gui" src="assets/thumb/histatNoOffsetGui.jpg" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+    </example>
+    
+    <example>
+      <brief>Default offsets</brief>
+      <description>
+        This example gathers only the center 12 pixels from the dark current 
+	area (both calibration and actual image), the center 8 pixels from 
+	the buffer area (both calibration and actual image), and all of the data
+	from what is considered to be the normal, viewable image.
+      </description>
+      <terminalInterface>
+        <commandLine> from=histatExample.cub > histatOut.log
+        </commandLine>
+        <description>
+        Note that we are redirecting standard output from the command line. If 
+	no "TO" file is specified, histat statistics will go to standard output, 
+	a feature we are taking advantage of here.
+        </description>
+      </terminalInterface>
+
+      <inputImages>
+        <image src="assets/image/histatExample.jpg" width="500" height="500">
+          <brief> HiRISE input image for histat</brief>
+          <description>This is the input image for which we will gather statistics.
+          </description>
+          <thumbnail caption=" Input image" src="assets/thumb/histatExample.jpg" width="200" height="200"/>
+          <parameterName>FROM</parameterName>
+        </image>
+      </inputImages>
+	<dataFiles>
+	  <dataFile path="assets/histatOut.log">
+	    <brief>
+	    Output from histats with the default offsets
+	    </brief>
+	    <description>
+            This is the output file from running histats. The outermost
+	    2 pixels on both sides of both buffers have been disregarded.
+	 </description>
+	  </dataFile>
+	</dataFiles>
+
+      <guiInterfaces>
+        <guiInterface>
+          <image width="394" height="388" src="assets/image/histatDefaultGui.jpg">
+            <brief>Example Gui</brief>
+            <description>Screenshot of GUI with parameters set to gather 
+	    statistics not including the 2 outermost columns of dark current and
+	    buffer pixels.</description>
+            <thumbnail width="200" height="197" caption="histat Gui" src="assets/thumb/histatDefaultGui.jpg" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+    </example>
+  </examples>
+
+</application>

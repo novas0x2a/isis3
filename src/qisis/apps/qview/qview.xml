@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="qview" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Display and analyze cubes
+  </brief>
+
+  <description>
+    This program will display cubes and allow for interactive analysis.
+    It is a prototype version and is still in progress.  More documentation
+    will be forthcoming.
+  </description>
+
+  <category>
+    <categoryItem>Display</categoryItem>
+  </category>
+
+  <history>
+    <change name="Jeff Anderson" date="2004-12-01">
+      Original version
+    </change>
+    <change name="Jeff Anderson" date="2006-01-06">
+      Port to Qt4 and add blink tool 
+    </change>
+    <change name="Elizabeth Miller" date="2006-07-26">
+      Fixed bug with filename expansion and added the MeasureTool
+    </change>
+   <change name="Brendan George" date="2006-09-19">
+       Documentation fixes
+   </change>
+   <change name="Steven Lambright" date="2007-09-11">
+       Added new rubber band functionality
+   </change>
+  </history>
+</application>

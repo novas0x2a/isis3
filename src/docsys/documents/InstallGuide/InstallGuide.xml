@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<documentation xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Documentation/documentation.xsd">
+  <files>
+
+    <!-- HTML FILE -->
+    <file primary="true">
+      <body>
+
+<!--  This block is used for notes and warnings, modify it or comment it out, do NOT delete it. -->
+<!-- <div style="border: 4px solid red; padding: 5px ; background-color: gold;">
+<div style="font-style: allcaps; font-weight: bold;">Upgrade Notes</div>
+<p>
+2007-07-19
+</p>
+<p>
+If you are upgrading to version 3.1.12, you <em>must</em>
+download the latest Isis Data Files!!! 
+</p>
+<p>
+If you are <em>not</em> upgrading to 3.1.12,
+you must <em>not</em> upgrade the Isis Data Files!!!
+</p>
+</div>
+-->
+
+
+        <h2>1) Find Disk Space</h2>
+        <p>
+            The current distribution of Isis 3 is approximately 341MB. This
+            includes the complete source, binaries, documentation, Isis
+            libraries, all 3rd party libraries necessary to run. Note: this
+            does not include 3rd party binaries and header files necessary
+            for building Isis. The data area is available as a seperate download
+            of many 10s of GBs if downloaded in full. This includes SPICE 
+            kernels for CASSINI, Clementine1, Mars Global Surveyor, Mars 
+            Odyssey, Mars Reconnaissance Orbiter, Viking. and a few from other 
+            missions. We suggest you install Isis3 in a work area, away from any 
+            existing Isis2.x installations. Change your current working 
+            directory to where you want isis3 installed and create a directory 
+            named isis3. The rsync commands in step 2 will place all of Isis and 
+            the SPICE kernels under this directory.
+
+          If you are looking for Isis 2, please
+        <a href="http://isis.astrogeology.usgs.gov/Isis2/isis-bin/installation.cgi">refer to the Isis 2 Installation
+        Guide</a> for instructions on downloading and installing Isis 2.
+        </p>
+
+        <p>
+        Example:
+        </p>
+<pre>
+        $ cd /work1
+        $ mkdir isis3
+        $ cd isis3
+</pre>
+
+        <h2>2) Download Isis3</h2>
+        <p>
+          We are distributing Isis3 using an rsync server. The only command you
+          need on your system is "rsync". If it is not available on your system
+          please see your system administrator. To download Isis3 follow the
+          example for your hardware and operating system combintion. 
+          <strong><i>Make sure to include the "." at the end of the "rsync"
+          commands - if you don't, you will only get a download listing.</i></strong>
+        </p>
+
+        <p>
+          Example for Linux x86:
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3_x86_linux/isis .
+</pre>
+        <p>
+          Example for Linux x86 64-bit:
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3_x86-64_linux/isis .
+</pre>
+
+<strong><i>Warning:  We are no longer building ISIS 3 for Linux SuSE 9.X,
+  RedHat Enterprise 3 or equivalent systems.  The above Linux versions are
+  meant for SuSE 10.1,  RedHat Enterprise 4, or higher.  if you are running an
+  older operating system, you should upgrade at your earliest
+  convience.</i></strong>
+
+        <p>
+          Example for Solaris Sun:cassini
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3_sparc_sunos/isis .
+</pre>
+        <p>
+          Example for MacOSX PowerPC (NEW):
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3_powerpc_darwin/isis .
+</pre>
+        <p>
+          Example for MacOSX Intel (NEW):
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3_intel_darwin/isis .
+</pre>
+
+        <h2>3) Get the Isis3 data files </h2>
+        <p>
+            This step has changed from previous releases of Isis3. The data area
+            is now seperate from the source code. This data area is crucial to
+            Isis3 and needs to be downloaded too.
+        </p>
+        <p>
+            Perform this step from the same directory you ran the previous rsync
+            command from. In the example it was "/work1/isis3".
+        </p>
+        <p>
+            To download all Isis3 data files use the following command.
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3data/data .
+</pre>
+        <p>
+            To download specific Isis3 mission data files use the following 
+            commands. Please note: Reguardless of the mission you must have the 
+            base data.  Some valid missions are: cassini, clementine1, galileo, 
+            lo, messenger, mgs, mro, odyssey, viking1, viking2.
+        </p>
+<pre>
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3data/data/base data/
+        rsync -azv --delete isisdist.wr.usgs.gov::isis3data/data/{missionName} data/ 
+</pre>
+
+        <h2>4) Set up your environment</h2>
+        <p>
+            Isis3 needs to know where all its pieces are located. We use an
+            environment variable called "ISISROOT" to do this. This environment
+            variable needs to be set. for the above example use:
+        </p>
+
+        <p>
+            for C shells:
+        </p>
+<pre>
+        setenv ISISROOT /work1/isis3/isis
+</pre>
+
+        <p>
+            for Bourne shells:
+        </p>
+<pre>
+        ISISROOT=/work1/isis3/isis
+        export ISISROOT
+</pre>
+
+        <p>
+            Run the startup script for Isis. This script assumes you installed
+            the Isis 3 data area in the same directory you installed the Isis 3
+            package. If you did not do this, you will need to modify the script to
+            meet your needs.
+        </p>
+
+        <p>
+            for C shells:
+        </p>
+<pre>
+        source $ISISROOT/scripts/isis3Startup.csh
+</pre>
+
+        <p>
+            for Bourne shells:
+        </p>
+<pre>
+        . $ISISROOT/scripts/isis3Startup.sh
+</pre>
+
+
+
+        <p>
+          If you encounter any problems we will be monitoring our discussion
+          board daily and will respond to any questions as best we can.
+        </p>
+        <p>
+          <a href="http://isis.astrogeology.usgs.gov/IsisSupport">Isis Support Center</a>
+        </p>
+
+        <h2>Information and Warnings</h2>
+
+        <p>
+        Isis 3 and Isis 2 will have collisions of executable names (e.g.,
+        pds2isis exists in both systems).  It is best to remove initializations
+        of Isis 2 from your startup file otherwise you may get unpredictable
+        results.
+        </p>
+
+        <p>
+        The shell script used to set your environment to run Isis3 modifies the
+        PATH and LD_LIBRARY_PATH environment variables. This may cause
+        problems for other programs as we utilize several 3rd party libraries
+        (Qt, Xerces, etc)
+        </p>
+
+        <p>
+        The installation for Isis 3 does not allow the installer to choose what
+        data sets to install or where to put them. The only control is through
+        the destination directory in the rsync command. If you choose to
+        move the data area you will need to modify the isis3Startup.xxx script.
+        </p>
+
+      </body>
+
+      <type>HTML</type>
+
+      <source>
+        <filename>index.html</filename>
+      </source>
+    </file>
+  </files>
+
+  <category>
+    <categoryItem>technicaldoc</categoryItem>
+  </category>
+
+  <audience>
+    <target>administrator</target>
+  </audience>
+
+  <history>
+    <change name="Deborah Lee Soltesz" date="2004-03-24">Added missing flags to rsync command</change>
+    <change name="Stuart C. Sides" date="2005-09-27">Updated for isis 3.0.8</change>
+    <change name="Stuart C. Sides" date="2006-05-12">Updated for isis 3.0.18</change>
+    <change name="Jeff Anderson" date="2006-10-30">Remove references to beta version</change>
+    <change name="Jac Shinaman" date="2007-01-18">Updated for isis 3.1.5 - Mac OS X</change>
+   <change name="Steven Koechle" date="2008-04-09">Added rsync options for data </change>
+  </history>
+
+  <bibliography>
+    <title>Installing Isis</title>
+    <brief>Downloading and installing Isis 3</brief>
+    <description>
+      This document describes how to download and install a
+      binary version of Isis.
+    </description>
+    <author>Stuart Sides</author>
+    <date>2004-03-10</date>
+  </bibliography>
+</documentation>

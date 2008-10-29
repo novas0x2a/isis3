@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="mosrange" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Compute the lat/lon range of a set camera images for mosaicking
+  </brief>
+
+  <description>
+    This program computes and outputs the latitude/longitude range of a set of 
+    images in camera space, as well as the pixel resolution.  It creates a 
+    cam2map ready map file with the extents of the latitude/longitude ranges of 
+    the image set.  
+
+    mosrange provides better control over the values of the latitude/longitude 
+    ranges by providing a PRECISION parameter.  This parameter specifies the 
+    maximum nuber of digits precision for many of the Mapping group parameters 
+    used to project images.
+
+    Its primary use is to provide a quick, simple and batchable means of 
+    creating map files for projections.
+    
+    An example of the output generated is:
+<pre>
+Group = Mapping
+  ProjectionName          = Equirectangular
+  PixelResolution         = 505.47754523 &lt;meters&gt;
+  MinPixelResolution      = 483.44899069799 &lt;meters&gt; 
+  MaxPixelResolution = 527.50609976589  &lt;meters&gt;
+  CenterLongitude =166.14855246
+  CenterLatitude = -13.60671289
+  MinimumLatitude = -21.49282793 
+  MaximumLatitude = -5.72059785
+  MinimumLongitude = 133.9068054
+  MaximumLongitude = 198.39029952
+
+  # Actual Parameters without precision applied
+  PreciseCenterLongitude  = 166.14855245944
+  PreciseCenterLatitude   = -13.606712891325
+  PreciseMinimumLatitude  = -21.492827923654
+  PreciseMaximumLatitude  = -5.7205978589947
+  PreciseMinimumLongitude = 133.90680540876
+  PreciseMaximumLongitude = 198.39029951012
+End_Group
+End
+ </pre>
+  </description>
+
+  <category>
+    <categoryItem>Cameras</categoryItem>
+  </category>
+
+  <history>
+    <change name="Kris Becker" date="2006-03-26">
+      Original version
+    </change>
+    <change name="Kris Becker" date="2008-06-27">
+      Removed references to CubeInfo due to refactor
+    </change>
+</history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROMLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input cube file list to compute range for
+        </brief>
+        <description>
+          Use this parameter to select the filename of a cube with
+          camera labels.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="MAP">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <defaultPath>$base/templates/maps</defaultPath>
+        <internalDefault>None</internalDefault>
+          <filter>*.map *.cub</filter>
+        <brief>
+          An existing MAP file that will be used to determine the name of the 
+          projection
+        </brief>
+        <description>
+            If this file is given, the ProjectionName keyword is used to 
+            determine the type of projection desired.  If you know the type 
+            already as well as the proper spelling required by ISIS, then you 
+            may use PROJECTION as an alternative to this file.
+        </description>
+      </parameter>
+
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <internalDefault>None</internalDefault>
+        <filter>*.map</filter>
+        <brief>
+          Output map projection file generated from the list
+        </brief>
+        <description>
+          This file will contain a map projection file suitable for projecting 
+          the given set of images.  This file will contain all the parameters 
+          suitable for using directly in cam2map.
+        </description>
+      </parameter>
+
+      <parameter name="LOG">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>
+          Writes the specifics for each file to this file
+        </brief>
+        <description>
+            Each input file will have its geometry computed and the results can 
+            be written to this file for a looksee.
+        </description>
+      </parameter>
+    </group>
+    <group name="Mapping">
+      <parameter name="PROJECTION">
+        <type>string</type>
+        <default><item>None</item></default>
+        <internalDefault>None</internalDefault>
+        <brief>
+           Name of projection you want to create
+        </brief>
+        <description>
+          Use this named projection as the type of projection you wish to 
+          create.  It should be the complete valid name as required by the 
+          cam2map application.   This name can also be provided in the MAP 
+          parameter if you do not know the proper spelling/format required for 
+          ISIS projections.
+        </description>
+      </parameter>
+        
+      <parameter name="PRECISION">
+        <type>integer</type>
+        <default><item>12</item></default>
+        <brief>
+           Digits of precision to use for latitude/longitude specifications
+        </brief>
+        <description>
+            <p>
+                This parameter provides some control over how the Latitude and 
+                Longitude min/max values are written to the map file.  Note that 
+                this is useful for creating easy values to use in subsequent 
+                applications that may require these values.  If these values are not 
+                specified, about 12 digits of precision will be used.
+            </p>
+            <p>
+                Note that you can use a negative number which has the effect of 
+                rounding the whole integral number.  A value of 0 will produce 
+                an integral whole number, effectively removing the decimal 
+                portion of the numbers.  A positive number will truncate up
+                (maximums using the ceil function) or down (minimums using the 
+                floor function) range values such as MinimumLatitude and 
+                MaximumLatitude.  The pixel resolution is rounded using same 
+                technique (with the rint fuction).
+            </p>
+        </description>
+      </parameter>
+    </group>
+  </groups>
+</application>

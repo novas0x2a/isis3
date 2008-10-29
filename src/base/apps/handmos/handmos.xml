@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="handmos" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Hand place a cube into a mosaic
+  </brief>
+
+  <description>
+    This program allows the user to specify a (sample,line,band) position in a
+    mosaic and places an input cube at that position.  If a portion of the input
+    cube falls outside of the dimension of the mosaic it will be clipped.
+  </description>
+
+  <category>
+    <categoryItem>Utility</categoryItem>
+  </category>
+
+  <history>
+    <change name="Jeff Anderson" date="2003-07-14">
+      Original version
+    </change>
+    <change name="Stuart Sides" date="2003-07-29">
+      Modified filename parameters to be cube parameters where necessary
+    </change>
+    <change name="Jeff Anderson" date="2003-09-19">
+      Added option to intialize the base mosaic
+    </change>
+    <change name="Jeff Anderson" date="2004-02-17">
+      Updated progress text and made output create use input cube attributes 
+    </change>
+    <change name="Elizabeth Miller" date="2006-09-01">
+      Added the MATCHBANDBIN option that checks to make sure the input
+      cube bandbin group matches the mosaic bandbin group.  The default is true.
+    </change>
+    <change name="Elizabeth Miller" date="2006-09-28">
+      Added history entry to the output cube
+    </change>
+    <change name="Steven Lambright" date="2008-05-06">
+      Expanded upon position parameters
+    </change>
+  </history>
+
+  <oldName>
+    <item>mosaic</item>
+  </oldName>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Cube to place in the mosaic
+        </brief>
+        <description>
+          This is the cube which will be placed into the mosaic
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="MOSAIC">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Mosaic output cube
+        </brief>
+        <description>
+          The mosaic cube which will have the input cube placed
+          into it.  This cube must exist.  If you are creating a new
+          mosaic, you can utilize the "makecube" program to generate
+          the base mosaic.
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="INPUT">
+        <type>string</type>
+        <default>
+          <item>ONTOP</item>
+        </default>
+        <brief>The priority of pixel placement</brief>
+        <description>
+          This parameter is used to select one of two ways to mosaic the
+          pixels in areas of overlap.
+        </description>
+
+        <list>
+          <option value="ONTOP">
+            <brief> Input cube will be placed on top of the mosaic </brief>
+            <description>
+              When the input pixel is not NULL, the input
+              pixel value will be written to the output cube. Otherwise the
+              output is unchanged.
+            </description>
+          </option>
+          <option value="BENEATH">
+            <brief>Input cube will be placed beneath the mosaic </brief>
+            <description>
+              When the mosaic pixel is not NULL it will be left
+              unchanged. If the mosaic pixel is NULL
+              the input pixel will be written to the output cube.
+            </description>
+          </option>
+        </list>
+      </parameter>
+    </group>
+
+    <group name="Placement">
+      <parameter name="INSAMPLE">
+        <type>integer</type>
+        <brief>This sample in the input cube will be placed
+          at OUTSAMPLE in the mosaic.
+          </brief>
+        <description>  
+          This is a sample in the input image. This sample in the input cube will be placed at
+            OUTSAMPLE in the mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="INLINE">
+        <type>integer</type>
+        <brief>This line in the input cube will be placed
+          at OUTLINE in the mosaic.
+          </brief>
+        <description>  
+          This is a line in the input image. This line in the input cube will be placed at
+            OUTLINE in the mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="INBAND">
+        <type>integer</type>
+        <brief>This band in the input cube will be placed
+          at OUTBAND in the mosaic.
+          </brief>
+        <description>  
+          This is a band in the input image. This band in the input cube will be placed at
+            OUTBAND in the mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="OUTSAMPLE">
+        <type>integer</type>
+        <brief>The INSAMPLE sample will be placed at this sample in the mosaic</brief>
+        <description>
+          This parameter is used to select the starting sample where
+          the input cube will be placed. The sample INSAMPLE will be placed at
+          this sample in the output mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+    <parameter name="OUTLINE">
+        <type>integer</type>
+        <brief>The INLINE line will be placed at this line in the mosaic</brief>
+        <description>
+          This parameter is used to select the starting line where
+          the input cube will be placed. The line INLINE will be placed at
+          this line in the output mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+
+      <parameter name="OUTBAND">
+        <type>integer</type>
+        <brief>The INBAND band will be placed at this band in the mosaic</brief>
+        <description>
+          This parameter is used to select the starting band where
+          the input cube will be placed. The band INBAND will be placed at
+          this band in the output mosaic.
+        </description>
+        <default><item>1</item></default>
+      </parameter>
+    </group>
+
+    <group name="Initialization">
+      <parameter name="CREATE">
+        <type>string</type>
+        <default>
+          <item>NO</item>
+        </default>
+        <brief>Create the output mosaic</brief>
+        <description>
+          This parameter is used to specify if the mosaic needs to be created.
+        </description>
+
+        <list>
+          <option value="NO">
+            <brief> The output mosaic already exists </brief>
+            <description>
+              Choose this option if the output mosaic already exists/
+            </description>
+            <exclusions>
+              <item>NSAMPLES</item>
+              <item>NLINES</item>
+              <item>NBANDS</item>
+            </exclusions>
+          </option>
+
+          <option value="YES">
+            <brief>Create the output mosaic </brief>
+            <description>
+              The output mosaic does not exist and will be created
+            </description>
+            <inclusions>
+              <item>NSAMPLES</item>
+              <item>NLINES</item>
+              <item>NBANDS</item>
+            </inclusions>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="NSAMPLES">
+        <type>integer</type>
+        <minimum inclusive="yes">1</minimum>
+        <brief>The number of samples to allocate in the mosaic</brief>
+        <description>
+          This parameter is used to select the number of samples
+          in the output mosaic.
+        </description>
+      </parameter>
+
+      <parameter name="NLINES">
+        <type>integer</type>
+        <minimum inclusive="yes">1</minimum>
+        <brief>The number of lines to allocate in the mosaic</brief>
+        <description>
+          This parameter is used to select the number of lines
+          in the output mosaic.
+        </description>
+      </parameter>
+
+      <parameter name="NBANDS">
+        <type>integer</type>
+        <minimum inclusive="yes">1</minimum>
+        <brief>The number of bands to allocate in the mosaic</brief>
+        <description>
+          This parameter is used to select the number of bands
+          in the output mosaic.
+        </description>
+      </parameter>
+    </group>
+    <group name="BandBin Option">
+      <parameter name="MATCHBANDBIN">
+        <type>boolean</type>
+        <brief>Enforce BandBin Group Match</brief>
+        <description>
+          This option causes the application to fail if the input bandbin group does not 
+          match the mosaic bandbin group.
+        </description>
+        <default><item>TRUE</item></default>
+      </parameter>
+    </group>
+  </groups>
+</application>

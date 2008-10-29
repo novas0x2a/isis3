@@ -1,0 +1,5 @@
+Group = MarsGlobalSurveyor/MOC-WA
+  Library = MocWideAngleCamera
+  Routine = MocWideAngleCameraPlugin
+EndGroup
+ 

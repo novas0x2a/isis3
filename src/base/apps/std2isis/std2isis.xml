@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="std2isis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Imports a cube from PNG, JPEG, BMP or TIFF format
+  </brief>
+
+  <description>
+    This program will import several standard image formats to an Isis cube.
+    The input image formats may include PNG, JPEG, TIFF, BMP, and GIF.  Not all
+    formats are available as the program implementation depends on the Qt 
+    library by TrollTech.  This program's output will be a cube with exactly
+    one band.
+  </description>
+
+  <history>
+    <change name="Steven Lambright" date="2007-07-18">
+      Original version
+    </change>
+    <change name="Steven Koechle" date="2007-08-29">
+      Added special pixel ranges and updated example images
+    </change>
+  </history>
+
+  <category>
+    <categoryItem>Import and Export</categoryItem>
+  </category>
+
+  <seeAlso>
+    <applications>
+      <item>isis2std</item>
+    </applications>
+  </seeAlso>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input image file to import
+        </brief>
+        <description>
+          Use this parameter to select the filename to import.
+        </description>
+        <filter>
+          *.PNG *.JPG* .JPEG *.BMP *.TIFF *.GIF
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <type>cube</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output file 
+        </brief>
+        <description>
+          Use this parameter to specify the name of the output cube.
+        </description>
+        <pixelType>real</pixelType>
+      </parameter>
+    </group>
+
+    <group name="Special Pixels">
+      <parameter name="SETNULLRANGE">
+        <type>boolean</type>
+        <default>
+          <item>NO</item>
+        </default>
+        <brief>Create special pixel values</brief>
+        <description>
+	    If this option is used input raw pixels below minimum and
+        above maximum will be converted to LRS and HRS respectively.  Otherwise
+        pixels in the input raw file will be left unchanged in most cases.  For
+        example, importing a raw 8-bit file and outputing to a 16-bit or 32-bit         real will
+        cause 0 and 255 to be actual values.  If left as 8-bit then 0 will
+        be NULL and 255 will be HRS.
+        </description>
+        <inclusions>
+          <item>NULLMIN</item>
+          <item>NULLMAX</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="NULLMIN">
+        <type>double</type>
+        <brief> Minimum valid value </brief>
+        <description>
+          Minimum valid value.  Anything below this value will be
+          set to LRS.
+        </description>
+        <inclusions>
+          <item>SETNULLRANGE</item>
+        </inclusions>
+      </parameter>
+      <parameter name="NULLMAX">
+        <type>double</type>
+        <brief> Maximum valid value </brief>
+        <description>
+          Maximum valid value.  Anything above this value will be
+          set to HRS.
+        </description>
+        <inclusions>
+          <item>SETNULLRANGE</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="SETHRSRANGE">
+        <type>boolean</type>
+        <default>
+          <item>NO</item>
+        </default>
+        <brief>Create special pixel values</brief>
+        <description>
+	    If this option is used input raw pixels below minimum and
+        above maximum will be converted to LRS and HRS respectively.  Otherwise
+        pixels in the input raw file will be left unchanged in most cases.  For
+        example, importing a raw 8-bit file and outputing to a 16-bit or 32-bit         real will
+        cause 0 and 255 to be actual values.  If left as 8-bit then 0 will
+        be NULL and 255 will be HRS.
+        </description>
+        <inclusions>
+          <item>HRSMIN</item>
+          <item>HRSMAX</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="HRSMIN">
+        <type>double</type>
+        <brief> Minimum valid value </brief>
+        <description>
+          Minimum valid value.  Anything below this value will be
+          set to LRS.
+        </description>
+        <inclusions>
+          <item>SETHRSRANGE</item>
+        </inclusions>
+      </parameter>
+      <parameter name="HRSMAX">
+        <type>double</type>
+        <brief> Maximum valid value </brief>
+        <description>
+          Maximum valid value.  Anything above this value will be
+          set to HRS.
+        </description>
+        <inclusions>
+          <item>SETHRSRANGE</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="SETLRSRANGE">
+        <type>boolean</type>
+        <default>
+          <item>NO</item>
+        </default>
+        <brief>Create special pixel values</brief>
+        <description>
+	    If this option is used input raw pixels below minimum and
+        above maximum will be converted to LRS and HRS respectively.  Otherwise
+        pixels in the input raw file will be left unchanged in most cases.  For
+        example, importing a raw 8-bit file and outputing to a 16-bit or 32-bit         real will
+        cause 0 and 255 to be actual values.  If left as 8-bit then 0 will
+        be NULL and 255 will be HRS.
+        </description>
+        <inclusions>
+          <item>LRSMIN</item>
+          <item>LRSMAX</item>
+        </inclusions>
+      </parameter>
+
+      <parameter name="LRSMIN">
+        <type>double</type>
+        <brief> Minimum valid value </brief>
+        <description>
+          Minimum valid value.  Anything below this value will be
+          set to LRS.
+        </description>
+        <inclusions>
+          <item>SETLRSRANGE</item>
+        </inclusions>
+      </parameter>
+      <parameter name="LRSMAX">
+        <type>double</type>
+        <brief> Maximum valid value </brief>
+        <description>
+          Maximum valid value.  Anything above this value will be
+          set to HRS.
+        </description>
+        <inclusions>
+          <item>SETLRSRANGE</item>
+        </inclusions>
+      </parameter>
+    </group>
+  </groups>
+
+  <examples>
+    <example>
+      <brief>
+        Converting an image to an Isis Cube
+      </brief>
+      <description>
+        This example will show the conversion from a standard grayscale JPEG image to a cube.
+      </description>
+      <terminalInterface>
+        <commandLine>FROM=peaks.jpg TO=peaks.cub</commandLine>
+        <description>Convert the image peaks.jpg to the Isis Cube peaks.cub</description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image src="assets/images/std2isis1.jpg" width="450" height="550">
+            <brief>Convert the image peaks.jpg to the Isis Cube peaks.cub</brief>
+            <description>
+              The is the GUI for std2isis when converting the image peaks.jpg to the Isis Cube peaks.cub
+            </description>
+            <thumbnail caption="Convert the image peaks.jpg to the Isis Cube peaks.cub" src="assets/thumbs/std2isis1.jpg" width="164" height="200" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <inputImages>
+        <image height="200" width="200" src="assets/images/peaks.jpg">
+          <brief>Input Image</brief>
+          <description>
+            The is the input image peaks.jpg in this example.
+          </description>
+          <thumbnail src="assets/thumbs/peaks.jpg" width="200" height="200" caption="Input Image" />
+        </image>
+      </inputImages>
+      <outputImages>
+        <image width="550" height="550" src="assets/images/peaks.cub.jpg">
+          <brief>Output Isis Cube</brief>
+          <description>
+            The is the output Isis Cube peaks.cub generated from this example.
+          </description>
+          <thumbnail src="assets/thumbs/peaks.cub.jpg" width="200" height="200" caption="Output Image" />
+        </image>
+      </outputImages>
+    </example>
+  </examples>
+</application>

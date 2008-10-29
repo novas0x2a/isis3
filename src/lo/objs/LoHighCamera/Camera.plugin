@@ -1,0 +1,13 @@
+Group = LunarOrbiter3/HighResolutionCamera
+  Library = LoHighCamera
+  Routine = LoHighCameraPlugin
+EndGroup
+Group = LunarOrbiter4/HighResolutionCamera
+  Library = LoHighCamera
+  Routine = LoHighCameraPlugin
+EndGroup
+Group = LunarOrbiter5/HighResolutionCamera
+  Library = LoHighCamera
+  Routine = LoHighCameraPlugin
+EndGroup
+ 

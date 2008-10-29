@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<class name="IsisMocNarrowAngleSumming" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Object/object.xsd">
+
+  <brief>Converts between image and detector coordinates for MOC NA camera</brief>
+
+  <description>
+    This class is a convenience class used in camera models and radiometric calibration for converting
+    MOC Narrow Angle camera image coordinates into detector coordinates.  This is accomplished
+    by applying the crosstrack summing mode and the first line sample (edit mode) in the conversion process.
+  </description>
+
+  <history>
+    <change name="Jeff Anderson" date="2003-10-28">
+      Original version
+    </change>
+  </history>
+
+  <includes>
+    <item>IsisMocNarrowAngleSumming.h</item>
+  </includes>
+
+  <category>
+    <missionItem>Mars Global Surveyor</missionItem>
+  </category>
+
+  <seeAlso>
+    <classes>
+      <item>IsisMocWideAngleSumming</item>
+    </classes>
+  </seeAlso>
+
+  <public>
+    <function name="IsisMocNarrowAngleSumming" type="constructor">
+      <description>
+        Constructs an IsisMocNarrowAngleSummingSpice object.
+      </description>
+      <argumentList>
+        <argument name="csum">
+          <type>int</type>
+          <description>
+            Cross track summing value, usually read from the labels of the cube
+          </description>
+        </argument>
+        <argument name="ss">
+          <type>int</type>
+          <description>
+            First line sample value, usually read from the labels of the cube
+          </description>
+        </argument>
+      </argumentList>
+    </function>
+
+    <function name="~IsisMocNarrowAngleSumming" type="destructor">
+      <description>
+        Destroys the object
+      </description>
+    </function>
+
+    <function name="Detector" type="method">
+      <type>double</type>
+      <description>
+        Returns a detector position given a sample position in the cube by removing the summing mode and first line sample values
+      </description>
+      <argumentList>
+        <argument name="sample">
+          <type>double</type>
+          <description>
+            Sample position
+          </description>
+        </argument>
+      </argumentList>
+    </function>
+
+    <function name="Sample" type="method">
+      <type>double</type>
+      <description>
+        Returns a sample position given a detector position in the cube by applying the summing mode and first line sample values
+      </description>
+      <argumentList>
+        <argument name="detector">
+          <type>double</type>
+          <description>
+            Sample position
+          </description>
+        </argument>
+      </argumentList>
+    </function>
+  </public>
+</class>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="mat2cnet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Converts an ISIS2 match point file to an Isis3 control network file.
+  </brief>
+
+  <description>
+    <p>
+      This program converts an ISIS2 match point file to an Isis3 control
+      network file.
+    </p>
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+    <categoryItem>Import and Export</categoryItem>
+  </category>
+
+  <history>
+    <change name="Brendan George" date="2007-08-10">
+      Original version
+    </change>
+    <change name="Steven Lambright" date="2007-12-14">
+      Now IMAGE_NUMBER will be used before IMAGE_ID for matching files
+    </change>
+    <change name="Stuart Sides" date="2008-04-15"> 
+        Fixed bug where serial numbers were not correct.
+    </change>
+    <change name="Steven Lambright" date="2008-05-19"> 
+        Error message added for missing FSC's
+    </change>
+    <change name="Christopher Austin" date="2008-07-01">
+       Added exception message when the given MATCH file's "Matchpoint total"
+       keyword is less than the number of actual Match Points in the file.
+    </change>
+  </history>
+
+  <groups>
+    <group name="ISIS 2 Files">
+      <parameter name="LIST2">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          List of ISIS2 input cubes in the match point file.
+        </brief>
+        <description>
+          A text file containing one column of ISIS2 cube file names. Every file
+          used in the match point file should be represented in this list. The
+          cubes must be available for the program to open and must be in the 
+          same order as the Isis3 cubes in LIST3
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="MATCH">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+            ISIS2 match point file
+        </brief>
+        <description>
+          Use this parameter to spexify the ISIS2 match point file
+          to be converted to an Isis3 control network file.
+        </description>
+        <filter>
+          *.mat
+        </filter>
+      </parameter>
+    </group>
+
+    <group name="Isis 3 Files">
+        <parameter name="LIST3">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>
+            List of ISIS3 input cubes in the match point file.
+          </brief>
+          <description>
+          A text file containing one column of ISIS3 cube file names. Every file
+          used in the match point file should be represented in this list. The
+          cubes must be available for the program to open and must be in the 
+          same order as the Isis2 cubes in LIST2
+          </description>
+          <filter>
+            *.lis
+          </filter>
+        </parameter>
+
+        <parameter name="CONTROL">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>
+              Isis3 output control network file
+          </brief>
+          <description>
+            Use this parameter to spexify the file name of the 
+            output Isis3 control network.
+            </description>
+          <filter>
+            *.ctl
+          </filter>
+        </parameter>
+    </group>
+
+    <group name="Control">
+    <parameter name="DESCRIPTION">
+      <type>string</type>
+      <brief>
+          The description of this output control network.
+      </brief>
+      <description>
+          A string describing this control network.
+      </description>
+    </parameter>
+
+      <parameter name="NETWORKID">
+        <type>string</type>
+        <brief>
+            Name of the output control network
+        </brief>
+        <description>
+            The ID or name of this particular control network. This string
+            should be unique.
+        </description>
+      </parameter>
+
+      <parameter name="TARGET">
+        <type>string</type>
+        <brief>
+            The body the control network is for
+        </brief>
+        <description>
+            The planet or body the control points and measures in this control
+            network are for.
+        </description>
+      </parameter>
+
+    </group>
+  </groups>
+</application>

@@ -1,0 +1,134 @@
+include $(ISISROOT)/make/isismake.macros
+
+ROOTINCLUDES = $(addprefix $(ISISROOT)/inc/, $(INCS))
+PLUGINS      = $(strip $(wildcard *.plugin))
+LIBRARY      = lib$(shell basename $(CURDIR))
+ARCHIVELIB   = $(LIBRARY).a
+SHAREDLIB    = $(LIBRARY).$(SHAREDLIBEXT)
+
+.SUFFIXES:
+.SUFFIXES: .cpp .o
+.SUFFIXES: .xml .html
+.SUFFIXES: .a .so .dylib
+
+object: $(OBJS)
+
+
+.cpp.o :
+	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) -c -o $@ $?
+
+#  Its not necessarily $(LIBRARY)!
+.a.so :
+	$(LDSHARED) $(ISISSHAREDFLAGS) $(ISISSHAREDON) -o $@ $? $(ISISSHAREDOFF)
+
+#  Its not necessarily $(LIBRARY)!
+.a.dylib :
+	$(RM) -rd .objs;
+	$(MKDIR) .objs && cd .objs && ar x ../$*.a;
+	$(LDSHARED) $(DYLIBFLAGS) $(ISISSHAREDON) -o $@ \
+	  -install_name $(CURDIR)/$@ $(DYLIBVERSION)  .objs/*.o $(ISISSHAREDOFF)
+	$(RM) -rd .objs;
+
+incs: $(ROOTINCLUDES)
+
+$(ROOTINCLUDES): $(INCS)
+	cp -p ${@F} $(ISISROOT)/inc
+	chmod 644 $(ISISROOT)/inc/${@F}
+
+#  For plugins, it is the $(LIBRARY) (more precisely $(SHAREDLIB))
+install: object
+	if [ "$(PLUGINS)" != "" ]; \
+	then \
+	  touch $(ISISROOT)/lib/$(PLUGINS); \
+	  cat $(PLUGINS) >> $(ISISROOT)/lib/$(PLUGINS); \
+	  $(MAKE) plugin; \
+	  cp -p $(SHAREDLIB) $(ISISROOT)/lib; \
+	elif [ "$(OBJS)" != "" ]; \
+	then \
+	  ar $(ISISARFLAGS) -crs $(ISISROOT)/lib/libisis3.a $(OBJS); \
+	  $(RANLIB) $(ISISROOT)/lib/libisis3.a; \
+	fi
+
+force: ;
+
+html: force
+	mkdir -p docbuild
+	cat $(ISISROOT)/src/docsys/Object/build//Programmer.conf         >  docbuild/ProgTester_temp.conf
+	echo "FILE_PATTERNS          = *.h *.cpp *.doxydef"             >> docbuild/ProgTester_temp.conf
+	echo "OUTPUT_DIRECTORY = $(CURDIR)/"                             >> docbuild/ProgTester_temp.conf
+	echo "STRIP_FROM_PATH  = $(CURDIR)/"                             >> docbuild/ProgTester_temp.conf
+	echo "INPUT            = $(ISISROOT)/src/docsys/Object/build/isisDoxyDefs.doxydef $(CURDIR)/"  >> docbuild/ProgTester_temp.conf
+	echo "HTML_HEADER      = $(ISISROOT)/src/docsys/Object/build/IsisObjectHeaderProgTester.html" >> docbuild/ProgTester_temp.conf
+	echo "HTML_FOOTER      = $(ISISROOT)/src/docsys/Object/build/IsisObjectFooterProgTester.html" >> docbuild/ProgTester_temp.conf
+	echo "HTML_OUTPUT      = html"                                   >> docbuild/ProgTester_temp.conf
+	echo "TAGFILES         = "                                       >> docbuild/ProgTester_temp.conf
+	echo "HTML_STYLESHEET  = $(ISISROOT)/src/docsys/Object/build/doxygen.css"                     >> docbuild/ProgTester_temp.conf
+	echo "IMAGE_PATH       = $(CURDIR)/"                             >> docbuild/ProgTester_temp.conf
+
+	if [ "$(findstring LOUD,$(MODE))" = "LOUD" ]; \
+	then \
+	  echo "QUIET                  = NO"                           >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARNINGS               = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_IF_UNDOCUMENTED   = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_IF_DOC_ERROR      = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_NO_PARAMDOC       = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	else \
+	  echo "QUIET                  = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARNINGS               = YES"                           >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_IF_UNDOCUMENTED   = YES"                           >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_IF_DOC_ERROR      = YES"                           >> docbuild/ProgTester_temp.conf;   \
+	  echo "WARN_NO_PARAMDOC       = YES"                           >> docbuild/ProgTester_temp.conf;   \
+	fi 
+
+	doxygen docbuild/ProgTester_temp.conf
+	-$(RM) -r docbuild
+	echo "View your documentation by opening the file html/index.html in a browser"
+
+clean:
+	-$(RM) $(OBJS) unitTest.o unitTest print.prt $(ARCHIVELIB) $(SHAREDLIB)
+	-$(RM) -rf html 
+	if [ "$(shell cat Makefile | grep cleanlocal | wc -l)" -ne 0 ]; \
+	then \
+	  $(MAKE) cleanlocal; \
+	fi
+
+sanitize: clean
+	-$(RM) print.prt tttt* junk.*
+
+test:
+	$(ISISROOT)/scripts/unitTester ; \
+        temp=$$? ; \
+	if test $$temp -eq 0 ; \
+	then \
+	  echo "Ok"; \
+	elif test $$temp -eq 2 ; \
+	then \
+	  echo "unitTest.cpp not found"; \
+	elif test $$temp -eq 1 ; \
+	then \
+	  echo "`basename $(CURDIR)`.truth not found"; \
+	elif test $$temp -eq 3 ; \
+	then \
+	  echo "Could not make unitTest"; \
+	elif test $$temp -eq 4 ; \
+	then \
+	  echo "UnitTest aborted"; \
+	elif test $$temp -eq 5 ; \
+	then \
+	  echo "Failed"; \
+	else \
+	  echo "Unexpected system error"; \
+	fi
+
+unitTest: $(OBJS) unitTest.o
+	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ unitTest.o $(OBJS) $(ALLLIBS)
+
+plugin: $(OBJS)
+	$(LDSHARED) $(ALLLIBDIRS) $(ISISSHAREDFLAGS) $(ISISSHAREDON) \
+	    -o $(SHAREDLIB) $(OBJS) $(ISISSHAREDOFF)
+
+truthdata: unitTest
+	./unitTest >& `basename $(CURDIR)`.truth;
+	
+ostruthdata: unitTest
+	./unitTest >& `basename $(CURDIR)`_$(HOST_ARCH)_$(HOST_PROC).truth;

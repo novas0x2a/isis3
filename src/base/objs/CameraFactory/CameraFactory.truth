@@ -1,0 +1,18 @@
+Unit test for CameraFactory
+Testing missing Instrument Group ...
+**CAMERA ERROR** Unable to initialize camera model from group [Instrument]
+**PVL ERROR** Unable to find group [Instrument]
+
+Testing missing spacecraft name ...
+**CAMERA ERROR** Unable to initialize camera model from group [Instrument]
+**PVL ERROR** Keyword [SpacecraftName] does not exist in [Group = Instrument]
+
+Testing missing instrument id ...
+**CAMERA ERROR** Unable to initialize camera model from group [Instrument]
+**PVL ERROR** Keyword [InstrumentId] does not exist in [Group = Instrument]
+
+Testing unsupported camera mode ...
+**CAMERA ERROR** Unable to initialize camera model from group [Instrument]
+**SYSTEM ERROR** Unsupported camera model, unable to find plugin for SpacecraftName [BOGUS SPACECRAFT] with InstrumentId [BOGUS INSTRUMENT]
+**PVL ERROR** Unable to find group [BOGUSSPACECRAFT/BOGUSINSTRUMENT] in file [/usgs/pkgs/isis3/isis/lib/Camera.plugin]
+

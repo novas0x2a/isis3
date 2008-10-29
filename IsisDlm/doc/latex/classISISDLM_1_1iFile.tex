@@ -1,0 +1,226 @@
+\section{ISISDLM::i\-File Class Reference}
+\label{classISISDLM_1_1iFile}\index{ISISDLM::iFile@{ISISDLM::iFile}}
+{\tt \#include $<$i\-File.h$>$}
+
+\subsection*{Public Types}
+\begin{CompactItemize}
+\item 
+typedef unsigned long {\bf Iid}
+\begin{CompactList}\small\item\em Definition of ID type. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Public Member Functions}
+\begin{CompactItemize}
+\item 
+std::string {\bf name} () const
+\item 
+{\bf Iid} {\bf get\-Id} () const
+\item 
+bool {\bf read\-Only} () const
+\item 
+Isis::Cube $\ast$ {\bf Cube} () const
+\item 
+Isis::Pvl $\ast$ {\bf Pvl} () const
+\item 
+void {\bf Flush} ()
+\end{CompactItemize}
+\subsection*{Protected Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf i\-File} ()
+\item 
+{\bf i\-File} (const std::string \&filename, Isis::Cube $\ast$cube, bool readonly=true)
+\item 
+{\bf i\-File} (const std::string \&filename, Isis::Pvl $\ast$pvl, bool readonly=true)
+\item 
+virtual {\bf $\sim$i\-File} ()
+\end{CompactItemize}
+\subsection*{Private Member Functions}
+\begin{CompactItemize}
+\item 
+{\bf i\-File} (const {\bf i\-File} \&f)
+\item 
+{\bf i\-File} {\bf operator=} (const {\bf i\-File} \&f)
+\item 
+{\bf Iid} {\bf new\_\-id} ()
+\end{CompactItemize}
+\subsection*{Private Attributes}
+\begin{CompactItemize}
+\item 
+{\bf Iid} {\bf \_\-iid}
+\begin{CompactList}\small\item\em Unique identifier. \item\end{CompactList}\item 
+bool {\bf \_\-readonly}
+\begin{CompactList}\small\item\em Input/Output status. \item\end{CompactList}\item 
+Isis::Cube $\ast$ {\bf \_\-cube}
+\begin{CompactList}\small\item\em ISIS cube file definition/pointer. \item\end{CompactList}\item 
+Isis::Pvl $\ast$ {\bf \_\-pvl}
+\begin{CompactList}\small\item\em PVL label/file pointer. \item\end{CompactList}\item 
+std::string {\bf \_\-filename}
+\begin{CompactList}\small\item\em Name of file. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Static Private Attributes}
+\begin{CompactItemize}
+\item 
+{\bf Iid} {\bf \_\-iid\_\-counter} = 0
+\begin{CompactList}\small\item\em Initialize the internal instance of itself. \item\end{CompactList}\end{CompactItemize}
+\subsection*{Friends}
+\begin{CompactItemize}
+\item 
+class {\bf File\-Repository}
+\end{CompactItemize}
+
+
+\subsection{Detailed Description}
+Specification of internal ISIS elements for tracking purposes This specification tracks an ISIS cube, its label, its identifier and a good bit of information regarding its status.
+
+This structure supports just a PVL label that is independant of an ISIS cube file. This allows use cases for creating and maintaining only PVL files.
+
+Version: \begin{Desc}
+\item[Id]{\bf i\-File.h},v 1.4 2004/11/02 15:38:53 kbecker Exp \end{Desc}
+
+
+
+
+\subsection{Member Typedef Documentation}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!Iid@{Iid}}
+\index{Iid@{Iid}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}typedef unsigned long {\bf ISISDLM::i\-File::Iid}}\label{classISISDLM_1_1iFile_w0}
+
+
+Definition of ID type. 
+
+
+
+\subsection{Constructor \& Destructor Documentation}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!iFile@{iFile}}
+\index{iFile@{iFile}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::i\-File::i\-File ()\hspace{0.3cm}{\tt  [protected]}}\label{classISISDLM_1_1iFile_b0}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!iFile@{iFile}}
+\index{iFile@{iFile}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::i\-File::i\-File (const std::string \& {\em filename}, Isis::Cube $\ast$ {\em cube}, bool {\em readonly} = true)\hspace{0.3cm}{\tt  [protected]}}\label{classISISDLM_1_1iFile_b1}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!iFile@{iFile}}
+\index{iFile@{iFile}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::i\-File::i\-File (const std::string \& {\em filename}, Isis::Pvl $\ast$ {\em pvl}, bool {\em readonly} = true)\hspace{0.3cm}{\tt  [protected]}}\label{classISISDLM_1_1iFile_b2}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!~iFile@{$\sim$iFile}}
+\index{~iFile@{$\sim$iFile}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::i\-File::$\sim${\bf i\-File} ()\hspace{0.3cm}{\tt  [protected, virtual]}}\label{classISISDLM_1_1iFile_b3}
+
+
+
+
+Here is the call graph for this function:\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=155pt]{classISISDLM_1_1iFile_b3_cgraph}
+\end{center}
+\end{figure}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!iFile@{iFile}}
+\index{iFile@{iFile}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}ISISDLM::i\-File::i\-File (const {\bf i\-File} \& {\em f})\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_d0}
+
+
+
+
+\subsection{Member Function Documentation}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!Cube@{Cube}}
+\index{Cube@{Cube}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Cube$\ast$ ISISDLM::i\-File::Cube () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1iFile_a3}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!Flush@{Flush}}
+\index{Flush@{Flush}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}void ISISDLM::i\-File::Flush ()}\label{classISISDLM_1_1iFile_a5}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!getId@{getId}}
+\index{getId@{getId}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf Iid} ISISDLM::i\-File::get\-Id () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1iFile_a1}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!name@{name}}
+\index{name@{name}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string ISISDLM::i\-File::name () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1iFile_a0}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!new_id@{new\_\-id}}
+\index{new_id@{new\_\-id}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf Iid} ISISDLM::i\-File::new\_\-id ()\hspace{0.3cm}{\tt  [inline, private]}}\label{classISISDLM_1_1iFile_d2}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!operator=@{operator=}}
+\index{operator=@{operator=}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf i\-File} ISISDLM::i\-File::operator= (const {\bf i\-File} \& {\em f})\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_d1}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!Pvl@{Pvl}}
+\index{Pvl@{Pvl}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl $\ast$ ISISDLM::i\-File::Pvl () const}\label{classISISDLM_1_1iFile_a4}
+
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!readOnly@{readOnly}}
+\index{readOnly@{readOnly}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool ISISDLM::i\-File::read\-Only () const\hspace{0.3cm}{\tt  [inline]}}\label{classISISDLM_1_1iFile_a2}
+
+
+
+
+\subsection{Friends And Related Function Documentation}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!FileRepository@{FileRepository}}
+\index{FileRepository@{FileRepository}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}friend class {\bf File\-Repository}\hspace{0.3cm}{\tt  [friend]}}\label{classISISDLM_1_1iFile_n0}
+
+
+
+
+\subsection{Member Data Documentation}
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_cube@{\_\-cube}}
+\index{_cube@{\_\-cube}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Cube$\ast$ {\bf ISISDLM::i\-File::\_\-cube}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_r2}
+
+
+ISIS cube file definition/pointer. 
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_filename@{\_\-filename}}
+\index{_filename@{\_\-filename}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}std::string {\bf ISISDLM::i\-File::\_\-filename}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_r4}
+
+
+Name of file. 
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_iid@{\_\-iid}}
+\index{_iid@{\_\-iid}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf Iid} {\bf ISISDLM::i\-File::\_\-iid}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_r0}
+
+
+Unique identifier. 
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_iid_counter@{\_\-iid\_\-counter}}
+\index{_iid_counter@{\_\-iid\_\-counter}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}{\bf i\-File::Iid} {\bf ISISDLM::i\-File::\_\-iid\_\-counter} = 0\hspace{0.3cm}{\tt  [static, private]}}\label{classISISDLM_1_1iFile_v0}
+
+
+Initialize the internal instance of itself. 
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_pvl@{\_\-pvl}}
+\index{_pvl@{\_\-pvl}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}Isis::Pvl$\ast$ {\bf ISISDLM::i\-File::\_\-pvl}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_r3}
+
+
+PVL label/file pointer. 
+
+\index{ISISDLM::iFile@{ISISDLM::i\-File}!_readonly@{\_\-readonly}}
+\index{_readonly@{\_\-readonly}!ISISDLM::iFile@{ISISDLM::i\-File}}
+\subsubsection{\setlength{\rightskip}{0pt plus 5cm}bool {\bf ISISDLM::i\-File::\_\-readonly}\hspace{0.3cm}{\tt  [private]}}\label{classISISDLM_1_1iFile_r1}
+
+
+Input/Output status. 
+
+
+
+The documentation for this class was generated from the following files:\begin{CompactItemize}
+\item 
+{\bf i\-File.h}\item 
+{\bf i\-File.cpp}\end{CompactItemize}

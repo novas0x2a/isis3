@@ -1,0 +1,26 @@
+include $(ISISROOT)/make/isismake.macros
+
+APPLICATIONS = $(filter-out CVS Makefile , $(wildcard *))
+
+applications:
+	for i in $(APPLICATIONS); do \
+          echo "    Building and installing [$$i]"; \
+	  cd $$i; $(MAKE) install; cd ..; \
+	done
+
+documentation:
+	for i in $(APPLICATIONS); do \
+          echo "    Installing application documentation [$$i]"; \
+	  cd $$i; $(MAKE) docs; cd ..; \
+	done
+
+clean:
+	for i in $(APPLICATIONS); do \
+	  cd $$i; $(MAKE) clean; cd ..; \
+	done
+
+test:
+	for i in $(APPLICATIONS); do \
+          printf %-46s "    Testing [$$i]"; \
+	  cd $$i; $(MAKE) test; cd ..; \
+	done

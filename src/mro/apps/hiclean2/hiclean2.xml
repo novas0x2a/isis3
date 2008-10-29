@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="hiclean2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Cleans a HiRISE image using Alan Delamere's's clean_image application
+  </brief>
+
+  <description>
+      <p>
+        <b>hiclean2</b> implements Alan Delamere's version of HiRISE image radiometric calibration
+        as coded in his IDL program called <i>clean.pro</i>.  Mike's general approach is to 
+        use the calibration data acquired for each image and compute statistics from it used to
+        characterize instrument conditions at the time the image is acquired.  This data includes
+        the reverse clock, mask, buffer and dark current data that is stored in Isis objects within
+        all HiRISE Isis cubes.  These objects are sometimes referred to as Binary Large OBjects,
+      </p>
+      <p>
+        Excerpts from Alan's description of his algorithm:
+        <PRE>
+Cimage_mask,image,info
+Step 1. Average all the usable masked pixels in each column including buffer and
+ dark for the 18 binned lines for bin 1, 9 lines for bin 2 and 4 lines for bin 4
+. Floating point array of 1052 columns for bin 1, 540 columns for bin 2 and 284 
+columns for bin 4.
+Step 2. Subtract this line from every line in the image.
+
+Cimage_dark, image, info
+The dark region has had subtracted from it the dark current generated in the mas
+k area by the above procedure. It should be a nominal zero value except for drif
+t and temperature change during imaging
+Step 1. Average the last twelve columns of each line and produce a floating poin
+t array of n lines long.
+Step 2. Apply an 11 point smoothing to this dark array. [I have tried a number o
+f different smoothing approaches including using median and averaging of differe
+nt lengths. For the recent dark images the 11 point smoothing produced the minim
+um observable degradation.]
+Step 3. Subtract the smoothed value from each line in the array.
+
+The actual code used is given below.
+
+What are the residual errors from this method?
+1.      The masked area pixels are closer to the hot amplifier than the image pi
+xels. The temperature of the CCD will rise during imaging so insufficient dark c
+urrent may not be removed.
+2.      There is an unexplained negative value in the binned area prior to the d
+ark area. This is the biggest error. For bin 2 it is about 15-30 DN.
+3.      Other?
+
+Essential algorithm extracted from code below
+  ave_lines,image,21,20+maskbinend,masked       ;All columns in masked
+for I = 0L,nlines-1 do a(0,i)=image(*,i)-masked         ;all columns have masked
+ subtracted
+ave_cols,image,nc-12,nc-1,dark
+dark   = smooth(dark,11)
+for i  = 0L,nlines-1 do a(12:(nc-17),i)  = image(12:(nc-17),i)-dark(i)*bin
+;Note bin not bin^2
+for i  = 0L,nlines-1 do a(0:12,i)  = image(0:12,i)-dark(i)
+for i  = 0L,nlines-1 do a(nc-16:nc-1,i)  = image(nc-16:nc-1,i)-dark(i)
+        </PRE>
+      </p>
+      <p>
+          In addition to those changes, some consideration has been given to
+          situations where bad missing (null) data exists in the mask and dark
+          calibration data.  Bad data could occur in these areas when gaps
+          occur in the dowlink of the file from the spacecraft or other anomolies.
+          Also, LookUp Tables (LUTs) can cause data saturation if they are
+          not carefully considered prior to use. 
+      </p>
+      <p>
+          In cases of missing data in the mask region, the minimum and maximum
+          of the data after averaging each column is computed.  For low saturated
+          and null special pixels, the minimum mask average value is used.  For high
+          saturation special pixels, the maximum is used.
+      </p>
+      <p>
+          For the dark pixel calibration data, an 11 pixel wide filter is applied after
+          averaging each line in this region.  This replaces any missing data with
+          the average of the 11 pixel filter.  If data is wider than 11 pixels in this
+          data, nulling of image data will result.
+      </p>
+      <p>
+          Under any condition valid data is nulled due to insufficent calibration data
+          in either region, hiclean2 terminates with and error.  The resulting output
+          files is retained, however - just in case it is useable.
+      </p>
+  </description>
+  <history>
+    <change name="Kris Becker" date="2005-12-19">
+      Original Version
+    </change>
+    <change name="Kris Becker" date="2006-02-19">
+        Discovered an off-by-one index issue when computing drift
+        correction. It amounted to approximately 2 DN difference.
+    </change>
+    <change name="Kris Becker" date="2006-03-14">
+        Changed to use the median statistic for computations involving
+        calibration.  The average is still used to gather quantitative
+        data on the radiometric calibration process.
+    </change>
+    <change name="Elizabeth Miller" date="2006-06-21">
+      Modified the cleaning sequence and added the propagation of 
+      the cleaned blobs
+    </change>
+    <change name="Kris Becker" date="2006-08-04">
+        There was a bug in how the line-by-line cleaning was being performed.
+        Basically, drift correction for all lines were done using dark and buffer
+        statistics from the first line.  Also, the 100 line filter was not being used
+        in the drift correction.  These problems have been fix.  This fix has also
+        nearly halved the processing time.
+
+        Image statistics are now added to the Application log file instead of
+        standard output.
+    </change>
+    <change name="Kris Becker" date="2006-10-26">
+        This version is a nearly complete rewrite based upon a simplified
+        version of an Alan Delamere algorithm.   
+
+        It also targets bloody IR10_1 and avoids using the last 2000 lines
+        or so of calibration data, propagating the last occuring dark current
+        drift.
+
+        Furthermore, it will terminate with an error if any valid data is NULLed
+        due to bad calibration, which can occur in gaps or bad LUTing.
+    </change>
+    <change name="Kris Becker" date="2006-11-06">
+        Not enough lines in IR10_1 were being ignored in the dark current drift
+        corection.  Changed 2000 to 3100.
+    </change>
+    <change name="Kris Becker" date="2006-11-22">
+        Separately count nulls induced through mask and dark correction and
+        report them to user and add to labels.  Also throws a Math error when
+        either of these counts are not zero.   This can be detected when the
+        exit status is 9.  The ouput TO image is retained for further use when
+        this condition is raised so decisions can be made as to its usefulness.
+    </change>
+    <change name="Kris Becker" date="2007-01-18">
+        Modified hiclean such that binning factor is no longer applied to drift
+        correction.  Also,  the smoothing filter of the drift is independantly
+        applied on the Calibration and Image buffer regions.    This version
+        is now known as hiclean2.
+    </change>
+    <change name="Kris Becker" date="2007-02-22">
+        Add the DARKOPT option that allows user to select how dark correction
+        is handled.
+    </change>
+    <change name="Brendan George" date="2007-06-05">
+        Modified to work with iString/StringTools merge
+    </change>
+    <change name="Kris Becker" date="2007-09-28">
+        Will no longer abort with an error when missing data is in the
+        (dark pixel) calibration region.  It still prints a message to report
+        this condition.
+    </change>
+    <change name="Steven Lambright" date="2008-05-12">
+          Removed references to CubeInfo 
+    </change>
+  </history>
+
+  <category>
+    <missionItem>Mars Reconnaissance Orbiter</missionItem>
+  </category>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input cube to calibrate
+        </brief>
+        <description>
+            <p>
+            The name of the cube to which the cleaning operation is to  be
+            applied.  Note that although it is possible to take the ancillary
+            data from one file, compute the statistics from it, and apply it
+            another, this is currently not supported.
+            </p>
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+      <parameter name="TO">
+        <type>cube</type>
+        <pixelType>real</pixelType>
+        <fileMode>output</fileMode>
+        <brief>
+          Output cube
+        </brief>
+        <description>
+	      Use this parameter to specify the name of the output cube.
+          If you do not include an extension of ".cub" it will be added 
+	      automatically.
+        </description>
+      </parameter>
+
+      <parameter name="CLEANSTATS">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>
+          Produce output of statistics generated for the cleaning operation
+        </brief>
+        <description>
+            <p>
+                The contents of this file will contain all the statistics generated
+                for the cleaning process.  This includes mask pixels and dark
+                buffer calibration data applied to the image data.
+             </p>
+             <p>
+                Below is a partial listing of what is being written to the
+                output file:
+            </p>
+            <PRE>
+Group = ImageStatistics
+  File          = TRA_000865_1905_BG12_0.cub
+  Lines         = 2500Group = ImageStatistics
+  File          = TRA_000865_1905_BG12_0.cub
+  Lines         = 2500
+  Samples       = 256
+  MaskAverage   = 1072.7843309859
+  MaskStdDev    = 44.159718656799
+  BadMaskPixels = 0
+  DarkAverage   = 17.311132445657
+  DarkStdDev    = 6.9278509333753
+  BadDarkPixels = 0
+End_Group
+
+Group = CalibrationStatistics
+  Binning           = 4
+  TDI               = 32
+  CPMM              = 4
+  Channel           = 0
+  FirstImageSample  = 12
+  FirstImageLine    = 33
+  FirstBufferSample = 0
+  FirstDarkSample   = 268
+End_Group
+End
+
+*** Dark and Mask Correction Buffers ***
+       Row      Dark    Column      Mask
+       -33  -9.69508       -12      1110
+       -32   -9.9678       -11      1041
+       -31  -9.83144       -10      1050
+       -30  -9.83144        -9      1050
+       -29   -9.9678        -8    1054.5
+       -28  -10.1042        -7      1059
+       -27  -9.83144        -6      1076
+       -26  -9.83144        -5   1063.25
+       -25  -10.1042        -4      1059
+       -24  -9.69508        -3      1059
+       -23  -9.28598        -2      1076
+       -22  -9.28598        -1      1059
+       -21  -9.28598         0    968.25
+       -20  -9.14962         1      1050
+       -19  -8.87689         2    1084.5
+       -18  -8.60417         3   1114.75
+          .        .                   .          .
+          .        .                   .          .
+          .        .                   .          .
+            </PRE>
+        </description>
+      </parameter>
+      <parameter name="DARKOPT">
+          <type>string</type>
+          <default><item>DERIVED</item></default>
+          <brief>Specifies how dark current correction is applied</brief>
+          <description>
+              The HiRISE dark current is computed from the dark image pixels
+              collected during image aquisition.  An algorithm which averages
+              the last 12 dark values in each line and then runs an 11 line
+              width smoothing algorithm is appled to each image line to correct
+              for dark current.  This works fine under most conditions, however
+              there are remains problematic images that it introduces horizontal
+              streaks.  This option allows the user to use this algorithm (default),
+              the median of all dark values from the aforementioned algorithm, or
+              skip it entirely (essentially setting the dark correction to 0).
+          </description>
+          <list>
+             <option value="DERIVED">
+                 <brief>Apply the derived dark current based upon algorithm</brief>
+                 <description>
+                     This option applies the dark current correction algorithm which derives the
+                     appropriate dark current offset from data collected during image
+                     acquisition.  This is the default.
+                 </description>
+             </option>
+             <option value="MEDIAN">
+                 <brief>Apply median dark current value</brief>
+                 <description> 
+                     This option computes the median value resulting from all
+                     the line dark current corrections and subtracts this value
+                     from all lines.
+                 </description>
+             </option>
+             <option value="NONE">
+                 <brief>Do not correct for dark current</brief>
+                 <description> 
+                     Selecting this option essentially sets the dark current
+                     subtraction to 0.  Using this option will do no dark current
+                     correction to the image data.
+                 </description>
+             </option>
+          </list>
+      </parameter>
+    </group>
+  </groups>
+</application>
