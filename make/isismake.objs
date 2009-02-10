@@ -29,18 +29,16 @@ object: $(OBJS) $(PROTOS:%.proto=%.pb.o)
 
 #  Its not necessarily $(LIBRARY)!
 .a.so :
-	$(LDSHARED) $(ISISSHAREDFLAGS) $(ISISSHAREDON) -o libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) $? $(ISISSHAREDOFF)
-	$(LN) -f libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT)
-	$(LN) -f libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
+	$(LDSHARED) $(ISISFINALFLAGS) $(ISISSHAREDFLAGS) $(ISISSHAREDON) -o libisis$(ISISMAJOR).$(SHAREDLIBEXT).$(ISISMINOR).$(ISISMINORMINOR) $? $(ISISSHAREDOFF) $(ALLLIBDIRS) $(ALLLIBS)
+	$(LN) -f libisis$(ISISMAJOR).$(SHAREDLIBEXT).$(ISISMINOR).$(ISISMINORMINOR) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
 
 #  Its not necessarily $(LIBRARY)!
 .a.dylib :
 	$(RM) -rd .objs;
 	$(MKDIR) .objs && cd .objs && ar x ../$*.a;
-	$(LDSHARED) $(DYLIBFLAGS) $(ISISSHAREDON) -o $@ \
-	  -install_name $(CURDIR)/$@ $(DYLIBVERSION)  .objs/*.o $(ISISSHAREDOFF)
-	$(LN) -f libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT)
-	$(LN) -f libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
+	$(LDSHARED) $(ISISFINALFLAGS) $(ISISSHAREDON) -o $@ \
+	  -install_name $(CURDIR)/$@ $(DYLIBVERSION)  .objs/*.o $(ISISSHAREDOFF) $(ALLLIBDIRS) $(ALLLIBS)
+	$(LN) -f libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
 	$(RM) -rd .objs;
 
 incs: protos $(ROOTINCLUDES)
@@ -136,8 +134,10 @@ html: force
 	-$(RM) -r docbuild
 	echo "View your documentation by opening the file html/index.html in a browser"
 
+
+
 clean:  localclean
-	-$(RM) $(OBJS) $(PROTOSGEN) $(MOCGEN) unitTest.o unitTest print.prt $(ARCHIVELIB) $(SHAREDLIB)
+	-$(RM) $(OBJS) $(PROTOSGEN) $(MOCGEN) unitTest.o unitTest print.prt $(ARCHIVELIB) $(SHAREDLIB) libisis$(ISISMAJOR).$(SHAREDLIBEXT).$(ISISMINOR).$(ISISMINORMINOR) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
 	-$(RM) -rf html
 
 localclean:
@@ -178,7 +178,7 @@ test:
 	fi
 
 unitTest: $(OBJS) unitTest.o
-	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ unitTest.o $(OBJS) $(ALLLIBS)
+	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ unitTest.o $(OBJS) $(ISISLINK) $(ALLLIBS)
 
 plugin: $(OBJS)
 	$(LDSHARED) $(ALLLIBDIRS) $(ISISSHAREDFLAGS) $(ISISSHAREDON) \

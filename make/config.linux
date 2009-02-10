@@ -48,6 +48,7 @@ ISISSHAREDFLAGS = $(ISISLDFLAGS) -shared
 ISISSHAREDON    = -Wl,-whole-archive
 ISISSHAREDOFF   = -Wl,-no-whole-archive
 ISISARFLAGS     =
+ISISFINALFLAGS  = -Wl,-soname,libisis$(ISISMAJOR).$(SHAREDLIBEXT).$(ISISMINOR).$(ISISMINORMINOR)
 
 #---------------------------------------------------------------------------
 #  Determine Linux Architecture.  Ensure the host architecture is set

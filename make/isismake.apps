@@ -11,7 +11,7 @@ MOCGEN	     = $(wildcard moc_*.cpp)
 app: $(BINS)
 
 $(BINS): $(OBJS)
-	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ $(OBJS) $(ALLLIBS)
+	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ $(OBJS) $(ISISLINK) $(ALLLIBS)
 
 .cpp.o : qtmoc
 	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) $(CPPFLAGS) -c -o $@ $?

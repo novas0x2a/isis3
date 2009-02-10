@@ -46,9 +46,9 @@ ISISDYNAMIC =
 #---------------------------------------------------------------------------
 RANLIB          = /usr/bin/ranlib
 SHAREDLIBEXT    = dylib
-DYLIBVERSION    = -compatibility_version $(ISISMAJOR).$(ISISMINOR) \
+DYLIBVERSION    = -compatibility_version $(ISISLIBVERSION) \
                   -current_version $(ISISLIBVERSION)
-DYLIBFLAGS      = -dynamiclib -flat_namespace  -single_module \
+ISISFINALFLAGS  = -dynamiclib -flat_namespace  -single_module \
                   -undefined suppress
 ISISSHAREDFLAGS = -bundle -flat_namespace -dynamic -undefined suppress 
 ISISSHAREDON    = 
