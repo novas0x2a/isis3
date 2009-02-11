@@ -17,95 +17,207 @@
     PVL.  if the polygon option is chosen, the image polygon is output in well known text format.  
     The following is an example of  the output given when caminfo is ran:
 
-<pre>
-  Object = Common
-    IsisId  = MGS/MOC-NA/641932858:47
-    From    = /home/bsucharski/isis/src/base/apps/caminfo/m1500250.cub
-    Lines   = 5760
-    Samples = 1024
-    Bands   = 1
-
-    Group = CubeCamStats
-      MinimumLatitude   = 1.6945049786511
-      MaximumLatitude   = 2.1185063092
-      MinimumLongitude  = 3.7540343798398
-      MaximumLongitude  = 3.8580857617475
-      MinimumResolution = 2.9146512614459
-      MaximumResolution = 2.9164026353144
-      MinimumPhase      = 19.379452089995
-      MaximumPhase      = 19.936334382221
-      MinimumEmission   = 0.15936555403382
-      MaximumEmission   = 0.43399775584188
-      MinimumIncidence  = 19.632717400426
-      MaximumIncidence  = 19.827343689002
-      LocalTimeMinimum  = 13.209552496928
-      LocalTimeMaximum  = 13.214237336569
-    End_Group
+<pre> 
+    
+Object = Caminfo
+  Object = Parameters
+    Program     = caminfo
+    Version     = 2.0
+    IsisVersion = "3.1.18beta | 2008-09-10"
+    RunDate     = 2008-09-23T04:04:40
+    IsisId      = MeSSEnGeR/MDIS-WAC/1/0108827809:757000
+    From        = EW0108827809H_iof.cub
+    Lines       = 1024
+    Samples     = 1024
+    Bands       = 1
   End_Object
 
-  Object = OriginalLabel
-    PDS_VERSION_ID               = PDS3
-    FILE_NAME                    = /moc2isis100000.img
-    RECORD_TYPE                  = FIXED_LENGTH
-    RECORD_BYTES                 = 1024
-    FILE_RECORDS                 = 5762
-    LABEL_RECORDS                = 2
-    ^IMAGE                       = 3
-    SPACECRAFT_NAME              = MARS_GLOBAL_SURVEYOR
-    MISSION_PHASE_NAME           = MAPPING
- End_Object
-
-  Object = BandSet
-    Group = Band
-      BandNumber             = 1
-      StartTime              = 2000-05-04T18:40:31.0109131
-      EndTime                = 2000-05-04T18:40:39.3410251
-      CenterLatitude         = 1.9060771045244
-      CenterLongitude        = 3.8061446305923
-      NorthAzimuth           = 100.70761963532
-      OffNadir               = 0.2021671019663
-      SolarLongitude         = 346.22325638167
-      LocalTime              = 13.211900358555
-      TargetCenterDistance   = 3783.0260771125
-      SlantDistance          = 388.7570030421
-      SubSolarAzimuth        = 346.38655846205
-      SubSolarLatitude       = -5.8177028320409
-      SubSolarLongitude      = 345.62763925227
-      SubSpacecraftAzimuth   = 42.539906045373
-      SubSpacecraftLatitude  = 1.9233520978592
-      SubSpacecraftLongitude = 3.790717852625
-      ParallaxX              = -0.02935148348207
-      ParallaxY              = -0.22732713411495
-      ShadowX                = -0.83200658176895
-      ShadowY                = 0.87638064622615
-      MeanValue              = 179.11143154666
-      MedianValue            = 184.0
-      StandardDeviation      = 29.154860810386
-      MinimumValue           = 96.0
-      MaximumValue           = 254.0
-      PercentHIS             = 0.0
-      PercentHRS             = 3.0517578125e-04
-      PercentLIS             = 0.0
-      PercentLRS             = 0.0
-      PercentNull            = 0.0
-      MinimumLatitude        = 1.6945049786511
-      MaximumLatitude        = 2.1185063092
-      MinimumLongitude       = 3.7540343798398
-      MinimumLongitude       = 3.8580857617475
-      MinimumResolution      = 2.9146512614459
-      MaximumResolution      = 2.9164026353144
-      MinimumPhase           = 19.379452089995
-      MaximumPhase           = 19.936334382221
-      MinimumEmission        = 0.15936555403382
-      MaximumEmission        = 0.43399775584188
-      MinimumIncidence       = 19.632717400426
-      MaximumIncidence       = 19.827343689002
-      LocalTimeMinimum       = 13.209552496928
-      LocalTimeMaximum       = 13.214237336569
-      GisFootprint                   = "MULTIPOLYGON (((3.8580857617475282 1.7029466691178021, 
-                                                                                   3.8580857617475282 1.6969397060439704)))"
-    End_Group  
+  Object = Camstats
+    MinimumLatitude   = -83.41440480372
+    MaximumLatitude   = 3.7509815164171
+    MinimumLongitude  = 130.12663958352
+    MaximumLongitude  = 211.4118481043
+    MinimumResolution = 2837.9275992245
+    MaximumResolution = 3243.3476291415
+    MinimumPhase      = 55.948494781205
+    MaximumPhase      = 63.452364544485
+    MinimumEmission   = 1.5987003275551
+    MaximumEmission   = 89.906039419667
+    MinimumIncidence  = 0.0061432307848179
+    MaximumIncidence  = 84.83085856686
+    LocalTimeMinimum  = 8.3450457249626
+    LocalTimeMaximum  = 13.764059626348
   End_Object
+
+  Object = Statistics
+    MeanValue         = 0.027290557106805
+    StandardDeviation = 0.030059960910294
+    MinimumValue      = 1.93800340639427e-04
+    MaximumValue      = 0.13901169598103
+    PercentHIS        = 0.0
+    PercentHRS        = 0.0
+    PercentLIS        = 0.0
+    PercentLRS        = 0.0
+    PercentNull       = 0.390625
+    TotalPixels       = 1048576
+  End_Object
+
+  Object = Geometry
+    BandsUsed              = 1
+    ReferenceBand          = 1
+    OriginalBand           = 1
+    Target                 = Mercury
+    StartTime              = 2008-01-14T19:53:48.9698697
+    EndTime                = 2008-01-14T19:53:48.9698697
+    CenterLatitude         = -35.99699070995
+    CenterLongitude        = 183.5425629901
+    CenterRadius           = 2440000.0
+    CentroidLatitude       = -29.640948990517
+    CentroidLongitude      = 169.87095531121
+    CentroidLine           = 444.50993729582
+    CentroidSample         = 451.51727680485
+    CentroidRadius         = 2440000.0
+    SurfaceArea            = 8306887.6685914
+    UpperLeftLongitude     = 130.629425434
+    UpperLeftLatitude      = 2.2131023206612
+    LowerLeftLongitude     = NULL
+    LowerLeftLatitude      = NULL
+    LowerRightLongitude    = NULL
+    LowerRightLatitude     = NULL
+    UpperRightLongitude    = NULL
+    UpperRightLatitude     = NULL
+    PhaseAngle             = 61.158147083403
+    EmissionAngle          = 67.650944858113
+    IncidenceAngle         = 36.012241921332
+    NorthAzimuth           = 301.67928206242
+    OffNadir               = 7.0664149700808
+    SolarLongitude         = 251.5447380459
+    LocalTime              = 11.906107285401
+    TargetCenterDistance   = 2.2131023206612
+    SlantDistance          = 17277.206903028
+    SampleResolution       = 3082.7363142225
+    LineResolution         = 3082.7363142225
+    PixelResolution        = 3082.7363142225
+    MeanGroundResolution   = 3040.5954926264
+    SubSolarAzimuth        = 302.6826986422
+    SubSolarLatitude       = -0.010137623850141
+    SubSolarLongitude      = 184.95095370909
+    SubSpacecraftAzimuth   = 220.05494431655
+    SubSpacecraftLatitude  = -0.010137623850141
+    SubSpacecraftLongitude = 129.16259115677
+    ParallaxX              = 106.67119905901
+    ParallaxY              = -89.682221077406
+    ShadowX                = -22.488549587781
+    ShadowY                = -35.052794194572
+    HasLongitudeBoundary   = FALSE
+    HasNorthPole           = FALSE
+    HasSouthPole           = FALSE
+  End_Object
+
+  Object = Polygon
+    CentroidLatitude  = -29.640948990517
+    CentroidLongitude = 169.87095531121
+    Radius            = 2440000.0 
+    SurfaceArea       = 8306887.6685914
+    GlobalCoverage    = 11.103217 
+    GisFootprint      = "MULTIPOLYGON (((130.6294254340024850 
+                        2.2131023206611959, 132.6105055692809458 
+                        2.1932630353674178, 134.5991041747939221 
+                        2.1768866704663559, 136.5989383173149179 
+                        2.1639614104686271, 138.6138732701137997 
+                        2.1544991617480225, 140.6479870975472579 
+                        2.1485370053737980, 142.7056447944214597 
+                        2.1461393256491279, 144.7915859682860571 
+                        2.1474007607611276, 146.9110313636781484 
+                        2.1524501894704975, 149.0698155062488013 
+                        2.1614560641171146, 151.2745557583258744 
+                        2.1746335423788317, 153.5328727459032621 
+                        2.1922540865408204, 155.8536845185811046 
+                        2.2146585384017592, 158.2476088770336560 
+                        2.2422752278895586, 160.7275286712950901 
+                        2.2756455971466307, 163.3094106296108805 
+                        2.3154614378397187, 166.0135340628912388 
+                        2.3626208040715224, 168.8664138091551763 
+                        2.4183154173570665, 171.9039685142860208 
+                        2.4841743385969286, 175.1770904293465208 
+                        2.5625157415150714, 178.7623042877256410 
+                        2.6568269305599421, 182.7846940640967830 
+                        2.7727925518573540, 187.4765775963039118 
+                        2.9209141292952903, 193.3794591608424014 
+                        3.1254813901633982, 202.8003290883544025 
+                        3.4888589890121060, 208.9133243384161744 
+                        3.6695683095888598, 209.4133181820310767 
+                        1.4310443060885591, 210.6818642154790666 
+                        -0.7847478854915861, 209.5295428597240175 
+                        -3.0806311148737824, 209.1564870917320604 
+                        -5.3515530445086279, 209.1471946316104891 
+                        -7.6207555826676865, 209.5097635515893160 
+                        -9.8977975847883499, 210.6196405642980096 
+                        -12.1902347166813119, 209.7307796946379881 
+                        -14.5159937391944958, 209.6716791291469804 
+                        -16.8610282853524112, 210.5320551329192540 
+                        -19.2444276256453826, 209.6857434743561157 
+                        -21.6461554847044155, 210.0992760736354512 
+                        -24.1062788576290039, 209.3212067909635721 
+                        -26.5882617801216163, 210.2192163964995473 
+                        -29.1708247809513495, 210.7328651668775876 
+                        -31.8146583584688898, 210.8366440393211292 
+                        -34.5240364830890556, 207.8981201575437865 
+                        -37.1820074567976775, 208.4575193189786546 
+                        -40.1005881182147590, 208.1640541101386361 
+                        -43.1055322081764345, 207.7543072120501790 
+                        -46.2586675543238570, 207.5314322096498643 
+                        -49.2705498078119462, 206.7582955548065229 
+                        -52.1936818866474255, 205.6192136018880490 
+                        -54.7714148223784818, 205.4996167427121918 
+                        -57.4727506257466345, 204.9971140635101960 
+                        -60.0578811129010504, 203.2383821704212892 
+                        -62.2679172921601563, 200.9300200165560284 
+                        -64.4465030350149277, 199.8971714572124938 
+                        -66.5763329778213091, 200.1258931627585582 
+                        -68.8361711620767949, 199.2972511439178618 
+                        -70.7805855358500509, 196.7792310173380201 
+                        -72.5300352734659555, 194.4112185232692127 
+                        -73.9561392970242792, 191.4374565775498809 
+                        -73.6523681610309922, 188.2995100761490619 
+                        -75.8654125285016363, 178.4906870778024199 
+                        -77.0852300681489879, 176.5050970206753789 
+                        -79.7808076095631549, 165.0757843694741496 
+                        -81.0881608166793910, 152.4799804246200949 
+                        -82.5308661672881669, 133.8681496681806493 
+                        -81.5827311403438955, 131.8894853390425226 
+                        -80.2140463705767246, 130.4765643322060669 
+                        -67.9452677585599929, 130.2747604739123801 
+                        -61.6120592839047703, 130.1922255563363535 
+                        -56.7166648646946001, 130.1524766479689106 
+                        -52.5703445634040207, 130.1336952263669104 
+                        -48.8998968692273337, 130.1270042469504915 
+                        -45.5637564899186245, 130.1280543588046328 
+                        -42.4773145391421494, 130.1344515306429059 
+                        -39.5851913980574466, 130.1447687819669454 
+                        -36.8487550883130979, 130.1581055369937303 
+                        -34.2397441886732210, 130.1738691835533643 
+                        -31.7367005547381460, 130.1916578156440494 
+                        -29.3228321892930808, 130.2111932749780863 
+                        -26.9846618961309481, 130.2322809933899919 
+                        -24.7111344971717593, 130.2547849487542067 
+                        -22.4930050180680006, 130.2786115605614725 
+                        -20.3224060723840729, 130.3036990978958727 
+                        -18.1925334154776763, 130.3300106175650228 
+                        -16.0974116238781058, 130.3575292469539306 
+                        -14.0317153685153944, 130.3862550843450379 
+                        -11.9906299772648701, 130.4162032634127115 
+                        -9.9697401421569314, 130.4474028990480292 
+                        -7.9649389431856257, 130.4798967426170293 
+                        -5.9723515331285055, 130.5137414512137468 
+                        -3.9882692673801907, 130.5490084324652855 
+                        -2.0090910168198790, 130.5857852735746576 
+                        -0.0312690207646566, 130.6241778074674187 
+                        1.9487429878277542, 130.6294254340024850 
+                        2.2131023206611959)))"
+  End_Object
+End_Object
+End
 </pre>
 
     <p>
@@ -174,6 +286,28 @@
          Added Camera Test option  to test for a valid camera at center of image 
          and return an error and end if a valid camera cannot be created.
      </change>
+     <change name="Kris Becker" date="2008-09-22"> 
+       Reworked the output PVL format;  added more keywords to the Common object 
+       that indicate versions and dates;  added more values to Geometry and
+       Polygon object.
+     </change>
+     <change name="Kris Becker" date="2008-10-22"> 
+         Corrected generation of polygon for multi-band data.  It created a 
+         POLYGON union instead of the required MULTIPOLYGON.
+     </change>
+     <change name="Kris Becker" date="2008-10-30"> 
+         The target center distance and subspacecraft latitude were not properly 
+         propagated to the output PVL file and consequently were invalid.  This 
+         has been corrected.
+     </change>
+     <change name="Kris Becker" date="2008-12-29"> 
+         Added RightAscension, Declination, SubSolarGroundAzimuth, and
+         SubSpacecraftGroundAzimuth computations; added center line/sample image 
+         coordinate used to compute center geometry; added check of valid image 
+         line/sample coordinates when testing for north/south poles (some camera 
+         models return valid states when coordinates are outside of image 
+         boundaries).
+     </change>
   </history>
 
   <category>
@@ -222,49 +356,65 @@
           Get Geometry Information
         </brief>
         <description>
-          Get geometry information from the camera at the center of the image.  Output values are:
+          Get geometry information from the camera at the center of the image.  
+          These data are contained in the Geomtry Object.  The keyword/values 
+          contained there are:
           <p>
-            Start Time<br/>
-            End Time<br/>
-            Center Latitude<br/>
-            Center Longitude <br/>
-              Phase Angle<br/>
-              Emission Angle<br/>
-              Incidence Angle<br/>
-              Sample Resolution<br/>
-              Line Resolution<br/>
-              Pixel Resolution<br/>
-            Solar Longitude<br/>
-            North Azimuth<br/>
-            Off Nader<br/>
-            Subspacecraft Latitude<br/>
-            Subspacecraft Longitude<br/>
-            Subspacecraft Azimuth<br/>
-            Subsolar Latitude<br/>
-            Subsolar Longitude<br/>
-            Subsolar Azimuth<br/>
-            Local Time<br/>
-            Target Center Distance<br/>
-            Slant Distance<br/>
-            ParallaxX<br/>
-            ParallaxY<br/>
-            ShadowX<br/>
-            ShadowY<br/>
-              IntersectsLongitudeDomain
-          </p>
-            <p>
-                In addition, latitude and longitude values are provided at the 
-                corners pixel locations:
-            </p>
-            <p>
-                UpperLeftLongitude<br/> 
-                UpperLeftLatitude<br/> 
-                LowerLeftLongitude<br/> 
-                LowerLeftLatitude<br/>
-                LowerRightLongitude<br/> 
-                LowerRightLatitude<br/> 
-                UpperRightLongitude<br/> 
-                UpperRightLatitude<br/>
+ BandsUsed<br/>
+ReferenceBand<br/>
+OriginalBand<br/>
+Target<br/>
+StartTime<br/>
+EndTime<br/>
+CenterLine<br/>
+CenterSample<br/>
+CenterLatitude<br/>
+CenterLongitude<br/>
+CenterRadius<br/>
+RightAscension<br/>
+Declination<br/>
+CentroidLatitude<br/>
+CentroidLongitude<br/>
+CentroidLine<br/>
+CentroidSample<br/>
+CentroidRadius<br/>
+SurfaceArea<br/>
+UpperLeftLongitude<br/>
+UpperLeftLatitude<br/>
+LowerLeftLongitude<br/>
+LowerLeftLatitude<br/>
+LowerRightLongitude<br/>
+LowerRightLatitude<br/>
+UpperRightLongitude<br/>
+UpperRightLatitude<br/>
+PhaseAngle<br/>
+EmissionAngle<br/>
+IncidenceAngle<br/>
+NorthAzimuth<br/>
+OffNadir<br/>
+SolarLongitude<br/>
+LocalTime<br/>
+TargetCenterDistance<br/>
+SlantDistance<br/>
+SampleResolution<br/>
+LineResolution<br/>
+PixelResolution<br/>
+MeanGroundResolution<br/>
+SubSolarAzimuth<br/>
+SubSolarGroundAzimuth<br/>
+SubSolarLatitude<br/>
+SubSolarLongitude<br/>
+SubSpacecraftAzimuth<br/>
+SubSpacecraftGroundAzimuth<br/>
+SubSpacecraftLatitude<br/>
+SubSpacecraftLongitude<br/>
+ParallaxX<br/>
+ParallaxY<br/>
+ShadowX<br/>
+ShadowY<br/>
+HasLongitudeBoundary<br/>
+HasNorthPole<br/>
+HasSouthPole
             </p>
         </description>
         <default><item>TRUE</item></default>
@@ -300,18 +450,20 @@
           Gather DN Statistics.
         </brief>
         <description>
-          Get DN statistics for each band.  Output values are:
+          Get DN statistics for all band within the cube.  These data are
+          contained in the Statistics object.  The keyword/values contained 
+          therein are:
           <p>
-            Mean<br/>
-            Median<br/>
-            Standard Deviation<br/>
-            Minimum<br/>
-            Maximum<br/>
-            Percent HIS<br/>
-            Percent HRS<br/>
-            Percent LIS<br/>
-            Percent LRS<br/>
-            Percent null
+MeanValue<br/>
+StandardDeviation<br/>
+MinimumValue<br/>
+MaximumValue<br/>
+PercentHIS<br/>
+PercentHRS<br/>
+PercentLIS<br/>
+PercentLRS<br/>
+PercentNull<br/>
+TotalPixels
           </p>
         </description>
         <default><item>FALSE</item></default>
@@ -375,20 +527,31 @@
 
       <parameter name="POLYGON">
         <type>boolean</type>
+        <default><item>FALSE</item></default>
         <brief>
           Creates polygon information 
         </brief>
         <description>
           use the imagePolygon class to gather ploygon information.  The output polygon
-          will be in well known text format (WKT).
+          will be in well known text format (WKT).  These data are contained 
+          within the Polygon object.   The keyword/values contained therein 
+          are:
+            <p>
+CentroidLatitude<br/>
+CentroidLongitude<br/>
+Radius<br/>
+SurfaceArea<br/>
+GlobalCoverage<br/>
+GisFootprint<br/>
+            </p>
         </description>
-        <default><item>FALSE</item></default>
       </parameter>
       </group>
 
       <group name="SPICE Option">
         <parameter name="SPICE">
           <type>boolean</type>
+          <default><item>FALSE</item></default>
           <brief>
             Run spiceinit on the input
           </brief>
@@ -398,13 +561,13 @@
               so any updates to SPICE information will be lost.  Spiceinit is in 
               this program to facilitate UPC processing.
           </description>
-          <default><item>FALSE</item></default>
         </parameter>
       </group>
 
     <group name="Camera Test">
       <parameter name="VCAMERA">
-        <type> boolean </type>
+        <type>boolean</type>
+        <default><item>FALSE</item></default>
         <brief>
           Test image center for valid camera 
         </brief>
@@ -414,7 +577,6 @@
           valid camera cannot be created the program will end.  The default is
           to not test the camera and output any available information.
         </description>
-        <default><item>FALSE</item></default>
       </parameter>
     </group>
    </groups>

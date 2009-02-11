@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:07 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/01/16 16:25:09 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -56,18 +56,18 @@ namespace Isis {
     std::string operatorName = op["Name"];
 
     // Open the factory plugin file
-    Plugin *p = new Plugin;
+    Plugin p;
     Filename f("InterestOperator.plugin");
     if (f.Exists()) {
-      p->Read("InterestOperator.plugin");
+      p.Read("InterestOperator.plugin");
     }
     else {
-      p->Read("$ISISROOT/lib/InterestOperator.plugin");
+      p.Read("$ISISROOT/lib/InterestOperator.plugin");
     }
 
     // Get the algorithm specific plugin and return it
     InterestOperator * (*plugin) (Pvl &pvl);
-    plugin = (InterestOperator * (*)(Pvl &pvl)) p->GetPlugin(operatorName);
+    plugin = (InterestOperator * (*)(Pvl &pvl)) p.GetPlugin(operatorName);
     return (*plugin)(pvl);
   }
 } // end namespace isis

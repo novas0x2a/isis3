@@ -1,32 +1,39 @@
-#include <QApplication>
 #include <QAction>
-#include <QFileDialog>
-#include <QMessageBox>
-#include <QString>
-#include <QPushButton>
-#include <QHBoxLayout>
-#include <QRadioButton>
-#include <QGridLayout>
-#include <QSpinBox>
-#include <QLineEdit>
+#include <QApplication>
 #include <QCheckBox>
+#include <QFileDialog>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QMessageBox>
 #include <QPainter>
+#include <QPushButton>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <QString>
 
-#include "QnetFileTool.h"
 #include "Application.h"
+#include "CubeViewport.h"
 #include "Filename.h"
 #include "MainWindow.h"
-#include "CubeViewport.h"
+#include "QnetFileTool.h"
+#include "SerialNumber.h"
 #include "Workspace.h"
-#include "ImageOverlap.h"
-#include "FindImageOverlaps.h"
 #include "qnet.h"
 
 using namespace Qisis::Qnet;
 using namespace std;
 
 namespace Qisis {
-  // Constructor
+  /** 
+   * Constructor 
+   *  
+   * @internal 
+   *   @history 2008-12-10 Jeannie Walldren - Reworded "What's
+   *            this?" description for saveAs action. Changed
+   *            "Save As" action text to match QnetTool's "Save
+   *            As" action
+   */
   QnetFileTool::QnetFileTool (QWidget *parent) : Qisis::FileTool(parent) {
     openAction()->setToolTip("Open network");
     QString whatsThis =
@@ -34,23 +41,31 @@ namespace Qisis {
        <p><b>Shortcut:</b>  Ctrl+O\n</p>";
     openAction()->setWhatsThis(whatsThis);
 
-    saveAction()->setToolTip("Save network");
+    saveAction()->setText("Save Control Network &As...");
     whatsThis =
-      "<b>Function:</b> Save the current <i>control network</i>";
+      "<b>Function:</b> Save the current <i>control network</i> under chosen filename";
     saveAction()->setWhatsThis(whatsThis);
     saveAction()->setEnabled(true);
 
     p_saveNet = false;
+
+    
   }
 
   /**
    *  Open a list of cubes
    * 
-   * @author  ???? Elizabeth Ribelin
+   * @author  2007-05-01 Elizabeth Ribelin
    * 
    * @internal
    * @history  2007-06-07 Tracie Sucharski - Allow new network to be opened,
    *                         prompt to save old network.
+   * @history  2008-11-26 Tracie Sucharski - Remove all polygon/overlap 
+   *                         references, this functionality will be qmos.
+   * @history 2008-11-26 Jeannie Walldren - Uncommented "emit 
+   *          controlNetworkUpdated()" line and added parameter
+   *          name defined in this method.
+   * @history 2008-12-10 Jeannie Walldren - Fixed documentation
    * 
    */
   void QnetFileTool::open () {
@@ -92,28 +107,6 @@ namespace Qisis {
       }
       g_serialNumberList = new Isis::SerialNumberList(list.toStdString());
 
-      if (g_imageOverlap != NULL) {
-        delete g_imageOverlap;
-        g_imageOverlap = NULL;
-      }
-
-#if 0
-      //  TODO;  Print error if polyinit hasn't been run
-      try {
-        g_imageOverlap = new Isis::FindImageOverlaps(*g_serialNumberList);
-
-      } catch ( Isis::iException &e ) {
-        QString message = "Error calculating image overlaps. ";
-        message += "Polygon plots will not be usable, but you can still ";
-        message += "pick points.\n\n";
-        string errors = e.Errors();
-        message += errors.c_str();
-        e.Clear();
-        QMessageBox::information((QWidget *)parent(),"Error",message);
-        g_imageOverlap = NULL;
-      }
-#endif
-
       if (g_controlNetwork != NULL) {
         delete g_controlNetwork;
         g_controlNetwork = NULL;
@@ -133,19 +126,19 @@ namespace Qisis {
     filter = "Control net (*.net);;";
     filter += "Text file (*.txt);;";
     filter += "All (*)";
-    QString net = QFileDialog::getOpenFileName((QWidget*)parent(),
+    cNetFilename = QFileDialog::getOpenFileName((QWidget*)parent(),
                                                "Select a control network",
                                                dir,
                                                filter);
     QApplication::setOverrideCursor(Qt::WaitCursor);
-    if (net.isEmpty()) {
+    if (cNetFilename.isEmpty()) {
       g_controlNetwork = new Isis::ControlNet();
       g_controlNetwork->SetType(Isis::ControlNet::ImageToGround);
       g_controlNetwork->SetUserName(Isis::Application::UserName());
     }
     else {
       try {
-        g_controlNetwork = new Isis::ControlNet(net.toStdString());
+        g_controlNetwork = new Isis::ControlNet(cNetFilename.toStdString());
       }
       catch (Isis::iException &e) {
         QString message = "Invalid control network.  \n";
@@ -161,8 +154,8 @@ namespace Qisis {
     //  Initialize cameras for control net
     g_controlNetwork->SetImages (*g_serialNumberList);
 
-    emit serialNumberListUpdated();
-    emit controlNetworkUpdated();
+    serialNumberListUpdated();
+    emit controlNetworkUpdated(cNetFilename);
     QApplication::restoreOverrideCursor();
     return;
   }
@@ -171,7 +164,7 @@ namespace Qisis {
   void QnetFileTool::exit() {
     //  If control net has been changed , prompt for user to save
     if (p_saveNet) {
-      int resp = QMessageBox::warning((QWidget*)parent(),"TieTool",
+      int resp = QMessageBox::warning((QWidget*)parent(),"QnetTool",
         "The control network files has been modified.\n"
         "Do you want to save your changes?",
         QMessageBox::Yes | QMessageBox::Default,
@@ -214,22 +207,41 @@ namespace Qisis {
     p_saveNet = false;
   } 
 
+  /**
+   * Load given cube in Workspace
+   * 
+   * @param serialNumber [in]   (QString)   Serial number of cube to display
+   *  
+   * @author  2007-05-01 Elizabeth Ribelin
+   * 
+   * @internal
+   *   @history  2008-10-08 Tracie Sucharski - Do not display cube if it is
+   *                             already displayed, set as active window.
+   *   @history 2008-12-10 Jeannie Walldren - Fixed documentation
+   *  
+   */
   void QnetFileTool::loadImage(const QString &serialNumber) {
     if (g_serialNumberList->HasSerialNumber(serialNumber.toStdString())) {
       string tempFilename = g_serialNumberList->Filename(serialNumber.toStdString());
       QString filename = tempFilename.c_str();
-      emit fileSelected(filename);
+      std::vector<CubeViewport *> *cvpList = 
+      g_vpMainWindow->workspace()->cubeViewportList();
+      bool found = false;
+      for (int i=0; i<(int)cvpList->size(); i++) {
+        std::string sn = Isis::SerialNumber::Compose(*((*cvpList)[i]->cube()));
+        if (sn == serialNumber.toStdString()) {
+          g_vpMainWindow->workspace()->setActiveWindow((*cvpList)[i]);
+          found = true;
+          break;
+        }
+      }
+      if (!found) emit fileSelected(filename);
     }
     else {
       // TODO:  Handle error?
     }
   }
 
-  void QnetFileTool::loadOverlap(Isis::ImageOverlap *overlap) {
-    for (int i=0; i<overlap->Size(); i++) {
-      loadImage((*overlap)[i].c_str());
-    }
-  }
 
   void QnetFileTool::loadPoint(Isis::ControlPoint *point) {
     for (int i=0; i<point->Size(); i++) {

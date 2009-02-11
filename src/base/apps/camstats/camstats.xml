@@ -49,6 +49,9 @@
      <change name="Christopher Austin" date="2008-06-11">
        Added the ATTACH option
      </change>
+    <change name="Steven Koechle" date="2008-11-12">
+       Camstats now outputs history to the cube when it finishes execution
+     </change>
   </history>
 
   <category>

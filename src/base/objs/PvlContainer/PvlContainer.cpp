@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/07/10 14:58:27 $
+ * $Revision: 1.8 $
+ * $Date: 2008/10/30 15:22:15 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -20,6 +20,8 @@
  *   http://www.usgs.gov/privacy.html.
  */                                                                      
 
+#include <algorithm>
+
 #include "PvlContainer.h"
 #include "Pvl.h"
 #include "Filename.h"
@@ -29,6 +31,7 @@
 #include "PvlFormat.h"
 
 using namespace std;
+
 namespace Isis {
 
   /**
@@ -258,11 +261,11 @@ namespace Isis {
         container[j].SetWidth(width);
         container[j].SetFormat(container.GetFormat());
         // Add a blank line before keyword comments
-        if (outTemplate[i].Comments() + container[j].Comments() > 0) os << endl;
+        if (outTemplate[i].Comments() + container[j].Comments() > 0) os << container.GetFormat()->FormatEOL();
         if (outTemplate[i].Comments() > 0) {
           for (int k=0; k<outTemplate[i].Comments(); k++) {
             for (int l=0; l<outTemplate[i].Indent()+container[j].Indent(); l++) os << " ";
-              os << outTemplate[i].Comment(k) << endl;
+              os << outTemplate[i].Comment(k) << container.GetFormat()->FormatEOL();
           }
         }
         os << container[j];
@@ -270,8 +273,8 @@ namespace Isis {
         container[j].SetIndent(0);
         container[j].SetWidth(0);
         if (++numKeywords < container.Keywords()) {
-//          if (j+1 < container.Keywords() && container[j+1].Comments() > 0) os << endl;
-          os << endl;
+//          if (j+1 < container.Keywords() && container[j+1].Comments() > 0) os << container.GetFormat()->FormatEOL();
+          os << container.GetFormat()->FormatEOL();
         }
       }
     }
@@ -287,8 +290,8 @@ namespace Isis {
       container[i].SetIndent(0);
       container[i].SetWidth(0);
       if (++numKeywords < container.Keywords()) {
-        if (i+1 < container.Keywords() && container[i+1].Comments() > 0) os << endl;
-        os << endl;
+        if (i+1 < container.Keywords() && container[i+1].Comments() > 0) os << container.GetFormat()->FormatEOL();
+        os << container.GetFormat()->FormatEOL();
       }
     }
 
@@ -299,5 +302,35 @@ namespace Isis {
 
     return os;
   }
+
+
+  /**
+   * Find the index of a keyword, using iterators.
+   * @param name The name of the keyword.
+   * @param beg The beginning iterator.
+   * @param end The ending iterator.
+   * @return The keyword index.
+   */
+  PvlContainer::PvlKeywordIterator PvlContainer::FindKeyword(const std::string &name,
+                                 PvlContainer::PvlKeywordIterator beg,
+                                 PvlContainer::PvlKeywordIterator end) {
+    PvlKeyword temp(name);
+    return find(beg,end,temp);
+  };
+
+
+  /**
+   * Find the index of a keyword, using iterators.
+   * @param name The name of the keyword.
+   * @param beg The beginning iterator.
+   * @param end The ending iterator.
+   * @return The keyword index.
+   */
+  PvlContainer::ConstPvlKeywordIterator PvlContainer::FindKeyword(const std::string &name,
+                                 PvlContainer::ConstPvlKeywordIterator beg,
+                                 PvlContainer::ConstPvlKeywordIterator end) const {
+    PvlKeyword temp(name);
+    return find(beg,end,temp);
+  };
 
 } // end namespace isis

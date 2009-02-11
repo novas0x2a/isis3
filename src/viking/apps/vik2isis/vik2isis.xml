@@ -27,6 +27,9 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Steven Koechle" date="2009-01-21">
+      Changed to use the Isis::Filename class and use the temporary preferences
+    </change>
   </history>
 
   <category>

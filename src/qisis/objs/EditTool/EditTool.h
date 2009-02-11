@@ -1,18 +1,20 @@
 #ifndef EditTool_h
 #define EditTool_h
 
-#include <QComboBox>
-#include <QLineEdit>
 #include <QMap>
 #include <QStack>
 
 #include "Tool.h"
 #include "SpecialPixel.h"
 
+class QToolButton;
+class QLineEdit;
+class QComboBox;
+
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/08/04 17:38:05 $
+ * $Revision: 1.7 $
+ * $Date: 2008/12/24 17:43:08 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for

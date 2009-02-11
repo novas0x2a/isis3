@@ -1,4 +1,4 @@
-//  $Id: hicalbeta.cpp,v 1.12 2008/07/15 15:37:08 skoechle Exp $
+//  $Id: hicalbeta.cpp,v 1.13 2008/11/18 06:59:48 kbecker Exp $
 #include "Isis.h"
 
 #include <cstdio>
@@ -84,8 +84,8 @@ void calibrate(Buffer &in, Buffer &out) {
 void IsisMain(){
 
   const std::string hical_program = "hicalbeta";
-  const std::string hical_version = "3.3";
-  const std::string hical_revision = "$Revision: 1.12 $";
+  const std::string hical_version = "3.4";
+  const std::string hical_revision = "$Revision: 1.13 $";
   const std::string hical_runtime = Application::DateTime();
 
   UserInterface &ui = Application::GetUserInterface();

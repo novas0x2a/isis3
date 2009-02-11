@@ -183,19 +183,21 @@ endif
 #---------------------------------------------------------------------------
 
 #  Libraries
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtNetwork.*.dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtSql.*.dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtGui.*.dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtCore.*.dylib"
-THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libqwt.*.dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtNetwork.*dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtSql.*dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtGui.*dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtCore.*dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libqwt.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libcspice*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libsuperlu_3.0.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libiconv*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libxerces-c*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgsl*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libz*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libpng12.*dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libpng.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgeos-*.dylib"
-THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/postgresql*/libpq.*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/postgresql*/libpq.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/mysql5/mysql/libmysqlclient_r*.dylib"
 
 #  Plugins

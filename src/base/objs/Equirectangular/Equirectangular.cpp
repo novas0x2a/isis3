@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/09/08 22:44:37 $
+ * $Revision: 1.7 $
+ * $Date: 2008/11/13 15:56:27 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -85,9 +85,11 @@ namespace Isis {
       p_clatRadius = LocalRadius(p_centerLatitude);
       p_centerLatitude *= Isis::PI / 180.0;
 
+      // This keyword is just for user's information, and was put in for Hirise
       if (!mapGroup.HasKeyword("CenterLatitudeRadius")) {
         mapGroup += PvlKeyword("CenterLatitudeRadius");
       }
+
       mapGroup["CenterLatitudeRadius"] = p_clatRadius;
 
       // Compute cos of the center latitude and make sure it is valid as

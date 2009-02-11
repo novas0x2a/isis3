@@ -2,8 +2,8 @@
 #define Stretch_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2007/05/08 22:16:33 $
+ * $Revision: 1.4 $
+ * $Date: 2008/11/13 15:21:04 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -56,10 +56,13 @@ namespace Isis {
  *                                          documentation
  *  @history 2005-03-11 Elizabeth Ribelin - Modified unitTest to test all 
  *                                          methods in the class
- *  @history 2006-05-25 Jacob Danton Fixed typo in documentation
- *  @history 2007-03-02 Elizabeth Miller Added Load and Save
+ *  @history 2006-05-25 Jacob Danton - Fixed typo in documentation
+ *  @history 2007-03-02 Elizabeth Miller - Added Load and Save
  *                                       methods
- */                                                                       
+ *  @history 2008-11-12 Steven Lambright - Changed search algorithm into a
+ *                                 binary search replacing a linear search.
+ * 
+ */
   class Stretch {
     private:
       std::vector<double> p_input;   //!< Array for input side of stretch pairs

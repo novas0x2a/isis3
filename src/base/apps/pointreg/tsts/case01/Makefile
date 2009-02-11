@@ -3,10 +3,11 @@ APPNAME = pointreg
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
-	$(LS) $(INPUT)/*.cub > $(OUTPUT)/cub.list;
-	$(APPNAME) files=$(OUTPUT)/cub.list \
+	$(LS) $(INPUT)/*.cub > $(OUTPUT)/cub.lis;
+	$(APPNAME) files=$(OUTPUT)/cub.lis \
 	cnet=$(INPUT)/red.net \
-	template=$(INPUT)/reg.txt \
-	to=$(OUTPUT)/redPointreg.pvl \
+	template=$(INPUT)/autoRegTemplate.def \
+	to=$(OUTPUT)/redOutputCnet.pvl \
+	flatfile=$(OUTPUT)/redFlatFile.txt >& $(OUTPUT)/redPointregLog.txt \
 	> /dev/null;
-	$(RM) $(OUTPUT)/cub.list;
+	$(RM) $(OUTPUT)/cub.lis;

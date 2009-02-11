@@ -30,6 +30,8 @@ namespace Qisis {
       QStatusBar *p_sbar;   //!< Status bar
       QLabel *p_sampLabel;  //!< Sample label
       QLabel *p_lineLabel;  //!< Line label
+      QLabel *p_latLabel;   //!< Lat label
+      QLabel *p_lonLabel;   //!< Lon label
       QLabel *p_grayLabel;  //!< Gray label
       QLabel *p_redLabel;   //!< Red label
       QLabel *p_grnLabel;   //!< Green label

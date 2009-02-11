@@ -2,8 +2,8 @@
 #define SpiceRotation_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/07/15 15:12:54 $
+ * $Revision: 1.11 $
+ * $Date: 2008/12/12 23:25:55 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -79,6 +79,12 @@ namespace Isis {
    *                        case where the Naif reference frame code is not
    *                        recognized.
    *  @history 2008-06-18  Fixed documentation, added NaifStatus calls
+   *  @history 2008-11-26  Debbie A. Cook Added method to set axes of rotation.
+   *                        Default axes are still 3,1,3 so existing software will
+   *                        not be affected by the change.  Also added timeScale to the
+   *                        the class and made some parameters protected instead of private
+   *                        so they are available to inheriting classes.
+   *  @history 2008-12-12  Debbie A. Cook Added method to return frame code
    */
   class SpiceRotation {
     public:
@@ -94,6 +100,7 @@ not have refchg_c, but only the f2c'd refchg.c.*/
 
       //! Change the frame (has no effect if cached)
       void SetFrame( int frameCode ) { p_frameCode = frameCode; };
+      int Frame() { return p_frameCode; };
 
       void SetTimeBias (double timeBias);
       /**
@@ -104,8 +111,6 @@ not have refchg_c, but only the f2c'd refchg.c.*/
 
       enum PartialType {WRT_RightAscension,WRT_Declination,WRT_Twist};
 
-      enum Axes {Axis3=3, Axis2=1, Axis1=3}; //!< Axes of rotation for converting
-                                             //   rotation to and from angles
       void SetEphemerisTime(double et);
 
       //! Return the current ephemeris time
@@ -157,16 +162,33 @@ not have refchg_c, but only the f2c'd refchg.c.*/
       //! Return the base time for the rotation
       double GetBaseTime (){ return p_baseTime; };
 
-      void SetOverrideBaseTime ( double baseTime );
+      //! Return the time scale for the rotation
+      double GetTimeScale (){ return p_timeScale; };
+
+      void SetOverrideBaseTime ( double baseTime, double timeScale );
 
       double DPolynomial ( const int coeffIndex );
 
       std::vector<double> ToReferencePartial(std::vector<double>& lookJ,
                                              PartialType partialVar, int coeffIndex);
       double WrapAngle (double compareAngle, double angle);
+      void SetAxes ( int axis1, int axis2, int axis3);
+      std::vector<double> GetCacheTime () { return p_cacheTime; };
 
-    private:
-	  int p_frameCode;                  //!< Naif frame code
+  protected:
+    std::vector<double> p_cacheTime;  //!< iTime for corresponding rotation
+    std::vector<std::vector<double> > p_cache;      //!< Cached rotations
+                                      //!< Coefficients of polynomials fit to
+                                      //    each of three rotation angles
+    int p_degree;                     //!< Degree of fit polynomial for angles
+    int p_axis1;                      //!< Axis of rotation for angle 1 of rotation
+    int p_axis2;                      //!< Axis of rotation for angle 2 of rotation
+    int p_axis3;                      //!< Axis of rotation for angle 3 of rotation
+    std::vector<double> p_RJ;         //!< Matrix for J2000 to reference
+                                      //   rotation at et
+
+  private:
+      int p_frameCode;                  //!< Naif frame code
       double p_timeBias;                //!< iTime bias when reading kernels
 
       double p_et;                      //!< Current ephemeris time
@@ -174,8 +196,6 @@ not have refchg_c, but only the f2c'd refchg.c.*/
                                         //   rotation at et
 
       bool p_matrixSet;                 //!< Flag indicating p_RJ has been set
-      std::vector<double> p_RJ;         //!< Matrix for J2000 to reference
-                                        //   rotation at et
 
       Source p_source;                  //!< The source of the rotation data
       int p_axisP;                      //!< The axis defined by the spacecraft
@@ -183,19 +203,16 @@ not have refchg_c, but only the f2c'd refchg.c.*/
       int p_axisV;                      //!< The axis defined by the velocity
                                         //   vector for defining a nadir rotation
       int p_targetCode;                 //!< For computing Nadir rotation only
-      std::vector<double> p_cacheTime;  //!< iTime for corresponding rotation
-      std::vector<std::vector<double> > p_cache;      //!< Cached rotations
 
       double p_baseTime;                //!< Base time used in fit equations
-      std::vector<double> p_coefficients[3];
-                                        //!< Coefficients of polynomials fit to
-                                        //    each of three rotation angles
-      int p_degree;                     //!< Degree of fit polynomial for angles
+      double p_timeScale;               //!< Time scale used in fit equations
       bool p_degreeApplied;             //!< Flag indicating whether or not a polynomial 
                                         //    of degree p_degree has been created and
                                         //    used to fill the cache
+      std::vector<double> p_coefficients[3];
       bool p_noOverride;                //!< Flag to compute base time;
       double p_overrideBaseTime;        //!< Value set by caller to override computed base time
+      double p_overrideTimeScale;       //!< Value set by caller to override computed time scale
   };
 };
 

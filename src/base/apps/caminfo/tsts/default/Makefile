@@ -1,5 +1,7 @@
 APPNAME = caminfo
 
+caminfo.pvl.IGNORELINES = RunDate IsisVersion From Version
+
 include $(ISISROOT)/make/isismake.tsts
 
 commands:

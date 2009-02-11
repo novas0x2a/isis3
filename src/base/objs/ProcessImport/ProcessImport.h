@@ -2,8 +2,8 @@
 #define ProcessImport_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/08/18 17:02:24 $
+ * $Revision: 1.8 $
+ * $Date: 2008/09/16 23:06:36 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -126,10 +126,12 @@ namespace Isis {
  *  @history 2007-11-13 Janet Barrett - Added the ProcessBip capability 
  *  @history 2008-02-22 Steven Lambright - Fixed a memory leak and improved the way the
  *                                    destructor detects allocated pointers.
- *  
  *  @history 2008-08-18 Jeannie Walldren - Modified
  *                                    documentation and added method
  *                                    SetFileTrailerBytes().
+ *  @history 2008-09-16 Christopher Austin - Added error throwing for the
+ *           setting of special pixel ranges that overlap by adding
+ *           CheckPixelRange().
  * 
  */                                                                       
 
@@ -235,6 +237,7 @@ class ProcessImport : public Isis::Process {
     void AddLabel (Isis::Pvl &label);
 #endif
 
+
   private:
     std::string p_inFile;        //!<Input file name
     Isis::PixelType p_pixelType; //!<Pixel type of input data
@@ -328,10 +331,10 @@ class ProcessImport : public Isis::Process {
                            Isis LIS value.*/
 
     void ProcessBsq (void funct(Isis::Buffer &out) = NULL);
-
     void ProcessBil (void funct(Isis::Buffer &out) = NULL);
-
     void ProcessBip (void funct(Isis::Buffer &out) = NULL);
+
+    void CheckPixelRange( std::string pixelName, double min, double max );
 };
 };
 #endif

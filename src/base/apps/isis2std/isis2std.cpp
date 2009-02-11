@@ -22,6 +22,7 @@ void IsisMain() {
   UserInterface &ui = Application::GetUserInterface();
   iString format = ui.GetString("FORMAT");
   format.DownCase();
+  int quality = ui.GetInteger("QUALITY");
 
   iString mode = ui.GetString("MODE");
 
@@ -148,7 +149,7 @@ void IsisMain() {
 
   // The return status is wrong for JPEG images, so the code will always
   //   continue.
-  if(!qimage->save(filename.c_str(),format.c_str(),100)) {
+  if(!qimage->save(filename.c_str(),format.c_str(),quality)) {
     delete qimage;
     iString err = "Unable to save [";
     err += filename.c_str();
@@ -174,13 +175,21 @@ void toGreyscaleImage (Buffer &in) {
     if (dn < 0) dn = 0;
     if (dn > 255) dn = 255;
     qimage->setPixel(i, in.Line()-1, dn);
+    // Since the plausable "exception" thrown by setPixel cannot be caught,
+    //  the following if statement does it informally.
+    if( !qimage->valid(i,in.Line()-1) ) {
+      string msg = "QT has detected your file size as exceeding 2GB.";
+      msg += " While your image might be under 2GB, your image labels are more";
+      msg += " than likely pushing the file size over 2GB.";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
   }
 }
 
-// Check to see if the QImage will be larger than 4GB
+// Check to see if the QImage will be larger than 2GB
 // error if it will be
 void checkDataSize (Isis::BigInt line, Isis::BigInt samp, iString mode){
-  Isis::BigInt maxSize = (Isis::BigInt)4*1024*1024*1024;
+  Isis::BigInt maxSize = (Isis::BigInt)2*1024*1024*1024;  //2GB limit
   Isis::BigInt size = 0;
   if(mode == "GRAYSCALE") {
     size = line*samp;
@@ -191,7 +200,7 @@ void checkDataSize (Isis::BigInt line, Isis::BigInt samp, iString mode){
   }
   if (size >= maxSize) {
     double inGB = (double)size / (1024*1024*1024);
-    string msg = "Cube exceeds max size of 4GB. Qimage cannot support ";
+    string msg = "Cube exceeds max size of 2GB. Qimage cannot support ";
     msg += "that much raw data. Your cube is "+(iString)inGB+" GB.";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }

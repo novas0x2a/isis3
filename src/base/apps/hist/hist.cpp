@@ -2,21 +2,20 @@
 
 #include <string>
 #include <QMenuBar>
+#include <qwt_interval_data.h>
 
 #include "Process.h"
-
 #include "Histogram.h"
 #include "UserInterface.h"
 #include "Progress.h"
 #include "LineManager.h"
 #include "QHistogram.h"
-
 #include "HistogramToolWindow.h"
-#include "HistogramToolCurve.h"
+#include "HistogramItem.h"
+#include "PlotToolCurve.h"
 
 using namespace std;
 using namespace Isis;
-
 
 void IsisMain() {
   Process p;
@@ -144,32 +143,47 @@ void IsisMain() {
       }
     }
 
-    Qisis::HistogramToolCurve *histCurve = new Qisis::HistogramToolCurve();
-    histCurve->setStyle(QwtPlotCurve::Lines);
+    Qisis::HistogramItem *histCurve = new Qisis::HistogramItem();
+    histCurve->setColor(Qt::darkCyan);
     histCurve->setTitle("Frequency");
 
-    Qisis::HistogramToolCurve *cdfCurve = new Qisis::HistogramToolCurve();
+    Qisis::PlotToolCurve *cdfCurve = new Qisis::PlotToolCurve();
     cdfCurve->setStyle(QwtPlotCurve::Lines);
     cdfCurve->setTitle("Percentage");
 
     QPen *pen = new QPen(Qt::red);
     pen->setWidth(2);
     histCurve->setYAxis(QwtPlot::yLeft);
-    histCurve->setPen(*pen);
-    pen->setColor(Qt::blue);
     cdfCurve->setYAxis(QwtPlot::yRight);
     cdfCurve->setPen(*pen);
 
-    histCurve->setData(&xarray[0],&yarray[0],xarray.size());
+    //These are all variables needed in the following for loop.
+    //----------------------------------------------
+    QwtArray<QwtDoubleInterval> intervals(xarray.size());
+    QwtArray<double> values(yarray.size());
+    double maxYValue = DBL_MIN;
+    double minYValue = DBL_MAX;
+    // --------------------------------------------- 
+
+    for(unsigned int y = 0; y < yarray.size(); y++) {
+
+      intervals[y] = QwtDoubleInterval(xarray[y], xarray[y] + hist.BinSize());
+  
+      values[y] = yarray[y];  
+      if(values[y] > maxYValue) maxYValue = values[y]; 
+      if(values[y] < minYValue) minYValue = values[y];
+    }
+    
+    histCurve->setData(QwtIntervalData(intervals, values));
     cdfCurve->setData(&xarray[0],&y2array[0],xarray.size());
 
     plot->add(histCurve);
     plot->add(cdfCurve);
     plot->fillTable();
 
-    plot->setScale(QwtPlot::xBottom, histCurve->minXValue(), histCurve->maxXValue());
-    plot->setScale(QwtPlot::yLeft, histCurve->minYValue(), histCurve->maxYValue());      
-
+    plot->setScale(QwtPlot::yLeft,0,maxYValue);
+    plot->setScale(QwtPlot::xBottom,hist.Minimum(),hist.Maximum());
+ 
     plot->showWindow();
   }
   p.EndProcess();

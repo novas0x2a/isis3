@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/08 20:40:23 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/10/22 23:45:01 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -117,13 +117,13 @@ namespace Isis {
 //    LoadEulerMounting(CP);
 
     double exposure_duration = inst["ExposureDuration"];
-    if (exposure_duration <= 420.0) {
+    if (exposure_duration <= .420) {
       offset1 = 7.0 / 8.0 * 4.48;    //4.48 seconds
     }
     else offset1 = 3.0 / 8.0 * 4.48;
     double offset2 = 1.0 / 64.0 * 4.48;
                                         
-    et += offset1 + offset2 + exposure_duration / 2.0; 
+    et += offset1 + offset2 + exposure_duration / 2.0;
 
     char timepds[25];
     et2utc_c(et,"ISOC",3,25,timepds);

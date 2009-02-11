@@ -1,3 +1,4 @@
+// $Id: IssNACamera.cpp,v 1.5 2009/01/22 22:04:54 kbecker Exp $
 #include "IssNACamera.h"
 #include "CameraDetectorMap.h"
 #include "CameraFocalPlaneMap.h"
@@ -18,6 +19,7 @@ namespace Cassini {
     
     SetFocalLength (focalLength);
     SetPixelPitch ();
+    InstrumentRotation()->SetFrame(Spice::GetInteger("INS_"+(iString)(int)NaifIkCode()+"_FRAME_ID"));
 
     // Get the start time in et
     PvlGroup inst = lab.FindGroup ("Instrument",Pvl::Traverse);

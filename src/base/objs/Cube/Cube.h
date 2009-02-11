@@ -2,8 +2,8 @@
 #define Cube_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2008/08/15 21:49:54 $                                                                 
+ * $Revision: 1.15 $                                                             
+ * $Date: 2008/12/17 20:31:55 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -97,6 +97,11 @@ namespace Isis {
  *   @history 2008-08-11 Steven Lambright - Added another Statistics method
  *                 which accepts a valid range -- also added another Histogram
  *                 method which accepts a bin/valid range (applies both).
+ *   @history 2008-08-11 Steven Lambright - Fixed definition of IsisCubeDef,
+ *            problem pointed out by "novas0x2a" (Support Board Member)
+ *   @history 2008-12-15 Steven Koechle - Added a method to delete blobs from a
+ *            cube
+ *   @history 2008-12-17 Steven Koechle - BlobDelete method was broken, fixed
  * 
 */
   class Cube {
@@ -134,6 +139,7 @@ namespace Isis {
       void Write(Isis::Buffer &wbuf);
       void Read(Isis::Blob &blob);
       void Write(Isis::Blob &blob);
+      bool BlobDelete(std::string BlobType, std::string BlobName);
 
      /**                                                                       
       * Returns the expanded filename.                                                         

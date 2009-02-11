@@ -2,8 +2,8 @@
 #define PolygonSeederFactory_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2008/12/17 21:43:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -56,7 +56,10 @@ namespace Isis {
    * 
    * @ingroup PatternMatching
    *
-   * @author 2006-01-20 Stuart Sides
+   * @author 2006-01-20 Stuart Sides 
+   *  
+   * @internal 
+   *   @history 2008-12-17 Christopher Austin - Fixed memory leak 
    */
   class PolygonSeederFactory {
     public:

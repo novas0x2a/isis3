@@ -12,6 +12,7 @@ class map2map : public Isis::Transform {
     bool p_trim;
     int p_outputSamples;
     int p_outputLines;
+    int p_inputWorldSize;
 
   public:
     // constructor

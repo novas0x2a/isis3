@@ -25,3 +25,38 @@ End_Object
 End
 Register = 0
 Position = 120 45
+
+Group = AutoRegStatistics
+  Total      = 1
+  Successful = 1
+  Failure    = 0
+End_Group
+
+Group = PatternChip1
+  PatternNotEnoughValidData = 0
+  PatternZScoreNotMet       = 0
+  FitChipNoData             = 0
+  FitChipToleranceNotMet    = 0
+End_Group
+
+Group = PatternChip2
+  PatternNotEnoughValidData = 0
+  PatternZScoreNotMet       = 0
+  FitChipNoData             = 0
+  FitChipToleranceNotMet    = 0
+End_Group
+
+Group = PatternChip3
+  PatternNotEnoughValidData = 0
+  PatternZScoreNotMet       = 0
+  FitChipNoData             = 0
+  FitChipToleranceNotMet    = 0
+End_Group
+
+Group = SurfaceModel
+  SurfaceModelNotEnoughValidData = 0
+  SurfaceModelSolutionInvalid    = 0
+  SurfaceModelToleranceNotMet    = 0
+  SurfaceModelDistanceInvalid    = 0
+End_Group
+End

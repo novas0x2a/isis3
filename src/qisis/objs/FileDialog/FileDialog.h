@@ -40,6 +40,7 @@ namespace Qisis {
     protected slots:
       void sendSignal();
       void done();
+      void cancel();
       void saveFilter();
       
     signals:
@@ -57,7 +58,6 @@ namespace Qisis {
       QStringList &p_filterList;
       QDir &p_dir;
       //QStringList &p_fileList;
-      void createDialog();
 
   };
 };

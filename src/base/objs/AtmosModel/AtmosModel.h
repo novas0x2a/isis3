@@ -2,8 +2,8 @@
 #define AtmosModel_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2008/07/09 19:57:32 $                                                                 
+ * $Revision: 1.10 $                                                             
+ * $Date: 2008/11/07 23:48:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -25,17 +25,22 @@
 
 #include <string>
 #include <vector>
-#include "Pvl.h"
 #include "PhotoModel.h"
+#include "NumericalApproximation.h"
+#include "NumericalAtmosApprox.h"
 
+using namespace std;
 namespace Isis {
+  class Pvl;
 
 /**
  * @brief Isotropic atmos scattering model 
- *
+ *  
+ * @ingroup RadiometricAndPhotometricCorrection
  * @author 1998-12-21 Randy Kirk
  *
  * @internal
+ *  @history 2007-02-20 Janet Barrett - Imported from Isis2.
  *  @history 2007-07-31 Steven Lambright - Fixed unit test
  *  @history 2007-08-15 Steven Lambright - Refactored
  *  @history 2008-03-07 Janet Barrett - Added code to set standard
@@ -43,115 +48,131 @@ namespace Isis {
  *                      and wharef variables and supporting methods.
  *  @history 2008-06-18 Christopher Austin - Fixed much documentation
  *  @history 2008-07-09 Steven Lambright - Fixed unit test
+ *  @history 2008-11-05 Jeannie Walldren - Moved numerical
+ *           methods and functions to NumericalMethods and
+ *           NumericalAtmosApprox classes. Moved G11Prime(),
+ *           Ei(), and En() from NumericalMethods into this
+ *           class. Added splines to protected variables and
+ *           removed second derivative vector protected
+ *           variables (p_atmosAhTable2, p_atmosHahgtTable2,
+ *           p_atmosHahgt0Table2) that are no longer needed.
+ *           Replaced arrays with vectors in protected
+ *           variables. Added documentation from Isis2 files.
+ *           Removed "Isis::" and "std::" in AtmosModel.cpp
+ *           since that file uses std and Isis namespaces.
+ *  @history 2008-11-07 Jeannie Walldren - Fixed documentation
  */
   class AtmosModel {
     public:
       AtmosModel (Pvl &pvl, PhotoModel &pmodel);
+      //! Empty destructor
       virtual ~AtmosModel() {};
 
-      //! Calculate atmospheric scattering effect
-      void CalcAtmEffect(double pha, double inc, double ema,
-        double *pstd, double *trans, double *trans0, double *sbar);
-
-      //! Used to calculate atmosphere at standard conditions
+      // These methods were moved here from the NumericalMethods class
+      static double G11Prime(double tau); 
+      static double Ei(double x) throw (iException &);
+      static double En(unsigned int n, double x) throw (iException &);
+      // Calculate atmospheric scattering effect
+      void CalcAtmEffect(double pha, double inc, double ema, double *pstd, 
+                         double *trans, double *trans0, double *sbar);
+      // Used to calculate atmosphere at standard conditions
       virtual void SetStandardConditions(bool standard);
-
-      //! Set parameters needed for atmospheric correction
-      void SetAtmosBha(const double bha);
-      void SetAtmosBharef(const double bharef);
-      void SetAtmosTau (const double tau);
-      void SetAtmosTauref(const double tauref);
-      void SetAtmosWha (const double wha);
-      void SetAtmosWharef(const double wharef);
-      void SetAtmosHga (const double hga);
-      void SetAtmosHgaref(const double hgaref);
+      // Obtain hemispheric and bihemispheric albedo by integrating the photometric function
+      void GenerateAhTable();
+      // Perform integration for Hapke Henyey-Greenstein atmosphere correction
+      void GenerateHahgTables();
+      // Set parameters needed for atmospheric correction
       void SetAtmosAtmSwitch (const int atmswitch);
-      void SetAtmosInc (const double inc);
-      void SetAtmosPhi (const double phi);
-      void SetAtmosNulneg(const std::string nulneg);
-
-      //! Obtain hemispheric and bihemispheric albedo by
-      //! integrating the photometric function
-      void PhtGetAhTable();
-
-      //! Perform integration for Hapke Henyey-Greenstein
-      //! atmosphere correction
-      void GetHahgTables();
-
-      //! Function to be integrated
-      double OutrFunc2Bint(double phi);
-
-      //! Function to be integrated
-      double InrFunc2Bint(double mu);
-
+      void SetAtmosBha       (const double bha   );
+      void SetAtmosBharef    (const double bharef);
+      void SetAtmosHga       (const double hga   );
+      void SetAtmosHgaref    (const double hgaref);
+      void SetAtmosInc       (const double inc   );
+      void SetAtmosNulneg    (const string nulneg);
+      void SetAtmosPhi       (const double phi   );
+      void SetAtmosTau       (const double tau   );
+      void SetAtmosTauref    (const double tauref);
+      void SetAtmosWha       (const double wha   );
+      void SetAtmosWharef    (const double wharef);
+      
       //! Return atmospheric algorithm name
-      std::string AlgorithmName () const { return p_atmosAlgorithmName; };
+      string AlgorithmName () const { return p_atmosAlgorithmName; };
 
       //! Return atmospheric Bha value
       double AtmosBha () const { return p_atmosBha; };
-
       //! Return atmospheric Tau value
       double AtmosTau () const { return p_atmosTau; };
-
       //! Return atmospheric Wha value
       double AtmosWha () const { return p_atmosWha; };
-
       //! Return atmospheric Hga value
       double AtmosHga () const { return p_atmosHga; };
-
       //! Return atmospheric Bharef value
       double AtmosBharef () const { return p_atmosBharef; };
-
       //! Return atmospheric Hgaref value
       double AtmosHgaref () const { return p_atmosHgaref; };
-
       //! Return atmospheric Tauref value
       double AtmosTauref () const { return p_atmosTauref; };
-
       //! Return atmospheric Wharef value
       double AtmosWharef () const { return p_atmosWharef; };
-
       //! Return atmospheric Nulneg value
       bool AtmosNulneg () const { return p_atmosNulneg; };
-
       //! Return atmospheric Ab value
       double AtmosAb () const { return p_atmosAb; };
-
+      //! Return atmospheric Hahgsb value
+      double AtmosHahgsb () const { return p_atmosHahgsb; };
       //! Return atmospheric Ninc value
       int AtmosNinc () const { return p_atmosNinc; };
 
       //! Return atmospheric IncTable value
-      double *AtmosIncTable () { return p_atmosIncTable; };
-
+      vector <double> AtmosIncTable () { return p_atmosIncTable; };
       //! Return atmospheric AhTable value
-      double *AtmosAhTable () { return p_atmosAhTable; };
-
-      //! Return atmospheric AhTable2 value
-      double *AtmosAhTable2 () { return p_atmosAhTable2; };
-
-      //! Return atmospheric Hahgsb value
-      double AtmosHahgsb () const { return p_atmosHahgsb; };
-
+      vector <double> AtmosAhTable () { return p_atmosAhTable; };
       //! Return atmospheric HahgtTable value
-      double *AtmosHahgtTable () { return p_atmosHahgtTable; };
-
+      vector <double> AtmosHahgtTable () { return p_atmosHahgtTable; };
       //! Return atmospheric Hahgt0Table value
-      double *AtmosHahgt0Table () { return p_atmosHahgt0Table; };
+      vector <double> AtmosHahgt0Table () { return p_atmosHahgt0Table; };
 
-      //! Return atmospheric HahgtTable2 value
-      double *AtmosHahgtTable2 () { return p_atmosHahgtTable2; };
-
-      //! Return atmospheric Hahgt0Table2 value
-      double *AtmosHahgt0Table2 () { return p_atmosHahgt0Table2; };
-
-      void r8qromb(int sub, double a, double b, double *ss);
-      void r8trapzd(int sub, double a, double b, double *s, int n);
+      /**
+       * If GenerateAhTable() has been called this returns a clamped
+       * cubic spline of the data set (@a p_atmosIncTable,
+       * @a p_atmosAhTable) with first derivatives of the endpoints 
+       * equal to 1.0e30. Otherwise, it is a natural cubic spline with 
+       * an empty data set. 
+       * 
+       * @returns @b NumericalApproximation Cubic spline 
+       * @internal 
+       *   @history 2008-11-05 Jeannie Walldren - Original version 
+       */
+      NumericalApproximation AtmosAhSpline() {return p_atmosAhSpline;};
+      /**
+       * If GenerateHahgTables() has been called this returns a 
+       * clamped cubic spline of the data set (@a p_atmosIncTable, 
+       * @a p_atmosHahgtTable) with first derivatives of the endpoints
+       * equal to 1.0e30. Otherwise, it is a natural cubic spline with 
+       * an empty data set. 
+       * 
+       * @returns @b NumericalApproximation Cubic spline
+       * @internal 
+       *   @history 2008-11-05 Jeannie Walldren - Original version 
+       */
+      NumericalApproximation AtmosHahgtSpline() {return p_atmosHahgtSpline;};
+      /**
+       * If GenerateHahgTables() has been called this returns a 
+       * clamped cubic spline of the data set (@a p_atmosIncTable, 
+       * @a p_atmosHahgt0Table) with first derivatives of the 
+       * endpoints equal to 1.0e30. Otherwise, it is a natural cubic 
+       * spline with an empty data set. 
+       * 
+       * @returns @b NumericalApproximation Cubic spline
+       * @internal 
+       *   @history 2008-11-05 Jeannie Walldren - Original version 
+       */
+      NumericalApproximation AtmosHahgt0Spline() {return p_atmosHahgt0Spline;};
           
     protected:
-      virtual void AtmosModelAlgorithm (double phase, 
-            double incidence, double emission) = 0;
+      virtual void AtmosModelAlgorithm (double phase, double incidence, double emission) = 0;
       
-      void SetAlgorithmName(std::string name) { p_atmosAlgorithmName = name; }
+      void SetAlgorithmName(string name) { p_atmosAlgorithmName = name; }
       void SetAtmosNulneg(bool nulneg) { p_atmosNulneg = nulneg; }
       void SetOldTau(double tau) { p_atmosTauold = tau; }
       void SetOldWha(double wha) { p_atmosWhaold = wha; }
@@ -174,22 +195,19 @@ namespace Isis {
       double p_atmosWharef;
       double p_atmosWhasave;
 
-      double p_pstd;
-      double p_trans;
-      double p_trans0;
-      double p_sbar;
+      double p_pstd;   //!Pure atmospheric-scattering term.
+      double p_trans;  //!Transmission of surface reflected light through the atmosphere overall.
+      double p_trans0; //!Transmission of surface reflected light through the atmosphere with no scatterings in the atmosphere.
+      double p_sbar;   //!Illumination of the ground by the sky.
       double p_atmosHga;
       double p_atmosTau;
       double p_atmosWha;
       double p_atmosAb;
-      double p_atmosIncTable[91];
-      double p_atmosAhTable[91];
-      double p_atmosAhTable2[91];
+      vector <double> p_atmosIncTable;
+      vector <double> p_atmosAhTable;
       double p_atmosHahgsb;
-      double p_atmosHahgtTable[91];
-      double p_atmosHahgtTable2[91];
-      double p_atmosHahgt0Table[91];
-      double p_atmosHahgt0Table2[91];
+      vector <double> p_atmosHahgtTable;
+      vector <double> p_atmosHahgt0Table;
       double p_atmosInc;
       double p_atmosPhi;
       double p_atmosMunot;
@@ -197,10 +215,17 @@ namespace Isis {
       double p_atmosCosphi;
       double p_atmosEulgam;
 
+      //! Spline object for the atmospheric Ah Table.  Properties are set in GenerateAhTable().
+      NumericalApproximation p_atmosAhSpline;
+      //! Spline object for the atmospheric Hahg Table.  Properties are set in GenerateHahgTables().
+      NumericalApproximation p_atmosHahgtSpline;
+      //! Spline object for the atmospheric Hahg0 Table.  Properties are set in GenerateHahgTables().
+      NumericalApproximation p_atmosHahgt0Spline;
+
     private:
       bool p_standardConditions;
     
-      std::string p_atmosAlgorithmName;
+      string p_atmosAlgorithmName;
  
       PhotoModel *p_atmosPM;
 
@@ -208,6 +233,7 @@ namespace Isis {
 
       double p_atmosTauold;
       double p_atmosWhaold;
+    friend class NumericalAtmosApprox;
   };
 };
 

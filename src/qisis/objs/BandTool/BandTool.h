@@ -1,13 +1,13 @@
 #ifndef BandTool_h
 #define BandTool_h
 
-#include <QHBoxLayout>
-#include <QPushButton>
-#include <QRadioButton>
-#include <QComboBox>
-#include <QMap>
-#include <QStackedWidget>
 #include "Tool.h"
+
+class QComboBox;
+class QRadioButton;
+class QStackedWidget;
+class QToolButton;
+class QHBoxLayout;
 
 namespace Qisis {
   class BandTool : public Qisis::Tool {
@@ -33,6 +33,8 @@ namespace Qisis {
       void setList();
       void setBandBin (Isis::Pvl &pvl);
       void setDisplay();
+      void copyLinkedViewports();
+      void copyAllViewports();
 
     private:
       QRadioButton *p_rgbButton;//!< RGB radio button

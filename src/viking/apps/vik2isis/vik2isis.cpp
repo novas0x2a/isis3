@@ -22,36 +22,37 @@ void IsisMain ()
   // We should be processing a PDS file
   ProcessImportPds p;
   UserInterface &ui = Application::GetUserInterface();
-  string in = ui.GetFilename("FROM");
+  Filename in = ui.GetFilename("FROM");
+  string tempName = "$TEMPORARY/" + in.Name() + ".img";
+  Filename temp (tempName);
+
   bool tempFile = false;
 
   // If the input file is compressed, use vdcomp to decompress
-  Filename temp(ui.GetFilename("FROM"));
-  iString ext = iString(temp.Extension()).UpCase();
+  iString ext = iString(in.Extension()).UpCase();
   if (ext == "IMQ") {
     try {
-     in = temp.Expanded();
-     string command = "$ISISROOT/bin/vdcomp " + in + " " + temp.Name() + ".img";
-     System(command); 
-     in = temp.Name() + ".img";
-     tempFile = true;
+      string command = "$ISISROOT/bin/vdcomp " + in.Expanded() + " " + temp.Expanded();
+      System(command); 
+      in = temp.Expanded();
+      tempFile = true;
     }
     catch (iException &e) {
       e.Clear();
     }
   }
   else if (ext != "IMG") {
-    string msg = "Input file [" + in + 
+    string msg = "Input file [" + in.Name() + 
                "] does not appear to be a Viking PDS product";
     throw iException::Message(iException::User,msg, _FILEINFO_);
   }
   // Convert the pds file to a cube
   Pvl pdsLabel;
   try {
-    p.SetPdsFile (in,"",pdsLabel);
+    p.SetPdsFile (in.Expanded(),"",pdsLabel);
   }
   catch (iException &e) {
-    string msg = "Input file [" + in + 
+    string msg = "Input file [" + in.Name() + 
                "] does not appear to be a Viking PDS product";
     throw iException::Message(iException::User,msg, _FILEINFO_);
   }
@@ -61,7 +62,7 @@ void IsisMain ()
   TranslateVikingLabels(pdsLabel, ocube);
   p.EndProcess ();
 
-  if (tempFile) remove (in.c_str());
+  if (tempFile) remove (temp.Expanded().c_str());
   return;
 }
 

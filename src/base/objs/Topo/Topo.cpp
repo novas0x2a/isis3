@@ -1,4 +1,5 @@
 #include "Topo.h"
+#include "SpecialPixel.h"
 #include "iException.h"
 
 using std::min;
@@ -60,7 +61,7 @@ namespace Isis {
     pprime = GetPhotoModel()->PhtTopder(phase,incidence,emission);
 
     if (psurf*pprimeref > pprime*p_normThresh) {
-      albedo = 0.0;
+      albedo = NULL8;
     }
     else {
       if (pprime == 0.0) {

@@ -2,8 +2,8 @@
 #define Pvl_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/07/10 14:56:46 $
+ * $Revision: 1.5 $
+ * $Date: 2008/10/02 23:39:45 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -117,6 +117,8 @@ namespace Isis {
   *           output operator
   *  @history 2008-07-10 Steven Lambright - Changed StringEqual to use
   *           PvlKeyword::StringEqual
+  *  @history 2008-10-2 Christopher Austin - Replaced all std::endl in the <<
+  *           operator, Write() and Append() with PvlFormat.FormatEOL()
   *                                                                        
   *  @todo 2005-02-14 add coded example to class documentation.                                                      
   */                                                                         

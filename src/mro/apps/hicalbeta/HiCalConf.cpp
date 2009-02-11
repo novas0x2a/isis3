@@ -1,8 +1,8 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $
- * $Date: 2008/07/15 15:37:08 $
- * $Id: HiCalConf.cpp,v 1.3 2008/07/15 15:37:08 skoechle Exp $
+ * $Revision: 1.4 $
+ * $Date: 2008/11/18 06:59:47 $
+ * $Id: HiCalConf.cpp,v 1.4 2008/11/18 06:59:47 kbecker Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -203,6 +203,14 @@ bool HiCalConf::_naifLoaded = false;
                                 int expected_size) const {
     return (getMatrix(name,getMatrixProfile(), expected_size));
   }
+
+
+  std::string HiCalConf::resolve(const std::string &composite, 
+                                 const DbProfile &matconf) const {
+    return (parser(composite,getList(matconf,"OptionKeywords"), matconf)); 
+  }
+
+
 
   /**
    * @brief Returns the named matrix from the specified file reference

@@ -1,13 +1,7 @@
-#include <QMenuBar>
 #include <QPixmap>
-#include <QToolBar>
-#include <QToolButton>
-#include <QComboBox>
 
 #include "BandTool.h"
-#include "MainWindow.h"
 #include "CubeViewport.h"
-
 
 namespace Qisis {
 
@@ -51,6 +45,32 @@ namespace Qisis {
 
     p_rgbButton = new QRadioButton(hbox);
     p_blackwhiteButton = new QRadioButton(hbox);
+
+
+    QMenu *copyMenu = new QMenu();
+    QAction *copyLinked = new QAction(active);
+    copyLinked->setText("to Linked Viewports");    
+    connect(copyLinked,SIGNAL(triggered(bool)),this,SLOT(copyLinkedViewports()));
+    
+    QAction *copyAll = new QAction(active);
+    copyAll->setText("to All Viewports");   
+    connect(copyAll,SIGNAL(triggered(bool)),this,SLOT(copyAllViewports()));
+
+    copyMenu->addAction(copyLinked);
+    copyMenu->addAction(copyAll);
+
+    QToolButton *copyButton = new QToolButton(hbox);
+    copyButton->setAutoRaise(true);
+    copyButton->setIconSize(QSize(22,22));
+    copyButton->setPopupMode(QToolButton::MenuButtonPopup);    
+    copyButton->setMenu(copyMenu);
+    copyButton->setDefaultAction(copyAll);
+    copyButton->setIcon(QPixmap(toolIconDir() + "/copy_bands.png"));
+    copyButton->setToolTip("Copy");
+    QString text  =
+      "<b>Function:</b>";
+    copyButton->setWhatsThis(text);
+
     QIcon colorIcon;
     QIcon grayIcon;
     colorIcon.addPixmap(toolIconDir()+"/rgb.png",QIcon::Normal,QIcon::On);
@@ -64,7 +84,7 @@ namespace Qisis {
     p_blackwhiteButton->setIconSize(QSize(22,22));
     p_rgbButton->setToolTip("Change to RGB");
     p_blackwhiteButton->setToolTip("Change to grayscale");
-    QString text =
+    text =
       "<b>Function:</b> Toggle the active viewport between color or \
       grayscale display of the cube.  Color display is only possible if \
       the cube has two or more bands";
@@ -156,6 +176,7 @@ namespace Qisis {
     layout->setMargin(0);
     layout->addWidget(p_rgbButton);
     layout->addWidget(p_blackwhiteButton);
+    layout->addWidget(copyButton);
     layout->addWidget(p_stack);
     layout->addWidget(vertLine);
     layout->addWidget(p_comboBox);
@@ -172,7 +193,7 @@ namespace Qisis {
    * according to what the user has selected in the p_comboBox.
    * These are the values shown in the gray boxes.
    */
-  void BandTool::setList(){
+  void BandTool::setList() {
     if (p_pvl.FindObject("IsisCube").HasGroup("BandBin") && 
         p_comboBox->count() > 0) {
 
@@ -337,6 +358,74 @@ namespace Qisis {
 
   }
 
+  /**
+   * This method copies the selected bands to all linked viewports.
+   * 
+   */
+  void BandTool::copyLinkedViewports() {
+   if(!cubeViewport()->isLinked()) return;
+
+   for(int i = 0; i < (int)cubeViewportList()->size(); i++) {
+    CubeViewport *cvp = cubeViewportList()->at(i);
+    if(!cvp->isLinked() || cvp == cubeViewport()) continue;
+
+    int bands = cvp->cubeBands();
+
+    if (p_rgbButton->isChecked()) {
+      if (cvp->isGray() ||
+          p_redSpin->value() != cvp->redBand() ||
+          p_grnSpin->value() != cvp->greenBand() ||
+          p_bluSpin->value() != cvp->blueBand()) {
+
+          if(p_redSpin->value() > bands || 
+             p_grnSpin->value() > bands || 
+             p_bluSpin->value() > bands) continue;
+
+          cvp->viewRGB(p_redSpin->value(),p_grnSpin->value(),p_bluSpin->value());
+      }
+    }
+    else {
+      if (cvp->isColor() || p_graySpin->value() != cvp->grayBand()) {
+        if(p_graySpin->value() > bands) continue;
+
+        cvp->viewGray(p_graySpin->value());
+      }
+    }
+   }
+  }
+
+  /**
+   * This methods copies the selected bands to all viewports.
+   * 
+   */
+  void BandTool::copyAllViewports() {
+   for(int i = 0; i < (int)cubeViewportList()->size(); i++) {
+    CubeViewport *cvp = cubeViewportList()->at(i);
+
+    int bands = cvp->cubeBands();
+
+    if (p_rgbButton->isChecked()) {
+      if (cvp->isGray() ||
+          p_redSpin->value() != cvp->redBand() ||
+          p_grnSpin->value() != cvp->greenBand() ||
+          p_bluSpin->value() != cvp->blueBand()) {
+
+          if(p_redSpin->value() > bands || 
+             p_grnSpin->value() > bands || 
+             p_bluSpin->value() > bands) continue;
+
+          cvp->viewRGB(p_redSpin->value(),p_grnSpin->value(),p_bluSpin->value());
+      }
+    }
+    else {
+      if (cvp->isColor() || p_graySpin->value() != cvp->grayBand()) {
+        if(p_graySpin->value() > bands) continue;
+
+        cvp->viewGray(p_graySpin->value());
+      }
+    }
+   }
+  }
 
   /** 
    * updates the band tool

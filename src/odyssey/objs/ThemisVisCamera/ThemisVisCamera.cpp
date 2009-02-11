@@ -43,7 +43,6 @@ namespace Isis {
       double offset = inst["SpacecraftClockOffset"];
       p_etStart = et + offset - ((p_exposureDur / 1000.0) / 2.0);
       p_nframes = inst["NumFramelets"];
-      double etEnd = et + (((SpiceDouble)p_nframes + 4.0) * p_interframeDelay);
 
       // Get the keywords from labels
       Isis::PvlGroup &bandBin = lab.FindGroup("BandBin",Isis::Pvl::Traverse);
@@ -68,7 +67,7 @@ namespace Isis {
 
       // Setup the ground and sky map
       bool evenFramelets = (inst["Framelets"][0] == "Even");
-      new PushFrameCameraGroundMap(this, p_etStart, etEnd, evenFramelets);
+      new PushFrameCameraGroundMap(this, evenFramelets);
       new CameraSkyMap(this);
 
       LoadCache();

@@ -2,9 +2,9 @@
 #define SplineFillComp_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $
- * $Date: 2008/01/13 08:13:00 $
- * $Id: SplineFillComp.h,v 1.1 2008/01/13 08:13:00 kbecker Exp $
+ * $Revision: 1.2 $
+ * $Date: 2008/11/06 00:08:15 $
+ * $Id: SplineFillComp.h,v 1.2 2008/11/06 00:08:15 jwalldren Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -29,7 +29,7 @@
 
 #include "iString.h"
 #include "Component.h"
-#include "DataInterp.h"
+#include "NumericalApproximation.h"
 #include "SpecialPixel.h"
 #include "iException.h"
 
@@ -40,7 +40,9 @@ namespace Isis {
    * 
    * @ingroup Utility
    * 
-   * @author 2007-10-09 Kris Becker
+   * @author 2007-10-09 Kris Becker 
+   * @history 2008-11-05 Jeannie Walldren Replaced references to 
+   *  DataInterp class with NumericalApproximation.
    */
   class SplineFillComp : public Component {
 
@@ -85,20 +87,19 @@ namespace Isis {
       }
 
       void fill(const HiVector &v) {
-        DataInterp spline(DataInterp::Cubic);
+        NumericalApproximation spline(NumericalApproximation::CubicNatural);
         for (int i = 0 ; i < v.dim() ; i++) {
           if (!IsSpecial(v[i])) {
-            spline.addPoint(i, v[i]); 
+            spline.AddData(i, v[i]); 
           }
         }
 
         //  Compute the spline and fill missing data
-        spline.Compute();
         HiVector vout(v.dim());
         _filled = 0;
         for (int j = 0 ; j < v.dim() ; j++) {
           if (IsSpecial(v[j])) {
-            vout[j] = spline.Evaluate(j); 
+            vout[j] = spline.Evaluate(j,NumericalApproximation::NearestEndpoint); 
             _filled++;
           }
           else {

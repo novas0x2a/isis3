@@ -5,6 +5,12 @@
 #include "Tool.h"
 
 namespace Qisis {
+  /**
+   * 
+   * @internal
+   *   @history 2008-12-10 Jeannie Walldren - Added "What's this?"
+   *              and shortcut to "Save" action
+   */
   class FileTool : public Tool {
     Q_OBJECT
 
@@ -44,6 +50,7 @@ namespace Qisis {
       virtual void save(); 
       virtual void saveAs(); 
       virtual void exportView(); 
+      virtual bool closeAll();
       virtual void exit();
       void enableSave(bool enable); 
       void discard(); 
@@ -62,6 +69,7 @@ namespace Qisis {
       QAction *p_save; //!< Action to save the current cube
       QAction *p_saveAs; //!< Action save the current cube as a user specified file
       QAction *p_exportView; //!< Action to export the view as a picture
+      QAction *p_closeAll;
       QAction *p_exit; //!< Action to exit qview
       QWidget *p_parent; //!< The parent widget of this object
       QString p_lastDir; //!< The last directory opened

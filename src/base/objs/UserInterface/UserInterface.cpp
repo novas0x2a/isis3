@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.10 $                                                             
- * $Date: 2008/07/11 22:22:25 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2009/01/07 17:20:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -528,12 +528,12 @@ namespace Isis {
                      "] does not contain any parameters to restore";
         throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
       } catch (...) {
-        string msg = "A corrupt parameter history file [" + hist.Expanded() + 
+        string msg = "A corrupt parameter history file [" + file + 
                      "] has been detected. Please fix or remove this file";
         throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
       }
     } else {
-      string msg = "Parameter history file [" + hist.Expanded() + 
+      string msg = "Parameter history file [" + file + 
                    "] does not exist";
       throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
     }
@@ -556,14 +556,22 @@ namespace Isis {
     // If a save file is specified, override the default file path
     if (p_saveFile != "") histFile = p_saveFile;
 
-    Isis::Pvl hist;
-    if (histFile.Exists()) {
-      hist.Read(histFile.Expanded());
-    }
-
     // Get the current command line
     Isis::Pvl cmdLine;
     CommandLine(cmdLine);
+
+    Isis::Pvl hist;
+
+    // If the history file's Pvl is corrupted, then
+    // leave hist empty such that the history gets
+    // overwriten with the new entry. 
+    try {
+      if (histFile.Exists()) {
+        hist.Read(histFile.Expanded());
+      }
+    } catch (iException e) { 
+      e.Clear();
+    }
 
     // Add it
     hist.AddGroup(cmdLine.FindGroup("UserParameters"));
@@ -575,6 +583,7 @@ namespace Isis {
 
     // Write it
     hist.Write(histFile.Expanded());
+
   }
 
   /**

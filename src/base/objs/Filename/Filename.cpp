@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/07/11 19:41:06 $
+ * $Revision: 1.6 $
+ * $Date: 2009/01/07 18:33:38 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -149,12 +149,7 @@ namespace Isis {
  * ".", "..", or "~"
  */
   std::string Filename::Expanded () const {
-    if (Isis::Preference::Preferences().IsUnitTest()) {
-      return QFileInfo::filePath().toStdString();
-    }
-    else {
-      return QFileInfo::absoluteFilePath().toStdString();
-    }
+    return QFileInfo::absoluteFilePath().toStdString();
   }
 
 /**

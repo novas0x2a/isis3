@@ -2,7 +2,7 @@ UNIT TEST for MoonAlbedo normalization function
 
 Object = PhotometricModel
   Group = Algorithm
-    Name = Moonpr
+    Name = LunarLambertMcEwen
   End_Group
 End_Object
 

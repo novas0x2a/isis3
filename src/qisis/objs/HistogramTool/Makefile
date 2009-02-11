@@ -1,5 +1,5 @@
-INCS = HistogramTool.h HistogramToolCurve.h
-CPPS = HistogramTool.cpp HistogramToolCurve.cpp
+INCS = HistogramTool.h HistogramItem.h
+CPPS = HistogramTool.cpp HistogramItem.cpp
 SRCS = $(CPPS) moc_HistogramTool.cpp
 OBJS = $(SRCS:%.cpp=%.o)
 

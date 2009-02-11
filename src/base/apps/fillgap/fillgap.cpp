@@ -1,17 +1,15 @@
 #include "Isis.h"
-
 #include <string>
-
 #include "ProcessBySample.h"
 #include "ProcessByLine.h"
 #include "ProcessBySpectra.h"
-#include "DataInterp.h"
+#include "NumericalApproximation.h"
 #include "SpecialPixel.h"
 
 using namespace std; 
 using namespace Isis;
 
-static DataInterp::InterpType iType(DataInterp::Cubic);
+static NumericalApproximation::InterpType iType(NumericalApproximation::CubicNatural);
 
 void fill(Buffer  &in, Buffer &out);
 
@@ -21,13 +19,13 @@ void IsisMain() {
   // set spline interpolation to user requested type
   string splineType = ui.GetString("INTERP");
   if (splineType == "LINEAR") {
-    iType = DataInterp::Linear; 
+    iType = NumericalApproximation::Linear; 
   } 
   else if (splineType == "AKIMA") {
-    iType = DataInterp::Akima;
+    iType = NumericalApproximation::Akima; 
   }
   else {
-    iType = DataInterp::Cubic;
+    iType = NumericalApproximation::CubicNatural; 
   }
 
   //Set null direction to the user defined direction
@@ -57,14 +55,14 @@ void IsisMain() {
 }
 
 void fill(Buffer &in, Buffer &out) { 
-  DataInterp spline(iType);
+  NumericalApproximation spline(iType);
   
   for (int i=0; i < in.size(); i++) {
     if (!IsSpecial(in[i])) {
-      spline.addPoint((double) (i+1),in[i]);
+      spline.AddData((double) (i+1),in[i]);
     }
   }
-  spline.Compute();
+
   for (int j = 0 ; j < out.size() ; j++) {
     out[j] = spline.Evaluate((double) (j+1));
   }

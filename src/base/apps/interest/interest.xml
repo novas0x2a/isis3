@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="interest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Applies an interest operator to the measurments of a control network
+  </brief>
+
+  <description>
+    This program uses an interest operator to find the most interesting
+    area near each measurment of a control network. It then creates a 
+    new control network using these "more interesting" points as the
+    measurments.
+  </description>
+
+  <category>
+    <categoryItem>Geometry</categoryItem>
+  </category>
+
+  <history>
+    <change name="Stuart Sides" date="2005-08-20">
+      Original version
+    </change>
+    <change name="Steven Koechle" date="2008-09-25">
+      Tweaked to compile and run with current version of Isis
+    </change>
+    <change name="Steven Lambright" date="2008-11-04">
+      Added support for image overlap files, new optional parameter "OVERLAPLIST"
+    </change>
+    <change name="Steven Lambright" date="2008-11-14">
+      "OVERLAPLIST" is now a required parameter.
+    </change>
+    <change name="Steven Koechle" date="2009-01-20">
+      Fixed Memory Leaks, Changed Deletion of cubes to use an iterator
+    </change>
+</history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROMLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          List of Input cubes in the control network
+        </brief>
+        <description>
+          Use this parameter to specify the cube filenames which are associated with
+          the control network.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="NETWORK">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input control network
+        </brief>
+        <description>
+          This file must contain control network with valid measurments
+        </description>
+        <filter>
+          *.net
+        </filter>
+      </parameter>
+
+      <parameter name="INTEREST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          PVL file containing the description of the interest operator plugin
+        </brief>
+        <description>
+          Use this parameter to select the filename which contains the
+          definition for the interest operator to be used.
+        </description>
+        <filter>
+          *
+        </filter>
+      </parameter>
+
+      <parameter name="OVERLAPLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          This is the list of image overlaps corresponding to this control net
+        </brief>
+        <description>
+          Use this parameter to select the filename which contains the
+          overlap list. You can obtain this file by running "findimageoverlaps."
+        </description>
+        <filter>
+          *
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output control network
+        </brief>
+        <description>
+          This file will contain the adjusted control network
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Information">
+        <parameter name="NETWORKID">
+          <type>string</type>
+          <brief>
+              Name of this control network
+          </brief>
+          <description>
+              The ID or name of this particular control network. This string
+              should be unique.
+          </description>
+        </parameter>
+
+        <parameter name="DESCRIPTION">
+        <type>string</type>
+        <brief>
+            The description of the network.
+        </brief>
+        <description>
+            A string describing purpose of this control network.
+        </description>
+      </parameter>
+
+    </group>
+  </groups>
+</application>

@@ -28,9 +28,15 @@
       Augmented observation number and added TO file with APPEND option
     </change>
     <change name="Steven Koechle" date="2008-04-04"> 
-        Added booleans for which keywords to get. If TO parameter is not entered 
-        output will go to console. Added results group to SessionLog and GuiLog 
-        (if applicable)
+      Added booleans for which keywords to get. If TO parameter is not entered 
+      output will go to console. Added results group to SessionLog and GuiLog 
+      (if applicable)
+    </change>
+    <change name="Steven Lambright" date="2008-10-31">
+      The print.prt file will now properly contain the results when getsn is run from
+      the command line; before the results group was always empty. The "TerminalOutput" user
+      preference no longer affects the output of this program. The default values of "FILE" and
+      "OBSERVATION" have been changed to FALSE.
     </change>
   </history>
 
@@ -82,7 +88,7 @@
     <group name="Display File Name">
       <parameter name="DEFAULT">
         <type>boolean</type>
-        <default><item>FALSE </item></default>
+        <default><item>FALSE</item></default>
         <brief>Allows serial number to default to the file name</brief>
         <description>
           Within the Result Pvl, if the serial number is not know, then Unknown 
@@ -96,7 +102,7 @@
     <group name="Options">
         <parameter name="FILE">
         <type>boolean</type>
-        <default><item>True</item></default>
+        <default><item>False</item></default>
         <brief>
           Get the Filename
         </brief>
@@ -118,7 +124,7 @@
       </parameter>
         <parameter name="OBSERVATION">
         <type>boolean</type>
-        <default><item>True</item></default>
+        <default><item>False</item></default>
         <brief>
           Get the Observation Number
         </brief>

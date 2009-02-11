@@ -19,6 +19,12 @@ namespace Qisis {
   *            functions to work with blank entries.
   *  @history 2008-06-25 Noah Hilt - Fixed the delete rows method to search the
   *           entire row for values, rather than just the first column.
+  *  @history 2008-10-17 Noah Hilt - Added an optional tooltip parameter to the
+  *           addToTable method. This tooltip will be displayed over the checkbox
+  *           that is to be added to the dock area.
+  *  @history 2008-11-25 Noah Hilt - Added an action to save the table to a file
+  *           that has been loaded or set with the save as action. This way the
+  *           user does not have to reselect the file to save the table to.
   */
 
 
@@ -83,7 +89,7 @@ namespace Qisis {
       TableMainWindow (QString title, QWidget *parent=0);
       void addToTable (bool setOn, const QString &heading,
                        const QString &menuText = "", int insertAt = -1, 
-                       Qt::Orientation o = Qt::Horizontal);
+                       Qt::Orientation o = Qt::Horizontal, QString toolTip = "");
       void deleteColumn(int item);
       void setStatusMessage(QString message);
 
@@ -92,6 +98,7 @@ namespace Qisis {
       void showTable();
       void syncColumns();
       void syncRows();
+      void saveAsTable();
       void saveTable ();
       void clearTable ();
       void deleteRows();
@@ -121,6 +128,9 @@ namespace Qisis {
       QWidget *p_parent; //!< The parent widget
       QString p_title; //!< The title string
       QDockWidget *p_dock; //!< The dock widget
+
+      QAction *p_save; //!< Action to save the table to the current file
+      QFile p_currentFile; //!< The current file
 
       QTableWidget *p_table; //!< The table
       Qisis::MainWindow *p_tableWin; //!< The main window 

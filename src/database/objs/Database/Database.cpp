@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $
- * $Date: 2007/06/06 00:32:05 $
+ * $Revision: 1.3 $
+ * $Date: 2008/10/30 16:38:23 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -560,7 +560,7 @@ std::vector<std::string> Database::getSystemTables() const {
  * @param f        Name of method initiating the exception
  * @param l        Line number the error occured
  */
-void Database::tossDbError(const std::string &message, char *f, int l) const
+void Database::tossDbError(const std::string &message, const char *f, int l) const
                            throw (iException &) {
   string errmess = message + " - DatabaseError = " + 
                    iString::ToStd(lastError().text());

@@ -16,4 +16,14 @@ Results from PhtTopder = 1e-15
 
 Results from PhtTopder = 0.013697
 
+Test PhtAcos ...
+Results from PhtAcos = 0
+        Actual value = 0
+
+Results from PhtAcos = 0.000349285
+        Actual value = 0.000349285
+
+Results from PhtAcos = 2.6088
+        Actual value = 2.6088
+
 

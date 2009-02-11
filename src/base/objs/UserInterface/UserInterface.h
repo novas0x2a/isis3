@@ -2,8 +2,8 @@
 #define UserInterface_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/06/18 21:32:38 $
+ * $Revision: 1.10 $
+ * $Date: 2009/01/07 17:20:48 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -84,6 +84,13 @@ namespace Isis {
  *  @history 2008-04-16 Steven Lambright - Moved parameter verification call
  *  @history 2008-06-06 Steven Lambright - Changed corrupt history file message
  *  @history 2008-06-18 Steven Lambright - Fixed documentation
+ *  @history 2008-09-23 Christopher Austin - Added a try/catch to SaveHistory(),
+ *                                      where if the history file is corrupt, it
+ *                                      simply overwrites it with the new single
+ *                                      valid entry.
+ *  @history 2000-01-07 Steven Lambright - Changed unit test and error on
+ *           invalid parameter history files to conform with a Filename class
+ *           change where Expanded(...) always returns a full path.
  *  @todo 2005-02-22 Jeff Anderson - add coded and implementation examples to
  *                                   class documentation
  */

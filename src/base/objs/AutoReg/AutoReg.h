@@ -2,8 +2,8 @@
 #define AutoReg_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/13 23:44:24 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/11/18 17:13:25 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -58,6 +58,8 @@ namespace Isis {
    *    inside the group "SurfaceModel" in the Pvl. Also changed the Pvl returned
    *    by RegistrationStatistics so that group names do not contain spaces and
    *    the Pvl only contains groups.
+   *    @history 2008-11-18 Steven Koechle - Changed all keywords *NotEnoughData
+   *             to *NotEnoughValidData
    */
   class Chip;
   class Pvl;
@@ -69,10 +71,10 @@ namespace Isis {
 
       enum RegisterStatus {
         Success, //!< Success
-        PatternChipNotEnoughData, //!< Not enough valid data in pattern chip
+        PatternChipNotEnoughValidData, //!< Not enough valid data in pattern chip
         FitChipNoData, //!< Fit chip did not have any valid data
         FitChipToleranceNotMet, //!< Goodness of fit tolerance not satisfied
-        SurfaceModelNotEnoughData, //!< Not enough points to fit a surface model for sub-pixel accuracy
+        SurfaceModelNotEnoughValidData, //!< Not enough points to fit a surface model for sub-pixel accuracy
         SurfaceModelSolutionInvalid, //!< Could not model surface for sub-pixel accuracy
         SurfaceModelDistanceInvalid, //!< Surface model moves registration more than one pixel
         PatternZScoreNotMet, //!< Pattern data max or min does not pass the z-score test
@@ -153,11 +155,11 @@ namespace Isis {
 
       int p_Total;
       int p_Success;
-      std::vector<int> p_PatternChipNotEnoughData;
+      std::vector<int> p_PatternChipNotEnoughValidData;
       std::vector<int> p_PatternZScoreNotMet;
       std::vector<int> p_FitChipNoData;
       std::vector<int> p_FitChipToleranceNotMet;
-      int p_SurfaceModelNotEnoughData;
+      int p_SurfaceModelNotEnoughValidData;
       int p_SurfaceModelSolutionInvalid;
       int p_SurfaceModelToleranceNotMet;
       int p_SurfaceModelDistanceInvalid;

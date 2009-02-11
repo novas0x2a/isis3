@@ -5,11 +5,14 @@
 using namespace Isis;
 
 void PipeBranched();
+void PipeMultiBranched();
 void PipeSimple();
+void PipeListed();
 
 void IsisMain() {
   UserInterface &ui = Application::GetUserInterface();
   ui.PutFilename("FROM", "$ISIS3DATA/odyssey/testData/I00831002RDR.even.cub");
+  ui.PutFilename("FROM2", "$ISIS3DATA/odyssey/testData/I00831002RDR.odd.cub");
   ui.PutFilename("TO", "/work1/out.cub");
   ui.PutString("SHAPE", "ELLIPSOID");
 
@@ -31,6 +34,15 @@ void IsisMain() {
   ui.Clear("MAPPING");
   ui.PutBoolean("MAPPING", false);
   PipeBranched();
+
+  std::cout << "Complicated Branching Pipe" << std::endl;
+  PipeMultiBranched();
+
+  ui.Clear("FROM");
+  ui.Clear("TO");
+  ui.PutFilename("FROM", "unitTest.lis");
+  std::cout << "Testing listing methods" << std::endl;
+  PipeListed();
 }
 
 void PipeBranched() {
@@ -180,3 +192,80 @@ void PipeSimple() {
   cout << p << endl;
 }
 
+void PipeMultiBranched() {
+  Pipeline p("unitTest3");
+
+  p.SetInputFile("FROM", "BANDS");
+  p.SetInputFile("FROM2", "BANDS");
+  p.SetOutputFile("TO");
+
+  p.KeepTemporaryFiles(false);
+
+  p.AddToPipeline("fft");
+  p.Application("fft").SetInputParameter("FROM", true);
+  p.Application("fft").AddBranch("mag", PipelineApplication::ConstantStrings);
+  p.Application("fft").AddBranch("phase", PipelineApplication::ConstantStrings);
+  p.Application("fft").SetOutputParameter("FROM.mag", "MAGNITUDE", "fft", "cub");
+  p.Application("fft").SetOutputParameter("FROM.phase", "PHASE", "fft", "cub");
+  p.Application("fft").SetOutputParameter("FROM2.mag", "MAGNITUDE", "fft", "cub");
+  p.Application("fft").SetOutputParameter("FROM2.phase", "PHASE", "fft", "cub");
+
+  cout << p << endl;
+
+  p.AddToPipeline("fx");
+  p.Application("fx").SetInputParameter("FILELIST", PipelineApplication::LastAppOutputListNoMerge, false);
+  p.Application("fx").SetOutputParameter("FROM.mag", "TO", "fx2", "cub");
+  p.Application("fx").SetOutputParameter("FROM2.phase", "TO", "fx2", "cub");
+  p.Application("fx").AddConstParameter("FROM.mag", "equation", "1+2");
+  p.Application("fx").AddConstParameter("MODE", "list");
+  p.Application("fx").AddConstParameter("FROM2.phase", "equation", "1+3");
+
+  cout << p << endl;
+
+  p.AddToPipeline("ifft");
+  p.Application("ifft").SetInputParameter("MAGNITUDE", true);
+  p.Application("ifft").AddParameter("PHASE", PipelineApplication::LastOutput);
+  p.Application("ifft").SetOutputParameter("FROM.mag", "TO", "untranslated", "cub");
+
+  cout << p << endl;
+
+  p.AddToPipeline("translate");
+  p.Application("translate").SetInputParameter("FROM", true);
+  p.Application("translate").AddConstParameter("STRANS", "-1");
+  p.Application("translate").AddConstParameter("LTRANS", "-1");
+  p.Application("translate").AddConstParameter("INTERP", "near");
+  p.Application("translate").SetOutputParameter("FROM.mag", "TO", "final", "cub");
+
+  cout << p << endl;
+}
+
+void PipeListed() {
+  Pipeline p("unitTest4");
+
+  p.SetInputListFile("FROM");
+  p.SetOutputListFile("TO");
+
+  p.KeepTemporaryFiles(false);
+
+  p.AddToPipeline("cubeatt");
+  p.Application("cubeatt").SetInputParameter("FROM", true);
+  p.Application("cubeatt").SetOutputParameter("TO", "copy");
+
+  p.AddToPipeline("spiceinit");
+  p.Application("spiceinit").SetInputParameter("FROM", false);
+  p.Application("spiceinit").AddConstParameter("ATTACH", "NO");
+
+  p.AddToPipeline("appjit");
+  p.Application("appjit").SetInputParameter("FROMLIST", PipelineApplication::LastAppOutputListNoMerge, false);
+
+  p.Application("appjit").AddConstParameter("MASTER", "MASTER.cub");
+  p.Application("appjit").AddConstParameter("DEGREE", "1");
+  
+  p.AddToPipeline("noproj");
+  p.Application("noproj").SetInputParameter("FROM", true);
+  p.Application("noproj").AddConstParameter("MATCH", "MATCH.cub");
+  p.Application("noproj").SetOutputParameter("TO", "noproj");
+  p.Application("noproj").SetOutputParameter("TO", "jitter");
+
+  std::cout << p << std::endl;
+}

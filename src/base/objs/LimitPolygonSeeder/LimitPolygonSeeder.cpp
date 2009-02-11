@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2008/12/23 17:24:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -24,22 +24,24 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <iomanip>
+
+#include "geos/util/TopologyException.h"
 
 #include "Pvl.h"
 #include "PvlGroup.h"
 #include "iException.h"
 #include "PolygonTools.h"
-
 #include "LimitPolygonSeeder.h"
 
 namespace Isis {
 
   /**
    * @brief Construct a LimitPolygonSeeder algorithm
-   * .
    * 
-   * @param pvl  A Pvl object that contains a valid polygon point 
-   * seeding definition
+   * 
+   * @param pvl  A Pvl object that contains a valid polygon point seeding 
+   *             definition
    */
   LimitPolygonSeeder::LimitPolygonSeeder (Pvl &pvl) : PolygonSeeder(pvl) {
     Parse(pvl);
@@ -66,6 +68,7 @@ namespace Isis {
   std::vector<geos::geom::Point*> LimitPolygonSeeder::Seed(const geos::geom::MultiPolygon *lonLatPoly,
                                                            Projection *proj) {
     if (proj == NULL) {
+
       std::string msg = "No Projection object available";
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
     }
@@ -74,7 +77,7 @@ namespace Isis {
     std::vector<geos::geom::Point*> points;
 
     // Create some things we will need shortly
-    geos::geom::MultiPolygon *xymp = PolygonTools::XYFromLonLat(*lonLatPoly, proj);
+    geos::geom::MultiPolygon *xymp = PolygonTools::LatLonToXY(*lonLatPoly, proj);
     const geos::geom::Envelope *xyBoundBox = xymp->getEnvelopeInternal();
 
     // Call the parents standardTests member
@@ -103,11 +106,13 @@ namespace Isis {
     double xSpacing = (xyBoundBox->getMaxX()-xyBoundBox->getMinX()) / (xSteps);
     double ySpacing = (xyBoundBox->getMaxY()-xyBoundBox->getMinY()) / (ySteps);
 
-    double dRealMinX = xyBoundBox->getMinX() + xSpacing/2;
-    double dRealMinY = xyBoundBox->getMinX() + xSpacing/2;
+    double realMinX = xyBoundBox->getMinX() + xSpacing/2;
+    double realMinY = xyBoundBox->getMinY() + ySpacing/2;
+    double maxY = xyBoundBox->getMaxY();
+    double maxX = xyBoundBox->getMaxX();
 
-    for (double y=dRealMinY; y < xyBoundBox->getMaxY(); y += ySpacing) {
-      for (double x=dRealMinX; x < xyBoundBox->getMaxX(); x += xSpacing) {
+    for (double y=realMinY; y < maxY; y += ySpacing) {
+      for (double x=realMinX; x < maxX; x += xSpacing) {
         geos::geom::Geometry *gridSquarePolygon = GetMultiPolygon(x-xSpacing/2.0,y-ySpacing/2,
                                                                   x+xSpacing/2.0,y+ySpacing/2, *xymp);
 
@@ -122,6 +127,7 @@ namespace Isis {
 
         geos::geom::Coordinate c(gridCenterX,gridCenterY);
         geos::geom::Point *p = Isis::globalFactory.createPoint(c);
+
         if (p->within(xymp)) {
           // Convert the x/y point to a lon/lat point
           if (proj->SetCoordinate(gridCenterX,gridCenterY)) {
@@ -134,18 +140,30 @@ namespace Isis {
             msg += iString(gridCenterY) + ")] to a (lon,lat)"; 
             throw iException::Message(iException::Programmer, msg, _FILEINFO_);
           }
-        }
-        else {
+
           delete p;
         }
       }
     }
 
     delete xymp;
-
     return points;
   }
 
+  /**
+   * This method returns the overlap between the x/y range specified and the 
+   * "orig" polygon. This is used to get polygons that represent the overlap 
+   * polygons in individual grid squares. 
+   * 
+   * @param dMinX Left side of rectangle
+   * @param dMinY Bottom side of rectangle
+   * @param dMaxX Right side of rectangle
+   * @param dMaxY Top side of the rectangle
+   * @param orig Multiplygon to intersect the square with
+   * 
+   * @return geos::geom::Geometry* The portion of "orig" that intersects the 
+   *         square
+   */
   geos::geom::Geometry *LimitPolygonSeeder::GetMultiPolygon(double dMinX, double dMinY, 
                                                          double dMaxX, double dMaxY, 
                                                          const geos::geom::MultiPolygon &orig) {

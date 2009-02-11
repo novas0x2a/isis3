@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.10 $                                                             
- * $Date: 2008/07/08 22:14:59 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2008/12/15 18:43:51 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -64,7 +64,7 @@ namespace Isis {
    * @return The modified exception object.
    */
   iException &iException::Message(iException::errType t, const std::string &m, 
-                                  char *f, int l) {
+                                  const char *f, int l) {
     if (p_exception == NULL) {
       p_exception = new iException();
     }
@@ -88,6 +88,8 @@ namespace Isis {
 
     p_list.push_back(i);
 
+    p_exception->describe();
+
     return *p_exception;
   }
 
@@ -96,10 +98,9 @@ namespace Isis {
   }
 
   /**
-   * Returns what happened in output format.
-   * @return The message stating what happened and where.
+   * Stores what happened in a member std::string.
    */
-  const char *iException::what() const throw () {
+  void iException::describe() {
     if (p_list.size() > 0) {
       std::string message;
       for (int i=p_list.size()-1; i>=0; i--) {
@@ -111,7 +112,24 @@ namespace Isis {
         }
         if (i != 0) message += "\n";
       }
-      return message.c_str();
+
+      p_what = message;
+    }
+    else {
+      p_what = "";
+    }
+  }
+
+  /**
+   * Returns what happened in output format. This pointer is valid as 
+   * long as no new iException objects are created (iException::Message is not 
+   * called again). 
+   *  
+   * @return The message stating what happened and where.
+   */
+  const char *iException::what() const throw () {
+    if(p_what != "") {
+      return p_what.c_str();
     }
     else {
       return NULL;

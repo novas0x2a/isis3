@@ -2,8 +2,8 @@
 #define BundleAdjust_h
 /**
  * @file
- * $Revision: 1.15 $
- * $Date: 2008/06/18 19:54:07 $
+ * $Revision: 1.17 $
+ * $Date: 2008/11/27 02:05:39 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -39,6 +39,13 @@
  *   @history 2008-01-14 Debbie A. Cook Added code to solve for local radii
  *   @history 2008-04-18 Debbie A. Cook Added progress for ControlNet
  *   @history 2008-06-18 Christopher Austin Fixed ifndef
+ *   @history 2008-11-07 Tracie Sucharski, Added bool to constructors to
+ *                          indicate whether to print iteration summary info
+ *                          to the session log. This was needed for qtie which
+ *                          has no session log.
+ *   @history 2008-11-22 Debbie A. Cook Added code to wrap longitude to keep it in [0.,360.]
+ *   @history 2008-11-22 Debbie A. Cook Added new call to get timeScale and set for the observation along with basetime
+ *   @history 2008-11-26 Debbie A. Cook Added check to ApplyHeldList for Ignored points and measures
  */
 
 #include "ControlNet.h"
@@ -55,12 +62,14 @@ namespace Isis {
 
   class BundleAdjust {
     public:
-      BundleAdjust(const std::string &cnetFile, const std::string &cubeList);
       BundleAdjust(const std::string &cnetFile, const std::string &cubeList,
-                   const std::string &heldList);
-      BundleAdjust(Isis::ControlNet &cnet, Isis::SerialNumberList &snlist);
+                   bool printSummary=true);
+      BundleAdjust(const std::string &cnetFile, const std::string &cubeList,
+                   const std::string &heldList,bool printSummary=true);
       BundleAdjust(Isis::ControlNet &cnet, Isis::SerialNumberList &snlist,
-                   Isis::SerialNumberList &heldsnlist);
+                   bool printSummary=true);
+      BundleAdjust(Isis::ControlNet &cnet, Isis::SerialNumberList &snlist,
+                   Isis::SerialNumberList &heldsnlist,bool printSummary=true);
       ~BundleAdjust();
 
       double Solve(double tol, int maxIterations);
@@ -137,6 +146,7 @@ namespace Isis {
 
       double p_error;
       int p_iteration;
+      bool p_printSummary;
 
       int p_numImagePartials;
       int p_numPointPartials;

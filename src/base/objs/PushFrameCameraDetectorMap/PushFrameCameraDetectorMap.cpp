@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/05/06 21:17:56 $
+ * $Revision: 1.2 $
+ * $Date: 2008/10/23 15:44:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -53,17 +53,30 @@ namespace Isis {
 
     // Convert framelet sample/line to summed framelet sample/line,
     // parent sample will be computed correctly
-    if (!CameraDetectorMap::SetDetector(unsummedFrameletSample,unsummedFrameletLine)) return false;
+    if (!CameraDetectorMap::SetDetector(unsummedFrameletSample,unsummedFrameletLine)) {
+      return false;
+    }
+
     p_frameletSample = p_detectorSample;
     p_frameletLine = p_detectorLine;
 
-    // Compute the parent line based on the current frame
+    // Compute the height of a framelet taking into account the summing mode
     int actualFrameletHeight = (int)(p_frameletHeight / LineScaleFactor());
+
     p_parentLine = (p_framelet - 1) * actualFrameletHeight + p_parentLine;
 
     // Save the detector sample/line
     p_detectorSample = sample;
     p_detectorLine = line;
+
+    // The parent line will be one outside of the framelet (null data) if it doesnt fit
+    //  into this framelet
+    if(p_frameletLine >= actualFrameletHeight*2) {
+      return false;
+    }
+    if(p_frameletLine <= -actualFrameletHeight) {
+      return false;
+    }
 
     return true;
   }

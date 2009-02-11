@@ -75,11 +75,11 @@ Original path      /$BADENV
 
 Testing ISIS preference variable expansion
 Original filename: /$TEMPORARY/unitTest.cpp
-New filename:      ./unitTest.cpp
+New filename:      /unitTest.cpp
 Name:              unitTest.cpp
 Basename:          unitTest
 Extension:         cpp
-Original path      $TEMPORARY
+Original path      /$TEMPORARY
 
 Testing file name without a path
 Original filename: unitTest.cpp

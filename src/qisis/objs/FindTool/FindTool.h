@@ -2,8 +2,8 @@
 #define FindTool_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/09/03 16:27:29 $
+ * $Revision: 1.7 $
+ * $Date: 2008/09/26 21:26:32 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -122,6 +122,7 @@ namespace Qisis {
       bool p_pressed;
       QPoint p_point;
       QPen p_pen;
+      bool p_paint;
 
   };
 

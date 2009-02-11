@@ -34,6 +34,10 @@ namespace Isis {
    * @history 2006-12-14 Stuart Sides - Modified keword units to be PDS complient
    * @history 2008-05-20 Steven Lambright - Fixed documentation 
    * @history 2008-08-07 Christopher Austin - Added fixed label export capability 
+   * @history 2008-10-02 Christopher Austin - Fixed LabelSize() and OutputLabel() 
+   *          in accordace to the pds end of line sequence requirement
+   * @history 2008-12-17 Steven Lambright - Added calculations for OFFSET and 
+   *          SCALEFACTOR keywords
    */
   class ProcessExportPds : public Isis::ProcessExport {
     public:

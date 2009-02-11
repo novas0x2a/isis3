@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:09 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2008/09/11 16:41:03 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -59,16 +59,24 @@ namespace Isis {
       string m = "You must specify exactly one output cube";
       throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
     }
-  
+
+    // allocate the sampMap/lineMap vectors
+    p_lineMap.resize(p_startQuadSize);
+    p_sampMap.resize(p_startQuadSize);
+
+    for(unsigned int pos = 0; pos < p_lineMap.size(); pos++) {
+      p_lineMap[pos].resize(p_startQuadSize);
+      p_sampMap[pos].resize(p_startQuadSize);
+    }
+
     // Create a tile manager for the output file
-    Isis::TileManager otile (*OutputCubes[0]);
-  
+    Isis::TileManager otile (*OutputCubes[0], p_startQuadSize, p_startQuadSize);
+
     // Create a portal buffer for the input file
     Isis::Portal iportal (interp.Samples(), interp.Lines(),
                         InputCubes[0]->PixelType() ,
                         interp.HotSample(), interp.HotLine());
-  
-  
+
     // Start the progress meter
     p_progress->SetMaximumSteps (otile.Tiles());
     p_progress->CheckStatus();
@@ -93,7 +101,6 @@ namespace Isis {
       int lastOutputBand = -1;
 
       for (otile.begin(); !otile.end(); otile++) {
-
         // Keep track of the current band
         if (lastOutputBand != otile.Band()) {
           lastOutputBand = otile.Band();
@@ -106,9 +113,11 @@ namespace Isis {
 
         OutputCubes[0]->Write(otile);
         p_progress->CheckStatus();
-
       }
     }
+
+    p_sampMap.clear();
+    p_lineMap.clear();
   }
  /** 
   * Registers a function to be called when the current output cube band number 
@@ -159,7 +168,7 @@ namespace Isis {
                                     bool useLastTileMap) {
     // Initializations
     vector<Quad *> quadTree;
-  
+
     if (!useLastTileMap) {
       // Set up the boundaries of the full tile
       Quad *quad = new Quad;
@@ -182,8 +191,8 @@ namespace Isis {
   
     // Apply the map to the output tile
     int outputBand = otile.Band();
-    for (int i=0, line=0; line<128; line++) {
-      for (int samp=0; samp<128; samp++, i++) {
+    for (int i=0, line=0; line<p_startQuadSize; line++) {
+      for (int samp=0; samp<p_startQuadSize; samp++, i++) {
         double inputLine = p_lineMap[line][samp];
         double inputSamp = p_sampMap[line][samp];
         if (inputLine != Isis::NULL8) {
@@ -200,7 +209,8 @@ namespace Isis {
   
   // Process a quad trying to find input positions for output positions
   void ProcessRubberSheet::ProcessQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
-                                     double lineMap[128][128], double sampMap[128][128]) {
+                                        std::vector< std::vector<double> > &lineMap, 
+                                        std::vector< std::vector<double> > &sampMap) {
     Quad *quad = quadTree[0];
     double oline[4],osamp[4];
     double iline[4],isamp[4];
@@ -238,7 +248,7 @@ namespace Isis {
     // on the edges transform we will split the quad or
     // if the quad is already small just transform everything
     if (badCorner == 4) {
-      if ((quad->eline - quad->sline) < 8) {
+      if ((quad->eline - quad->sline) < p_endQuadSize) {
         SlowQuad(quadTree,trans,lineMap,sampMap);
       }
       else {
@@ -299,7 +309,7 @@ namespace Isis {
     // If the split distance is small we might as well compute at every
     // point
     if (badCorner > 0) {
-       if ((quad->eline - quad->sline) < 8) {
+       if ((quad->eline - quad->sline) < p_endQuadSize) {
         SlowQuad(quadTree,trans,lineMap,sampMap);
       }
       else {
@@ -325,7 +335,7 @@ namespace Isis {
     // transform is lame (bugged)
     double detA;
     if ((detA = Det4x4(A)) == 0.0) {
-      if ((quad->eline - quad->sline) < 8) {
+      if ((quad->eline - quad->sline) < p_endQuadSize) {
         SlowQuad(quadTree,trans,lineMap,sampMap);
       }
       else {
@@ -366,7 +376,7 @@ namespace Isis {
     double midLine,midSamp;
   
     if (!trans.Xform (midSamp, midLine, quadMidSamp, quadMidLine)) {
-      if ((quad->eline - quad->sline) < 8) {
+      if ((quad->eline - quad->sline) < p_endQuadSize) {
         SlowQuad(quadTree,trans,lineMap,sampMap);
       }
       else {
@@ -386,7 +396,7 @@ namespace Isis {
                       sampCoef[3];
   
     if ((abs(cmidSamp - midSamp) > 0.5) || (abs(cmidLine - midLine) > 0.5)) {
-      if ((quad->eline - quad->sline) < 8) {
+      if ((quad->eline - quad->sline) < p_endQuadSize) {
         SlowQuad(quadTree,trans,lineMap,sampMap);
       }
       else {
@@ -423,13 +433,17 @@ namespace Isis {
       double csamp = ulSamp;
   
       // Get pointers to speed processing
-      double *lptr = &lineMap[ol-quad->slineTile][quad->ssamp-quad->ssampTile];
-      double *sptr = &sampMap[ol-quad->slineTile][quad->ssamp-quad->ssampTile];
+      int startSamp = quad->ssamp-quad->ssampTile;
+      std::vector<double> &lineVect = lineMap[ol-quad->slineTile];
+      std::vector<double> &sampleVect = sampMap[ol-quad->slineTile];
   
       // Loop computing input positions for respective output positions
       for (int os=quad->ssamp; os<=quad->esamp; os++) {
-        *lptr++ = cline;
-        *sptr++ = csamp;
+        lineVect[startSamp] = cline;
+        sampleVect[startSamp] = csamp;
+
+        startSamp ++;
+
         cline += lineChangeWrSamp;
         csamp += sampChangeWrSamp;
       }
@@ -486,7 +500,8 @@ namespace Isis {
   
   // Slow quad computation for every output pixel
   void ProcessRubberSheet::SlowQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
-                                  double lineMap[128][128], double sampMap[128][128]) {
+                                     std::vector< std::vector<double> > &lineMap, 
+                                     std::vector< std::vector<double> > &sampMap) {
     // Get the quad
     Quad *quad = quadTree[0];
     double iline,isamp;

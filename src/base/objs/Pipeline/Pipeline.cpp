@@ -6,6 +6,7 @@
 #include "Application.h"
 #include "Preference.h"
 #include "TextFile.h"
+#include "Filename.h"
 
 using namespace Isis;
 using namespace std;
@@ -22,6 +23,7 @@ namespace Isis {
   Pipeline::Pipeline(const iString &procAppName) {
     p_procAppName = procAppName;
     p_addedCubeatt = false;
+    p_outputListNeedsModifiers = false;
   }
 
 
@@ -58,7 +60,12 @@ namespace Isis {
       bool foundFirst = false;
 
       // Keep track of whether or not we must remove virtual bands
-      bool mustElimBands = !p_virtualBands.empty();
+      bool mustElimBands = false;
+
+      // Look to see if we need to eliminate virtual bands...
+      for(unsigned int i = 0; i < p_virtualBands.size(); i++) {
+        mustElimBands |= !p_virtualBands[i].empty();
+      }
 
       // Keep track of temp files for conflicts
       vector<iString> tmpFiles;
@@ -68,6 +75,11 @@ namespace Isis {
       //   is not branched (expecting multiple inputs).
       for(int i = 0; i < (int)p_apps.size() && successfulPrepare; i++) {
         if(mustElimBands && p_apps[i]->SupportsVirtualBands()) {
+          if(i != 0 && p_virtualBands.size() != 1) {
+            iString message = "If multiple original inputs were set in the pipeline, the first application must support virtual bands.";
+            throw iException::Message(iException::Programmer, message, _FILEINFO_);
+          }
+
           p_apps[i]->SetVirtualBands(p_virtualBands);
           mustElimBands = false;
   
@@ -77,6 +89,7 @@ namespace Isis {
           if(p_addedCubeatt && i != (int)p_apps.size() - 1) {
             delete p_apps[p_apps.size() - 1];
             p_apps.resize(p_apps.size() - 1);
+            p_appIdentifiers.resize(p_appIdentifiers.size() - 1);
             p_apps[p_apps.size() - 1]->SetNext(NULL);
             p_addedCubeatt = false;
             successfulPrepare = false;
@@ -86,7 +99,8 @@ namespace Isis {
         else {
           // Pipeline is responsible for the virtual bands, reset any apps
           //   who have an old virtual bands setting.
-          p_apps[i]->SetVirtualBands("");
+          vector<iString> empty;
+          p_apps[i]->SetVirtualBands(empty);
         }
   
         // This instructs the pipeline app to prepare itself; all previous pipeline apps must
@@ -102,9 +116,9 @@ namespace Isis {
         if(!foundFirst && p_apps[i]->Enabled()) {
           foundFirst = true;
   
-          if(p_apps[i]->InputBranches().size() != 1) {
+          if(p_apps[i]->InputBranches().size() != OriginalBranches().size()) {
             string msg = "The program [" + p_apps[i]->Name() + "] can not be the first in the pipeline";
-            msg += " because it must be run multiple times with varying inputs";
+            msg += " because it must be run multiple times with unspecified varying inputs";
             throw iException::Message(iException::Programmer, msg, _FILEINFO_);
           }
         }
@@ -129,9 +143,9 @@ namespace Isis {
   
       // We failed at eliminating bands, add stretch to our programs and try again
       if(successfulPrepare && mustElimBands) {
-        AddToPipeline("cubeatt");
-        Application("cubeatt").SetInputParameter("FROM", true);
-        Application("cubeatt").SetOutputParameter("TO", "final");
+        AddToPipeline("cubeatt", "~PIPELINE_RESERVED_FOR_BANDS~");
+        Application("~PIPELINE_RESERVED_FOR_BANDS~").SetInputParameter("FROM", true);
+        Application("~PIPELINE_RESERVED_FOR_BANDS~").SetOutputParameter("TO", "final");
         p_addedCubeatt = true;
         successfulPrepare = false;
       }
@@ -198,26 +212,113 @@ namespace Isis {
 
   /**
    * This method is used to set the original input file. This file is the first 
+   * program's input, and the virtual bands will be taken directly from this 
+   * parameter. 
+   * 
+   * @param inputParam The parameter to get from the user interface that contains 
+   *                   the input file
+   */
+  void Pipeline::SetInputFile(const iString &inputParam) {
+    UserInterface &ui = Application::GetUserInterface();
+    p_originalInput.push_back(ui.GetFilename(inputParam));
+    p_originalBranches.push_back(inputParam);
+    p_virtualBands.push_back(ui.GetInputAttribute(inputParam).BandsStr());
+  }
+
+
+  /**
+   * This method is used to set the original input file. No virtual bands will 
+   * be read, and the inputFile parameter will be read as a path to a file instead 
+   * of as a parameter. 
+   * 
+   * @param inputParam A filename object containing the location of the input file
+   */
+  void Pipeline::SetInputFile(const Filename &inputFile) {
+    p_originalInput.push_back(inputFile.Expanded());
+    p_originalBranches.push_back(inputFile.Expanded());
+    p_virtualBands.push_back("");
+  }
+
+
+  /**
+   * This method is used to set the original input files. These files are the 
+   * first program's input, a branch will be added for every line in the file, and
+   * the virtual bands will be taken directly from this parameter. 
+   * 
+   * @param inputParam The parameter to get from the user interface that contains 
+   *                   the input file
+   */
+  void Pipeline::SetInputListFile(const iString &inputParam) {
+    UserInterface &ui = Application::GetUserInterface();
+
+    TextFile filelist( Filename(ui.GetFilename(inputParam)).Expanded() );
+    string filename;
+    int branch = 1;
+
+    while(filelist.GetLineNoFilter(filename)) {
+      p_originalInput.push_back(filename);
+      p_originalBranches.push_back(inputParam + iString(branch));
+      p_virtualBands.push_back("");
+      p_finalOutput.push_back(Filename(filename).Name());
+
+      branch ++;
+    }
+
+    p_outputListNeedsModifiers = true;
+  }
+
+
+  /**
+   * This method is used to set the original input files. These files are the 
+   * first program's input, a branch will be added for every line in the file.
+   * 
+   * @param inputParam The filename of the list file contains the input files
+   */
+  void Pipeline::SetInputListFile(const Filename &inputFilename) {
+    TextFile filelist( inputFilename.Expanded() );
+    string filename;
+    int branch = 1;
+
+    while(filelist.GetLineNoFilter(filename)) {
+      p_originalInput.push_back(filename);
+      p_originalBranches.push_back(Filename(inputFilename).Expanded() + " " + iString(branch));
+      p_finalOutput.push_back(Filename(filename).Name());
+      p_virtualBands.push_back("");
+
+      branch ++;
+    }
+
+    p_outputListNeedsModifiers = true;
+  }
+
+
+  /**
+   * This method is used to set the original input file. This file is the first 
    * program's input. 
    * 
    * @param inputParam The parameter to get from the user interface that contains 
    *                   the input file
    * @param virtualBandsParam The parameter to get from the user interface that 
    *                          contains the virtual bands list; internal default is
-   *                          supported.
+   *                          supported. Empty string if no virtual bands
+   *                          parameter exists.
    */
   void Pipeline::SetInputFile(const iString &inputParam, const iString &virtualBandsParam) {
     UserInterface &ui = Application::GetUserInterface();
-    p_originalInput = ui.GetAsString(inputParam);
+    p_originalInput.push_back(ui.GetAsString(inputParam));
+    p_originalBranches.push_back(inputParam);
 
-    if(ui.WasEntered(virtualBandsParam)) {
-      p_virtualBands = ui.GetAsString(virtualBandsParam);
+    if(!virtualBandsParam.empty() && ui.WasEntered(virtualBandsParam)) {
+      p_virtualBands.push_back(ui.GetAsString(virtualBandsParam));
+    }
+    else {
+      p_virtualBands.push_back("");
     }
   }
 
 
   /**
-   * THis method is used to set the final output file. If no programs generate 
+   * This method is used to set the final output file. If no programs generate 
    * output, the final output file will not be used. If the output file was not 
    * entered, one will be generated automatically and placed into the current 
    * working folder. 
@@ -227,13 +328,72 @@ namespace Isis {
    */
   void Pipeline::SetOutputFile(const iString &outputParam) {
     UserInterface &ui = Application::GetUserInterface();
+    p_finalOutput.clear();
 
     if(ui.WasEntered(outputParam)) {
-      p_finalOutput = ui.GetAsString(outputParam);
+      p_finalOutput.push_back(ui.GetAsString(outputParam));
+    }
+  }
+
+
+  /**
+   * This method is used to set the final output file. If no programs generate 
+   * output, the final output file will not be used. If the output file was not 
+   * entered, one will be generated automatically and placed into the current 
+   * working folder.
+   * 
+   * @param outputFile The filename of the output file; NOT the parameter name.
+   */
+  void Pipeline::SetOutputFile(const Filename &outputFile) {
+    p_finalOutput.clear();
+    p_finalOutput.push_back(outputFile.Expanded());
+  }
+
+
+  /**
+   * This method is used to set an output list file. Basically, this means the 
+   * output filenames are specified in the list file. Internal defaults/automatic 
+   * name calculations are supported. 
+   * 
+   * @param outputFilenameList Parameter name containing the path to the output 
+   *                           list file
+   */
+  void Pipeline::SetOutputListFile(const iString &outputFilenameParam) {
+    UserInterface &ui = Application::GetUserInterface();
+
+    if(ui.WasEntered(outputFilenameParam)) {
+      SetOutputListFile(Filename(ui.GetFilename(outputFilenameParam)));
     }
     else {
-      p_finalOutput = "";
+      p_finalOutput.clear();
+
+      // Calculate output files
+      for(unsigned int i = 0; i < p_originalInput.size(); i++) {
+        p_finalOutput.push_back(Filename(p_originalInput[i]).Name());
+      }
+
+      p_outputListNeedsModifiers = true;
     }
+  }
+
+
+  /**
+   * This method is used to set an output list file. Basically, this means the 
+   * output filenames are specified in the list file.  
+   * 
+   * @param outputFilenameList List file with output cube names
+   */
+  void Pipeline::SetOutputListFile(const Filename &outputFilenameList) {
+    p_finalOutput.clear();
+
+    TextFile filelist( outputFilenameList.Expanded() );
+    string filename;
+
+    while(filelist.GetLineNoFilter(filename)) {
+      p_finalOutput.push_back(filename);
+    }
+
+    p_outputListNeedsModifiers = false;
   }
 
 
@@ -250,16 +410,31 @@ namespace Isis {
 
   /**
    * Add a new program to the pipeline. This method must be called before calling 
-   * Pipeline::Application(...) to access it. 
+   * Pipeline::Application(...) to access it. The string identifier will access
+   * this program.
    * 
-   * @param appname The name of the new application
+   * @param appname The name of the new application 
+   * @param identifier The program's identifier for when calling 
+   *                   Pipeline::Application
    */
-  void Pipeline::AddToPipeline(const iString &appname) {
+  void Pipeline::AddToPipeline(const iString &appname, const iString &identifier) {
+    // Check uniqueness first
+    for(unsigned int appIdentifier = 0; appIdentifier < p_appIdentifiers.size(); appIdentifier++) {
+      if(p_appIdentifiers[appIdentifier] == identifier) {
+        iString message = "The application identifier [" + identifier + "] is not unique. " +
+                          "Please providing a unique identifier";
+        throw iException::Message(iException::Programmer, message, _FILEINFO_);
+      }
+    }
+
     // If we've got cubeatt on our list of applications for band eliminating, take it away temporarily
-    PipelineApplication *stretch = NULL;
+    PipelineApplication *cubeAtt = NULL;
+    iString cubeAttId = "";
     if(p_addedCubeatt) {
-      stretch = p_apps[p_apps.size()-1];
+      cubeAtt = p_apps[p_apps.size()-1];
+      cubeAttId = p_appIdentifiers[p_appIdentifiers.size()-1];
       p_apps.resize(p_apps.size()-1);
+      p_appIdentifiers.resize(p_appIdentifiers.size()-1);
       p_apps[p_apps.size()-1]->SetNext(NULL);
     }
 
@@ -270,12 +445,63 @@ namespace Isis {
     else {
       p_apps.push_back(new PipelineApplication(appname, p_apps[p_apps.size()-1]));
     }
+
+    p_appIdentifiers.push_back(identifier);
     
     // If we have stretch, put it back where it belongs
-    if(stretch) {
-      p_apps[p_apps.size()-1]->SetNext(stretch);
-      stretch->SetPrevious(p_apps[p_apps.size()-1]);
-      p_apps.push_back(stretch);
+    if(cubeAtt) {
+      p_apps[p_apps.size()-1]->SetNext(cubeAtt);
+      cubeAtt->SetPrevious(p_apps[p_apps.size()-1]);
+      p_apps.push_back(cubeAtt);
+      p_appIdentifiers.push_back(cubeAttId);
+    }
+  }
+
+
+  /**
+   * Add a new program to the pipeline. This method must be called before calling 
+   * Pipeline::Application(...) to access it. The string used to access this 
+   * program will be the program's name. 
+   * 
+   * @param appname The name of the new application
+   */
+  void Pipeline::AddToPipeline(const iString &appname) {
+    // Check uniqueness first
+    for(unsigned int appIdentifier = 0; appIdentifier < p_appIdentifiers.size(); appIdentifier++) {
+      if(p_appIdentifiers[appIdentifier] == appname) {
+        iString message = "The application identifier [" + appname + "] is not unique. Please use " +
+                          "the other AddToPipeline method providing a unique identifier";
+        throw iException::Message(iException::Programmer, message, _FILEINFO_);
+      }
+    }
+
+    // If we've got cubeatt on our list of applications for band eliminating, take it away temporarily
+    PipelineApplication *cubeAtt = NULL;
+    iString cubeAttId = "";
+    if(p_addedCubeatt) {
+      cubeAtt = p_apps[p_apps.size()-1];
+      cubeAttId = p_appIdentifiers[p_appIdentifiers.size()-1];
+      p_apps.resize(p_apps.size()-1);
+      p_appIdentifiers.resize(p_appIdentifiers.size()-1);
+      p_apps[p_apps.size()-1]->SetNext(NULL);
+    }
+
+    // Add the new application
+    if(p_apps.size() == 0) {
+      p_apps.push_back(new PipelineApplication(appname, this));
+    }
+    else {
+      p_apps.push_back(new PipelineApplication(appname, p_apps[p_apps.size()-1]));
+    }
+
+    p_appIdentifiers.push_back(appname);
+    
+    // If we have stretch, put it back where it belongs
+    if(cubeAtt) {
+      p_apps[p_apps.size()-1]->SetNext(cubeAtt);
+      cubeAtt->SetPrevious(p_apps[p_apps.size()-1]);
+      p_apps.push_back(cubeAtt);
+      p_appIdentifiers.push_back(cubeAttId);
     }
   }
 
@@ -284,16 +510,17 @@ namespace Isis {
    * This is an accessor to get a specific PipelineApplication. This is the 
    * recommended accessor. 
    * 
-   * @param appname The name of the application to access, such as "spiceinit"
+   * @param identifier The identifier (usually name) of the application to access,
+   *                such as "spiceinit"
    * 
    * @return PipelineApplication& The application's representation in the pipeline
    */
-  PipelineApplication &Pipeline::Application(const iString &appname) {
+  PipelineApplication &Pipeline::Application(const iString &identifier) {
     int index = 0;
     bool found = false;
 
     while(!found && index < Size()) {
-      if(Application(index).Name() == appname) {
+      if(p_appIdentifiers[index] == identifier) {
         found = true;
       }
       else {
@@ -302,7 +529,7 @@ namespace Isis {
     }
 
     if(!found) {
-      iString msg = "Application [" + appname + "] has not been added to the pipeline";
+      iString msg = "Application identified by [" + identifier + "] has not been added to the pipeline";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
@@ -380,34 +607,74 @@ namespace Isis {
    * @return iString The final output string
    */
   iString Pipeline::FinalOutput(int branch, bool addModifiers) {
-    iString output = p_finalOutput;
+    iString output = ((p_finalOutput.size() != 0)? p_finalOutput[0] : "");
 
     if(p_apps.size() == 0) return output;
+
+    if(p_finalOutput.size() > 1) {
+      if((unsigned int)branch >= p_finalOutput.size()) {
+        iString msg = "Output not set for branch [" + iString(branch) + "]";
+        throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+      }
+
+      if(!p_outputListNeedsModifiers) {
+        return p_finalOutput[branch];
+      }
+      else {
+        output = p_finalOutput[branch];
+        addModifiers = true;
+      }
+    }
 
     PipelineApplication *last = p_apps[p_apps.size()-1];
     if(!last->Enabled()) last = last->Previous();
 
-    if(output == "") {
-      output = "./" + Filename(p_originalInput).Basename();
+    if(output == "" || p_finalOutput.size() > 1) {
+      if(output == "") {
+        output = "./" + Filename(p_originalInput[0]).Basename();
+      }
+      else {
+        output = "./" + Filename(p_originalInput[branch]).Basename();
+      }
 
+      // Base filename off of first input file
       if(!addModifiers || last->OutputBranches().size() == 1) {
-        if(addModifiers)
+        if(addModifiers && p_finalOutput.size() > 1)
           output += "." + last->OutputNameModifier();
 
         output += "." + last->OutputExtension();
       }
       else {
-        output += "." + last->OutputBranches()[branch];
+        // If we have multuple final outputs, rely on them to
+        //   differentiate the branches
+        if(p_finalOutput.size() <= 1) {
+          output += "." + last->OutputBranches()[branch];
+        }
 
-        if(addModifiers)
+        if(addModifiers && p_finalOutput.size() > 1)
           output += "." + last->OutputNameModifier();
-
+        
         output += "." + last->OutputExtension();
       }
+    }
+    else if(addModifiers) {
+      PipelineApplication *last = p_apps[p_apps.size()-1];
+      if(!last->Enabled()) last = last->Previous();
+    
+      output = Filename(p_finalOutput[0]).Path() + "/" +
+               Filename(p_finalOutput[0]).Basename() + "." + 
+               last->OutputBranches()[branch] + ".";
+
+      if(p_finalOutput.size() > 1) {
+        output += last->OutputNameModifier() + ".";
+      }
+
+      output += last->OutputExtension();
     }
     
     return output;
   }
+
 
   /**
    * This method returns the user's temporary folder for temporary files. It's 
@@ -420,6 +687,7 @@ namespace Isis {
     return (string)pref.FindGroup("DataDirectory")["Temporary"];
   }
 
+
   /**
    * This method re-enables all applications. This resets the effects of
    * PipelineApplication::Disable, SetFirstApplication and SetLastApplication.
@@ -430,6 +698,7 @@ namespace Isis {
       p_apps[i]->Enable();
     }
   }
+
 
   /**
    * This is the output operator for a Pipeline, which enables things such as: 

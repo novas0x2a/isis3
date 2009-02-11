@@ -34,7 +34,7 @@ void IsisMain() {
   int nlines = icube->Lines();
   
   // Must be narrow angle
-  if (moc.IsWideAngle()) {
+  if (moc.WideAngle()) {
     string msg = "The 50 sample noise pattern does not occur in ";
     msg += "MOC wide angle images";
     throw iException::Message(iException::User,msg,_FILEINFO_);

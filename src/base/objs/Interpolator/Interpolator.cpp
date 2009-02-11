@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:07 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2008/11/06 15:53:53 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -187,6 +187,13 @@ namespace Isis {
     double a = isamp - j;
     double b = iline - k;
   
+    /**
+     * This algorithm has been checked extensively, and is correctly coded! 
+     *  
+     * This algorithm works by modeling the picture locally with a polynomial 
+     * surface, which means DNs less than all inputs or greater than all inputs are 
+     * possible. 
+     */
     return  -b * (1.0-b)*(1.0-b) * (-a * (1.0-a)*(1.0-a) * buf[0] +
                                    (1.0 - 2.0 * a*a + a*a*a) * buf[1] + 
                                    a * (1.0 + a - a*a) * buf[2] - 

@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/05/15 22:44:12 $
+ * $Revision: 1.7 $
+ * $Date: 2008/12/19 22:08:34 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -24,18 +24,17 @@
  */
 
 #include <QAction>
-#include <QListWidget>
 #include <QComboBox>
 #include <QDialog>
-#include <QStackedWidget>
 #include <QLabel>
+#include <QListWidget>
+#include <QStackedWidget>
 #include <QStringList>
-#include "Tool.h"
-#include "FileTool.h"
-#include "SerialNumberList.h"
-#include "ImageOverlap.h"
 #include "ControlNet.h"
+#include "FileTool.h"
 #include "Projection.h"
+#include "SerialNumberList.h"
+#include "Tool.h"
 
 namespace Qisis {
 
@@ -49,6 +48,18 @@ namespace Qisis {
  * @internal
  *  @history 2006-08-02 Tracie Sucharski - Initialize cameras for every image
  *                        in cube list.
+ *  @history 2008-11-24 Jeannie Walldren - Replace references to
+ *           PointEdit class with ControlPointEdit
+ *  @history 2008-11-26 Jeannie Walldren - Added cNetName
+ *            parameter to controlNetworkUpdated() so that 
+ *            QnetTool can read the name of the control net file.
+ * @history  2008-11-26 Tracie Sucharski - Remove all polygon/overlap 
+ *                         polygon/overlap references, this functionality will
+ *                         be in qmos.
+ *  @history 2008-12-10 Jeannie Walldren - Reworded "What's
+ *            this?" description for saveAs action. Changed
+ *            "Save As" action text to match QnetTool's "Save
+ *            As" action
  *
  */
 
@@ -57,16 +68,16 @@ namespace Qisis {
 
     signals:
       void serialNumberListUpdated();
-      void controlNetworkUpdated();
+      void controlNetworkUpdated(QString cNetName);
 
     public:
       QnetFileTool (QWidget *parent);
+      QString cNetFilename;
 
     public slots:
       virtual void open();
       virtual void exit();
       virtual void saveAs();
-      void loadOverlap(Isis::ImageOverlap *overlap);
       void loadPoint(Isis::ControlPoint *point);
       void loadImage(const QString &serialNumber);
       void setSaveNet();

@@ -2,8 +2,8 @@
 #define LimitPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/12/23 17:24:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -35,15 +35,23 @@ namespace Isis {
   /**                                                                       
    * @brief Seed points using a grid
    *                                                                        
-   * This class is used to construct a grid of points inside a polygon.
-   *                                                                        
+   * This class seeds the polygons with Control Points by creating a grid 
+   *  centered on the polygon. For each grid square, if it contains any overlap, a
+   *  box is then created within the grid square, surrounding the valid data. The
+   *  point checked is the center of this box, and if this point is within the
+   *  overlap polygon then this point is returned, otherwise the grid square does
+   *  not have a point.
+   *  
    * @ingroup PatternMatching
    *                                                                        
    * @author  2008-04-21 Steven Lambright 
    *  
-   * @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
-   * 
-   * @internal
+   * @internal 
+   *   @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
+   *   @history 2008-11-12 Steven Lambright - Fixed documentation
+   *   @history 2008-11-25 Steven Lambright - Added error checking
+   *   @history 2008-12-23 Steven Lambright - Fixed problem with finding points in
+   *            polygons that caused this algorithm to miss some.
    */                                                                       
   class LimitPolygonSeeder : public PolygonSeeder {
     public:
@@ -54,7 +62,6 @@ namespace Isis {
 
       std::vector<geos::geom::Point*> Seed(const geos::geom::MultiPolygon *mp, 
                                            Projection *proj);
-      double Spacing();
 
     protected:
       virtual void Parse(Pvl &pvl);
@@ -63,10 +70,10 @@ namespace Isis {
       geos::geom::Geometry *GetMultiPolygon(double dMinX, double dMinY, 
                                             double dMaxX, double dMaxY, 
                                             const geos::geom::MultiPolygon &orig);
-      double p_minThickness; //<! area / max(Xextent,Yextent)**2
-      double p_minArea; //<! Units are meters
-      int p_majorAxisPts; //<! Number of points to place on major axis
-      int p_minorAxisPts; //<! Number of points to place on minor axis
+      double p_minThickness; //!< area / max(Xextent,Yextent)**2
+      double p_minArea; //!< Units are meters
+      int p_majorAxisPts; //!< Number of points to place on major axis
+      int p_minorAxisPts; //!< Number of points to place on minor axis
   };
 };
 

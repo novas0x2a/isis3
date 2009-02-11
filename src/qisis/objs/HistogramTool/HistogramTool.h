@@ -6,11 +6,11 @@
 #include <QComboBox>
 #include <QTableView>
 #include "Workspace.h"
-#include "Tool.h"
+#include "PlotTool.h"
 #include <qwt_plot.h>
 #include "RubberBandComboBox.h"
 #include "HistogramToolWindow.h"
-#include "HistogramToolCurve.h"
+#include "HistogramItem.h"
 #include "Histogram.h"
 
 #include "geos/geom/Point.h"
@@ -29,7 +29,7 @@ namespace Qisis {
   * @internal 
   *  @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0
   */
-  class HistogramTool : public Qisis::Tool {
+  class HistogramTool : public Qisis::PlotTool {
     Q_OBJECT
 
     public:
@@ -42,24 +42,21 @@ namespace Qisis {
       QWidget *createToolBarWidget (QStackedWidget *parent);
       QAction *toolPadAction(ToolPad *pad);
       QAction *p_autoScale;//!< Auto scale the plot
-      void addTo (QMenu *menu);
       void enableRubberBandTool();
       void updateTool();
       
     protected slots:
       void createWindow();      
       void rubberBandComplete();
-      void updateViewPort();
-      void viewportSelected();
 
     public slots:
       void changePlot();
-      void showPlotWindow();
       void updateViewPort(Qisis::CubeViewport *);
       void copyCurve(Qisis::PlotCurve *);
-      void pasteCurve(Qisis::HistogramToolWindow *);
-      void pasteCurveSpecial(Qisis::HistogramToolWindow *);
-      void removeWindow(QObject *);
+      void copyCurve();
+      void pasteCurve(Qisis::PlotWindow *);
+      void pasteCurveSpecial(Qisis::PlotWindow *);
+      void showPlotWindow();
            
    private slots:
      void newPlotWindow();
@@ -70,16 +67,16 @@ namespace Qisis {
       QWidget *p_parent; //!< parent widget
       HistogramToolWindow *p_histToolWindow;//!< Plot Tool Window Widget
 
-      HistogramToolCurve *p_copyCurve;//!< Plot curve for copying curves
-      HistogramToolCurve *p_histCurve;//!< Plot curve for 
-      HistogramToolCurve *p_cdfCurve;//!< Plot curve for
+      HistogramItem *p_copyCurve;//!< Plot curve for copying curves
+      HistogramItem *p_histCurve;//!< Histogram Item
+      PlotToolCurve *p_cdfCurve;//!< Plot curve for
                                 // 
       QAction *p_action;//!< Plot tool's action
 
       bool p_scaled;//!< Has the plot been scaled?
       
       QList <QColor> p_colors;//!< List of colors
-      QList<PlotWindow *> p_plotWindows;//!< List of all plot windows
+      QList<HistogramToolWindow *> p_plotWindows;//!< List of all plot windows
       RubberBandComboBox *p_rubberBand;//!< Rubber band combo box
 
       int p_color;//!< Keeps track of which color we are at

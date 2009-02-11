@@ -40,6 +40,10 @@
     <change name="Steven Koechle" date="2008-08-19">
         Updated to work with Geos3.0.0
     </change>
+    <change name="Steven Koechle" date="2008-12-15">
+        Deletes old footprint (generated off cubes serial number) if its found. 
+        New name for blob is just Footprint.
+    </change>
   </history>
 
   <groups>

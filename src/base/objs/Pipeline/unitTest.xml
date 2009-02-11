@@ -29,7 +29,24 @@
         <filter>
           *.QUB *.imq *.img *.cub
         </filter>
-        <default><item>...</item></default>
+        <default><item>fromValue</item></default>
+      </parameter>
+
+      <parameter name="FROM2">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input Themis PDS RDR or an ISIS Themis level 1 cube 
+        </brief>
+        <description>
+          Input filename. This file can be in one of two stages.  A raw PDS Themis RDR or
+          an ISIS Level 0/1 cube.  The level 0/1 cube is assumed to have been run
+          through thm2isis and spiceinit.
+        </description>
+        <filter>
+          *.QUB *.imq *.img *.cub
+        </filter>
+        <default><item>fromValue2</item></default>
       </parameter>
 
       <parameter name="TO">

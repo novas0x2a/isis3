@@ -1,7 +1,11 @@
 #include <cmath>
+#include "AtmosModel.h"
+#include "Constants.h"
 #include "Isotropic1.h"
-#include "NumericalMethods.h"
+#include "Pvl.h"
+#include "PvlGroup.h"
 #include "iException.h"
+#include "iString.h"
 
 using std::max;
 
@@ -17,18 +21,50 @@ namespace Isis {
     }
   }
 
+  /**
+   * Isotropic atmospheric scattering in the first approximation          
+   * The model for scattering for a general, non-Lambertian surface with  
+   * an atmosphere looks like this:                                       
+   *                                                                      
+   * P = Pstd + trans*(rho*Ah*munot)/(1.d0-rho*Ab*sbar)                   
+   *     trans0*rho*(Psurf-Ah*munot)                                      
+   *                                                                      
+   * where P is the overall photometric function (the model of the data), 
+   * PSTD is the pure atmospheric-scattering term, PSURF is the surface   
+   * photometric function, AH*MUNOT is a Lambertian approximation to this 
+   * with hemispheric albedo AH, TRANS and TRANS0 quantify transmission   
+   * of surface reflected light through the atmosphere overall and with   
+   * no scatterings in the atmosphere, and finally SBAR quantifies the    
+   * illumination of the ground by the sky.  RHO is the ratio of the sur- 
+   * face albedo to the albedo assumed in the functional form of PSURF.
+   * 
+   * @param phase Value of the phase angle.
+   * @param incidence Value of the incidence angle.
+   * @param emission Value of the emission angle.
+   * 
+   * @history 1998-12-21 Randy Kirk - USGS, Flagstaff - Original
+   *          code
+   * @history 1999-03-12 K Teal Thompson  Port to Unix/ISIS;
+   *          declare vars; add implicit none.
+   * @history 2007-02-20 Janet Barrett - Imported from Isis2
+   *          pht_atm_functions to Isis3.
+   * @history 2008-11-05 Jeannie Walldren - Replaced 
+   *          NumericalMethods::r8expint() with AtmosModel::En().
+   *          Replaced Isis::PI with PI since this is in Isis
+   *          namespace.
+   */
   void Isotropic1::AtmosModelAlgorithm (double phase, double incidence, double emission)
   {
-    double hpsq1;
-    double mu,munot;
-    double mup,munotp;
-    double xx;
-    double maxval;
-    double emu,emunot;
-    double xmu,xmunot;
-    double ymu,ymunot;
-    double fix;
-    double gmunot,gmu;
+    double hpsq1;                        
+    double mu,munot;                     
+    double mup,munotp;                   
+    double xx;             
+    double maxval;         
+    double emu,emunot;            
+    double xmu,xmunot;     
+    double ymu,ymunot;     
+    double fix;            
+    double gmunot,gmu;     
 
     if (p_atmosTau == 0.0) {
       p_pstd = 0.0;
@@ -41,9 +77,9 @@ namespace Isis {
     if (TauOrWhaChanged()) {
       // preparation includes exponential integrals e sub 2 through 4
       p_wha2 = 0.5 * p_atmosWha;
-      p_e2 = NumericalMethods::r8expint(2,p_atmosTau);
-      p_e3 = NumericalMethods::r8expint(3,p_atmosTau);
-      p_e4 = NumericalMethods::r8expint(4,p_atmosTau);
+      p_e2 = AtmosModel::En(2,p_atmosTau);
+      p_e3 = AtmosModel::En(3,p_atmosTau);
+      p_e4 = AtmosModel::En(4,p_atmosTau);
 
       // zeroth moments of (uncorrected) x and y times characteristic fn
       p_x0 = p_wha2;
@@ -60,7 +96,7 @@ namespace Isis {
 
       // prepare to find correct mixture of x and y in conservative case
       if (p_atmosWha == 1.0) {
-        p_e5 = NumericalMethods::r8expint(5,p_atmosTau);
+        p_e5 = AtmosModel::En(5,p_atmosTau);
         p_alpha2 = (1.0/3.0) + p_delta * (0.25 - p_e5);
         p_beta2 = p_e4 + p_delta * (0.25 - p_e5);
         p_fixcon = (p_beta0 * p_atmosTau - p_alpha1 + p_beta1) / ((p_alpha1 + p_beta1) * p_atmosTau + 2.0 * (p_alpha2 + p_beta2));
@@ -79,11 +115,11 @@ namespace Isis {
 
     // correct the path lengths for planetary curvature
     hpsq1 = pow((1.0+p_atmosHnorm),2.0) - 1.0;
-    munot = cos((Isis::PI/180.0)*incidence);
+    munot = cos((PI/180.0)*incidence);
     maxval = max(1.0e-30,hpsq1+munot*munot);
     munotp = p_atmosHnorm / (sqrt(maxval) - munot);
     munotp = max(munotp,p_atmosTau/69.0);
-    mu = cos((Isis::PI/180.0)*emission);
+    mu = cos((PI/180.0)*emission);
     maxval = max(1.0e-30,hpsq1+mu*mu);
     mup = p_atmosHnorm / (sqrt(maxval) - mu);
     mup = max(mup,p_atmosTau/69.0);

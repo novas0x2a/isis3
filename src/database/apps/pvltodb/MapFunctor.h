@@ -2,8 +2,8 @@
 #define MapFunctor_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/07/11 22:28:54 $
+ * $Revision: 1.6 $                                                             
+ * $Date: 2008/10/27 23:39:01 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -44,6 +44,13 @@
 #include "iTime.h"
 #include "iString.h"
 #include "Filename.h"
+
+
+#include "geos/io/WKTReader.h"
+#include "geos/geom/GeometryFactory.h"
+#include "geos/geom/Geometry.h"
+#include "geos/geom/MultiPolygon.h"
+#include "geos/util/GEOSException.h"
 
 namespace Isis {
 
@@ -259,6 +266,76 @@ class Numeric : public MapFunctor {
     int maxArgs() const { return (2); }
 };
 
+class NullIf : public MapFunctor {
+  public:
+    NullIf() : MapFunctor("nullif") { }
+    ~NullIf() { }
+
+    std::string exec(const std::vector<std::string> &args) const {
+      if ((args.size() < 2) || (args.size() > 3)) {
+        ostringstream mess;
+        mess << "Invalid number of arguments (" << args.size() 
+             << ") - must have 2 or 3 arguments";
+        throw iException::Message(Isis::iException::Programmer, mess.str(), 
+                                  _FILEINFO_);
+      }
+
+      if (iString::Equal(args[0],args[1])) {
+        return (((args.size() == 3) ? args[2] : std::string("NULL")));
+      }
+
+      return (args[0]);
+    }
+
+    int minArgs() const { return (2); } 
+    int maxArgs() const { return (3); }
+};
+
+
+class ToMultiPolygon : public MapFunctor {
+  public:
+    ToMultiPolygon() : MapFunctor("tomultipolygon") { }
+    ~ToMultiPolygon() { }
+
+    std::string exec(const std::vector<std::string> &args) const {
+      if (args.size() != 1) {
+        ostringstream mess;
+        mess << "Invalid number of arguments (" << args.size() 
+             << ") - must have 1 argument";
+        throw iException::Message(Isis::iException::Programmer, mess.str(), 
+                                  _FILEINFO_);
+      }
+
+      // Attempt to convert incoming string to GOES representation and check
+      //  its type
+      std::string wktpoly(args[0]);
+      geos::geom::Geometry *poly(0);
+      try {
+        geos::io::WKTReader parser;
+        poly = parser.read(wktpoly);
+        if (poly->getGeometryTypeId() != geos::geom::GEOS_MULTIPOLYGON ) {
+           vector<geos::geom::Geometry *> polys;
+           polys.push_back(poly);
+           const geos::geom::GeometryFactory *gfactory = geos::geom::GeometryFactory::getDefaultInstance();
+           geos::geom::MultiPolygon *geom = gfactory->createMultiPolygon(polys);
+           wktpoly = geom->toString();
+           delete geom;
+        }
+      } catch ( geos::util::GEOSException &ge ) {
+        //  Ensure return the default input string
+        wktpoly = args[0];
+      }
+
+      delete poly;
+      return (wktpoly);
+    }
+
+    int minArgs() const { return (1); } 
+    int maxArgs() const { return (1); }
+};
+
+
+
 ///  Define a function container for other classes to use
 typedef CollectorMap<std::string,MapFunctor *,NoCaseStringCompare> FunctionList;
 
@@ -293,6 +370,8 @@ struct FunctionFactory {
     add(funcs, new ToFormalCase());
     add(funcs, new IsEqual()); 
     add(funcs, new Numeric()); 
+    add(funcs, new NullIf()); 
+    add(funcs, new ToMultiPolygon()); 
     return (funcs);
   }
   void add(FunctionList &funcs, MapFunctor *func) const {

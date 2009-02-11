@@ -1,5 +1,10 @@
 #include "Isis.h"
+
+#include <sstream>
+
+#include "FileList.h"
 #include "ControlNet.h"
+#include "Progress.h"
 
 using namespace std;
 using namespace Isis;
@@ -8,60 +13,122 @@ using namespace Isis;
 void IsisMain() {
   // Get user parameters
   UserInterface &ui = Application::GetUserInterface();
-  ControlNet c1( ui.GetFilename("FROM1") );
-  ControlNet c2( ui.GetFilename("FROM2") );
+  FileList filelist;
+  if( ui.GetString("INPUTTYPE") == "LIST" ) {
+    filelist = ui.GetFilename("FROMLIST");
+  }
+  else if ( ui.GetString("INPUTTYPE") == "CNETS" ) {
+    filelist.push_back( ui.GetFilename("FROM1") );
+    filelist.push_back( ui.GetFilename("FROM2") );
+  }
   Filename outfile( ui.GetFilename("TO") );
 
-  //Checks to make sure the ControlNets are valid to merge
-  if( c1.Target() != c2.Target() ) {
-    string msg = "Inputs do not target the same target.";
-    msg += " FROM1 target = [" + c1.Target() + "]";
-    msg += " FROM2 target = [" + c2.Target() + "]";
-    throw iException::Message(iException::User,msg,_FILEINFO_);
-  }
-  else if( c1.NetworkId() == c2.NetworkId() ) {
-    string msg = "Inputs have the same Network Id of [";
-    msg += c1.NetworkId() + "] They are likely the same file.";
-    throw iException::Message(iException::User,msg,_FILEINFO_);
-  }
-  else if( c1.Type() != c2.Type() ) {
-    string msg = "Inputs are not of the same Network Type. FROM1=[";
-    msg += iString(c1.Type()) + "] FROM2=[" + iString(c2.Type()) + "]";
-    throw iException::Message(iException::User,msg,_FILEINFO_);
-  }
+  //Creates a Progress
+  Progress progress;
+  progress.SetMaximumSteps( filelist.size() );
+  progress.CheckStatus();
 
-  //If not force, then checks and throws an error if a ControlPoint Id is shared
-  if( not ui.GetBoolean("FORCE") ) {
-    for( int i=0; i<c2.Size(); i++ ) {
-      if( c1.Exists(c2[i]) ) {
-        string msg = "Inputs contain the same ControlPoint. [Id=";
-        msg += c2[i].Id() + "] Set FORCE=true to force the merge.";
-        throw iException::Message(iException::User,msg,_FILEINFO_);
-      }
-    }
-  }
-
-  //Set up the output ControlNet
-  ControlNet cnet;
+  //Set up the output ControlNet with the first Control Net in the list
+  ControlNet cnet( Filename(filelist[0]).Expanded() );
   cnet.SetNetworkId( ui.GetString("ID") );
-  cnet.SetType( c1.Type() );
-  cnet.SetTarget( c1.Target() );
   cnet.SetUserName( Isis::Application::UserName() );
   cnet.SetCreatedDate( Isis::Application::DateTime() );
   cnet.SetModifiedDate( Isis::iTime::CurrentLocalTime() );
   cnet.SetDescription( ui.GetString("DESCRIPTION") );
 
-  //Adds c1 to the ControlNet
-  for( int i=0; i<c1.Size(); i++ ) {
-    c1[i].SetId( c1.NetworkId() + c1[i].Id() );
-    cnet.Add( c1[i] );
-  }
-  //Adds c2 to the ControlNet
-  for( int i=0; i<c2.Size(); i++ ) {
-    c2[i].SetId( c2.NetworkId() + c2[i].Id() );
-    cnet.Add( c2[i] );
+  progress.CheckStatus();
+
+  ofstream ss;
+  if( ui.WasEntered("REPORT") ) {
+    string report = ui.GetFilename("REPORT");
+    ss.open(report.c_str(),ios::out);
   }
 
+  for ( int f = 1; f < (int)filelist.size(); f ++ ) {
+
+    ControlNet currentnet( Filename(filelist[f]).Expanded() );
+
+    //Checks to make sure the ControlNets are valid to merge
+    if ( cnet.Target() != currentnet.Target() ) {
+      string msg = "Input [" + currentnet.NetworkId() + "] does not target the ";
+      msg += "same target as other Control Nets.";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+    /*else if( cnet.NetworkId() == currentnet.NetworkId() ) {
+      string msg = "Inputs have the same Network Id of [";
+      msg += cnet.NetworkId() + "] They are likely the same file.";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }*/
+    else if ( cnet.Type() != currentnet.Type() ) {
+      string msg = "Inputs are not of the same Network Type. [";
+      msg += iString(cnet.Type()) + "] [" + iString(currentnet.Type()) + "]";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+
+    //ERROR Merge
+    if ( ui.GetString("DUPLICATEPOINTS") == "ERROR" ) {
+
+      //Throws an error if there is a duplicate Control Point
+      for ( int cp=0; cp<currentnet.Size(); cp++ ) {
+        if ( cnet.Exists(currentnet[cp]) ) {
+          string msg = "Inputs contain the same ControlPoint. [Id=";
+          msg += currentnet[cp].Id() + "] Set DUPLICATEPOINTS=RENAME to force the";
+          msg += " merge. Or, set DUPLICATEPOINTS=REPLACE to replace duplicate";
+          msg += " Control Points.";
+          throw iException::Message(iException::User,msg,_FILEINFO_);
+        }
+        //Adds the point to the output ControlNet
+        cnet.Add( currentnet[cp] );
+      }
+
+    }
+    //RENAME Merge
+    else if ( ui.GetString("DUPLICATEPOINTS") == "RENAME" ) {
+
+      //Adds the Control Net and gets the number of duplicate Control
+      // Points to Log
+      for ( int cp=0; cp<currentnet.Size(); cp++ ) {
+        try {
+          cnet.Find( currentnet[cp].Id() ); //This is the failing line
+          if( ui.WasEntered("REPORT") ) {
+            ss << "Control Point " << currentnet[cp].Id() << " from ";
+            ss << currentnet.NetworkId() << " was renamed ";
+            ss << currentnet.NetworkId() << currentnet[cp].Id() << endl;
+          }
+          currentnet[cp].SetId( currentnet.NetworkId() + currentnet[cp].Id() );
+        } catch ( ... ) {
+          //then currentnet[i] was not found and no renaming took place
+        }
+        //Adds the point to the output ControlNet
+        cnet.Add( currentnet[cp] );
+      }
+
+    }
+    //REPLACE Merge
+    else if ( ui.GetString("DUPLICATEPOINTS") == "REPLACE" ) {
+
+      //Adds currentnet to the ControlNet if it does not exist in cnet
+      for ( int cp=0; cp<currentnet.Size(); cp++ ) {
+        try {
+          cnet.Find( currentnet[cp].Id() ); //This is the failing line
+          if( ui.WasEntered("REPORT") ) {
+            ss << "Control Point " << currentnet[cp].Id() << " was replaced from ";
+            ss << currentnet.NetworkId() << endl;
+          }
+          cnet.Delete( currentnet[cp].Id() );
+        } catch ( ... ) {
+          //then currentnet[i] was not found as was not deleted
+        }
+        //Adds the point to the output ControlNet
+        cnet.Add( currentnet[cp] );
+      }
+
+    }
+
+    progress.CheckStatus();
+  }
+
+  //Writes out the final Control Net
   cnet.Write( outfile.Expanded() );
 
 }

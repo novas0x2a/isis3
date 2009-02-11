@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/08/18 17:02:24 $
+ * $Revision: 1.10 $
+ * $Date: 2008/09/16 23:06:36 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -60,11 +60,11 @@ namespace Isis {
     p_base.push_back(0.0);
     p_mult.push_back(1.0);
     // Make all special pixels invalid
-    SetNull(DBL_MAX,DBL_MIN);
-    SetHRS(DBL_MAX,DBL_MIN);
-    SetLRS(DBL_MAX,DBL_MIN);
-    SetHIS(DBL_MAX,DBL_MIN);
-    SetLIS(DBL_MAX,DBL_MIN);
+    SetNull(DBL_MAX,-DBL_MAX);
+    SetHRS(DBL_MAX,-DBL_MAX);
+    SetLRS(DBL_MAX,-DBL_MAX);
+    SetHIS(DBL_MAX,-DBL_MAX);
+    SetLIS(DBL_MAX,-DBL_MAX);
 
     p_saveFileHeader = false;
     p_saveDataHeader = false;
@@ -742,6 +742,7 @@ namespace Isis {
   *             imported.
   */
   void ProcessImport::SetNull(const double null_min, const double null_max){
+    CheckPixelRange( "Null", null_min, null_max );
     p_null_min = null_min;
     p_null_max = null_max;
   }
@@ -757,6 +758,7 @@ namespace Isis {
   *             imported.
   */
   void ProcessImport::SetLRS(const double lrs_min, const double lrs_max){
+    CheckPixelRange( "LRS", lrs_min, lrs_max );
     p_lrs_min = lrs_min;
     p_lrs_max = lrs_max;
   }
@@ -772,6 +774,7 @@ namespace Isis {
   *             imported.
   */
   void ProcessImport::SetLIS(const double lis_min, const double lis_max){
+    CheckPixelRange( "LIS", lis_min, lis_max );
     p_lis_min = lis_min;
     p_lis_max = lis_max;
   }
@@ -787,6 +790,7 @@ namespace Isis {
   *             imported.
   */
   void ProcessImport::SetHRS(const double hrs_min, const double hrs_max){
+    CheckPixelRange( "HRS", hrs_min, hrs_max );
     p_hrs_min = hrs_min;
     p_hrs_max = hrs_max;
   }
@@ -802,8 +806,74 @@ namespace Isis {
   *             imported.
   */
   void ProcessImport::SetHIS(const double his_min, const double his_max){
+    CheckPixelRange( "HIS", his_min, his_max );
     p_his_min = his_min;
     p_his_max = his_max;
+  }
+
+
+  /**
+   * Checks the special pixel range of the given against all other special pixel 
+   * value ranges, making sure none overlap. 
+   * 
+   * @param pixelName Name of the special pixel type to be displayed in the error 
+   *                  message.
+   * @param pixelMin The minimum value of the special pixel range
+   * @param pixelMax The maximum value of the special pixel range
+   */
+  void ProcessImport::CheckPixelRange( string pixelName, double pixelMin, double pixelMax ) {
+    if( pixelMin == DBL_MAX || pixelMax == -DBL_MAX ) return;
+
+    if(  p_null_min != DBL_MAX && p_null_max != -DBL_MAX && ( // Checks if null has been set
+        (pixelMin > p_null_min && pixelMin < p_null_max) ||      // Checks for min crossing
+        (pixelMax > p_null_min && pixelMax < p_null_max) ||      // Checks for max crossing
+        (pixelMin < p_null_min && pixelMax > p_null_max) )) {    // Checks for straddling values
+      string msg = "The " + pixelName + " range [" + iString(pixelMin) +
+        "," + iString(pixelMax) + "] overlaps the NULL range [" +
+        iString(p_null_min) + "," + iString(p_null_max) + "]";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
+    }
+
+    if(  p_lrs_min != DBL_MAX && p_lrs_max != -DBL_MAX && (
+        (pixelMin > p_lrs_min && pixelMin < p_lrs_max) ||
+        (pixelMax > p_lrs_min && pixelMax < p_lrs_max) ||
+        (pixelMin < p_lrs_min && pixelMax > p_lrs_max) )) {
+      string msg = "The " + pixelName + " range [" + iString(pixelMin) +
+        "," + iString(pixelMax) + "] overlaps the LRS range [" +
+        iString(p_lrs_min) + "," + iString(p_lrs_max) + "]";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
+    }
+
+    if(  p_lis_min != DBL_MAX && p_lis_max != -DBL_MAX && (
+        (pixelMin > p_lis_min && pixelMin < p_lis_max) ||
+        (pixelMax > p_lis_min && pixelMax < p_lis_max) ||
+        (pixelMin < p_lis_min && pixelMax > p_lis_max) )) {
+      string msg = "The " + pixelName + " range [" + iString(pixelMin) +
+        "," + iString(pixelMax) + "] overlaps the LIS range [" +
+        iString(p_lis_min) + "," + iString(p_lis_max) + "]";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
+    }
+
+    if(  p_hrs_min != DBL_MAX && p_hrs_max != -DBL_MAX && (
+        (pixelMin > p_hrs_min && pixelMin < p_hrs_max) ||
+        (pixelMax > p_hrs_min && pixelMax < p_hrs_max) ||
+        (pixelMin < p_hrs_min && pixelMax > p_hrs_max) )) {
+      string msg = "The " + pixelName + " range [" + iString(pixelMin) +
+        "," + iString(pixelMax) + "] overlaps the HRS range [" +
+        iString(p_hrs_min) + "," + iString(p_hrs_max) + "]";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
+    }
+
+    if(  p_his_min != DBL_MAX && p_his_max != -DBL_MAX && (
+        (pixelMin > p_his_min && pixelMin < p_his_max) ||
+        (pixelMax > p_his_min && pixelMax < p_his_max) ||
+        (pixelMin < p_his_min && pixelMax > p_his_max) )) {
+      string msg = "The " + pixelName + " range [" + iString(pixelMin) +
+        "," + iString(pixelMax) + "] overlaps the HIS range [" +
+        iString(p_his_min) + "," + iString(p_his_max) + "]";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
+    }
+
   }
 
   /** 

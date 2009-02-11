@@ -1,6 +1,7 @@
 APPNAME = hicalbeta
 
 output.txt.SKIPLINES = 7
+output.txt.IGNORELINES = CONF
 
 include $(ISISROOT)/make/isismake.tsts
 

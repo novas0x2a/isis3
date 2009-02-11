@@ -7,19 +7,21 @@
   </brief>
 
   <description>
-  <pre>
     This program performs photometric corrections on a cube. It can be used
-    to normalize an image for mosaicking. There are three aspects of 
-    photometric correction that need to be considered when running the 
-    photomet program:
+    to normalize an image for mosaicking. The user must input the cube with a
+    pvl containing the corresponding photometric parameters.  Examples of sample
+    pvl files are shown below. There are three aspects of photometric correction 
+    that need to be considered when running the photomet program:
   
+    <pre>
     1) Surface photometric function model type
     2) Atmospheric photometric function model type
     3) Type of normalization to be performed
+    </pre>
   
     The types of surface photometric function model types currently available
     in photomet are:
-  
+    <pre>
     HapkeHen        : Hapke-Henyey-Greenstein photometric model. Derive model 
                       albedo using complete Hapke model with Henyey-Greenstein 
 		      single-particle phase function whose coefficients are 
@@ -51,10 +53,12 @@
     Moonpr          : This model was developed specifically for use with the
                       Moon. This model was designed to be used in conjunction
 		      with the MoonAlbedo normalization model.
+    </pre>
   
     The types of atmospheric photometric function model types currently
     available in photomet are:
   
+    <pre>
     Anisotropic1    : Uses Chandrasekhar's solution for anisotropic scattering
                       described by a one term Legendre polynomial. This model
 		      uses first order scattering approximation.
@@ -84,9 +88,11 @@
     Isotropic2      : Uses Chandrasekhar's solution for isotropic scattering.
                       This model uses second order scattering approximation.
 		      It is slower but more accurate than Isotropic1.
+    </pre>
   
     The types of normalization models currently available in photomet are:
   
+    <pre>
     Albedo          : Normalization without atmosphere. Each pixel is divided by 
                       the model photometric function evaluated at the geometry
                       of that pixel, then multiplied by the function at reference
@@ -159,6 +165,7 @@
 		      albedo variations; and (3) normalize with the TopoAtm model
 		      to undo the temporary normalization and equalize topographic
 		      shading.
+    </pre>
   
     As you can see above, the only normalization models that make use of atmospheric
     correction are: AlbedoAtm, ShadeAtm, and TopoAtm. Atmospheric correction is not
@@ -170,6 +177,7 @@
     parameters that apply to them. Here is a list of the models and their related
     parameters (in parentheses):
   
+    <pre>
     HapkeHen (B0,Hg1,Hg2,Hh,Theta,Wh)
     Lambert
     LommelSeeliger
@@ -193,10 +201,12 @@
     ShadeAtm (Albedo,Incref)
     Topo (Albedo,Incref,Thresh)
     TopoAtm (Albedo,Incref)
+    </pre>
   
     Here is a description of each parameter along with a valid range
     of values and the default for that parameter:
   
+    <pre>
     Photometric parameters:
     -----------------------
     B0:     Hapke opposition surge component: 0 &lt;= value : default is 0.0
@@ -269,9 +279,10 @@
              limit : default is 0.0081
     Xmul   : Used to convert radiance to reflectance or apply a calibration 
              fudge factor: no limit : default is 1.0
+    </pre>
   
     Here are some example PVL files:
-    --------------------------------
+    <pre>
     Example 1:
   
     Object = PhotometricModel
@@ -285,6 +296,7 @@
       EndGroup
     EndObject
   
+    --------------------------------
     Example 2:
   
     Object = PhotometricModel
@@ -303,6 +315,7 @@
       EndGroup
     EndObject
   
+    --------------------------------
     Example 3:
   
     Object = PhotometricModel
@@ -322,6 +335,7 @@
       EndGroup
     EndObject
   
+    --------------------------------
     Example 4:
   
     Object = PhotometricModel
@@ -373,6 +387,11 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Jeannie Walldren" date="2009-01-08">
+      Added MAXEMISSION and MAXINCIDENCE parameters.  Modified code to set 
+      off-target pixels to NULL.  Added appTests for new parameters.  Added user
+      documentation examples. 
+    </change>
   </history>
 
   <category>
@@ -395,7 +414,6 @@
           *.cub
         </filter>
       </parameter>
-
       <parameter name="TO">
         <type>cube</type>
         <pixelType>real</pixelType>
@@ -408,7 +426,6 @@
           correction.
         </description>
       </parameter>
-
       <parameter name="PHOPAR">
         <type>filename</type>
         <fileMode>input</fileMode>
@@ -419,10 +436,312 @@
           This file will contain the photometric parameters to use
           when doing the photometric correction.
         </description>
-	<filter>
-	  *.pvl
+	      <filter>
+	        *.pvl
         </filter>
       </parameter>
     </group>
+    <group name="TrimParameters">
+      <parameter name="MAXEMISSION">
+        <type>double</type>
+        <brief>Maximum emisson angle</brief>
+        <description>
+          The maximum number of degrees allowed for the emission angle.  This 
+          number must be between 0.0 and 90.0.
+        </description>
+        <minimum inclusive="yes">0.0</minimum>
+        <maximum inclusive="yes">90.0</maximum>
+        <default><item> 90.0</item></default>
+      </parameter>
+      <parameter name="MAXINCIDENCE">
+        <type>double</type>
+        <brief>Maximum incidence angle</brief>
+        <description>
+          The maximum number of degrees allowed for the incidence angle.  This 
+          number must be between 0.0 and 90.0.
+        </description>
+        <minimum inclusive="yes">0.0</minimum>
+        <maximum inclusive="yes">90.0</maximum>
+        <default><item> 90.0</item></default>
+      </parameter>
+    </group>
   </groups>
+
+  <examples>
+    <example>
+      <brief>Photometric corrections with any valid angles</brief>
+      <description>
+        This example shows the photometric correction of a cube by using 
+        photomet application with the default parameter values kept for the 
+        maximum emission and incidence angles. 
+      </description>
+      <terminalInterface>
+        <commandLine>
+          photomet from=input.cub phopar=input.pvl to=output.cub
+        </commandLine>
+        <description>Run photomet with default maximum angles</description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image src="assets/images/gui1.jpg" width="510" height="550">
+            <brief>Example GUI</brief>
+            <description>
+              Screenshot of GUI version of the application.  Notice the default
+              values of 90.0 are left alone for the MAXEMISSION and
+              MAXINCIDENCE parameters.
+            </description>
+            <thumbnail src="assets/thumbs/gui1thumb.jpg" caption="photomet GUI using defaults" width="185" height="200"/>
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/input.pvl">
+          <brief>Example input PVL</brief>
+          <description>
+            Pvl file including the input photometric parameters for the input 
+            cube.
+          </description>
+          <parameterName>
+            PHOPAR
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+      <inputImages>
+        <image src="assets/images/input.jpg" width="547" height="550">
+          <brief>Example input cube </brief>
+          <description>
+            Screenshot of the input image before photometric correction has been 
+            performed. 
+          </description>
+          <thumbnail src="assets/thumbs/inputthumb.jpg" caption="Input image" width="199" height="200"/>
+          <parameterName>
+            FROM
+          </parameterName>
+        </image>
+      </inputImages>
+      <outputImages>
+        <image src="assets/images/output1.jpg" width="547" height="550">
+          <brief>Example output cube </brief>
+          <description> 
+            Screenshot of the output image after photometric correction.  Notice 
+            many features on the surface are easier to view due to the 
+            normalization of the pixels.
+          </description>
+          <thumbnail src="assets/thumbs/output1thumb.jpg" caption="Output image" width="199" height="200"/>
+          <parameterName>
+            TO
+          </parameterName>
+        </image>
+      </outputImages>
+    </example>
+    <example>
+      <brief>Photometric corrections using maximum emission angle parameter</brief>
+      <description>
+        This example shows the photometric correction of a cube by using 
+        photomet application with the maximum emission angle set to 75.0 and the
+        default parameter value kept for the maximum incidence angle. 
+      </description>
+      <terminalInterface>
+        <commandLine>
+          photomet from=input.cub phopar=input.pvl to=output.cub maxemission=75.0
+        </commandLine>
+        <description>
+          Run photomet with maximum emission angle less than the default value 
+          of 90 degrees.
+        </description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image src="assets/images/gui2.jpg" width="510" height="550">
+            <brief>Example GUI</brief>
+            <description>
+              Screenshot of GUI version of the application.  Notice the 
+              MAXEMISSION parameter is changed from the default value of 90.0.
+            </description>
+            <thumbnail src="assets/thumbs/gui2thumb.jpg" caption="photomet GUI with MAXEMISSION changed" width="185" height="200"/>
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/input.pvl">
+          <brief>Example input PVL</brief>
+          <description>
+            Pvl file including the input photometric parameters for the input 
+            cube.
+          </description>
+          <parameterName>
+            PHOPAR
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+      <inputImages>
+        <image src="assets/images/input.jpg" width="547" height="550">
+          <brief>Example input cube </brief>
+          <description>
+            Screenshot of the input image before photometric correction has been 
+            performed. 
+          </description>
+          <thumbnail src="assets/thumbs/inputthumb.jpg" caption="Input image" width="199" height="200"/>
+          <parameterName>
+            FROM
+          </parameterName>
+        </image>
+      </inputImages>
+      <outputImages>
+        <image src="assets/images/output2.jpg" width="547" height="550">
+          <brief>Example output cube </brief>
+          <description> 
+            Screenshot of the output image after photometric correction.  Notice 
+            there are more blackened areas than in the Example 1 output image.  
+            This happens since the pixel values have been set to null where the 
+            emission angles are greater than 75.
+          </description>
+          <thumbnail src="assets/thumbs/output2thumb.jpg" caption="Output image" width="199" height="200"/>
+          <parameterName>
+            TO
+          </parameterName>
+        </image>
+      </outputImages>
+    </example>
+    <example>
+      <brief>Photometric corrections using maximum incidence angle parameter</brief>
+      <description>
+        This example shows the photometric correction of a cube by using 
+        photomet application with the maximum incidence angle set to 85.0 and the
+        default parameter value kept for the maximum emission angle. 
+      </description>
+      <terminalInterface>
+        <commandLine>
+          photomet from=input.cub phopar=input.pvl to=output.cub maxincidence=85.0
+        </commandLine>
+        <description>
+          Run photomet with maximum incidence angle less than the default value 
+          of 90 degrees.
+        </description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image src="assets/images/gui3.jpg" width="510" height="550">
+            <brief>Example GUI</brief>
+            <description>
+              Screenshot of GUI version of the application.  Notice the 
+              MAXINCIDENCE parameter is changed from the default value of 90.0.
+            </description>
+            <thumbnail src="assets/thumbs/gui3thumb.jpg" caption="photomet GUI with MAXINCIDENCE changed" width="185" height="200"/>
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/input.pvl">
+          <brief>Example input PVL</brief>
+          <description>
+            Pvl file including the input photometric parameters for the input 
+            cube.
+          </description>
+          <parameterName>
+            PHOPAR
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+      <inputImages>
+        <image src="assets/images/input.jpg" width="547" height="550">
+          <brief>Example input cube </brief>
+          <description>
+            Screenshot of the input image before photometric correction has been 
+            performed. 
+          </description>
+          <thumbnail src="assets/thumbs/inputthumb.jpg" caption="Input image" width="199" height="200"/>
+          <parameterName>
+            FROM
+          </parameterName>
+        </image>
+      </inputImages>
+      <outputImages>
+        <image src="assets/images/output3.jpg" width="547" height="550">
+          <brief>Example output cube </brief>
+          <description> 
+            Screenshot of the output image after photometric correction.  Notice 
+            there are different areas of valid pixels from Examples 1 and 2 
+            output images. This happens since the pixel values have been set to 
+            null where the incidence angles are greater than 85, but the 
+            emission angle parameter is kept at default.
+          </description>
+          <thumbnail src="assets/thumbs/output3thumb.jpg" caption="Output image" width="199" height="200"/>
+          <parameterName>
+            TO
+          </parameterName>
+        </image>
+      </outputImages>
+    </example>
+    <example>
+      <brief>Photometric corrections using maximum emission and incidence angle parameters</brief>
+      <description>
+        This example shows the photometric correction of a cube by using 
+        photomet application with the maximum emission angle set to 75.0 and the 
+        maximum incidence angle set to 85.0. 
+      </description>
+      <terminalInterface>
+        <commandLine>
+          photomet from=input.cub phopar=input.pvl to=output.cub maxemission=75.0 maxincidence=85.0
+        </commandLine>
+        <description>
+          Run photomet with maximum emission and incidence angles less than the 
+          default values of 90 degrees.
+        </description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image src="assets/images/gui4.jpg" width="510" height="550">
+            <brief>Example GUI</brief>
+            <description>
+              Screenshot of GUI version of the application.  Notice the 
+              MAXEMISSION and MAXINCIDENCE parameters are changed from the 
+              default values of 90.0.
+            </description>
+            <thumbnail src="assets/thumbs/gui4thumb.jpg" caption="photomet GUI with MAXEMISSION and MAXINCIDENCE changed" width="185" height="200"/>
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/input.pvl">
+          <brief>Example input PVL</brief>
+          <description>
+            Pvl file including the input photometric parameters for the input 
+            cube.
+          </description>
+          <parameterName>
+            PHOPAR
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+      <inputImages>
+        <image src="assets/images/input.jpg" width="547" height="550">
+          <brief>Example input cube </brief>
+          <description>
+            Screenshot of the input image before photometric correction has been 
+            performed. 
+          </description>
+          <thumbnail src="assets/thumbs/inputthumb.jpg" caption="Input image" width="199" height="200"/>
+          <parameterName>
+            FROM
+          </parameterName>
+        </image>
+      </inputImages>
+      <outputImages>
+        <image src="assets/images/output4.jpg" width="547" height="550">
+          <brief>Example output cube </brief>
+          <description> 
+            Screenshot of the output image after photometric correction.  Notice 
+            this output image contains the overlapping valid pixels from 
+            Examples 2 and 3.
+          </description>
+          <thumbnail src="assets/thumbs/output4thumb.jpg" caption="Output image" width="199" height="200"/>
+          <parameterName>
+            TO
+          </parameterName>
+        </image>
+      </outputImages>
+    </example>
+  </examples>
+
 </application>

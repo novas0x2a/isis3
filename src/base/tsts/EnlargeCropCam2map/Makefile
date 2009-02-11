@@ -9,7 +9,7 @@ include $(ISISROOT)/make/isismake.tsts
 commands:
 	$(APP1NAME) from= $(INPUT)/lua0825f.cub \
 	  to= $(OUTPUT)/enlargeTruth.cub \
-	  interp=nearestneighbor smag=1.5 lmag=1.5 > /dev/null;
+	  interp=nearestneighbor sscale=1.5 lscale=1.5 > /dev/null;
 	$(APP2NAME) from= $(OUTPUT)/enlargeTruth.cub \
 	  to= $(OUTPUT)/EnlargeCropTruth.cub \
 	  sample=50 nsamples=200 \

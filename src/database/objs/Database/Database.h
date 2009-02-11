@@ -2,8 +2,8 @@
 #define Database_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $
- * $Date: 2007/06/06 00:32:06 $
+ * $Revision: 1.3 $
+ * $Date: 2008/10/30 16:38:23 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -73,10 +73,14 @@ namespace Isis {
  * 
  * @ingroup Database
  * @author 2006-08-18 Kris Becker
- * 
- * @history 2007-06-05 Brendan George - Modified to work with
+ *  
+ * @internal 
+ *   @history 2007-06-05 Brendan George - Modified to work with
  *          iString/StringTools merge
- */                                                                       
+ *   @history 2008-10-30 Steven Lambright - tossDbError now accepts a const
+ *            char* for a filename, issue pointed out by "novus0x2a" (Support
+ *            Board Member)
+ */
   class Database : public QSqlDatabase {
     public:
       /** Access status for database creation */
@@ -125,7 +129,7 @@ namespace Isis {
                                                  * construction techniques */
       std::string _name;           //!<  Name of the connection
 
-      void tossDbError(const std::string &message, char *f, int l) const
+      void tossDbError(const std::string &message, const char *f, int l) const
                         throw (iException &);
   };
 

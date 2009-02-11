@@ -13,7 +13,7 @@ export
 help:
 	echo "Isis Make Tests Commands"
 	echo "------------------------ "
-	echo "make tests                  : Runs and displays results for all of the tests"
+	echo "make test                   : Runs and displays results for all of the tests"
 	echo "make newtest TEST=testname  : Creates a new test named testname"
 
 #----------------------------------------------------------------------------
@@ -24,7 +24,7 @@ help:
 # has no makefile or there is no tests a message is
 # printed saying so.
 #----------------------------------------------------------------------------
-tests:
+test: force
 	if [ "$(TESTS)" != "" ]; \
 	then \
 	  echo ""; \
@@ -44,9 +44,10 @@ tests:
 	  printf $(BLANKS) ""; \
 	  echo "no tests"; \
 	fi
+force: ;
 
 #----------------------------------------------------------------------------
-# Target = help
+# Target = newtest
 # Dependencies = variable TEST 
 #
 # Creates a new test in the current directory.  Relies on 
@@ -67,4 +68,22 @@ newtest:
 	  cd $(TEST); \
 	  $(CP) $(ISISROOT)/make/Makefile.tsts Makefile; \
 	  $(MAKE) dirs; \
+	fi
+
+#----------------------------------------------------------------------------
+# Target = clean
+#
+# Removes the output from any previous tests
+#----------------------------------------------------------------------------
+clean:
+	if [ "$(TESTS)" != "" ]; \
+	then \
+	  for i in $(TESTS); do \
+	    cd $$i; \
+	    if [ -f "Makefile" ]; \
+	    then \
+	      $(MAKE) clean; \
+	    fi ; \
+	    cd ..; \
+	  done \
 	fi

@@ -4,4 +4,4 @@ include $(ISISROOT)/make/isismake.tsts
 
 commands:
 	$(APPNAME) FROM=$(INPUT)/input.cub MOSAIC=$(OUTPUT)/mosaic.cub \
-	CREATE=YES SLAT=-75 ELAT=-72 SLON=0 ELON=720 > /dev/null;
+	CREATE=YES MINLAT=-75 MAXLAT=-72 MINLON=0 MAXLON=720 > /dev/null;

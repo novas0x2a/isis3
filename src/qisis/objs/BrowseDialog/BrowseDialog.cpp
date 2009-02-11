@@ -1,4 +1,6 @@
 #include "BrowseDialog.h"
+
+#include <QFileDialog>
 #include <iostream>
 
 namespace Qisis {

@@ -1,4 +1,4 @@
-// $Id: mdiscal.cpp,v 1.18 2008/09/18 07:45:09 kbecker Exp $
+// $Id: mdiscal.cpp,v 1.21 2008/11/25 16:38:26 kbecker Exp $
 #include "Isis.h"
 
 #include <vector>
@@ -60,12 +60,12 @@ void Calibrate(vector<Buffer *>&in, vector<Buffer *>&out);
 void IsisMain() {
 
   const string mdiscal_program = "mdiscal";
-  const string mdiscal_version = "1.0";
-  const string mdiscal_revision = "$Revision: 1.18 $";
+  const string mdiscal_version = "1.2";
+  const string mdiscal_revision = "$Revision: 1.21 $";
   string mdiscal_runtime = Application::DateTime();
 
   // Specify the version of the CDR generated
-  const int cdr_version = 2;
+  const int cdr_version = 3;
 
   // We will be processing by column in case of a linear dark current fit. This will make the
   //   calibration a one pass system in this case, rather than two.
@@ -154,12 +154,12 @@ void IsisMain() {
       ie.Clear();
     }
 
-    //  Model cannot be used for exposure times > 2.0 <sec>
-    if ((darkCurr == "MODEL") && (exposureDuration > 2.0)) {
+    //  Model cannot be used for exposure times > 1.0 <sec>
+    if ((darkCurr == "MODEL") && (exposureDuration > 1.0)) {
       darkCurr = "NONE";
       string mess = "There are no valid dark current pixels and the dark model" 
                     " correction can not be used when the exposure duration"
-                    " exceeds 2000...image cannot be calibrated";
+                    " exceeds 1000...image cannot be calibrated";
       iException &ie= iException::Message(iException::User, mess, _FILEINFO_);
       ie.Report();
       ie.Clear();
@@ -179,15 +179,15 @@ void IsisMain() {
     calibrationValues.resize(icube->Lines());
   }
   else if(darkCurr == "MODEL") {
-    if(exposureDuration > (2000.0/1000.0)) {
+    if(exposureDuration > 1.0) {
         string mess = "Dark model correction can not be used when the "
-                    "exposure duration exceeds 2000...using STANDARD instead."; 
+                    "exposure duration exceeds 1000...using LINEAR instead."; 
         iException &ie= iException::Message(iException::User, mess, _FILEINFO_);
         ie.Report();
         ie.Clear();
 
         // set processing to standard
-      darkCurrentMode = DarkCurrentStandard;
+      darkCurrentMode = DarkCurrentLinear;
       calibrationValues.resize(icube->Lines());
       darkCurr = "STANDARD";
     }
@@ -202,7 +202,7 @@ void IsisMain() {
                                darkCurr + "]", _FILEINFO_);
   }
 
-  string darkCurrentFile;
+  string darkCurrentFile("");
   if(darkCurrentMode != DarkCurrentNone) {
     if(darkCurrentMode != DarkCurrentModel) {
       p.Progress()->SetText("Gathering Dark Current Statistics");
@@ -248,7 +248,15 @@ void IsisMain() {
   string respfile("");
   vector<double> rsp = loadResponsivity(isNarrowAngleCamera, isBinnedData,
                                        filterNumber+1, respfile);
-  abs_coef = 1.0 / (rsp[0] * ((rsp[2] * ccdTemperature) + rsp[1]));
+  // abs_coef = 1.0 / (rsp[0] * ((rsp[2] * ccdTemperature) + rsp[1]));
+  double T = 1.0;
+  double Rt = rsp[0];
+  double Resp = 0;
+  for (unsigned int i = 1 ; i < rsp.size() ; i++) {
+    Resp += Rt * (rsp[i] * T);
+    T *= ccdTemperature;
+  }
+  abs_coef = 1.0 / Resp;
 
  //  Retrieve filter dependant SMEAR component
   string smearfile("");
@@ -337,8 +345,9 @@ void IsisMain() {
   calibrationLog.AddKeyword(PvlKeyword("ResponsivityFile", respfile));
   calibrationLog.AddKeyword(PvlKeyword("SmearCompFile", smearfile));
   PvlKeyword rspKey("Response", rsp[0]);
-  rspKey.AddValue(rsp[1]);
-  rspKey.AddValue(rsp[2]);
+  for (unsigned int i = 1 ; i < rsp.size() ; i++) {
+    rspKey.AddValue(rsp[i]);
+  }
   calibrationLog.AddKeyword(rspKey);
   calibrationLog.AddKeyword(PvlKeyword("SmearComponent", smearComponent));
 
@@ -383,7 +392,7 @@ void IsisMain() {
     key = PvlKeyword("SourceProductId", Quote(orgProdId));
   }
 
-  if(darkCurrentFile.empty()) {
+  if(!darkCurrentFile.empty()) {
     key.AddValue(Quote(Filename(darkCurrentFile).Basename()));
   }
   key.AddValue(Quote(flatfield.Basename()));

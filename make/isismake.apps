@@ -25,7 +25,15 @@ clean:
 	then \
 	  $(MAKE) cleanlocal; \
 	fi
-
+	if [ -d "tsts" ]; \
+	then \
+	  if [ -f "tsts/Makefile" ]; \
+	    then \
+	    cd tsts; \
+	    $(MAKE) clean; \
+	    cd ..; \
+	  fi; \
+	fi
 
 install: app
 	if [ ! -d "$(ISISROOT)/bin/xml" ]; \
@@ -53,7 +61,7 @@ test:
 	  echo "no tsts folder"; \
 	elif [ -f "tsts/Makefile" ]; \
 	then \
-	  cd tsts; $(MAKE) tests; \
+	  cd tsts; $(MAKE) test; \
 	else \
 	  echo ""; \
 	  printf %-6s ""; \
@@ -71,3 +79,5 @@ testdir:
 	  echo "tsts folder already exists"; \
 	fi
 
+html:
+	$(MAKE) `basename $(CURDIR)`.html;

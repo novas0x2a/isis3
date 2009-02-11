@@ -64,6 +64,13 @@
     <change name="Steven Lambright" date="2008-05-12">
       Removed references to CubeInfo 
     </change>
+    <change name="Kris Becker" date="2008-10-17">
+      Added QUALITY parameter to set compression levels
+    </change>
+    <change name="Christopher Austin" date="2008-11-04">
+      Fixed checkDataSize() since Qimage has a maximum size of 2 GB, not 4GB.
+      Added some QT error catching.
+    </change>
   </history>
 
   <category>
@@ -277,7 +284,22 @@
             </description>
           </option>
         </list>
-      </parameter>
+      </parameter> 
+        <parameter name="QUALITY">
+            <type>integer</type>
+            <brief>Specify output image quality</brief>
+            <default><item>100</item></default>
+            <description>
+                This parameter allows the user to specify level of quality 
+                (compression) for the output image.  Some output image types may 
+                not utilize this parameter.  The range is from 100 (no 
+                compression and highest quality) to 0 (highest compression and 
+                reduced quality).  A value of -1 can be given to use the default 
+                settings.
+            </description>
+            <minimum inclusive="yes">-1</minimum>
+            <maximum inclusive="yes">100</maximum>
+        </parameter>
     </group>
 
     <group name="Stretch Options">

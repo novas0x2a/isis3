@@ -1,18 +1,10 @@
-#include <QMenu>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QDialog>
-#include <QPushButton>
-#include <QToolButton>
-#include <QDoubleSpinBox>
+#include "BlinkTool.h"
+
+#include "Filename.h"
+#include "CubeViewport.h"
+
 #include <QTimer>
 #include <QPainter>
-#include <QSplitter>
-#include "BlinkTool.h"
-#include "MainWindow.h"
-#include "CubeViewport.h"
-#include "Workspace.h"
-#include "Filename.h"
 
 namespace Qisis {
 
@@ -125,13 +117,13 @@ namespace Qisis {
 
     // Create the action to bring up the blink window
     p_action = new QAction(parent);
-    p_action->setShortcut(Qt::CTRL+Qt::Key_B);
+    p_action->setShortcut(Qt::Key_K);
     p_action->setText("&Blink ...");
     p_action->setIcon(QPixmap(toolIconDir()+"/blink.png"));
     p_action->setToolTip("Blink");
     text =
       "<b>Function:</b> Opens a blink comparator for linked viewports. \
-       <p><b>Shortcut:</b> Ctrl+B</p>";
+       <p><b>Shortcut:</b>K</p>";
     p_action->setWhatsThis(text);
     p_action->setEnabled(false);
     connect(p_action,SIGNAL(triggered()),p_dialog,SLOT(show()));

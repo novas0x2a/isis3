@@ -8,7 +8,8 @@
 
   <description>
     This program will reduce a cube either by averaging pixels or using the
-    nearest-neighbor algorithm.
+    nearest-neighbor algorithm. All special pixels that can't be resolved by the 
+    VALIDPER value will be set to NULL.
 
   </description>
 
@@ -33,30 +34,34 @@
       Fixed propagation bug
     </change>
     <change name="Tracie Sucharski" date="2004-07-15">
-        Forget to change ons/onl minimum inclusive values from 1.0 to 1 during the
-        2003-5-13 change.
+      Forget to change ons/onl minimum inclusive values from 1.0 to 1 during the
+      2003-5-13 change.
     </change>
     <change name="Drew Davidson" date="2005-08-17">
-        Added example
+      Added example
     </change>
     <change name="Tracie Sucharski" date="2006-04-03">
-        Fixed bug in average algorithm, forgot to divide Vper by 100.
+      Fixed bug in average algorithm, forgot to divide Vper by 100.
     </change>
     <change name="Jeff Anderson" date="2006-09-19">
-        Fixed problems when program ran in batchlist
+      Fixed problems when program ran in batchlist
     </change>
     <change name="Sean Crosby" date="2007-02-28">
-        Program now updates output file's mapping keywords
+      Program now updates output file's mapping keywords
     </change>
-      <change name="Steven Koechle" date="2008-01-23"> 
-          Changed so if it failed VPER the output cube would get null values. 
-          Now processes cube bands from user input correctly
+    <change name="Steven Koechle" date="2008-01-23"> 
+      Changed so if it failed VPER the output cube would get null values. 
+      Now processes cube bands from user input correctly
     </change>
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
-      <change name="Steven Koechle" date="2008-05-15"> 
-          Added radio button for VPER options to allow original functionaliy.
+    <change name="Steven Koechle" date="2008-05-15"> 
+      Added radio button for VPER options to allow original functionaliy.
+    </change>
+    <change name="Steven Lambright" date="2008-12-22"> 
+      The "Scale" keyword in the Projection group in the labels is now being 
+      updated if this program is run on a projected cube. 
     </change>
   </history>
 

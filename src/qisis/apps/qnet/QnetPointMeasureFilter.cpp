@@ -2,6 +2,7 @@
 #include <QMessageBox>
 #include "QnetPointMeasureFilter.h"
 #include "QnetNavTool.h"
+#include "ControlMeasure.h"
 #include "ControlNet.h"
 #include "SerialNumberList.h"
 
@@ -40,7 +41,14 @@ namespace Qisis {
   /**
    * Filters a list of points for points that have at least one measure
    * of the selected type(s). The filtered list will appear in the
-   * navtools point list display.
+   * navtools point list display. 
+   *  
+   * @internal
+   *   @history 2009-01-08 Jeannie Walldren - Modified to remove
+   *                          new filter points from the existing
+   *                          filtered list. Previously, a new
+   *                          filtered list was created from the
+   *                          entire control net each time.
    */
   void QnetPointMeasureFilter::filter() {
     // Make sure there is a control net loaded to filter
@@ -60,36 +68,48 @@ namespace Qisis {
       return;
     }
 
-    // Loop through the control net checking the types of each control measure 
-    // for each of the control points.  If we find a match, we add it to the 
-    // filtered list and break out of the inner loop
-    for (int i=0; i<g_controlNetwork->Size(); i++) {
-      Isis::ControlPoint cp = (*g_controlNetwork)[i];
+    // Loop through each value of the filtered points list 
+    // checking the types of each control measure for each 
+    // of the control points.  If no measures match, we remove
+    // it from the filtered list
+    // Loop in reverse order since removal list of elements affects index number
+    for (int i = g_filteredPoints.size()-1; i >= 0; i--) {
+      Isis::ControlPoint cp = (*g_controlNetwork)[g_filteredPoints[i]];
+      int numMeasNotMatching = 0;
       for (int j=0; j<cp.Size(); j++) {
-        if ((p_unmeasured->isChecked()) && (cp[j].Type() == 0)) {
-          g_filteredPoints.push_back(i);
+        // if the point contains a measure that matches a checked type, 
+        // keep this point in the list and go on to the next point
+        if ((p_unmeasured->isChecked()) && 
+            (cp[j].Type() == Isis::ControlMeasure::Unmeasured)) {
           break;  
         }
-        else if ((p_manual->isChecked()) && (cp[j].Type() == 1)) {
-          g_filteredPoints.push_back(i);
+        else if ((p_manual->isChecked()) && 
+                 (cp[j].Type() == Isis::ControlMeasure::Manual)) {
           break;
         }
-        else if ((p_estimated->isChecked()) && (cp[j].Type() == 2)) {
-          g_filteredPoints.push_back(i);
+        else if ((p_estimated->isChecked()) && 
+                 (cp[j].Type() == Isis::ControlMeasure::Estimated)) {
           break;
         }
-        else if ((p_automatic->isChecked()) && (cp[j].Type() == 3)) {
-          g_filteredPoints.push_back(i);
+        else if ((p_automatic->isChecked()) && 
+                 (cp[j].Type() == Isis::ControlMeasure::Automatic)) {
           break;
         }
-        else if ((p_validatedManual->isChecked()) && (cp[j].Type() == 4)) {
-          g_filteredPoints.push_back(i);
+        else if ((p_validatedManual->isChecked()) && 
+                 (cp[j].Type() == Isis::ControlMeasure::ValidatedManual)) {
           break;
         }
-        else if ((p_validatedAutomatic->isChecked()) && (cp[j].Type() == 5)) {
-          g_filteredPoints.push_back(i);
+        else if ((p_validatedAutomatic->isChecked()) && 
+                 (cp[j].Type() == Isis::ControlMeasure::ValidatedAutomatic)) {
           break;
         }
+        // if this measure doesn't match any of the checked values, increment
+        else numMeasNotMatching++;
+      }
+      // if no measures match the checked values, 
+      // remove this point from the filter list
+      if (cp.Size() == numMeasNotMatching) {
+        g_filteredPoints.removeAt(i);
       }
     }
 

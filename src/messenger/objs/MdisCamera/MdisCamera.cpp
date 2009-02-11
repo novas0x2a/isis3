@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $
- * $Date: 2008/08/08 20:29:08 $
+ * $Revision: 1.9 $
+ * $Date: 2009/01/22 00:23:03 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -23,6 +23,7 @@
 #include "iString.h"
 #include "iException.h"
 #include "CameraDistortionMap.h"
+#include "TaylorCameraDistortionMap.h"
 #include "CameraDetectorMap.h"
 #include "CameraFocalPlaneMap.h"
 #include "CameraGroundMap.h"
@@ -196,8 +197,23 @@ namespace Isis {
       // See $ISIS3DATA/messenger/kernels/iak/mdisAddendumXXX.ti or possibly
       // $ISIS3DATA/messenger/kernels/ik/msgr_mdis_vXXX.ti for the *_OD_K
       // parameters.
-      CameraDistortionMap *distortionMap = new CameraDistortionMap(this);
-      distortionMap->SetDistortion(fnCode);
+      // NAC has a new implementation of its distortion contributed by
+      // Scott Turner and Lillian Nguyen at JHUAPL.
+      if (NaifIkCode() == MdisWac) {
+        CameraDistortionMap *distortionMap = new CameraDistortionMap(this);
+        distortionMap->SetDistortion(fnCode);
+      }
+      else {  // Camera is the NAC, use new distortion model
+        try {
+          TaylorCameraDistortionMap *distortionMap = new TaylorCameraDistortionMap(this); 
+          distortionMap->SetDistortion(NaifIkCode());
+        } catch (iException &ie) {
+          string msg = "New MDIS/NAC distortion model invalidates previous "
+                       "SPICE - you must rerun spiceinit to get new kernels";
+          ie.Message(iException::User, msg, _FILEINFO_);
+          throw;
+        }
+      }
 
       // Setup the ground and sky map
       new CameraGroundMap(this);

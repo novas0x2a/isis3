@@ -1,7 +1,14 @@
+#include <iostream>
+#include <sstream>
+
+#include "geos/io/WKBReader.h"
+#include "geos/io/WKBWriter.h"
+
 #include "PolygonTools.h"
 #include "iException.h"
 #include "Filename.h"
 #include "ImageOverlap.h"
+#include "iString.h"
 
 namespace Isis {
 
@@ -27,6 +34,34 @@ namespace Isis {
     Init();
     SetPolygon (polygon);
     Add (serialNumber);
+  }
+
+  /**                                                                       
+   * Construct an ImageOverlap object and initialize it from the istream
+   * 
+   * @param inputStream A stream containing a representation of the image overlap
+   *
+   */ 
+  ImageOverlap::ImageOverlap (std::istream &inputStream) {
+    geos::io::WKBReader geosReader;
+
+    std::string fileData;
+    getline(inputStream, fileData);
+
+    iString serialNums = fileData;
+    iString serialNum;
+    while((serialNum = serialNums.Token(",")) != "") {
+      Add (serialNum);
+    }
+
+    // now get the multipolygon on the next line
+    getline(inputStream, fileData);
+
+    std::stringstream multiPolygon;
+    multiPolygon << fileData;
+    multiPolygon.seekg(0, std::ios::beg);
+
+    p_polygon = (geos::geom::MultiPolygon *)geosReader.readHEX(multiPolygon);
   }
 
 
@@ -83,6 +118,25 @@ namespace Isis {
   }
 
 
+  void ImageOverlap::Write(std::ostream &outputStream) {
+    geos::io::WKBWriter geosWriter;
+
+    iString serialNums;
+
+    for(unsigned int sn = 0; sn < p_serialNumbers.size(); sn++) {
+      if(sn != 0) {
+        serialNums += ",";
+      }
+
+      serialNums += p_serialNumbers[sn];
+    }
+
+    serialNums += "\n";
+
+    outputStream << serialNums;
+
+    geosWriter.writeHEX(*p_polygon, outputStream);
+  }
   /**                                                                       
    * This method will add a new serial number to the list of serial numbers
    * alread associated with the overlap.

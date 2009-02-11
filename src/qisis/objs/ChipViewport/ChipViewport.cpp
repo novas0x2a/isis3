@@ -1,14 +1,6 @@
-#include <iostream>
-
-#include <QApplication>
-#include <QCursor>
-#include <QIcon>
-#include <QPainter>
-#include <QStyle>
-
 #include "ChipViewport.h"
-#include "iException.h"
-#include "Histogram.h"
+
+#include <QPainter>
 
 namespace Qisis {
 
@@ -26,6 +18,8 @@ namespace Qisis {
     p_rotation = 0;
     p_geomIt = false;
     p_tempView = NULL;
+    p_cross = true;
+    p_circle = false;
 
   }
 
@@ -129,6 +123,12 @@ namespace Qisis {
       painter.setPen(Qt::red);
       painter.drawLine(0,(p_height-1)/2,p_width-1,(p_height-1)/2);
       painter.drawLine((p_width-1)/2,0,(p_width-1)/2,p_height-1);
+    }
+
+    if (p_circle == true) {
+      painter.setPen(Qt::red);
+      painter.drawEllipse((p_height-1)/2-p_circleSize/2,(p_width-1)/2-p_circleSize/2,
+                           p_circleSize,p_circleSize);
     }
     p_tempView = NULL;
     //painter.end();
@@ -310,6 +310,24 @@ namespace Qisis {
     repaint();
       
   }
+
+
+  void ChipViewport::setCircle(bool checked) {
+
+    if (checked == p_circle) return;
+
+    p_circle = checked;
+    repaint();
+  }
+
+
+  void ChipViewport::setCircleSize(int size) {
+
+    p_circleSize = size;
+    repaint();
+
+  }
+
 
 
   //!<  Slot to geom chip

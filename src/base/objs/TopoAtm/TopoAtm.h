@@ -2,8 +2,8 @@
 #define TopoAtm_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/06/18 20:53:08 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2008/11/05 23:37:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -69,11 +69,14 @@ namespace Isis {
    * describing the output (the albedo to be used in simulating the out-
    * put image).
    *
+   * @ingroup RadiometricAndPhotometricCorrection
    * @author 1998-12-21 Randy Kirk
    *
    * @internal
    *  @history 2007-08-15 Steven Lambright Refactored code
    *  @history 2008-06-18 Steven Lambright Fixed ifndef command
+   *  @history 2008-11-05 Jeannie Walldren - Modified references
+   *           to NumericalMethods class.
    */
   class TopoAtm : public NormModel {
     public:

@@ -27,9 +27,13 @@ void IsisMain() {
   prog.SetMaximumSteps(1);
   prog.CheckStatus ();
 
-  ImagePolygon poly(SerialNumber::Compose(cube));
+  std::string sn = SerialNumber::Compose(cube);
+  cube.BlobDelete("Polygon",sn);
+
+  ImagePolygon poly;
   poly.Create(cube,pixInc);
   cube.Write(poly);
+
   Process p;
   p.SetInputCube("FROM");
   p.WriteHistory(cube);

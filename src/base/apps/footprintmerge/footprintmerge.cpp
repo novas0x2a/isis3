@@ -52,7 +52,7 @@ void IsisMain() {
     }
 
     //  Make sure cube has been run through footprintinit
-    ImagePolygon *poly = new ImagePolygon(SerialNumber::Compose(cube));
+    ImagePolygon *poly = new ImagePolygon;
     try {
       cube.Read(*poly);
       cube.Close();

@@ -24,11 +24,11 @@ vector< set<string> > findIslands(set<string> &index, map< string, set<string> >
 void IsisMain() {
   Progress progress;
   UserInterface &ui = Application::GetUserInterface();
-  ControlNet innet(ui.GetFilename("CONTROL"));
+  ControlNet innet(ui.GetFilename("NETWORK"));
   iString prefix(ui.GetString("PREFIX"));
 
   //Sets up the list of serial numbers for #4
-  FileList inlist(ui.GetFilename("LIST"));
+  FileList inlist(ui.GetFilename("FROMLIST"));
   vector<iString> innums;
   vector<iString> listednums;
   map< string, string > num2cube;
@@ -54,6 +54,7 @@ void IsisMain() {
   set<string> serialNumDupe;
   set<string> noLatLonCubes;
   map< string, set<string> > noLatLonCPoints;
+  set<string> latlonchecked;
 
   if (innet.Size() > 0) {
     progress.SetText("Calculating");
@@ -67,7 +68,10 @@ void IsisMain() {
     //Checks for lat/Lon production
     if( ui.GetBoolean("NOLATLON") ) {
       for (int j=0; j < controlpt.Size(); j++) {
-        if ( !num2cube[controlpt[j].CubeSerialNumber()].empty() ) {
+        if ( !num2cube[controlpt[j].CubeSerialNumber()].empty()  &&
+             latlonchecked.find(controlpt[j].CubeSerialNumber()) == latlonchecked.end() ) {
+          latlonchecked.insert( controlpt[j].CubeSerialNumber() );
+
           Pvl pvl( num2cube[controlpt[j].CubeSerialNumber()] );
           Camera *camera( CameraFactory::Create( pvl ) );
           if (camera == NULL) {
@@ -177,13 +181,13 @@ void IsisMain() {
 
   stringstream ss (stringstream::in | stringstream::out);
 
-  ss << endl << "----------------------------------------" << endl;
+  ss << endl << "--------------------------------------------------------------------------------" << endl;
   if(islands.size() == 1) {
     ss << "The cubes are fully connected by the Control Net." << endl;
   }
   else if(islands.size() == 0) {
     ss << "There are no control points in the provided Control Measure [";
-    ss << Filename(ui.GetFilename("CONTROL")).Name() << "]" << endl;
+    ss << Filename(ui.GetFilename("NETWORK")).Name() << "]" << endl;
   }
   else {
     ss << "The cubes are NOT fully connected by the Control Net." << endl;
@@ -205,7 +209,7 @@ void IsisMain() {
 
     out_stream.close();
 
-    ss << "----------------------------------------" << endl;
+    ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << singleMeasureControlPoints.size();
     ss << " cubes in Control Points with only a single";
     ss << " Control Measure." << endl;
@@ -229,7 +233,7 @@ void IsisMain() {
 
     out_stream.close();
 
-    ss << "----------------------------------------" << endl;
+    ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << serialNumDupe.size();
     ss << " duplicate Control Measures in the";
     ss << " Control Net." << endl;
@@ -260,7 +264,7 @@ void IsisMain() {
 
     out_stream.close();
 
-    ss << "----------------------------------------" << endl;
+    ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << noLatLonCubes.size();
     ss << " serial numbers in the Control Net which are listed in the";
     ss << " input list and cannot compute latitude and longitudes." << endl;
@@ -289,11 +293,11 @@ void IsisMain() {
     
     out_stream.close();
     
-    ss << "----------------------------------------" << endl;
+    ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << innums.size();
-    ss << " cubes in the input list [" << Filename(ui.GetFilename("LIST")).Name();
+    ss << " cubes in the input list [" << Filename(ui.GetFilename("FROMLIST")).Name();
     ss << "] which do not exist in the Control Net [";
-    ss << Filename(ui.GetFilename("CONTROL")).Name() << "]" << endl;
+    ss << Filename(ui.GetFilename("NETWORK")).Name() << "]" << endl;
     ss << "These cubes are listed in [" + Filename(name).Name() + "]" << endl;
   }
 
@@ -317,16 +321,16 @@ void IsisMain() {
 
     out_stream.close();
 
-    ss << "----------------------------------------" << endl;
+    ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << nonlistednums.size();
-    ss << " serial numbers in the Control Net [" << Filename(ui.GetFilename("CONTROL")).Basename();
+    ss << " serial numbers in the Control Net [" << Filename(ui.GetFilename("NETWORK")).Basename();
     ss << "] which do not exist in the input list [";
-    ss << Filename(ui.GetFilename("LIST")).Name() << "]" << endl;
+    ss << Filename(ui.GetFilename("FROMLIST")).Name() << "]" << endl;
     ss << "These serial numbers are listed in [" + Filename(name).Name() + "]" << endl;
   }
 
 
-  ss << "----------------------------------------" << endl << endl;
+  ss << "--------------------------------------------------------------------------------" << endl << endl;
   std::string log = ss.str();
 
   if (ui.IsInteractive()) {

@@ -2,8 +2,8 @@
 #define SqlQuery_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $
- * $Date: 2007/06/06 00:49:46 $
+ * $Revision: 1.5 $
+ * $Date: 2008/10/30 16:40:50 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -145,6 +145,9 @@ class SqlRecord;
  *                                    executedQuery().
  *  @history 2007-06-05 Brendan George - Modified to work with
  *           iString/StringTools merge
+ *   @history 2008-10-30 Steven Lambright - tossQueryError now accepts a const
+ *            char* for a filename, issue pointed out by "novus0x2a" (Support
+ *            Board Member)
  */                                                                       
   class SqlQuery : public QSqlQuery {
     public:
@@ -188,7 +191,7 @@ class SqlRecord;
     private:
       bool _throwIfFailed;        //!<  User can select action on query results
 
-      void tossQueryError(const std::string &message, char *f, int l) const
+      void tossQueryError(const std::string &message, const char *f, int l) const
                           throw (iException &);
   };
 }

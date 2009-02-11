@@ -13,7 +13,7 @@ commands:
 	  line=50 nlines=150 > /dev/null;
 	$(APP2NAME) from= $(OUTPUT)/cropTruth.cub \
 	  to= $(OUTPUT)/CropEnlargeTruth.cub \
-	  interp=nearestneighbor smag=2 lmag=2 > /dev/null;
+	  interp=nearestneighbor sscale=2 lscale=2 > /dev/null;
 	$(APP3NAME) from= $(OUTPUT)/CropEnlargeTruth.cub \
 	  to= $(OUTPUT)/CropEnlargeCam2mapTruth.cub \
 	  > /dev/null;

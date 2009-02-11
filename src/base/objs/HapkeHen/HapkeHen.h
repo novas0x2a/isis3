@@ -1,9 +1,9 @@
-#if !defined(HapkeHen_h)
+#ifndef HapkeHen_h
 #define HapkeHen_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/18 17:00:24 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/11/05 23:38:50 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -24,7 +24,7 @@
  */                                                                       
 
 #include <string>
-#include "PhotoModel.h"
+#include "HapkePhotoModel.h"
 
 namespace Isis {
   class Pvl;
@@ -37,22 +37,46 @@ namespace Isis {
  *  scattering albedo wh, opposition surge parameters
  *  hh and b0, and macroscopic roughness theta.
  *
- * @author 1989-08-02 ?
+ * @ingroup RadiometricAndPhotometricCorrection
+ * @author 1989-08-02 Unknown
+ * @history 2008-01-14 Janet Barret - Imported into Isis3 from 
+ *          Isis2.
  * @history 2008-03-07 Janet Barrett - Moved variables and related
  *                     methods that pertain to Hapke specific parameters
  *                     to the PhotoModel class.
- * @history 2008-06-18 Stuart Sides - Fixed doc error
+ * @history 2008-06-18 Stuart Sides - Fixed doc error 
+ * @history 2008-10-17 Steven Lambright - Changed inheritance, moved 
+ *              HapkeHen specific methods into this class from
+ *              the base class.
+ * @history 2008-11-05 Jeannie Walldren - Added documentation 
+ *          from Isis2 files
  *
  */
-  class HapkeHen : public PhotoModel {
+  class HapkeHen : public HapkePhotoModel {
     public:
       HapkeHen (Pvl &pvl);
       virtual ~HapkeHen() {};
       
+      void SetPhotoHg1(const double hg1);
+      //! Return photometric Hg1 value
+      inline double PhotoHg1 () const { return p_photoHg1; };
+
+      void SetPhotoHg2(const double hg2);
+      //! Return photometric Hg2 value
+      inline double PhotoHg2 () const { return p_photoHg2; };
+
     protected:
       virtual double PhotoModelAlgorithm (double phase, double incidence,
             double emission);
 
+    private:
+      double p_photoHg1;
+      double p_photoHg2;
+      double p_photoCott;
+      double p_photoCot2t;
+      double p_photoTant;
+      double p_photoSr;
+      double p_photoOsr;
   };
 };
 

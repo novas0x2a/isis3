@@ -2,8 +2,8 @@
 #define ImageOverlap_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/19 22:32:52 $
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/11/03 21:50:09 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -46,6 +46,7 @@ namespace Isis {
  *   @history 2007-11-02 Tracie Sucharski, Added HasSN method
  *    @history 2008-08-18 Steven Lambright - Updated to work with geos3.0.0
  *           instead of geos2. Mostly namespace changes.
+ *    @history 2008-11-03 Steven Lambright - Added the Read and Write methods
  * 
  */
 
@@ -53,6 +54,7 @@ namespace Isis {
     public:
       ImageOverlap ();
       ImageOverlap (std::string serialNumber, geos::geom::MultiPolygon &polygon);
+      ImageOverlap (std::istream &inputStream);
 
       virtual ~ImageOverlap();
 
@@ -81,6 +83,7 @@ namespace Isis {
       // Does serial number exist in this ImageOverlap
       bool HasSerialNumber(std::string &sn);
 
+      void Write(std::ostream &outputStream);
     private:
 
       std::vector<std::string> p_serialNumbers;

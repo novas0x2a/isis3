@@ -2,8 +2,8 @@
 #define Qisis_AdvancedTrackTool_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/06/25 23:52:59 $
+ * $Revision: 1.9 $
+ * $Date: 2008/12/24 17:14:29 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -23,14 +23,8 @@
  */
 #include "Tool.h"
 #include "TableMainWindow.h"
-#include <QAction>
-class QDialog;
-class QListWidget;
-class QMenu;
-class QLabel;
-class QStatusBar;
-class QListWidgetItem;
 
+class QAction;
 
 namespace Qisis {
   /**
@@ -47,6 +41,9 @@ namespace Qisis {
    * @internal
    *  @history 2008-06-25 Noah Hilt - Added enumeration for different column
    *           values.
+   *  @history 2008-10-14 Noah Hilt - Added Projected X and Y values to the table.
+   *  @history 2008-10-17 Noah Hilt - Added tooltips to certain items in the table
+   *           that did not have descriptive names.
    *
    */
   class AdvancedTrackTool : public Tool {
@@ -93,6 +90,8 @@ namespace Qisis {
         WEST_LON_360, //!< The 360 west longitude for this point
         EAST_LON_180, //!< The 180 east longitude for this point
         WEST_LON_180, //!< The 180 west longitude for this point
+        PROJECTED_X, //!< Projected X value for valid projections
+        PROJECTED_Y, //!< Projected Y value for valid projections
         RADIUS, //!< The radius for this point
         POINT_X, //!< The x value for this point
         POINT_Y, //!< The y value for this point

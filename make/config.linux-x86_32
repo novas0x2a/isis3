@@ -166,8 +166,11 @@ THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libblas.so.*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libgfortran.so.*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicuuc.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicudata.so*"
-THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libpq.so*"
+THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libpq.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libmysqlclient_r.so*"
+THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libssl.so*"
+THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libcrypto.so*"
+THIRDPARTYLIBS    += "/lib/libreadline.so*"
 
 #  Plugins
 THIRDPARTYPLUGINS += "$(ISIS3LOCAL)/plugins/"

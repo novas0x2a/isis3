@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/08/04 17:38:05 $
+ * $Revision: 1.10 $
+ * $Date: 2008/12/24 17:43:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -23,17 +23,13 @@
 #include <QApplication>
 #include <QMenuBar>
 #include <QPixmap>
-#include <QToolBar>
-#include <QToolButton>
 #include <QAction>
 #include <QHBoxLayout>
-#include <QValidator>
 #include <QMessageBox>
 
 #include "RubberBandTool.h"
 #include "CubeViewport.h"
 #include "EditTool.h"
-#include "MainWindow.h"
 
 namespace Qisis {
   /**

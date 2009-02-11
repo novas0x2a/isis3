@@ -36,7 +36,7 @@ endif
 #---------------------------------------------------------------------------
 ISISMAJOR        = 3
 ISISMINOR        = 1
-ISISMINORMINOR   = 17
+ISISMINORMINOR   = 18
 ISISVERSION      = $(ISISMAJOR).$(ISISMINOR).$(ISISMINORMINOR)
 ISISRELEASE      = REL_0_0
 

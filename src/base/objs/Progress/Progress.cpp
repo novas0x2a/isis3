@@ -4,8 +4,8 @@
 #include <sys/un.h>
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/01/30 22:12:22 $
+ * $Revision: 1.3 $
+ * $Date: 2008/12/12 17:17:52 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -120,6 +120,7 @@ namespace Isis {
   */
   void Progress::CheckStatus () {
     // Error check
+    //std::cout << p_currentStep << " / " << p_maximumSteps << std::endl;
     if (p_currentStep > p_maximumSteps) {
       string m = "Step exceeds maximumSteps in [Progress::CheckStatus]";
       throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
@@ -162,5 +163,33 @@ namespace Isis {
     p_currentStep++;
   
     return;
+  }
+
+  /**
+   * If the initial step size was a guess, it can be modified using this method. 
+   * For example, if you SetMaximumSteps(11) then call AddSteps(1) then the new 
+   * MaximumSteps is 12. The progress bar will not go backwards (it will not drop 
+   * from 10% to 5%). "steps" can be negative to remove steps.
+   * 
+   * 
+   * @param steps Amount to adjust the MaximumSteps by
+   */
+  void Progress::AddSteps(const int steps) {
+    if (steps == 0) {
+      string m = "Value for [steps] must not be zero in [Progress::AddSteps]";
+      throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
+    }
+
+    p_maximumSteps += steps;
+
+    if (p_currentStep > p_maximumSteps) {
+      string m = "Step exceeds maximumSteps in [Progress::AddSteps]";
+      throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
+    }
+
+    if (p_maximumSteps <= 0) {
+      string m = "Maximum steps must be greater than zero in [Progress::AddSteps]";
+      throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
+    }
   }
 } // end namespace isis

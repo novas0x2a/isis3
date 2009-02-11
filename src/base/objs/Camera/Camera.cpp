@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.13 $
- * $Date: 2008/08/08 20:03:44 $
+ * $Revision: 1.16 $
+ * $Date: 2009/01/05 22:42:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -48,6 +48,8 @@ namespace Isis {
     p_lines = dims["Lines"];
     p_samples = dims["Samples"];
     p_bands = dims["Bands"];
+
+    SetGeometricTilingHint();
 
     // Get the AlphaCube information
     p_alphaCube = new Isis::AlphaCube(lab);
@@ -1031,6 +1033,45 @@ namespace Isis {
   }
 
   /**
+   * Computes and returns the ground azimuth between the ground point and
+   * another point of interest, such as the subspacecraft point or the
+   * subsolar point.
+   *
+   * @param glat The latitude of the ground point
+   * @param glon The longitude of the ground point
+   * @param slat The latitude of the subspacecraft or subsolar point
+   * @param slon The longitude of the subspacecraft or subsolar point
+   *
+   * @return double The azimuth in degrees
+   */
+  double Camera::GroundAzimuth(double glat, double glon, 
+                               double slat, double slon) {
+    double a = (90.0 - slat) * Isis::PI / 180.0;
+    double b = (90.0 - glat) * Isis::PI / 180.0;
+    double c = (glon - slon) * Isis::PI / 180.0;
+    double absum = 0.5 * (a + b);
+    double cosabsum = cos(absum);
+    double sinabsum = sin(absum);
+    double abdif = 0.5 * (a - b);
+    double cosabdif = cos(abdif);
+    double sinabdif = sin(abdif);
+    double cotc = 1.0 / (tan(0.5 * c));
+    double tanabsum = cotc * cosabdif / cosabsum;
+    double tanabdif = cotc * sinabdif / sinabsum;
+    double ABsum = atan(tanabsum);
+    double ABdif = atan(tanabdif);
+    double A = ABsum + ABdif;
+    double sinc = sin(c) * sin(a) / sin(A);
+    c = asin(sinc);
+    double azimuth = A * 180.0 / Isis::PI + 90.0;
+    azimuth = 450.0 - azimuth;
+    if (azimuth > 360.0) {
+      azimuth = azimuth - 360.0;
+    }
+    return azimuth;
+  }
+
+  /**
    * Computes and returns the distance between two latitude/longitude points in
    * meters, given the radius of the sphere.  The method uses the haversine
    * formula to compute the distance.
@@ -1183,5 +1224,90 @@ namespace Isis {
 
     // Reset to band 1
     SetBand(1);
+  }
+
+  /**
+   * This method sets the best geometric tiling size for projecting from this 
+   * camera model. This is used by cam2map/ProcessRubberSheet. When cubes are 
+   * projected, an attempt is made to use linear equations to take large, square 
+   * chunks of data at a time to cull the amount of SetUniversalGround(...) calls 
+   * necessary to project a cube. If the chunk of data fails to be linear, then it 
+   * will be split up into 4 corners and each of the new chunks (corners) are 
+   * reconsidered up until endSize is reached - the endsize size will be 
+   * considered, it is inclusive. The startSize must be a multiple of 2 greater 
+   * than 2, and the endSize must be a multiple of 2 equal to or less than the 
+   * start size but greater than 2. 
+   * 
+   * @param startSize The tile size to start with; default 128
+   * @param endSize The tile size to give up at; default 8
+   */
+  void Camera::SetGeometricTilingHint(int startSize, int endSize) {
+    // verify the start size is a multiple of 2 greater than 2
+    int powerOf2 = 2;
+
+    if(endSize > startSize) {
+      iString message = "Camera::SetGeometricTilingHint End size must be smaller than the start size";
+      throw iException::Message(iException::Programmer, message, _FILEINFO_);
+    }
+
+    if(startSize < 4) {
+      iString message = "Camera::SetGeometricTilingHint Start size must be at least 4";
+      throw iException::Message(iException::Programmer, message, _FILEINFO_);
+    }
+
+    bool foundEnd = false;
+    while(powerOf2 > 0 && startSize != powerOf2) {
+      powerOf2 *= 2;
+
+      if(powerOf2 == endSize) foundEnd = true;
+    }
+    
+    // Didnt find a solution, the integer became negative first, must not be
+    //   a power of 2
+    if(powerOf2 < 0) {
+      iString message = "Camera::SetGeometricTilingHint Start size must be a power of 2";
+      throw iException::Message(iException::Programmer, message, _FILEINFO_);
+    }
+
+    if(!foundEnd) {
+      iString message = "Camera::SetGeometricTilingHint End size must be a power of 2 less than the start size, but greater than 2";
+      throw iException::Message(iException::Programmer, message, _FILEINFO_);
+    }
+
+    p_geometricTilingStartSize = startSize;
+    p_geometricTilingEndSize = endSize;
+  }
+
+  /**
+   * This will get the geometric tiling hint; these values are typically used for 
+   * ProcessRubberSheet::SetTiling(...). 
+   * 
+   * @param startSize Tiling start size
+   * @param endSize Tiling end size
+   */
+  void Camera::GetGeometricTilingHint(int &startSize, int &endSize) {
+    startSize = p_geometricTilingStartSize;
+    endSize = p_geometricTilingEndSize;
+  }
+
+  
+  /**
+   * This returns true if the current Sample() or Line() value 
+   * is outside of the cube (meaning the point must have been 
+   * extrapolated). 
+   * 
+   * 
+   * @return bool Point was extrapolated
+   */
+  bool Camera::InCube() {
+    if(Sample() < 0.5 || Line() < 0.5) {
+      return false;
+    }
+
+    if(Sample() > Samples() + 0.5 || Line() > Lines() + 0.5) {
+      return false;
+    }
+
+    return true;
   }
 } // end namespace isis

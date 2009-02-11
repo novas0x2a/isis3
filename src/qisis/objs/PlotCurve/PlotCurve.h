@@ -5,8 +5,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/19 15:32:24 $
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/10/07 16:30:34 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -54,7 +54,7 @@ namespace Qisis {
 
       bool p_markerIsVisible;//!< Are the markers visible?
 
-  private:
+  protected:
       QwtSymbol p_symbolStyle; //!< Plot symbols
       QList<QwtPlotMarker *> p_plotMarkers;//!< List of the plot markers
       QPen p_markerPen;//!< Pen used to draw plot line and markers

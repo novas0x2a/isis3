@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/07/09 17:55:52 $
+ * $Revision: 1.6 $
+ * $Date: 2008/09/30 22:28:38 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -56,6 +56,8 @@ namespace Isis {
    *   @history 2008-01-14 Debbie A. Cook, Changed call to Camera->SetUniversalGround in ComputeErrors
    *            to include the radius as an argument since the method has been overloaded to include
    *            radius.
+   *   @history 2008-09-12 Tracie Sucharski, Add method to return true/false
+   *                   for existence of Serial Number.
    *
    */
   class ControlPoint {
@@ -90,6 +92,9 @@ namespace Isis {
 
       //! Return the measurement for the given serial number
       const ControlMeasure &operator[](const std::string &serialNumber) const;
+
+      //! Does Serial Number exist in point
+      bool HasSerialNumber (std::string &serialNumber);
 
       //! Return the number of measurements in the control point
       int Size () const { return p_measure.size(); };

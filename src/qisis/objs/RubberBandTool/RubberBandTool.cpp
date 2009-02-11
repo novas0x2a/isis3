@@ -146,6 +146,10 @@ namespace Qisis {
         }
       }
       break;
+
+    case SegmentedLine:
+      paintVerticesConnected(painter);
+      break;
     }
   }
 
@@ -316,6 +320,7 @@ namespace Qisis {
     case RotatedRectangle:
       break;
 
+    case SegmentedLine:
     case Polygon:
       p_tracking = false;
       repaint();
@@ -376,6 +381,7 @@ namespace Qisis {
       }
       break;
 
+    case SegmentedLine:
     case Polygon:
       if (!p_tracking) {
         reset();
@@ -480,6 +486,7 @@ namespace Qisis {
       }
       break;
 
+    case SegmentedLine:
     case Polygon:
       break;
     }
@@ -534,6 +541,7 @@ namespace Qisis {
       emit measureChange();
       break;
 
+    case SegmentedLine:
     case Polygon:
       {
         if (p_mouseDown && p != p_vertices[ p_vertices.size() - 1 ]) {
@@ -641,6 +649,7 @@ namespace Qisis {
         }
         break;
 
+      case SegmentedLine:
       case Polygon:
         break;
       }
@@ -728,7 +737,7 @@ namespace Qisis {
     QList<QPoint> vertices = getFoundVertices();
 
     switch (p_bandingMode) {
-    case Angle: {
+      case Angle: {
         if (vertices.size() != 3) break;
 
         geos::geom::CoordinateSequence *points1 = new geos::geom::CoordinateArraySequence();
@@ -749,8 +758,9 @@ namespace Qisis {
         geometry = angle;
       }
       break;
-    case Circle:
-    case Ellipse: {
+
+      case Circle:
+      case Ellipse: {
         if (vertices.size() != 2) break;
         // A circle is an ellipse, so it gets no special case
         // Equation of an ellipse: (x-h)^2/a^2 + (y-k)^2/b^2 = 1 where
@@ -795,9 +805,10 @@ namespace Qisis {
                                                     );
       }
       break;
-    case Rectangle:
-    case RotatedRectangle:
-    case Polygon: {
+
+      case Rectangle:
+      case RotatedRectangle:
+      case Polygon: {
         if (vertices.size() < 3) break;
 
         geos::geom::CoordinateSequence *points = new geos::geom::CoordinateArraySequence();
@@ -812,13 +823,28 @@ namespace Qisis {
 
       }
       break;
-    case Line:
-      if (vertices.size() != 2) break;
-      geos::geom::CoordinateSequence *points = new geos::geom::CoordinateArraySequence();
-      points->add(geos::geom::Coordinate(vertices[0].x(), vertices[0].y()));
-      points->add(geos::geom::Coordinate(vertices[1].x(), vertices[1].y()));
-      geos::geom::LineString *line = Isis::globalFactory.createLineString(points);
-      geometry = line;
+
+      case Line: {
+        if (vertices.size() != 2) break;
+        geos::geom::CoordinateSequence *points = new geos::geom::CoordinateArraySequence();
+        points->add(geos::geom::Coordinate(vertices[0].x(), vertices[0].y()));
+        points->add(geos::geom::Coordinate(vertices[1].x(), vertices[1].y()));
+        geos::geom::LineString *line = Isis::globalFactory.createLineString(points);
+        geometry = line;
+      }
+      break;
+
+      case SegmentedLine: {
+        if (vertices.size() < 2) break;
+        geos::geom::CoordinateSequence *points = new geos::geom::CoordinateArraySequence();
+
+        for (int vertex = 0; vertex < vertices.size(); vertex++) {
+          points->add(geos::geom::Coordinate(vertices[vertex].x(), vertices[vertex].y()));
+        }
+
+        geos::geom::LineString *line = Isis::globalFactory.createLineString(points);
+        geometry = line;
+      }
       break;
     }
 
@@ -883,19 +909,11 @@ namespace Qisis {
   }
 
   /** 
-   * This method returns the mouse button  modifier if it is a 
-   * valid point. 
-   * 
-   * 
+   * This method returns the mouse button  modifier 
+   *  
    * @return MouseButton Mouse button modifier on last release
    */
   Qt::MouseButton RubberBandTool::getMouseButton() {
-    if(!figureIsPoint()) {
-      QMessageBox::information((QWidget *)parent(),
-                               "Error","**PROGRAMMER ERROR** Can Not Get Mouse Button for Non-Point");
-      return Qt::MouseButton();
-    }
-
     return p_mouseButton;
   }
 
@@ -921,6 +939,10 @@ namespace Qisis {
     case Circle: 
     case Ellipse:
       complete = (p_vertices.size() == 1 && p_tracking) || (p_vertices.size() == 2);
+      break;
+
+    case SegmentedLine:
+      complete = (p_vertices.size() > 1 && !p_tracking);
       break;
 
     case Polygon:
@@ -973,6 +995,11 @@ namespace Qisis {
       }
       break;
 
+    case SegmentedLine: {
+        valid = vertices.size() > 1;
+      }
+      break;
+
     case Polygon: {
         // For polygons, we must revert back to using geos
         geos::geom::Geometry *poly = getGeometry();
@@ -981,6 +1008,7 @@ namespace Qisis {
       }
       break;
     }
+
     return valid;
   }
 
@@ -999,6 +1027,7 @@ namespace Qisis {
     case Circle: 
     case Ellipse: 
     case Polygon: 
+    case SegmentedLine:
       isPoint = false;
       break;
 

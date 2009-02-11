@@ -1,9 +1,6 @@
 #ifndef BrowseDialog_h
 #define BrowseDialog_h
-#include <QFileDialog>
-#include <QtGui>
-#include <QSettings>
-#include "Filename.h"
+
 #include "FileDialog.h"
 
 namespace Qisis {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: mdiscal.xml,v 1.11 2008/09/18 07:45:10 kbecker Exp $ -->
+<!-- $Id: mdiscal.xml,v 1.13 2008/11/25 16:32:57 kbecker Exp $ -->
 
 <application name="mdiscal" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
@@ -74,14 +74,18 @@
     interior. <br /><br />
     Absolute Coefficient Correction:<br />
     This converts the DN values from responsivity to radiance values.
-
+      <p>
+          The MODEL dark current option cannot be used if the exposure time 
+          exceeds 1 second.  In this case, the LINEAR model is selected and a 
+          message is issued to the user.
+      </p>
     <p>
       Note that there are some extreme cases where an image could not be 
       radiometrically calibrated.  When there is more than two factors of 
       binning, FPU or PIXEL, then there are no valid dark pixel colums.  For 
-      this case, calibrations using STANDARD or LINEAR cannot be used., however, 
+      this case, calibrations using STANDARD or LINEAR cannot be used, however, 
       the MODEL can.  But, the MODEL cannot be used if the exposure time is 
-      exceeds 2 seconds.  And in this case, the image cannot be calibrated.  
+      exceeds 1 seconds.  And in this case, the image cannot be calibrated.  
       When these conditions are detected, a message is issued, but calibration 
       continues using either the MODEL or NONE as the calibration mode.
     </p>
@@ -286,35 +290,41 @@ DN_lin(x,y,f,b) is linearized dark- and smear-corrected DN, and
 Flat(x,y,f,b) is the value in the appropriate flat-field image.
 
 
-(6) Conversion from DNs to radiance
-===================================
-
-The value that relates corrected DN's measured per unit time to radiance
-is the responsivity. Responsivity is modeled as a function of which camera
-is being used (MDIS-WAC or MDIS-NAC as indicated by the keyword
-INSTRUMENT_ID), its binning state (as indicated by the keyword
-MESS:FPU_BIN), and in the case of the WAC the filter number (as indicated
-by the keyword FILTER_NUMBER). The coefficients used to calculate the
-responsivity are in the 'RESPONSIVITY' directory. For a camera, binning
-state, and filter, the responsivity is calculated from uncalibrated CCD
-temperature (as indicated by the keyword MESS:CCD_TEMP) as follows:
-
-Resp(f,T,b) = R(f,t=-30.3C,b) *
-              [correction_offset(f,b) + T(CCD) * correction_slope(f,b)]
+(6) Conversion from DNs to radiance 
+ ===================================
+The value that relates corrected DN's measured per unit time to radianceis the
+responsivity. Responsivity is modeled as a function of which camera is being
+used (MDIS-WAC or MDIS-NAC as indicated by the keyword INSTRUMENT_ID), its
+binning state (as indicated by the keyword MESS:FPU_BIN), and in the case of the
+WAC the filter number (as indicated by the keyword FILTER_NUMBER). The
+coefficients used to calculate the responsivity are in the 'RESPONSIVITY'
+directory. For a camera, binning state, and filter, the responsivity is
+calculated from uncalibrated CCD temperature (as indicated by the keyword
+MESS:CCD_TEMP) as follows:
+ 
+Resp(T,b) = R(t=-30.3C,b) * [correction_offset(b) + T(CCD) * correction_coef1(b)
++ T(CCD)^2 * correction_coef2(b)]
 
 where
 
-Resp(f,T,b) is the reponsivity in units of corrected DN / ms / (W / (m**2
-microns**1 sr**1)) in filter f and binning state b and CCD temperature T,
+Resp(T,b) is responsivity at CCD temperature T in binning state b,
 
-R(t=-30.3C,b) is responsivity at a reference CCD temperature of 1060 DN (-
-30.3C),
+T(CCD) is raw CCD temperature in units of DNs,
 
-correction_offset(f,b) is camera- and filter-dependent temperature
-correction offset for filter f and binning state b, and
+R(t=-30.3C,b) is responsivity in binning state b at CCD temperature of 1060 DN
+(-30.3C),
 
-correction_slope(f,b) is camera- and filter-dependent temperature
-correction slope for filter f and binning state b.
+correction_offset(b) is the camera-dependent temperature correction offset for
+binning state b,
+
+correction_coef1(b) is the camera-dependent temperature correction first-order
+coefficient for binning state b.
+
+correction_coef2(b) is the camera-dependent temperature correction second-order
+coefficient for binning state b.
+
+The temperature correction defaults to unity at CCD temperature of 1060 DN
+(-30.3C).
 
 To apply responsivity to obtain radiance L, the expression is
 
@@ -420,6 +430,17 @@ in the SOLAR directory.
     </change>
     <change name="Kris Becker" date="2008-09-18"> 
       Very minor change of watts unit expressed as W instead of w.
+    </change>
+    <change name="Kris Becker" date="2008-11-19"> 
+        Changed the exposure threshold for the dark current model from 2 seconds 
+        to 1 second and it now uses the LINEAR model instead of the STANDARD 
+        model in this case;  Implemented new quadratic responsivity equation for
+        both WAC and NAC instruments that adds an additional term to the 
+        responsivity files; updated documentation.
+    </change>
+    <change name="Kris Becker" date="2008-11-25"> 
+        Corrected inclusion of dark current model file to SourceProductId when 
+        applicable; bumped the version number to 3.
     </change>
   </history>
 

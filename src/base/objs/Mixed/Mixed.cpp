@@ -1,5 +1,6 @@
 #include <cmath>
 #include "Mixed.h"
+#include "SpecialPixel.h"
 #include "iException.h"
 
 namespace Isis {
@@ -78,7 +79,7 @@ namespace Isis {
     // of the growing pprime term in the denominator.
 
     if (aden > p_anum*p_normThresh) {
-      albedo = 0.0;
+      albedo = NULL8;
     }
     else {
       albedo = dn * p_anum / aden + p_rhobar * (p_psurfref - p_anum / aden * psurf);

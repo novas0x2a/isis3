@@ -2,8 +2,8 @@
 #define Affine_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/18 17:03:49 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/10/29 23:36:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -64,6 +64,9 @@ namespace Isis {
  *  @history 2007-07-12  Debbie A. Cook, Added methods Coefficients
  *           and InverseCoefficients
  *  @history 2008-06-18 Christopher Austin - Added documentation
+ *  @history 2008-10-29 Steven Lambright - Corrected usage of std::vector,
+ *                      problem pointed out by "novas0x2a" (Support Forum
+ *                      Member)
  * 
  */                                                                       
 

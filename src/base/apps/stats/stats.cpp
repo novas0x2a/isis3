@@ -57,13 +57,38 @@ void IsisMain() {
 
   // Write the results to the output file if the user specified one
   if (ui.WasEntered("TO")) {
-    Pvl temp;
-    temp.AddGroup(results);
-    temp.Write(ui.GetFilename("TO"));
+    string outFile = Filename(ui.GetFilename("TO")).Expanded();
+    ofstream os;
+    bool writeHeader = false;
+    //write the results in the requested format.
+    if (ui.GetString("FORMAT") == "PVL") {
+      Pvl temp;
+      temp.AddGroup(results);
+      temp.Write(outFile);
+    } else {
+      //if the format was not PVL, write out a flat file.
+      os.open(outFile.c_str(),ios::out);
+        writeHeader = true;
+    } 
+    if(writeHeader) {
+      for(int i = 0; i < results.Keywords(); i++) {
+        os << results[i].Name();
+        if(i < results.Keywords()-1) {
+          os << ",";
+        }
+      }
+      os << endl;
+    }
+    for(int i = 0; i < results.Keywords(); i++) {
+      os << (string)results[i];
+      if(i < results.Keywords()-1) {
+        os << ",";
+      }
+    }
+    os << endl;
   }
 
   delete stats;
-
   // Write the results to the log
   Application::Log(results);
 }

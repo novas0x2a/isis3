@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2007/05/08 22:16:33 $
+ * $Revision: 1.6 $
+ * $Date: 2008/11/13 15:21:02 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -180,13 +180,28 @@ namespace Isis {
     if (value == p_input[0]) return p_output[0];
     if (value == p_input[p_pairs-1]) return p_output[p_pairs-1];
 
-    // Ok find the surrounding pairs
-    int i = 1;
-    while (value > p_input[i]) i++;
+    // Ok find the surrounding pairs with a binary search
+    int start = 0;
+    int end = p_pairs-1;
+    while (start != end) {
+      int middle = (start + end) / 2;
+
+      if(middle == start) {
+        end = middle;
+      }
+      else if(value < p_input[middle]) {
+        end = middle;
+      }
+      else {
+        start = middle;
+      }
+    }
+
+    end = start+1;
 
     // Apply the stretch
-    double slope = (p_output[i] - p_output[i-1]) / (p_input[i] - p_input[i-1]);
-    return slope * (value - p_input[i]) + p_output[i];
+    double slope = (p_output[end] - p_output[start]) / (p_input[end] - p_input[start]);
+    return slope * (value - p_input[end]) + p_output[end];
   }
 
  /**

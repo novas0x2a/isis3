@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2008/06/18 16:46:16 $
+ * $Revision: 1.3 $
+ * $Date: 2008/10/23 15:44:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -40,6 +40,7 @@ namespace Isis {
    *  
    * @internal
    *   @history 2008-06-18 Steven Lambright Added documentation
+   *   @history 2008-10-23 Steven Lambright Added optimizations, fixed misc. bugs
    */
   class PushFrameCameraDetectorMap : public CameraDetectorMap {
   public:
@@ -66,6 +67,7 @@ namespace Isis {
       p_flippedFramelets = true;
       p_timeAscendingFramelets = true;
       p_nframelets = 0;
+      p_bandStartDetector = 0;
     }
 
     //! Destructor
@@ -158,13 +160,25 @@ namespace Isis {
      *  In some cases, the top framelet from the raw instrument data has been
      *  moved to the bottom of the image and this compensates for that.
      *  
-     *  @param frameletsFlipped True if framelets flipped
+     *  @param frameletsFlipped False if framelets flipped
      *  @param nframelets Number of framelets in each band, ignored
      *                    if frameletsFlipped is set to false
      */
     void SetFlippedFramelets(bool frameletsFlipped, int nframelets) {
-      p_flippedFramelets = frameletsFlipped;
+      p_timeAscendingFramelets = !frameletsFlipped;
       p_nframelets = nframelets;
+    }
+
+    /** Mirrors the each framelet in the file
+     *  
+     *  Use this method to change which direction the framelets are geometrically
+     *  placed. If the first line in the framelet has been changed to the last line
+     *  in the framelet, then this should be true (DEFAULT).
+     * 
+     * @param frameletsFlipped True if geometric flip in the framelet
+     */
+    void SetGeometricallyFlippedFramelets(bool frameletsFlipped) {
+      p_flippedFramelets = frameletsFlipped;
     }
 
     /**
@@ -181,7 +195,7 @@ namespace Isis {
      * @return int
      */
     int TotalFramelets() const
-      { return (int) (p_camera->Lines() / (p_frameletHeight / LineScaleFactor())); };
+      { return (int) (p_camera->ParentLines() / (p_frameletHeight / LineScaleFactor())); };
 
 
     /**
@@ -204,6 +218,8 @@ namespace Isis {
      * @return int Number of lines in a framelet
      */
     int frameletHeight() const { return p_frameletHeight; };
+
+    bool timeAscendingFramelets() { return p_timeAscendingFramelets; }
 
   private:
     double p_etStart;      //!<Starting time at the top of the 1st parent line

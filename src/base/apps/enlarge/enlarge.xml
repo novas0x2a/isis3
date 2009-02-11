@@ -49,6 +49,14 @@
     <change name="Steven Koechle" date="2008-05-28">
         Fixed problems with the way the Alpha Cube was handled
     </change>
+    <change name="Christopher Austin" date="2008-12-11">
+      Changed the parameter names smag/lmag to sscale/lscale for consistancy
+      with reduce.
+    </change>
+    <change name="Steven Lambright" date="2008-12-22"> 
+      The "Scale" keyword in the Projection group in the labels is now being 
+      updated if this program is run on a projected cube. 
+    </change>
   </history>
 
   <category>
@@ -85,7 +93,7 @@
     </group>
 
     <group name="Scaling">
-      <parameter name="SMAG">
+      <parameter name="SSCALE">
         <type>double</type>
         <brief>Sample magnification factor</brief>
         <description>
@@ -95,7 +103,7 @@
         <minimum inclusive="yes">1.0</minimum>
       </parameter>
 
-      <parameter name="LMAG">
+      <parameter name="LSCALE">
         <type>double</type>
         <brief>Line magnification factor</brief>
         <description>
@@ -158,11 +166,11 @@
         <commandLine>
 	  from= peaks.cub
 	  to=enlargedPeaks.cub
-	  smag=2
-	  lmag=1
+	  sscale=2
+	  lscale=1
 	</commandLine>
 	<description>
-	  As one can see, the sample magnitude is twice the line magnitude. 
+	  As one can see, the sample scale is twice the line scale. 
 	  Since no interpolation has been specified, the application will 
 	  default to nearest neighbor.
 	</description>

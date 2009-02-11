@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.13 $
- * $Date: 2008/07/11 22:19:47 $
+ * $Revision: 1.14 $
+ * $Date: 2008/11/28 21:03:20 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -761,4 +761,54 @@ namespace Isis {
      ComputeSolarLongitude(p_et);
      return p_solarLongitude;
    }
+
+
+ /**
+  * Returns true if the kernel group has kernel files
+  *
+  * @param lab Label containing Instrument and Kernels groups.
+  * @return bool - status of kernel files in the kernel group
+  */
+  bool Spice::HasKernels(Isis::Pvl &lab) {
+
+    // Get the kernel group and check main kernels
+    Isis::PvlGroup kernels = lab.FindGroup("Kernels",Isis::Pvl::Traverse);
+    std::vector<string> keywords;
+    keywords.push_back("TargetPosition");
+
+    if (kernels.HasKeyword("SpacecraftPosition")) {
+      keywords.push_back("SpacecraftPosition");
+    }
+    else {
+      keywords.push_back("InstrumentPosition");
+    }
+
+    if (kernels.HasKeyword("SpacecraftPointing")) {
+      keywords.push_back("SpacecraftPointing");
+    }
+    else {
+      keywords.push_back("InstrumentPointing");
+    }
+
+    if (kernels.HasKeyword("Frame")) {
+      keywords.push_back("Frame");
+    }
+
+    if (kernels.HasKeyword("Extra")) {
+      keywords.push_back("Extra");
+    }
+
+    Isis::PvlKeyword key;
+    for (int ikey = 0; ikey < (int) keywords.size(); ikey++) {
+      key = kernels[ikey];
+
+      for (int i=0; i<key.Size(); i++) {
+        if (key[i] == "") return false;
+        if (iString(key[i]).UpCase() == "NULL") return false;
+        if (iString(key[i]).UpCase() == "NADIR") return false;
+        if (iString(key[i]).UpCase() == "TABLE") return false;
+      }
+    }
+    return true;
+  }
 }

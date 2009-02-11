@@ -36,11 +36,11 @@ namespace Isis {
     // Clear statistics
     p_Total = 0;
     p_Success = 0;
-    p_PatternChipNotEnoughData.clear();
+    p_PatternChipNotEnoughValidData.clear();
     p_PatternZScoreNotMet.clear();
     p_FitChipNoData.clear();
     p_FitChipToleranceNotMet.clear();
-    p_SurfaceModelNotEnoughData = 0;
+    p_SurfaceModelNotEnoughValidData = 0;
     p_SurfaceModelSolutionInvalid = 0;
     p_SurfaceModelToleranceNotMet = 0;
     p_SurfaceModelDistanceInvalid = 0;
@@ -362,8 +362,8 @@ namespace Isis {
 
       // See if the pattern chip has enough good data
       if (!subpattern.IsValid(p_patternValidPercent)) {
-        p_PatternChipNotEnoughData[sp]++;
-        return PatternChipNotEnoughData;
+        p_PatternChipNotEnoughValidData[sp]++;
+        return PatternChipNotEnoughValidData;
       }
   
         // See if the pattern passes the z-score test
@@ -443,8 +443,8 @@ namespace Isis {
         }
       }
       if (samps.size() < 7) { 
-        p_SurfaceModelNotEnoughData++;
-        return SurfaceModelNotEnoughData;
+        p_SurfaceModelNotEnoughValidData++;
+        return SurfaceModelNotEnoughValidData;
       }
       if (ModelSurface(samps,lines,fits)) {
         p_SurfaceModelSolutionInvalid++;
@@ -578,8 +578,8 @@ namespace Isis {
 
     int n = samples.size();
 
-    p_PatternChipNotEnoughData.clear();
-    p_PatternChipNotEnoughData.resize(n, 0);
+    p_PatternChipNotEnoughValidData.clear();
+    p_PatternChipNotEnoughValidData.resize(n, 0);
     p_PatternZScoreNotMet.clear();
     p_PatternZScoreNotMet.resize(n, 0);
     p_FitChipNoData.clear();
@@ -622,9 +622,9 @@ namespace Isis {
     stats += Isis::PvlKeyword("Failure", p_Total - p_Success);
     pvl.AddGroup(stats);
 
-    for (int i=0; i< (int)p_PatternChipNotEnoughData.size(); i++) {
+    for (int i=0; i< (int)p_PatternChipNotEnoughValidData.size(); i++) {
       PvlGroup grp("PatternChip"+iString(i+1));
-      grp += PvlKeyword("PatternNotEnoughData", p_PatternChipNotEnoughData[i]);
+      grp += PvlKeyword("PatternNotEnoughValidData", p_PatternChipNotEnoughValidData[i]);
       grp += PvlKeyword("PatternZScoreNotMet", p_PatternZScoreNotMet[i]);
       grp += PvlKeyword("FitChipNoData", p_FitChipNoData[i]);
       grp += PvlKeyword("FitChipToleranceNotMet", p_FitChipToleranceNotMet[i]);
@@ -632,7 +632,7 @@ namespace Isis {
     };
 
     PvlGroup model("SurfaceModel");
-    model += PvlKeyword("SurfaceModelNotEnoughData", p_SurfaceModelNotEnoughData);
+    model += PvlKeyword("SurfaceModelNotEnoughValidData", p_SurfaceModelNotEnoughValidData);
     model += PvlKeyword("SurfaceModelSolutionInvalid", p_SurfaceModelSolutionInvalid);
     model += PvlKeyword("SurfaceModelToleranceNotMet", p_SurfaceModelToleranceNotMet);
     model += PvlKeyword("SurfaceModelDistanceInvalid", p_SurfaceModelDistanceInvalid);

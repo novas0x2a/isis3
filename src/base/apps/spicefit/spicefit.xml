@@ -28,6 +28,10 @@
     <change name="Steven Koechle" date="2007-10-05">
       Added check to see if cube has existing polygon, if so delete it.
     </change>
+    <change name="Debbie A. Cook" date="2008-12-08">
+      Added code to write InstrumentPointing keyword value as table in kernels 
+      group in case the kernels are not already attached.
+    </change>
   </history>
 
   <groups>

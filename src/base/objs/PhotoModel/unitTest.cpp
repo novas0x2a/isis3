@@ -61,6 +61,28 @@ int main () {
   catch (iException &e) {
     e.Report(false);
   }
+
+  std::cout << "Test PhtAcos ..." << std::endl;
+  try {
+  double result;
+
+  result = PhotoModel::PhtAcos(1.0);
+  std::cout << "Results from PhtAcos = " << result << std::endl;             
+  std::cout << "        Actual value = " << 0      << std::endl
+      << std::endl;                                                           
+  result = PhotoModel::PhtAcos(.999999939);                        
+  std::cout << "Results from PhtAcos = " << result      << std::endl;
+  std::cout << "        Actual value = " << 0.000349285 << std::endl
+      << std::endl;                                                
+  result = PhotoModel::PhtAcos(-.861393443);
+  std::cout << "Results from PhtAcos = " << result      << std::endl;
+  std::cout << "        Actual value = " << 2.608802982 << std::endl
+      << std::endl;
+  }
+  catch (iException &e) {
+    e.Report();
+  }
+
   std::cout << std::endl;
 
   return 0;

@@ -21,7 +21,7 @@ int main () {
       std::endl << std::endl;
 
   PvlGroup algp("Algorithm");
-  algp += PvlKeyword("Name","Moonpr");
+  algp += PvlKeyword("Name","LunarLambertMcEwen");
 
   PvlObject op("PhotometricModel");
   op.AddGroup(algp);

@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2008/07/08 22:14:59 $                                                                 
+ * $Revision: 1.10 $                                                             
+ * $Date: 2008/12/15 18:43:52 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -52,6 +52,11 @@ namespace Isis {
    *   @history 2008-06-18 Stuart Sides - Fixed doc error
    *   @history 2008-07-08 Steven Lambright - Changed memory cleanup; now uses
    *                                       atexit
+   *   @history 2008-10-30 Steven Lambright - iException::Message now takes a
+   *            const char* for the filename, instead of a chat*, issue pointed
+   *            out by "novus0x2a" (Support Board Member)
+   *   @history 2008-12-15 Steven Lambright - iException::what no longer returns
+   *            deleted memory.
    */
   class iException : public std::exception {
     public:
@@ -71,7 +76,7 @@ namespace Isis {
         System     = 255
       };
 
-      static iException &Message(errType t, const std::string &m, char *f, int l);
+      static iException &Message(errType t, const std::string &m, const char *f, int l);
 
       const char *what() const throw();
       errType Type() const;
@@ -109,23 +114,33 @@ namespace Isis {
           std::string filename;
           int lineNumber;
       };
-      //! 
+
+      //! List of iExceptions
       static QList<Info> p_list;
 
 	  static void createStackTrace();
       std::string enumString(errType t) const;
       errType enumString(const std::string &s) const;
 
+      void describe();
+
       /** 
        * True or false, depending on whether the filename and line number
        * should be reported in the output.
        */
       bool p_reportFileLine;
+
       /**
        * True or false, depending on whether the exception should be output in
        * PVL format.
        */
       bool p_pvlFormat;
+
+      /**
+       * This is the return value of what(). Calculate and keep track of it 
+       * in order to prevent the caller from using deleted memory. 
+       */
+      std::string p_what;
    };
 };
 

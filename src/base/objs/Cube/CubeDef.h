@@ -1,7 +1,7 @@
 /**                                                                     
  * @file                                                                
- * $Revision: 1.1.1.1 $                                                           
- * $Date: 2006/10/31 23:18:06 $                                                               
+ * $Revision: 1.2 $                                                           
+ * $Date: 2008/10/30 16:52:30 $                                                               
  *                                                                      
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -21,7 +21,7 @@
  *   http://www.usgs.gov/privacy.html.                                  
  */                                                                     
 
-#if !defined(IsisCubeDef_h)
+#ifndef IsisCubeDef_h
 #define IsisCubeDef_h
 
 #include <string>
@@ -35,7 +35,7 @@
 #include "Endian.h"
 #include "CubeFormat.h"
 
-typedef struct IsisCubeDef {
+struct IsisCubeDef {
   std::string labelFile;
   Isis::Pvl label;
   int labelBytes;

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/08/14 23:24:46 $
+ * $Revision: 1.7 $
+ * $Date: 2008/12/17 17:27:37 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -368,6 +368,7 @@ namespace Isis {
     p_inputMinimum.clear();
     p_inputMiddle.clear();
     p_inputMaximum.clear();
+
     for (unsigned int i=0; i<InputCubes.size(); i++) {
       // Get the manual stretch parameters if needed
       string strType = Application::GetUserInterface().GetString("STRETCH");
@@ -574,13 +575,13 @@ namespace Isis {
     p_pixelType = pixelIn;
 
     if (pixelIn == Isis::UnsignedByte)
-      SetOutputRange((double)0, (double)255);
+      SetOutputRange((double)VALID_MIN1, (double)VALID_MAX1);
     else if (pixelIn == Isis::UnsignedWord)
-      SetOutputRange((double)0, (double)65535);
+      SetOutputRange((double)VALID_MINU2, (double)VALID_MAXU2);
     else if (pixelIn == Isis::SignedWord)
-      SetOutputRange((double)-32768, (double)32767);
+      SetOutputRange((double)VALID_MIN2, (double)VALID_MAX2);
     else if (pixelIn == Isis::Real)
-      SetOutputRange(-((double)FLT_MAX), (double)FLT_MAX);
+      SetOutputRange(-DBL_MAX, DBL_MAX);
     else{
       string message =
         "Unsupported bit type [ProcessExport::SetOutputType]";

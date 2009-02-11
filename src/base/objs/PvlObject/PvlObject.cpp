@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/07/10 15:04:01 $
+ * $Revision: 1.9 $
+ * $Date: 2008/10/01 01:14:27 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -551,18 +551,18 @@ namespace Isis {
     if (outTemplate.Comments() > 0) {
       for (int k=0; k<outTemplate.Comments(); k++) {
         for (int l=0; l<object.Indent(); l++) os << " ";
-        os << outTemplate.Comment(k) << endl;
+        os << outTemplate.Comment(k) << object.GetFormat()->FormatEOL();
       }
-      os << endl;
+      os << object.GetFormat()->FormatEOL();
     }
 
     // Output the object comments and name
-    os << object.GetNameKeyword() << endl;
+    os << object.GetNameKeyword() << object.GetFormat()->FormatEOL();
     object.SetIndent(object.Indent()+2);
 
     // Output the keywords in this Object
     if (object.Keywords() > 0) {
-      os << (Isis::PvlContainer &) object << endl;
+      os << (Isis::PvlContainer &) object << object.GetFormat()->FormatEOL();
     }
 
     // This number keeps track of the number of objects have been written
@@ -572,14 +572,14 @@ namespace Isis {
     for (int i=0; i<outTemplate.Objects(); i++) {
       for (int j=0; j<object.Objects(); j++) {
         if (outTemplate.Object(i).Name() != object.Object(j).Name()) continue;
-        if (j == 0 && object.Keywords() > 0) os << endl;
+        if (j == 0 && object.Keywords() > 0) os << object.GetFormat()->FormatEOL();
         object.Object(j).SetIndent(object.Indent());
         object.Object(j).SetFormatTemplate(outTemplate.Object(i));
         object.Object(j).SetFormat(object.GetFormat());
-        os << object.Object(j) << endl;
+        os << object.Object(j) << object.GetFormat()->FormatEOL();
         object.Object(j).SetFormat(NULL);
         object.Object(j).SetIndent(0);
-        if (++numObjects < object.Objects()) os << endl;
+        if (++numObjects < object.Objects()) os << object.GetFormat()->FormatEOL();
       }
     }
 
@@ -587,13 +587,13 @@ namespace Isis {
     // format template pvl
     for (int i=0; i<object.Objects(); i++) {
       if (outTemplate.HasObject(object.Object(i).Name())) continue;
-      if (i == 0 && object.Keywords() > 0) os << endl;
+      if (i == 0 && object.Keywords() > 0) os << object.GetFormat()->FormatEOL();
       object.Object(i).SetIndent(object.Indent());
       object.Object(i).SetFormat(object.GetFormat());
-      os << object.Object(i) << endl;
+      os << object.Object(i) << object.GetFormat()->FormatEOL();
       object.Object(i).SetFormat(NULL);
       object.Object(i).SetIndent(0);
-      if (++numObjects < object.Objects()) os << endl;
+      if (++numObjects < object.Objects()) os << object.GetFormat()->FormatEOL();
     }
 
     // This number keeps track of the number of Groups that have been written
@@ -604,14 +604,14 @@ namespace Isis {
       for (int j=0; j<object.Groups(); j++) {
         if (outTemplate.Group(i).Name() != object.Group(j).Name()) continue;
         if ((numGroups == 0) && 
-            (object.Objects() > 0 || object.Keywords() > 0)) os << endl;
+            (object.Objects() > 0 || object.Keywords() > 0)) os << object.GetFormat()->FormatEOL();
         object.Group(j).SetIndent(object.Indent());
         object.Group(j).SetFormatTemplate(outTemplate.Group(i));
         object.Group(j).SetFormat(object.GetFormat());
-        os << object.Group(j) << endl;
+        os << object.Group(j) << object.GetFormat()->FormatEOL();
         object.Group(j).SetFormat(NULL);
         object.Group(j).SetIndent(0);
-        if (++numGroups < object.Groups()) os << endl;
+        if (++numGroups < object.Groups()) os << object.GetFormat()->FormatEOL();
       }
     }
 
@@ -619,13 +619,13 @@ namespace Isis {
     for (int i=0; i<object.Groups(); i++) {
       if (outTemplate.HasGroup(object.Group(i).Name())) continue;
       if ((numGroups == 0) && 
-          (object.Objects() > 0 || object.Keywords() > 0)) os << endl;
+          (object.Objects() > 0 || object.Keywords() > 0)) os << object.GetFormat()->FormatEOL();
       object.Group(i).SetIndent(object.Indent());
       object.Group(i).SetFormat(object.GetFormat());
-      os << object.Group(i) << endl;
+      os << object.Group(i) << object.GetFormat()->FormatEOL();
       object.Group(i).SetFormat(NULL);
       object.Group(i).SetIndent(0);
-      if (++numGroups < object.Groups()) os << endl;
+      if (++numGroups < object.Groups()) os << object.GetFormat()->FormatEOL();
     }
 
     // Output the end of the object

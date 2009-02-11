@@ -1,12 +1,24 @@
 #include <cmath>
 #include "AlbedoAtm.h"
-#include "NumericalMethods.h"
+#include "NumericalApproximation.h"
 #include "iException.h"
 
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
 #define MAX(x,y) (((x) > (y)) ? (x) : (y))
 
 namespace Isis {
+  /**
+   * Constructs AlbedoAtm object using a Pvl, PhotoModel, and
+   * AtmosModel
+   * @param pvl 
+   * @param pmodel 
+   * @param amodel 
+   *  
+   * @internal 
+   *   @history 2008-11-05 Jeannie Walldren - Modified references
+   *          to NumericalMethods class and replaced Isis::PI with
+   *          PI since this is in Isis namespace.
+   */
   AlbedoAtm::AlbedoAtm (Pvl &pvl, PhotoModel &pmodel, AtmosModel &amodel) :
       NormModel(pvl,pmodel,amodel) {
     PvlGroup &algo = pvl.FindObject("NormalizationModel")
@@ -25,13 +37,11 @@ namespace Isis {
     GetPhotoModel()->SetStandardConditions(false);
 
     // Get reference hemispheric albedo
-    GetAtmosModel()->PhtGetAhTable();
-    NumericalMethods::r8splint(GetAtmosModel()->AtmosIncTable(),
-                               GetAtmosModel()->AtmosAhTable(), 
-                               GetAtmosModel()->AtmosAhTable2(),
-	                             GetAtmosModel()->AtmosNinc(),
-                               p_normIncref,&p_normAhref);
-    p_normMunotref = cos((Isis::PI/180.0)*p_normIncref);
+    GetAtmosModel()->GenerateAhTable();
+
+    p_normAhref = (GetAtmosModel()->AtmosAhSpline()).Evaluate(p_normIncref, NumericalApproximation::Extrapolate);
+
+    p_normMunotref = cos((PI/180.0)*p_normIncref);
 
     // Now calculate atmosphere at standard conditions
     GetAtmosModel()->SetStandardConditions(true);
@@ -41,6 +51,21 @@ namespace Isis {
     GetAtmosModel()->SetStandardConditions(false);
   }
 
+  /** 
+   * @param phase Value of phase angle.
+   * @param incidence  Value of incidence angle.
+   * @param emission Value of emission angle.
+   * @param demincidence
+   * @param dememission
+   * @param dn
+   * @param albedo
+   * @param mult 
+   * @param base 
+   * @internal 
+   *   @history 2008-11-05 Jeannie Walldren - Modified references
+   *          to NumericalMethods class and replaced Isis::PI with
+   *          PI since this is in Isis namespace.
+   */
   void AlbedoAtm::NormModelAlgorithm (double phase, double incidence, 
       double emission, double demincidence, double dememission, double dn,
       double &albedo, double &mult, double &base)
@@ -64,13 +89,9 @@ namespace Isis {
     psurf = GetPhotoModel()->CalcSurfAlbedo(phase,demincidence,
         dememission);
 
-    NumericalMethods::r8splint(GetAtmosModel()->AtmosIncTable(),
-                               GetAtmosModel()->AtmosAhTable(),
-                               GetAtmosModel()->AtmosAhTable2(),
-	                             GetAtmosModel()->AtmosNinc(),
-                               incidence,&ahInterp);
+    ahInterp = (GetAtmosModel()->AtmosAhSpline()).Evaluate(incidence, NumericalApproximation::Extrapolate);
 
-    munot = cos(incidence*(Isis::PI/180.0));
+    munot = cos(incidence*(PI/180.0));
     GetAtmosModel()->CalcAtmEffect(phase,incidence,emission,&pstd,&trans,&trans0,&p_normSbar);
 
     // With model at actual geometry, calculate rho from dn

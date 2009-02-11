@@ -32,49 +32,53 @@
     <change name="Christopher Austin" date="2008-08-01">
       Added Control Point IDs to the NoLatLon flat file.
     </change>
+    <change name="Christopher Austin" date="2008-10-28">
+      Greatly optimized the NoLatLon option.
+    </change>
+    <change name="Steven Lambright" date="2008-11-24">
+      Renamed parameters: "LIST" is now "FROMLIST" and "CONTROL" is now "NETWORK"
+    </change>
   </history>
 
   <category>
-    <categoryItem>Utility</categoryItem>
+    <categoryItem>Control Networks</categoryItem>
   </category>
   
   <groups>
     <group name="Input Files">
-
-      <parameter name="LIST">
+      <parameter name="FROMLIST">
           <type>filename</type>
           <fileMode>input</fileMode>
           <brief>
-            List of ISIS3 input cubes in the match point file.
+            List of ISIS3 input cubes in the match point file
           </brief>
           <description>
           A text file containing one column of ISIS3 cube file names. Every file
           used in the match point file should be represented in this list.
           </description>
           <filter>
-            *.lis, *.txt, *.lis 
+            *.lis
           </filter>
         </parameter>
 
-        <parameter name="CONTROL">
+        <parameter name="NETWORK">
           <type>filename</type>
           <fileMode>input</fileMode>
           <brief>
-              Isis3 input control network file
+             Isis3 input control network file
           </brief>
           <description>
             Use this parameter to specify the control network file containing
             the information to be validated
             </description>
           <filter>
-            *.ctl, *.pvl, *.net
+            *.net
           </filter>
         </parameter>
 
     </group>
 
     <group name="Output Options">
-
       <parameter name="PREFIX">
         <type>string</type>
         <fileMode>output</fileMode>
@@ -157,11 +161,8 @@
           longitude.  These serial numbers will be followed by the Control Point
           IDs in which they could not compute their latitudes and longitudes.
           If there are no such serial numbers, then no file is created.
-          Note: This option is very time consuming.
         </description>
       </parameter>
-
     </group>
-
   </groups>
 </application>

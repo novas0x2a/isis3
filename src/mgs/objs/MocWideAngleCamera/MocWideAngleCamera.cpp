@@ -10,6 +10,12 @@ using namespace std;
 namespace Isis {
   namespace Mgs {
     // constructors
+    /** 
+     * @internal 
+     *   @history 2008-11-05 Jeannie Walldren - Replaced reference
+     *          to MocLabels IsWideAngleRed() with MocLabels
+     *          WideAngleRed().
+     */
     MocWideAngleCamera::MocWideAngleCamera (Isis::Pvl &lab) : Camera(lab) {
       // See if we have a moc camera
       MocLabels *moclab = new Isis::Mgs::MocLabels(lab);
@@ -17,7 +23,7 @@ namespace Isis {
       double csum = moclab->CrosstrackSumming();
       double dsum = moclab->DowntrackSumming();
       double ss = moclab->FirstLineSample();
-      bool isRed = moclab->IsWideAngleRed();
+      bool isRed = moclab->WideAngleRed();
 
       // Set up the camera info from ik/iak kernels
       // LoadEulerMounting();

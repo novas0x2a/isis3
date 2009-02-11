@@ -1,9 +1,9 @@
-#if !defined(ObservationNumberList_h)
+#ifndef ObservationNumberList_h
 #define ObservationNumberList_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/06/18 17:52:43 $
+ * $Revision: 1.5 $
+ * $Date: 2008/10/30 16:19:46 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -48,6 +48,8 @@ namespace Isis {
    *            removed from the observation list, the serialNumberIndex
    *            may exceed the size of the map
    *   @history 2008-06-18 Steven Koechle - Fixed Documentation Errors
+   *   @history 2008-10-30 Steven Lambright - Fixed problem with definition
+   *            of struct quad, pointed out by "novus0x2a" (Support Board Member)
    */
   class ObservationNumberList : public Isis::SerialNumberList {
     public:
@@ -70,7 +72,7 @@ namespace Isis {
       std::vector<std::string> PossibleFilenames (const std::string &on);
 
     private:
-      typedef struct ObservationSet {
+      struct ObservationSet {
         int serialNumberIndex;
         int observationNumberIndex;
         std::string observationNumber;

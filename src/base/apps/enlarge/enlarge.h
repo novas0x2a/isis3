@@ -10,21 +10,21 @@ class Enlarge : public Isis::Transform {
     int p_outputSamples; // Number of samples for output
     int p_outputLines;   // Number of lines for output
 
-    double p_sampleMag;
-    double p_lineMag;
+    double p_sampleScale;
+    double p_lineScale;
 
   public:
     // constructor
     Enlarge (const double inputSamples, const double inputLines, 
-             const double sampleMag, const double lineMag){
+             const double sampleScale, const double lineScale){
 
       // Save off the sample and line magnification
-      p_sampleMag = sampleMag;
-      p_lineMag = lineMag;
+      p_sampleScale = sampleScale;
+      p_lineScale = lineScale;
 
       // Calculate the output size. If there is a fractional pixel, round up
-      p_outputSamples = (int)ceil (inputSamples * p_sampleMag);
-      p_outputLines = (int)ceil (inputLines * p_lineMag);
+      p_outputSamples = (int)ceil (inputSamples * p_sampleScale);
+      p_outputLines = (int)ceil (inputLines * p_lineScale);
     }
 
     // destructor
@@ -34,8 +34,8 @@ class Enlarge : public Isis::Transform {
     // Convert the requested output samp/line to an input samp/line
     bool Xform (double &inSample, double &inLine,
                          const double outSample, const double outLine) {
-      inSample = (outSample - 0.5) / p_sampleMag + 0.5;
-      inLine = (outLine - 0.5) / p_lineMag + 0.5;
+      inSample = (outSample - 0.5) / p_sampleScale + 0.5;
+      inLine = (outLine - 0.5) / p_lineScale + 0.5;
       return true;
     }
 

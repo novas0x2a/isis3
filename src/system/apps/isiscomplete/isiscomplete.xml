@@ -27,6 +27,9 @@
     <change name="Steven Lambright" date="2008-06-17">
       This program now handles qview properly
     </change>
+    <change name="Steven Lambright" date="2008-09-12">
+      This program now handles isisui properly
+    </change>
   </history>
 </application>
 

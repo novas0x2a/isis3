@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2008/08/11 20:40:43 $
- * $Revision: 1.13 $
+ * $Date: 2008/12/24 17:36:00 $
+ * $Revision: 1.15 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -28,7 +28,6 @@
 #include <QPaintEvent>
 #include <QResizeEvent>
 #include <QPixmap>
-#include <QPen>
 #include <QPoint>
 #include <QLine>
 
@@ -62,6 +61,11 @@ namespace Qisis {
  *  @history 2007-12-11  Steven Lambright, Added 1x1xn cube auto stretch support
  *  @history 2008-06-19  Noah Hilt, Added a close event for saving and discarding
  *                           changes and a method to set the cube.
+ *  @history 2008-12-04  Jeannie Walldren, Fixed a bug in
+ *           computeStretch() method for comparing precision
+ *           difference on 32 bit Linux system. Added try/catch
+ *           in showCube() to set p_cubeShown = false if this
+ *           fails.
  */
 
   class Tool;

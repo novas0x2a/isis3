@@ -42,6 +42,14 @@
     <change name="Steven Lambright" date="2008-05-13">
       This program now utilizes ProcessMapMosaic
     </change>
+    <change name="Christopher Austin" date="2008-09-19">
+      If the given cube falls outside the provided the mosaic, it will now be
+      logged.  (Removed some unused header files.)
+    </change>
+    <change name="Christopher Austin" date="2008-12-11">
+      Changed the parameters SLAT, ELAT, SLON, ELON to MINLAT, MAXLAT, MINLON,
+      MAXLON in correlation with autimos.
+    </change>
   </history>
 
   <oldName>
@@ -121,17 +129,17 @@
           This parameter is used to specify if the mosaic needs to be created.
         </description>
         <inclusions>
-            <item>SLAT</item>
-            <item>ELAT</item>
-            <item>SLON</item>
-            <item>ELON</item>
+            <item>MINLAT</item>
+            <item>MAXLAT</item>
+            <item>MINLON</item>
+            <item>MAXLON</item>
         </inclusions>
       </parameter>
 
-      <parameter name="SLAT">
+      <parameter name="MINLAT">
         <type>double</type>
         <minimum inclusive="yes">-90.0</minimum>
-        <brief>Starting latitude</brief>
+        <brief>Minimum Latitude</brief>
         <description>
             This parameter specifies the minimum latitude to determine the bounding box of the mosaic
         </description>
@@ -140,24 +148,24 @@
         </inclusions>
       </parameter>
 
-      <parameter name="ELAT">
+      <parameter name="MAXLAT">
         <type>double</type>
         <maximum inclusive="yes">90.0</maximum>
-        <brief>Ending latitude</brief>
+        <brief>Maximum Latitude</brief>
         <description>
             This parameter specifies the maximum latitude to determine the bounding box of the mosaic
         </description>
         <greaterThan>
-            <item>SLAT</item>
+            <item>MINLAT</item>
         </greaterThan>
         <inclusions>
             <item>CREATE</item>
         </inclusions>
       </parameter>
 
-      <parameter name="SLON">
+      <parameter name="MINLON">
         <type>double</type>
-        <brief>Starting longitude</brief>
+        <brief>Minimum Longitude</brief>
         <description>
             This parameter specifies the minimum longitude to determine the bounding box of the mosaic
         </description>
@@ -166,14 +174,14 @@
         </inclusions>
       </parameter>
 
-      <parameter name="ELON">
+      <parameter name="MAXLON">
         <type>double</type>
-        <brief>Ending longitude</brief>
+        <brief>Maximum Longitude</brief>
         <description>
             This parameter specifies the maximum longitude to determine the bounding box of the mosaic
         </description>
         <greaterThan>
-            <item>SLON</item>
+            <item>MINLON</item>
         </greaterThan>
         <inclusions>
             <item>CREATE</item>

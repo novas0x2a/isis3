@@ -52,7 +52,7 @@ int main () {
   Cube cube1;
   cube.Open(inFile,"r");
 
-  ImagePolygon poly(cube.Filename());
+  ImagePolygon poly;
   try {
     poly.Create(cube);
 //    poly.Create(cube,pixInc);
@@ -68,7 +68,7 @@ int main () {
 
   // Convert poly to samp/line
   UniversalGroundMap *gMap = new UniversalGroundMap (cube);
-  geos::geom::MultiPolygon *slPoly = PolygonTools::SampleLineFromLonLat (*poly.Polys(),gMap);
+  geos::geom::MultiPolygon *slPoly = PolygonTools::LatLonToSampleLine (*poly.Polys(),gMap);
   std::cout<<slPoly->toString()<<std::endl;
 
   //  Convert back to lon/lat for comparison

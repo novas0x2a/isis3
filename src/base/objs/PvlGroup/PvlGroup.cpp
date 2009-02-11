@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/07/10 15:00:45 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/10/01 01:15:11 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *   individual third-party library and package descriptions for intellectual property information,
@@ -127,18 +127,18 @@ namespace Isis {
     if (temp.Comments() > 0) {
       for (int k=0; k<temp.Comments(); k++) {
         for (int l=0; l<group.Indent(); l++) os << " ";
-        os << temp.Comment(k) << endl;
+        os << temp.Comment(k) << group.GetFormat()->FormatEOL();
       }
-//      os << endl;
+//      os << group.GetFormat()->FormatEOL();
     }
 
     // Output the group comments and name
-    os << group.GetNameKeyword() << endl;
+    os << group.GetNameKeyword() << group.GetFormat()->FormatEOL();
     group.SetIndent(group.Indent()+2);
 
     // Output the keywords in this group
     if (group.Keywords() > 0) {
-      os << (Isis::PvlContainer &) group << endl;
+      os << (Isis::PvlContainer &) group << group.GetFormat()->FormatEOL();
     }
 
     // Output the end of the group

@@ -56,10 +56,15 @@ namespace Qisis {
    * appear in the navtools point list display.
    * 
    * @internal
-   * @history  2007-06-05 Tracie Sucharski - Look at ControlPoint::MaximumError
-   *                         instead of ControlPoint::AverageError
-   * @history  2008-08-06 Tracie Sucharski - Added functionality of filtering 
-   *                         range of errors. 
+   *   @history  2007-06-05 Tracie Sucharski - Look at ControlPoint::MaximumError
+   *                           instead of ControlPoint::AverageError
+   *   @history  2008-08-06 Tracie Sucharski - Added functionality of filtering 
+   *                           range of errors.
+   *   @history  2009-01-08 Jeannie Walldren - Modified to remove
+   *                           new filter points from the existing
+   *                           filtered list. Previously, a new
+   *                           filtered list was created from the
+   *                           entire control net each time.
    */
   void QnetPointErrorFilter::filter() {
     // Make sure we have a list of control points to filter
@@ -87,24 +92,30 @@ namespace Qisis {
     lessNum = p_lessErrorEdit->text().toDouble();
     greaterNum = p_greaterErrorEdit->text().toDouble();
 
-    // Loop through each control point comparing its error with the user entered
-    // value and add it to the filtered list if it is within the filtering range
-    for (int i=0; i<g_controlNetwork->Size(); i++) {
+    // Loop through each value of the filtered points list comparing the error of its 
+    // corresponding point with error with the user entered value and remove it from
+    // the filtered list if it is outside the filtering range 
+    // Loop in reverse order since removal list of elements affects index number
+    for (int i = g_filteredPoints.size()-1; i >= 0; i--) {
+      Isis::ControlPoint cp = (*g_controlNetwork)[g_filteredPoints[i]];
       if (p_lessThanCB->isChecked() && p_greaterThanCB->isChecked()) {
-        if ( ((*g_controlNetwork)[i].MaximumError() < lessNum) &&
-             ((*g_controlNetwork)[i].MaximumError() > greaterNum) ) {
-          g_filteredPoints.push_back(i);
+        if ( (cp.MaximumError() < lessNum) &&
+             (cp.MaximumError() > greaterNum) ) {
+          continue;
         }
+        else g_filteredPoints.removeAt(i);
       }
-      else if (p_lessThanCB->isChecked() && !p_greaterThanCB->isChecked()) {
-        if ((*g_controlNetwork)[i].MaximumError() < lessNum) {
-          g_filteredPoints.push_back(i);
+      else if (p_lessThanCB->isChecked()) {
+        if (cp.MaximumError() < lessNum) {
+          continue;
         }
+        else g_filteredPoints.removeAt(i);
       }
-      else if (p_greaterThanCB->isChecked() && !p_lessThanCB->isChecked()) {
-        if ((*g_controlNetwork)[i].MaximumError() > greaterNum) {
-          g_filteredPoints.push_back(i);
+      else if (p_greaterThanCB->isChecked()) {
+        if (cp.MaximumError() > greaterNum) {
+          continue;
         }
+        else g_filteredPoints.removeAt(i);
       }
     }
     // Tell the navtool that a list has been filtered and it needs to update

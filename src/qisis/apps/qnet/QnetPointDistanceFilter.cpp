@@ -1,4 +1,5 @@
 #include <QGridLayout>
+#include <QList>
 #include <QMessageBox>
 #include "QnetPointDistanceFilter.h"
 #include "QnetNavTool.h"
@@ -17,13 +18,17 @@ namespace Qisis {
    * 
    * @param parent The parent widget for the point distance
    *               filter
+   * @internal 
+   *   @history 2008-11-26 Jeannie Walldren - Clarified label for
+   *                          distance filter value.
+   *  
    */
   QnetPointDistanceFilter::QnetPointDistanceFilter (QWidget *parent) : QnetFilter(parent) {
     // Create the labels and widgets to be added to the main window
-    QLabel *label = new QLabel("Filter using distance between points");
-    QLabel *lessThan = new QLabel("Less than");
+    QLabel *label = new QLabel("Filter points that are within given distance of some other point.");
+    QLabel *lessThan = new QLabel("Minimum distance is less than");
     p_lineEdit = new QLineEdit();
-    QLabel *meters = new QLabel ("meters");
+    QLabel *meters = new QLabel("meters");
     QLabel *pad = new QLabel();
 
     // Create the layout and add the widgets to the window
@@ -40,7 +45,22 @@ namespace Qisis {
   /**
    * Filters a list of points for points that are less than the user entered
    * distance from another point in the control net.  The filtered list will
-   * appear in the navtools point list display.
+   * appear in the navtools point list display. 
+   * @internal 
+   *   @history 2008-11-26 Jeannie Walldren - Modified code to
+   *                          handle case in which the lat/lon of
+   *                          the point is Null. In this event,
+   *                          the Camera class will be used to
+   *                          determine lat/lon/rad for the
+   *                          reference measure or for the first
+   *                          measure. Changed variable names for
+   *                          clarity.  Adjusted inner "for" loop
+   *                          to reduce number of iterations.
+   *   @history 2009-01-08 Jeannie Walldren - Modified to replace
+   *                          existing filtered list with a subset
+   *                          of that list. Previously, a new
+   *                          filtered list was created from the
+   *                          entire control net each time.
    */
   void QnetPointDistanceFilter::filter() {
     // Make sure we have a control network to filter through
@@ -51,54 +71,87 @@ namespace Qisis {
     }
 
     // Make sure the user entered a filtering value
-    int num = -1;
     if (p_lineEdit->text() == "") {
       QMessageBox::information((QWidget *)parent(),
                                "Error","Distance value must be entered");
       return;
     }
     // Get the user entered value for filtering
-    num = p_lineEdit->text().toInt();
+    int userEntered = p_lineEdit->text().toInt();
 
-    // Loop through each control point
-    for (int i=0; i<g_controlNetwork->Size(); i++) {
-      // Set the minDist to some huge number so the value is sure to be replaced
-      double minDist = 1e10;
-
+    // create temporary QList to contain new filtered images
+    QList <int> temp;
+    // Loop through each value of the filtered points list  
+    // Loop in reverse order for consistency with other filter methods
+    for (int i = g_filteredPoints.size()-1; i >= 0; i--) {
+      Isis::ControlPoint cp1 = (*g_controlNetwork)[g_filteredPoints[i]];
       // Get necessary info from the control point for later use
-      double rad = (*g_controlNetwork)[i].Radius();
-      double lat1 = (*g_controlNetwork)[i].UniversalLatitude();
-      double lon1 = (*g_controlNetwork)[i].UniversalLongitude();
-
-      // Skip this point if the lat/lon values were not set in the control net
+      double rad = cp1.Radius();
+      double lat1 = cp1.UniversalLatitude();
+      double lon1 = cp1.UniversalLongitude();
+  
+      // If no lat/lon for this point, use lat/lon of first measure
       if ((lat1 == Isis::Null) || (lon1 == Isis::Null)) {
-        continue;
+          Isis::Camera *cam1;
+          Isis::ControlMeasure cm1;
+          // first try to get info from reference measure, if one exists
+          if (cp1.HasReference()) {
+            cm1 = cp1[cp1.ReferenceIndex()];
+          }
+          // if no reference measure exists, use the first control measure of the point
+          else cm1 = cp1[0];
+          int camIndex1 = g_serialNumberList->SerialNumberIndex(cm1.CubeSerialNumber());
+          cam1 = g_controlNetwork->Camera(camIndex1);
+          cam1->SetImage(cm1.Sample(),cm1.Line());
+          rad = cam1->LocalRadius();
+          lat1 = cam1->UniversalLatitude();
+          lon1 = cam1->UniversalLongitude();
       }
-
-      // Loop through each other point comparing it to the initial point we have
-      for (int j=0; j<g_controlNetwork->Size(); j++) {
-        if (i == j) continue;
-        double lat2 = (*g_controlNetwork)[j].UniversalLatitude();
-        double lon2 = (*g_controlNetwork)[j].UniversalLongitude();
-
-        // Skip this point if the lat/lon values were not set in the control net
-        if ((lat2 == Isis::Null) || (lon2 == Isis::Null)) {
+      // Loop through each control point, comparing it to the initial point
+      // from the filtered list
+      for (int j = 0; j < g_controlNetwork->Size(); j++) {
+        if (j == g_filteredPoints[i]) {
+          // cp1 = cp2, go to next value of j
           continue;
         }
-
+        Isis::ControlPoint cp2 = (*g_controlNetwork)[j];
+        double lat2 = cp2.UniversalLatitude();
+        double lon2 = cp2.UniversalLongitude();
+  
+        // If no lat/lon for this point, use lat/lon of first measure
+        if ((lat2 == Isis::Null) || (lon2 == Isis::Null)) {
+          Isis::Camera *cam2;
+          Isis::ControlMeasure cm2;
+          // first try to get info from reference measure, if one exists
+          if (cp2.HasReference()) {
+            cm2 = cp2[cp2.ReferenceIndex()];
+          }
+          // if no reference measure exists, use the first control measure of the point
+          else cm2 = cp2[0];
+          int camIndex2 = g_serialNumberList->SerialNumberIndex(cm2.CubeSerialNumber());
+          cam2 = g_controlNetwork->Camera(camIndex2);
+          cam2->SetImage(cm2.Sample(),cm2.Line());
+          lat2 = cam2->UniversalLatitude();
+          lon2 = cam2->UniversalLongitude();
+        }
         // Get the distance from the camera class
-        double d = Isis::Camera::Distance(lat1,lon1,lat2,lon2,rad);
-
-        // Check to see if the new distance is less than the current minDist
-        if (d < minDist) minDist = d;
-      }
-
-      // If the minimum distance is less than the number we are filtering for, 
-      // add the current control point index to the filtered points list
-      if (minDist < num) {
-        g_filteredPoints.push_back(i);
+        double dist = Isis::Camera::Distance(lat1,lon1,lat2,lon2,rad);
+        // If the distance found is less than the input number, add the 
+        // control points' indices to the new filtered points list
+        if (dist < userEntered) {
+          if(!temp.contains(g_filteredPoints[i])) {
+            temp.push_back(g_filteredPoints[i]);
+          }
+          break;
+        }
       }
     }
+
+    // Sort QList of filtered points before displaying list to user
+    qSort(temp.begin(), temp.end());
+    // replace existing filter list with this one
+    g_filteredPoints = temp;
+
     // Tell the nav tool that a list has been filtered and needs to be updated
     emit filteredListModified();
     return;

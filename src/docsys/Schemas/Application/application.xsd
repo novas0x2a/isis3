@@ -390,6 +390,7 @@
 			<xs:enumeration value="Cameras"/>
 			<xs:enumeration value="Control Networks"/>
 			<xs:enumeration value="Display"/>
+      <xs:enumeration value="Fourier Domain"/>
 			<xs:enumeration value="Filters"/>
 			<xs:enumeration value="Geometry"/>
 			<xs:enumeration value="Import and Export"/>

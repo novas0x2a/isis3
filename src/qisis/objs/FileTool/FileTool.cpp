@@ -1,27 +1,30 @@
 #include <QApplication>
 #include <QFileDialog>
-#include <QMessageBox>
+#include <QImage>
 #include <QMenu>
+#include <QMessageBox>
 #include <QPainter>
+#include <QPixmap>
 #include <QPrinter>
 #include <QPrintDialog>
-#include <QPixmap>
-#include <QImage>
 
+#include "BrowseDialog.h"
+#include "CubeAttribute.h"
+#include "CubeViewport.h"
 #include "FileDialog.h"
 #include "FileTool.h"
 #include "MainWindow.h"
-#include "CubeViewport.h"
-#include "Workspace.h"
-#include "BrowseDialog.h"
 #include "OriginalLabel.h"
-#include "CubeAttribute.h"
+#include "Workspace.h"
 
 namespace Qisis {
   /**
    * Constructs a FileTool object.
    * 
    * @param parent 
+   * @internal 
+   *   @history 2008-12-10 Jeannie Walldren - Added "What's this?"
+   *            and shortcut to "Save" action
    */
   FileTool::FileTool (QWidget *parent) : Qisis::Tool(parent) {
     p_parent = parent;
@@ -50,11 +53,13 @@ namespace Qisis {
     connect(p_browse,SIGNAL(activated()),this,SLOT(browse()));
 
     p_save = new QAction(parent);
+    p_save->setShortcut(Qt::CTRL+Qt::Key_S);
     p_save->setText("&Save");
     p_save->setIcon(QPixmap(toolIconDir()+"/filesave.png"));
     p_save->setToolTip("Save");
     whatsThis =
-      "<b>Function:</b> Save changes to the current Cube";
+      "<b>Function:</b> Save changes to the current Cube \
+       <p><b>Shortcut:</b> Ctrl+S</p>";
     p_save->setWhatsThis(whatsThis);
     connect(p_save,SIGNAL(activated()),this,SLOT(confirmSave()));
     p_save->setEnabled(false);
@@ -93,9 +98,18 @@ namespace Qisis {
     connect(p_print,SIGNAL(activated()),this,SLOT(print()));
     p_print->setEnabled(false);
 
+    p_closeAll = new QAction(parent);
+    p_closeAll->setText("&Close All...");
+    p_closeAll->setToolTip("Close All");
+    whatsThis =
+      "<b>Function:</b> Close all cube viewports.";
+    p_closeAll->setWhatsThis(whatsThis);
+    connect(p_closeAll,SIGNAL(activated()),this,SLOT(closeAll()));
+
     p_exit = new QAction(parent);
     p_exit->setShortcut(Qt::CTRL+Qt::Key_Q);
     p_exit->setText("E&xit");
+    p_exit->setIcon(QPixmap(toolIconDir() + "/fileclose.png"));
     whatsThis =
       "<b>Function:</b>  Quit qview \
       <p><b>Shortcut:</b> Ctrl+Q</p>";
@@ -120,6 +134,7 @@ namespace Qisis {
     menu->addAction(p_saveAs);
     menu->addAction(p_exportView);
     menu->addAction(p_print);
+    menu->addAction(p_closeAll);
     menu->addAction(p_exit);
   }
 
@@ -144,6 +159,7 @@ namespace Qisis {
     perm->addAction(p_open);
     perm->addAction(p_exportView);
     perm->addAction(p_print);
+    perm->addAction(p_exit);
   }
 
   /**
@@ -435,20 +451,37 @@ namespace Qisis {
 
     QString output =
       QFileDialog::getSaveFileName((QWidget *)parent(),
-                                   "Choose output file",
+                                   QString("Choose output file"),
                                    p_lastDir,
-                                   QString("Images (*.png *.jpg *.tif)"));
+                                   QString("PNG (*.png);;JPG (*.jpg);;TIF (*.tif)"));
     if (output.isEmpty()) return;
 
     p_lastDir = output;
 
     QString format = QFileInfo(output).suffix();
+
+    if(format.isEmpty()) {
+      if(output.endsWith('.')) {
+        output.append(QString("png"));
+      }
+      else {
+        output.append(QString(".png"));
+      }
+    }
+    else if(format.compare("png", Qt::CaseInsensitive) && 
+       format.compare("jpg", Qt::CaseInsensitive) && 
+       format.compare("tif", Qt::CaseInsensitive)) {
+
+      QMessageBox::information((QWidget *)parent(),"Error", format + " is an invalid extension.");
+      return;
+    }
+
     QPixmap pm = QPixmap::grabWidget(cubeViewport()->viewport());
     
     //if (!cubeViewport()->pixmap().save(output,format.toStdString().c_str())) {
-    std::string formatString = format.toStdString();
-    if (!pm.save(output,formatString.c_str())) {
-      QMessageBox::information((QWidget *)parent(),"Error","Unable to save"+output);
+
+    if (!pm.save(output)) {
+      QMessageBox::information((QWidget *)parent(),"Error","Unable to save " + output);
       return;
     }
   }
@@ -490,38 +523,43 @@ namespace Qisis {
   }
 
   /**
+   * Try to close all open cubes and save/discard if necessary.
+   */
+  bool FileTool::closeAll() {
+    //  Close all cubes
+    // We must create a temporary list.  If not the actual
+    // list size gets modified when a close occurs and not all
+    // windows were being closed.
+    CubeViewport *d;
+    std::vector<Qisis::CubeViewport *> tempList(*cubeViewportList());
+    for (int i = 0; i < (int)tempList.size(); i++) {
+      d = tempList.at(i);
+      //Set the current viewport to the one being closed
+      setCubeViewport(d);
+      //If the user cancels the close operation, delete any viewports
+      //that WERE closed and set the viewportlist to the temp list and return
+      if(!d->close()) {
+        tempList.erase(tempList.begin(), tempList.begin() + i);
+        cubeViewportList()->assign(tempList.begin(), tempList.end());
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
    * Exit the program, this slot called when the exit is chosen from the File menu
    * 
    * @internal
    * @history  2007-02-13  Tracie Sucharski,  Close all cubes before exiting
    */
   void FileTool::exit() {
-    //  Close all cubes
-    // We must create a temporary list.  If not the actual
-    // list size gets modified when a close occurs and not all
-    // windows were being closed.
-    CubeViewport *d;
-    std::vector<Qisis::CubeViewport *> *tempList;
-    tempList = cubeViewportList();
-    for (int i=0; i<(int)tempList->size(); i++) {
-      d = tempList->at(i);
-      //Set the current viewport to the one being closed
-      setCubeViewport(d);
-      //If the user cancels the close operation, delete any viewports
-      //that WERE closed and set the viewportlist to the temp list and return
-      if(!d->close()) {
-        tempList->erase(tempList->begin(), tempList->begin() + i);
-        setCubeViewportList(tempList);
-        return;
-      }
-    }
-
-
-    /*This is OK to cast the p_parent because we know it's sub-subclassed from 
-     *Qisis::MainWindow and we know that Qisis::MainWindow has a close method*/ 
-    ((MainWindow*)p_parent)->close();
-    qApp->quit();
-    
+    if(closeAll()) {
+      /*This is OK to cast the p_parent because we know it's sub-subclassed from 
+       *Qisis::MainWindow and we know that Qisis::MainWindow has a close method*/ 
+      ((MainWindow*)p_parent)->close();
+      qApp->quit();
+    }   
   }
 
   /**

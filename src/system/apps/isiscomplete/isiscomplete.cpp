@@ -47,6 +47,12 @@ void MakeCompletion(const string &appName) {
 
   if(appName.compare("qnet") == 0) return;
 
+  if(appName.compare("isisui") == 0) {
+    string binPath = Filename("$ISISROOT/bin").Expanded();
+    cout << "complete isisui 'n@*@F:" << binPath << "/@'";
+    return;
+  }
+
   // Do not complete self
   if(appName.compare("isiscomplete") == 0) return;
 

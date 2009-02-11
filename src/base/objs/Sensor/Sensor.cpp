@@ -181,7 +181,7 @@ namespace Isis {
         double dist = (pB[0] - p_pB[0]) * (pB[0] - p_pB[0]) +
                (pB[1] - p_pB[1]) * (pB[1] - p_pB[1]) +
                (pB[2] - p_pB[2]) * (pB[2] - p_pB[2]);
-        if (dist < 0.000001) done = true;
+        if (dist < 0.000000000001) done = true;
        it++;
 
       }

@@ -34,7 +34,7 @@ namespace Qisis {
    * 
    */
   void PlotTool::viewportSelected(){
-    p_autoScale->setChecked(true);
+    //p_autoScale->setChecked(true);
   }
 
 
@@ -50,7 +50,9 @@ namespace Qisis {
       if (!p_currentPlotType == SpectralPlot) {
         RubberBandTool::enable(RubberBandTool::Line);
         p_rubberBand->setEnabled(false);
+        plotType->setEnabled(false);
       } else {
+        plotType->setEnabled(true);
         p_rubberBand->setEnabled(true);
       }
     }
@@ -398,7 +400,7 @@ namespace Qisis {
    * users can paste curves to and copy curves from.
    */
   void PlotTool::newPlotWindow(){
-    PlotWindow *blankWindow = new PlotWindow("Plot Window",p_parent);
+    PlotToolWindow *blankWindow = new PlotToolWindow("Plot Window",p_parent);
     blankWindow->setDestroyOnClose(true);
     connect(blankWindow, SIGNAL(curvePaste(Qisis::PlotWindow *)), this, 
             SLOT(pasteCurve(Qisis::PlotWindow *)));
@@ -597,7 +599,6 @@ namespace Qisis {
         p_copyCurve->setColor(c);
       }
     }
-
     pw->add(p_copyCurve);
     updateViewPort(p_copyCurve);
     p_color++;
@@ -634,7 +635,6 @@ namespace Qisis {
    * another plot window.
    */
   void PlotTool::setupPlotCurves(){
-
     p_maxCurve = new PlotToolCurve();
     p_maxCurve->setTitle("Maximum");
     p_minCurve = new PlotToolCurve();
@@ -888,7 +888,7 @@ namespace Qisis {
       interp.SetType(Isis::Interpolator::NearestNeighborType);
     }
 
-    Isis::Portal dataReader(interp.Samples(),interp.Lines(),Isis::Double);
+    Isis::Portal dataReader(interp.Samples(),interp.Lines(),cvp->cube()->PixelType());
 
     int lineLength = (int)(sqrt(pow(ss-es,2)+pow(sl-el,2)) + 0.5); //round to the nearest pixel increment
     int band = ((cvp->isGray())? cvp->grayBand() : cvp->redBand());
@@ -903,7 +903,6 @@ namespace Qisis {
 
       dataReader.SetPosition(x,y,band);
       cvp->cube()->Read(dataReader);
-
       double result = interp.Interpolate(x,y,dataReader.DoubleBuffer());
 
       if (!Isis::IsSpecial(result)) {
@@ -990,11 +989,10 @@ namespace Qisis {
 
     // loop thru the window list
     for (int i = 0; i < p_plotWindows.size(); i++) {  
-
+      
       for (int c = 0; c < p_plotWindows[i]->getNumCurves(); c++) {
         /*get all curves in current window*/
         PlotToolCurve *curve = (PlotToolCurve *)p_plotWindows[i]->getPlotCurve(c);  
-
         if (curve->getViewPort() == vp) {
           QPen pen(curve->pen().color());
           pen.setWidth(curve->pen().width());

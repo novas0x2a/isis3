@@ -20,7 +20,7 @@ void IsisMain() {
 
   cout << "Testing GetUserInterface ... " << endl;
   Isis::UserInterface &ui = Isis::Application::GetUserInterface();
-  cout << ui.GetFilename("FROM") << endl;
+  cout << ui.GetAsString("FROM") << endl;
   cout << endl;
 
   cout << "Testing SetOutputCube without an input cube ..." << endl;
@@ -71,7 +71,8 @@ void IsisMain() {
     p.SetInputCube("FROM",Isis::OneBand);
   }
   catch (Isis::iException &e) {
-    e.Report(false);
+    cout << "An exception was thrown!" << endl;
+    e.Clear();
   }
   cout << endl;
   

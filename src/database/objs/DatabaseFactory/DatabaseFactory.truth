@@ -1,21 +1,13 @@
 Default name: default profile
 Add access profile: 0
 Adding a couple profiles...
-Profile list: test profile 1
-Profile list: test profile 2
 Default profile name: 
 Setting a default name... 0
 Default profile name: default name
-Available list: MySQL
-Available list: PostgreSQL
-Available list: QMYSQL
-Available list: QMYSQL3
-Available list: QPSQL
-Available list: QPSQL7
-Available list: QSQLITE
-Available list: SQLite
-Driver available: 0
-Driver available: 1
+Driver available [doesntexist]: 0
+Driver available [mysql]: 1
+Driver available [postgresql]: 1
+Driver available [sqlite]: 1
 Is Available: 0
 Is connected: 0
 Is persistant: 0

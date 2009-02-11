@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/10/03 21:47:17 $
+ * $Revision: 1.7 $
+ * $Date: 2008/12/11 22:43:09 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -84,7 +84,9 @@ namespace Isis {
   
       // This is EquatorialCylindrical, so shift to the left all the way
       if(wrapPossible) {
-        while(outSampleEnd - worldSize > 0) {
+        // While some data would still be put in the mosaic, move left 
+        //  >1 for end because 0 still means no data, whereas 1 means 1 line of data 
+        while(outSampleEnd - worldSize > 1) {
           outSample -= worldSize;
           outSampleEnd -= worldSize;
         }
@@ -118,6 +120,11 @@ namespace Isis {
         throw iException::Message(iException::User, msg, _FILEINFO_);
       }
     }
+
+    WriteHistory(*mosaicCube);
+
+    // Don't propagate any more histories now that we've done one
+    p_propagateHistory = false;
 
     ClearInputCubes();
     return true;
@@ -197,18 +204,33 @@ namespace Isis {
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
-    int bands = 0;
+    int samples, lines, bands = 0;
     Pvl label;
     label.Read(propagationCubes[0]);
-    PvlGroup &mGroup = label.FindGroup("Mapping",Pvl::Traverse);
+    PvlGroup mGroup = label.FindGroup("Mapping",Pvl::Traverse);
     mGroup["MinimumLatitude"] = slat;
     mGroup["MaximumLatitude"] = elat;
     mGroup["MinimumLongitude"] = slon;
     mGroup["MaximumLongitude"] = elon;
-    Projection *proj = Isis::ProjectionFactory::CreateFromCube(label);
 
+    if(mGroup.HasKeyword("UpperLeftCornerX")) 
+      mGroup.DeleteKeyword("UpperLeftCornerX");
+
+    if(mGroup.HasKeyword("UpperLeftCornerY")) 
+      mGroup.DeleteKeyword("UpperLeftCornerY");
+
+    Pvl mapPvl;
+    mapPvl += mGroup;
+
+    // Use CreateForCube because our range differs from any of the cubes (manually specified)
+    Projection *proj = Isis::ProjectionFactory::CreateForCube(mapPvl, samples, lines, false);
+    
     double xmin,xmax,ymin,ymax;
     proj->XYRange(xmin, xmax, ymin, ymax);
+
+    // The xmin/ymax should be rounded for the labels
+    xmin = mapPvl.FindGroup("Mapping")["UpperLeftCornerX"];
+    ymax = mapPvl.FindGroup("Mapping")["UpperLeftCornerY"];
 
     for(unsigned int i = 0; i < propagationCubes.size(); i++) {
       Cube cube;

@@ -151,6 +151,13 @@
     <change name="Steven Koechle" date="2008-06-17">
       Added CK check and throw more appropriate error
     </change>
+    <change name="Christopher Austin" date="2008-09-12">
+      Added the removal of StartPadding and EndPadding keywords from previous
+      spiceinit runs, and added some double inited tests.  NOTE: Whenever
+      adding new keywords, run spiceinit twice on the same cube in your test,
+      dumping out both labels to verify that the keyword is not being
+      duplicated.
+    </change>
   </history>
 
   <oldName>

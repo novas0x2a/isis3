@@ -2,9 +2,9 @@
 #define OffsetCorrect_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $
- * $Date: 2008/06/13 22:28:55 $
- * $Id: OffsetCorrect.h,v 1.1 2008/06/13 22:28:55 kbecker Exp $
+ * $Revision: 1.3 $
+ * $Date: 2008/11/18 07:29:12 $
+ * $Id: OffsetCorrect.h,v 1.3 2008/11/18 07:29:12 kbecker Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -76,9 +76,21 @@ namespace Isis {
        */
       const Statistics &Stats() const { return (_stats); }
 
+      /**
+       * @brief Specifies if the input trigger conditions were met
+       *  
+       * If trigger conditions where met, the reverse clock correction becomes a 
+       * constant as opposed to processed reverse cloc pixels. 
+       * 
+       * @return bool True if triggered, false otherwise
+       */
+      bool wasTriggered() const { return (_triggered); }
+
     private:
       HiVector   _revClock;
       Statistics _stats;
+      bool       _triggered;
+
 
       void init(HiCalData &cal, const HiCalConf &conf) {
         DbProfile prof = conf.getMatrixProfile();
@@ -87,22 +99,64 @@ namespace Isis {
 
         int line0 = ConfKey(prof,"ZzFirstLine",0);
         int lineN = ConfKey(prof,"ZzLastLine",19);
-        _revClock = averageLines(cal.getReverseClock(), line0, lineN);
-      
-        _history.add("AveLines(RevClock["+ToString(line0) + "," +
-                     ToString(lineN)+"])");
+        std::string tfile= conf.getMatrixSource("ReverseClockStatistics",prof);
 
+        HiMatrix revclk = cropLines(cal.getReverseClock(), line0, lineN);
+        _stats.Reset();
+        _stats.AddData(revclk[0], revclk.dim1()*revclk.dim2());
+
+        _revClock = averageLines(revclk);
+       _history.add("RevClock(CropLines["+ToString(line0)+","+ToString(lineN) +
+                    "],Mean["+ToString(_stats.Average()) + 
+                     "],StdDev["+ToString(_stats.StandardDeviation()) +
+                     "],LisPixels["+ToString(_stats.LisPixels())+
+                     "],HisPixels["+ToString(_stats.HisPixels()) +
+                     "],NulPixels["+ToString(_stats.NullPixels())+ "])");
+
+       DbAccess triggers(Pvl(tfile).FindObject("ReverseClockStatistics"));
+       std::string tprofName = conf.resolve("{FILTER}{CCD}_{CHANNEL}_{BIN}",prof); 
+       _history.add("ReverseClockStatistics(File["+tfile+
+                    "],Profile["+tprofName+"])");
+
+       _triggered= false;
+       if (triggers.profileExists(tprofName)) {
+         DbProfile tprof(prof, triggers.getProfile(tprofName), tprofName);
+         double revmean = ConfKey(tprof,"RevMeanTrigger", _stats.Average());
+         double revstddev = ConfKey(tprof,"RevStdDevTrigger", DBL_MAX);
+         int lisTol = ConfKey(tprof, "RevLisTolerance", 1);
+         int hisTol = ConfKey(tprof, "RevHisTolerance", 1);
+         int nulTol = ConfKey(tprof, "RevNulTolerance", 1);
+
+         _history.add("TriggerLimits(RevMeanTrigger["+ToString(revmean) +
+                      "],RevStdDevTrigger["+ToString(revstddev)+
+                      "],RevLisTolerance["+ToString(lisTol)+
+                      "],RevHisTolerance["+ToString(hisTol)+
+                      "],RevNulTolerance["+ToString(nulTol)+ "])");
+
+         if ((_stats.LisPixels() > lisTol) || (_stats.HisPixels() > hisTol) ||
+             (_stats.NullPixels() > nulTol) || 
+             (_stats.StandardDeviation() > revstddev)) { 
+           _triggered = true;
+           _data = HiVector(_revClock.dim1(), revmean);
+           _history.add("Trigger(True - Reverse Clock set to constant,"
+                        "ReverseClock["+ToString(revmean)+"])"); 
+         }
+         else {
+           _history.add("Trigger(False - Reverse Clock processing invoked)");
+           _triggered = false;
+         }
+       }
+       else {
+         _history.add("Trigger(Profile["+tprofName+"],NotFound!)");
+         _triggered = false;
+       }
+
+       if (!_triggered) {
         SplineFillComp spline(_revClock, _history);
         _data = spline.ref();
         _history = spline.History();
+       }
 
-        //  Compute statistics and record to history
-        _stats.Reset();
-        for ( int i = 0 ; i < _revClock.dim() ; i++ ) {
-            _stats.AddData(_revClock[i]);
-        }
-        _history.add("Statistics(Average["+ToString(_stats.Average())+
-                     "],StdDev["+ToString(_stats.StandardDeviation())+"])"); 
         return;
       }
 
@@ -110,7 +164,7 @@ namespace Isis {
         o << "#  History = " << _history << std::endl;
         //  Write out the header
         o << std::setw(_fmtWidth)   << "RevClock"
-          << std::setw(_fmtWidth+1) << "Processed\n";
+          << std::setw(_fmtWidth+1) << "Applied\n";
 
         for (int i = 0 ; i < _data.dim() ; i++) {
           o << formatDbl(_revClock[i]) << " "

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/07/11 22:16:52 $
+ * $Revision: 1.8 $
+ * $Date: 2008/10/02 23:39:45 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -87,16 +87,24 @@ namespace Isis {
   }
   
   /** 
-   * Opens and writes PVL information to a file
+   * Opens and writes PVL information to a file and handles the end of line 
+   * sequence 
    * 
    * @param file Name of the file to create. The method will overwrite any 
    *             existing file.
    * 
    * @throws Isis::iException::Io
    */
-    void Pvl::Write(const std::string &file) {
+  void Pvl::Write(const std::string &file) {
     // Expand the filename
     Isis::Filename temp(file);
+
+    // Set up a Formatter
+    bool removeFormatter = false;
+    if (GetFormat() == NULL) {
+      SetFormat(new PvlFormat());
+      removeFormatter = true;
+    }
   
     // Open the file
     ofstream ostm;
@@ -111,12 +119,17 @@ namespace Isis {
     // Write the labels
     try {
       ostm << *this;
-      if (Terminator() != "") ostm << endl;
+      if (Terminator() != "") ostm << GetFormat()->FormatEOL();
     }
     catch (...) {
       ostm.close();
       string message = "Unable to write PVL to file [" + temp.Expanded() + "]";
       throw Isis::iException::Message(Isis::iException::Io,message,_FILEINFO_);
+    }
+
+    if (removeFormatter) {
+      delete GetFormat();
+      SetFormat(NULL);
     }
   
     // Close the file
@@ -124,7 +137,7 @@ namespace Isis {
   }
   
  /** 
-  * Appends PVL information to a file
+  * Appends PVL information to a file and handles the end of line sequence
   * 
   * @param file Name of the file to append to.
   * 
@@ -133,6 +146,13 @@ namespace Isis {
   void Pvl::Append(const std::string &file) {
     // Set up for opening and writing
     Isis::Filename temp(file);
+
+    // Set up a Formatter
+    bool removeFormatter = false;
+    if (GetFormat() == NULL) {
+      SetFormat(new PvlFormat());
+      removeFormatter = true;
+    }
   
     // Open the file
     ofstream ostm;
@@ -147,7 +167,7 @@ namespace Isis {
     // Write the labels
     try {
       ostm << *this;
-      if (Terminator() != "") ostm << endl;
+      if (Terminator() != "") ostm << GetFormat()->FormatEOL();
     }
     catch (...) {
       ostm.close();
@@ -155,10 +175,16 @@ namespace Isis {
                        temp.Expanded() + "]";
       throw Isis::iException::Message(Isis::iException::Io,message,_FILEINFO_);
     }
+
+    if (removeFormatter) {
+      delete GetFormat();
+      SetFormat(NULL);
+    }
   
     // Close the file
     ostm.close();
   }
+
 
   void Pvl::SetFormatTemplate (Isis::Pvl &temp) {
     if ( p_internalTemplate ) delete p_formatTemplate;
@@ -166,12 +192,21 @@ namespace Isis {
     Isis::PvlObject::SetFormatTemplate(temp);
   }
 
+
   void Pvl::SetFormatTemplate (const std::string &file) {
     if ( p_internalTemplate ) delete p_formatTemplate;
     p_internalTemplate = true;
     p_formatTemplate = new Isis::Pvl(file);
   }  
 
+  /**
+   * This stream will not handle the end of line sequence
+   * 
+   * @param os 
+   * @param pvl 
+   * 
+   * @return ostream& 
+   */
   ostream& operator<<(std::ostream &os, Pvl &pvl) {
 
     // Set up a Formatter
@@ -234,13 +269,13 @@ namespace Isis {
 
     // Output the pvl's comments
     for (int i=0; i<pvl.Comments(); i++) {
-      os << pvl.Comment(i) << endl;
-      if (i == (pvl.Comments() - 1)) os << endl;
+      os << pvl.Comment(i) << pvl.GetFormat()->FormatEOL();
+      if (i == (pvl.Comments() - 1)) os << pvl.GetFormat()->FormatEOL();
     }
 
     // Output the keywords
     if (pvl.Keywords() > 0) {
-      os << (Isis::PvlContainer &) pvl << endl;
+      os << (Isis::PvlContainer &) pvl << pvl.GetFormat()->FormatEOL();
     }
 
     // this number keeps track of the number of objects that have been written
@@ -250,27 +285,27 @@ namespace Isis {
     for (int i=0; i<outTemplate.Objects(); i++) {
       for (int j=0; j<pvl.Objects(); j++) {
         if (outTemplate.Object(i).Name() != pvl.Object(j).Name()) continue;
-        if (numObjects == 0 && pvl.Keywords() > 0) os << endl;
+        if (numObjects == 0 && pvl.Keywords() > 0) os << pvl.GetFormat()->FormatEOL();
         pvl.Object(j).SetIndent(pvl.Indent());
         pvl.Object(j).SetFormatTemplate(outTemplate.Object(i));
         pvl.Object(j).SetFormat(pvl.GetFormat());
-        os << pvl.Object(j) << endl;
+        os << pvl.Object(j) << pvl.GetFormat()->FormatEOL();
         pvl.Object(j).SetFormat(NULL);
         pvl.Object(j).SetIndent(0);
-        if (++numObjects < pvl.Objects()) os << endl;
+        if (++numObjects < pvl.Objects()) os << pvl.GetFormat()->FormatEOL();
       }
     }
 
     // Output the objects that were not included in the format template pvl
     for (int i=0; i<pvl.Objects(); i++) {
       if (outTemplate.HasObject(pvl.Object(i).Name())) continue;
-      if (numObjects == 0 && pvl.Keywords() > 0) os << endl;
+      if (numObjects == 0 && pvl.Keywords() > 0) os << pvl.GetFormat()->FormatEOL();
       pvl.Object(i).SetIndent(pvl.Indent());
       pvl.Object(i).SetFormat(pvl.GetFormat());
-      os << pvl.Object(i) << endl;
+      os << pvl.Object(i) << pvl.GetFormat()->FormatEOL();
       pvl.Object(i).SetFormat(NULL);
       pvl.Object(i).SetIndent(0);
-      if (++numObjects < pvl.Objects()) os << endl;
+      if (++numObjects < pvl.Objects()) os << pvl.GetFormat()->FormatEOL();
     }
 
     // this number keeps track of the number of groups that have been written
@@ -281,14 +316,14 @@ namespace Isis {
       for (int j=0; j<pvl.Groups(); j++) {
         if (outTemplate.Group(i).Name() != pvl.Group(j).Name()) continue;
         if ((numGroups == 0) && 
-            (pvl.Objects() > 0 || pvl.Keywords() > 0)) os << endl;
+            (pvl.Objects() > 0 || pvl.Keywords() > 0)) os << pvl.GetFormat()->FormatEOL();
         pvl.Group(j).SetIndent(pvl.Indent());
         pvl.Group(j).SetFormatTemplate(outTemplate.Group(i));
         pvl.Group(j).SetFormat(pvl.GetFormat());
-        os << pvl.Group(j) << endl;
+        os << pvl.Group(j) << pvl.GetFormat()->FormatEOL();
         pvl.Group(j).SetFormat(NULL);
         pvl.Group(j).SetIndent(0);
-        if (++numGroups < pvl.Groups()) os << endl;
+        if (++numGroups < pvl.Groups()) os << pvl.GetFormat()->FormatEOL();
       }
     }
   
@@ -296,13 +331,13 @@ namespace Isis {
     for (int i=0; i<pvl.Groups(); i++) {
       if (outTemplate.HasGroup(pvl.Group(i).Name())) continue;
       if ((numGroups == 0) && 
-          (pvl.Objects() > 0 || pvl.Keywords() > 0)) os << endl;
+          (pvl.Objects() > 0 || pvl.Keywords() > 0)) os << pvl.GetFormat()->FormatEOL();
       pvl.Group(i).SetIndent(pvl.Indent());
       pvl.Group(i).SetFormat(pvl.GetFormat());
-      os << pvl.Group(i) << endl;
+      os << pvl.Group(i) << pvl.GetFormat()->FormatEOL();
       pvl.Group(i).SetFormat(NULL);
       pvl.Group(i).SetIndent(0);
-      if (++numGroups < pvl.Groups()) os << endl;
+      if (++numGroups < pvl.Groups()) os << pvl.GetFormat()->FormatEOL();
     }
   
     // Output the terminator

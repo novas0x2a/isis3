@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/08/05 21:49:56 $
+ * $Revision: 1.10 $
+ * $Date: 2008/10/01 01:12:19 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -531,18 +531,18 @@ namespace Isis {
    * @see operator<< 
    */
   ostream& PvlKeyword::WriteWithWrap(std::ostream &os, const std::string &texttowrite, 
-                                     int startColumn, int &charsLeft) const {
+                                     int startColumn, int &charsLeft, PvlFormat *tempFormat) const {
     // Position set
     int pos = charsLeft - 1;
     string tempText = texttowrite;
 
     //If there's less than 1 character left, go ahead and skip to a new line.
     if (charsLeft < 1) {
-      os << endl;
+      os << tempFormat->FormatEOL();
       for (int k=0; k < startColumn; ++k) {
         os << " "; 
       }
-      charsLeft = 78 - startColumn;
+      charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
     }
 
     //If it's quoted...
@@ -555,25 +555,25 @@ namespace Isis {
         if (pos <= 0) break;
 
         os << tempText.substr(0, (pos+1));
-        os << endl;
+        os << tempFormat->FormatEOL();
         for (int k=0; k < startColumn; ++k) {
           os << " "; 
         }
 
         tempText = tempText.substr(pos+1, tempText.length()-(pos+1));
-        charsLeft = 78 - startColumn;
+        charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
         pos = charsLeft - 1;
       }
     } 
 
     // Should we linefeed?
-    if ((charsLeft != 78 - startColumn) && 
+    if ((charsLeft != 80 - 1 - (int)(tempFormat->FormatEOL().length()) - startColumn ) && 
         ((int)tempText.length() > charsLeft)) {
-      os << endl;
+      os << tempFormat->FormatEOL();
       for (int k=0; k < startColumn; ++k) {
         os << " "; 
       }
-      charsLeft = 78 - startColumn;
+      charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
     }
 
     // Write the remaining text
@@ -626,7 +626,7 @@ namespace Isis {
     // Write out the comments
     for (int i=0; i<keyword.Comments(); i++) {
       for (int j=0; j<keyword.Indent(); j++) os << " ";
-      os << keyword.Comment(i) << endl;
+      os << keyword.Comment(i) << tempFormat->FormatEOL();
     }
 
     // Write the keyword name & add length to startColumn.
@@ -653,10 +653,10 @@ namespace Isis {
     }
 
     // Loop and write each array value
-    int charsLeft = 78 - startColumn;
+    int charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
     for (int i=0; i<keyword.Size(); i++) {
       string val = tempFormat->FormatValue(keyword, i);
-      keyword.WriteWithWrap(os, val, startColumn, charsLeft);
+      keyword.WriteWithWrap(os, val, startColumn, charsLeft, tempFormat);
       if ((i==0) && keyword.Size() > 1) startColumn++;
 //cout << " I: " << i;
     }

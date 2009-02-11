@@ -561,8 +561,9 @@ void pds_labels(host)
 #ifdef VMS
     ibuf[length] = 0;
 #else
-    // JAA - Added unsigned char to remove compiler warning
-    ibuf[length] = (unsigned char) NULL;
+    // FIXED 2008/10/29, "NULL" was improper, \0 needed to be the specifier for a null terminator. 
+    //   - Steven Lambright, pointed out by "novas0x2a" (Support Forum Member)
+    ibuf[length] = '\0';
 #endif
 
     /******************************************************************/

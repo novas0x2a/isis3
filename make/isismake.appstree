@@ -4,7 +4,7 @@ APPLICATIONS = $(filter-out CVS Makefile , $(wildcard *))
 
 applications:
 	for i in $(APPLICATIONS); do \
-          echo "    Building and installing [$$i]"; \
+          echo "    Building and installing [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) install; cd ..; \
 	done
 

@@ -79,10 +79,10 @@ void IsisMain() {
 
   // Point to the right group of camera parameters
   string camera;
-  if (gbl::moc->IsWideAngleRed()) {
+  if (gbl::moc->WideAngleRed()) {
     camera = "WideAngleRed";
   }
-  else if (gbl::moc->IsWideAngleBlue()) {
+  else if (gbl::moc->WideAngleBlue()) {
     camera = "WideAngleBlue";
   }
   else if (etStart > etNABActivation) {
@@ -285,7 +285,7 @@ void gbl::LoadCoefficients(const string &file, int ns) {
 
 void gbl::FixWagoLines(string file) {
   // Nothing to do for narrow angle
-  if (gbl::moc->IsNarrowAngle()) return;
+  if (gbl::moc->NarrowAngle()) return;
 
   // Open the cube to repair
   Cube fix;

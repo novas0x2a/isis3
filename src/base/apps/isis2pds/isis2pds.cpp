@@ -63,8 +63,7 @@ void IsisMain() {
   if (ui.GetString("LABTYPE") == "FIXED")
     p.SetExportType( ProcessExportPds::Fixed );
 
-  Pvl &pdsLabel = p.StandardPdsLabel(ProcessExportPds::Image);
-  p.StandardAllMapping(pdsLabel);
+  p.StandardPdsLabel(ProcessExportPds::Image);
  
   Filename outFile(ui.GetFilename("TO", "img"));
   string outFilename(outFile.Expanded());

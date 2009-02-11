@@ -122,12 +122,15 @@ End_Group
     <change name="Steven Lambright" date="2008-04-21">
       Added default values for the lines and samples
     </change>
-     <change name="Steven Lambright" date="2008-05-12">
-          Removed references to CubeInfo 
-     </change>
+    <change name="Steven Lambright" date="2008-05-12">
+      Removed references to CubeInfo 
+    </change>
     <change name="Steven Koechle" date="2008-08-19">
-          Removed unnecessary duplicate cube creation
+      Removed unnecessary duplicate cube creation
      </change>
+    <change name="Steven Lambright" date="2009-01-05">
+      Added the ALLOWOUTSIDE option
+    </change>
   </history>
 
   <oldName>
@@ -289,6 +292,19 @@ End_Group
         </description>
         <minimum inclusive="yes">0.0</minimum>
         <maximum inclusive="yes">360.0</maximum>
+      </parameter>
+
+      <parameter name="ALLOWOUTSIDE">
+        <type>boolean</type>
+        <brief>
+          Allow sample/line values outside the image
+        </brief>
+        <description>
+          When this is checked, sample/line values that are outside of the image (but close)
+          will be extrapolated. For example, a sample of -0.5 would be valid. If this is not
+          checked, a sample of -0.5 is not allowed.
+        </description>
+        <default><item>true</item></default>
       </parameter>
     </group>
   </groups>

@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2008/06/18 21:24:28 $
+ * $Revision: 1.4 $
+ * $Date: 2008/12/24 17:28:24 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -26,11 +26,13 @@
 #include <QWidget>
 #include <QPaintEvent>
 #include <QResizeEvent>
-#include <QImage>
 
-#include "ChipViewport.h"
 #include "Chip.h"
 #include "Stretch.h"
+#include "iException.h"
+#include "Histogram.h"
+
+class QImage;
 
 namespace Qisis {
 /**
@@ -38,9 +40,11 @@ namespace Qisis {
   *
   * @ingroup Visualization Tools
   *
-  * @author 2007-05-01 Tracie Sucharski
+  * @author 2007-05-01 Tracie Sucharski 
   *
-  * @internal
+  * @internal 
+  * @history 2008-09-09 Tracie Sucharski - Added setCircle and setCircleSize 
+  *                          methods. 
   *
   */
 
@@ -90,6 +94,8 @@ namespace Qisis {
       void autoStretch ();
       void setCross (bool checked);
       void rotateChip (int rotation);
+      void setCircle (bool checked);
+      void setCircleSize (int size);
 
       void geomChip (Isis::Chip *matchChip);
       void nogeomChip ();
@@ -147,7 +153,9 @@ namespace Qisis {
 
       QImage *p_image;//!< The image
       bool p_paintImage;//!< Paint Image?
-      bool p_cross;//!< Cross?
+      bool p_cross;//!< Draw crosshair
+      bool p_circle;//!< Draw circle
+      int p_circleSize;//!<Circle size
 
       ChipViewport *p_tempView;//!< Temporary viewport
 

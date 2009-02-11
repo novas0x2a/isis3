@@ -53,6 +53,12 @@ End_Object
 Object = Label
   Bytes = 65536
 End_Object
+
+Object = History
+  Name      = IsisCube
+  StartByte = 81921
+  Bytes     = 3026
+End_Object
 End
 Testing Mosaic 2
 unittest: Initializing mosaic
@@ -72,8 +78,8 @@ Object = IsisCube
     TileLines   = 128
 
     Group = Dimensions
-      Samples = 247
-      Lines   = 248
+      Samples = 248
+      Lines   = 249
       Bands   = 1
     End_Group
 
@@ -98,8 +104,8 @@ Object = IsisCube
     MaximumLatitude    = -4.0
     MinimumLongitude   = 29.0
     MaximumLongitude   = 31.0
-    UpperLeftCornerX   = -45374.226399844
-    UpperLeftCornerY   = -121293.4016966
+    UpperLeftCornerX   = -45586.756856155
+    UpperLeftCornerY   = -121074.5047685
     PixelResolution    = 245.09009062449 <meters/pixel>
     Scale              = 123.72328210776 <pixels/degree>
   End_Group
@@ -108,7 +114,14 @@ End_Object
 Object = Label
   Bytes = 65536
 End_Object
+
+Object = History
+  Name      = IsisCube
+  StartByte = 131073
+  Bytes     = 3026
+End_Object
 End
+Mosaic Data: -1.79769e+308	-1.79769e+308	-1.79769e+308
 Mosaic Data: -1.79769e+308	-1.79769e+308	-1.79769e+308
 Mosaic Data: -1.79769e+308	-1.79769e+308	-1.79769e+308
 Mosaic Data: -1.79769e+308	-1.79769e+308	10

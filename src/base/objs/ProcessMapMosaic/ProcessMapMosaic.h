@@ -2,8 +2,8 @@
 #define ProcessMapMosaic_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/10/03 21:47:18 $
+ * $Revision: 1.6 $
+ * $Date: 2008/12/11 22:43:10 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -53,10 +53,19 @@ namespace Isis {
  *                                     copied to the output mosaic.
  *  @history 2008-10-03 Steven Lambright - Fixed problem where return values
  *                                     from SetUniversalGround were not checked
- *                                                                        
- *  @todo 2005-02-11 Stuart Sides - add coded example and implementation example 
- *                                  to class documentation                                                     
- */                                                                       
+ *  @history 2008-11-18 Christopher Austin - Added the first cube's history to
+ *           the mosaic's history along with the history object of the
+ *           application which did the mosaic.
+ *  @history 2008-12-08 Steven Lambright - Fixed one of the SetOutputCube(...)
+ *           methods, a lat/lon range was specified but CreateFromCube was still
+ *           being used (needed CreateFromCube because no cubes existed with the
+ *           correct range).
+ *  @todo 2005-02-11 Stuart Sides - add coded example and implementation example
+ *                                  to class documentation
+ *  @todo 2005-02-11 Steven Lambright - Fixed problem with world wrapping that
+ *        would result in trying to wrap errenously and produce an error later
+ *        on.
+ */
 
   class ProcessMapMosaic : public Isis::ProcessMosaic {
   

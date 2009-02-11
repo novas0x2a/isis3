@@ -102,6 +102,10 @@ void IsisMain(){
   string instType;
   double exposure;
 
+  // Adjust translations for summing mode
+  transl /= ui.GetDouble("SUMMINGMODE");
+  transs /= ui.GetDouble("SUMMINGMODE");
+
   detectorSamples += sampleExpansion;
   numberLines += lineExpansion;
 

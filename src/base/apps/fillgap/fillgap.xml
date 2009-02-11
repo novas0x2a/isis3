@@ -21,6 +21,11 @@
       Changed INTERP option CUBIC's name to CUBICCONVOLUTION to correlate with 
       other apps using the INTERP param.
     </change>
+    <change name="Jeannie Walldren" date="2008-11-05">
+      Removed references to DataInterp class and replaced them  with 
+      NumericalApproximation class.
+    </change>
+
   </history>
 
   <groups>
@@ -143,7 +148,7 @@
         interpolation scheme (cubic).
       </description>
       <terminalInterface>
-        <commandLine> from=../IN/peaks-h-null.cub to=OUT/output.cub interp=cubic mulldirection=horizontal
+        <commandLine> from=../IN/peaks-h-null.cub to=OUT/output.cub interp=cubic direction=samples
         </commandLine>
         <description>
          fillgap gui example
@@ -175,7 +180,8 @@
           <image width="741" height="841" src="assets/image/fillgapGui.JPG">
             <brief>Example Gui</brief>
             <description>Screenshot of GUI with parameters filled in to perform
-a fillgap operation on the input image. </description>
+              a fillgap operation on the input image.
+            </description>
             <thumbnail width="200" height="300" caption="Fillgap Gui" src="assets/thumb/fillgapGui.JPG" />
           </image>
         </guiInterface>

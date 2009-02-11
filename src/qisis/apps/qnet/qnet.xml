@@ -6,80 +6,172 @@
   </brief>
 
   <description>
-     <p>
-      <div style="background-color:gold; border:2pxsolidred; fort-weight:bold;">
-        This program is a prototype version and may contain errors.  
-        Please do not report errors. The documentation is not complete and may
-        be inaccurate. USE AT YOUR OWN RISK.
-      </div>
+    <p>
+      This program will create and edit control networks.  To run qnet, you will
+      need to create a text file containing a list of all cubes in the control
+      network. There are 3 core windows used in this application.
+    </p>
+
+    <h3>qnet window</h3>
+     The main qnet window is similar to the qview application.  You will see
+     many of the same tools, such as "Band Selection", "Zoom", "Pan",
+     "Stretch" and "Find" along the right border. The "Tie" tool is the last
+     button along the right toolbar. It will be the default tool selected when
+     "qnet" is launched.
+    <p>
+      In this window, select the "Open network" button or the open action (from 
+      File menu), and open the file containing the list of cubes in the network. 
+      You will then be prompted for the control network file. If you are editing 
+      an existing one, choose that file.  If you are creating a new control 
+      network, choose the "Cancel" button.
     </p>
     <p>
-   This program will create and edit control networks. 
-    </p>
-    <p>
-    To run qnet, you will need to create a text file containing a list of all cubes in the control network.
-    </p>
-    <p>
-    The main window of qnet is similar to the program "qview".  You will see many of the same tools
-    such as zoom, pan, stretch, etc.  The Tie tool will be the default tool selected (the bottom button along
-    the right hand toolbar) when qnet is launched.
-    </p>
-    <p>
-    Once qnet is up, select the "Open network" button or the open action (from File menu), and open the file
-    containing the list of cubes in the network.  You will then be prompted for the
-    control network file.  If you are editing an existing one, choose that file.  If you are
-    creating a new control network, choose the "Cancel" button.
-    </p>
-    <p>
-      The Control Network Navigator allows you to filter cubes or points on different attributes.   If filtering cubes,
-      you can then view the cube(s) chosen from the filtered list.  If filtering points, you can view the cube(s) for 
-      the chosen points from the list or edit a chosen point.
-    </p>
-    <p>
-    Cubes are displayed in the main window, with control points displayed as green "+", 
-    yellow "+" (points set to "Ignored") or red "+" (point currently being edited).
-    When the Tie tool is the chosen tool, the mouse buttons have the following function in the cube viewports
-                of the main qnet window:
+      Cubes may be opened in the main qnet window selected from the list in
+      the Control Network Navigator window.  Points on these cubes are color
+      coded as follows:
     </p>
     <pre>
+      <strong>green "+"</strong> control point 
 
-                Left Button:  Modify the closest control point
-                Middle Button:  Delete the closest control point
-                Right Button:  Create new control point
+      <strong>magenta "+"</strong> ground point
 
-    </pre>
-    <p>
-        If modifying or creating a point, the Point Editor dialog will be displayed, which will display the
-        cube that is the "Reference" cube on the left and the next cube in the control point on the right.
-        Only the control measure on the right hand side can be moved.  The measure can be adjusted by:
-    </p>
+      <strong>yellow "+"</strong> ignore point 
+
+      <strong>red "+"</strong> point currently being edited (i.e. in Qnet Tool window) 
+      
+      window) 
+    </pre> 
+      When the "Tie" tool is activated, the mouse buttons have the following 
+      function in the cube viewports of the main qnet window:
     <pre>
+      <strong>Left Button:</strong>  Modify the closest control point
 
-                       1)  clicking the left mouse button will move that cursor position under the crosshair
-                       2)  move 1 pixel at a time using arrow keys on the keyboard
-                       3)  move 1 pixel at a time using arrow buttons on the Point Editor dialog
+      <strong>Middle Button:</strong>  Delete the closest control point 
 
-        Other Point Editor functions / options:
-
-               Geom:  Geom the right view to match the left view
-
-               Rotate:  Rotate the right view
-    
-               Blink controls (buttons below left view):  Blink the left and right view in the left view window.
-                             Using the arrow keys to move the right view will update the blinking in real time.
-    
-               Find:   Center the right view so that the same latitude / longitude is under the crosshair as
-                          the left view.
-
-               Register:  Sub-pixel register the the right view to the left view.
-
-               Save Point:  Save the control measure under the right view in the control network.
-
-               Add Measure(s) to Point:  Add control measure(s) to the current control point.
-               
-                        
+      <strong>Right Button:</strong>  Create new control point
     </pre>
 
+    <h3>Control Network Navigator window</h3> 
+    The Control Network Navigator displays a list of cubes or points in the
+    control network.  The user may choose to open cube(s) in the qnet window or
+    filter the list on different attributes.
+    <strong>Points -</strong> default list for the Control Network Navigator.  
+      With this selected, the user may click any of the following buttons:
+    <pre>
+      <strong>"View Cube(s)"</strong> to open all cubes containing the selected 
+      point(s) 
+
+      <strong>"Modify Point"</strong> (or <strong>double click</strong> list 
+      item) to edit the point using the Qnet Tool 
+      
+      <strong>"Ignore Point(s)"</strong> to set selected points to "Ignore"
+      
+      <strong>"Delete Point(s)"</strong> to remove selected points from the 
+      control network 
+      
+      <strong>"Filter"</strong> to list all points from the currently displayed
+      list that meet the new filtering criteria selected.  **Note** If the 
+      currently displayed list is already filtered, the new list will only 
+      display points that meet the criteria of all filters previously chosen
+      until the user resets the list.
+      
+      <strong>"Show All"</strong> to reset the displayed list to all points in 
+      the network 
+    </pre>  
+    There are 8 filters for the points list which display the following:
+    <pre>
+      <strong>Error:</strong> points with bundle adjustment errors within the 
+      user specified range 
+      
+      <strong>Point ID:</strong> points whose Point Id contains the user 
+      specified string 
+      
+      <strong>Images:</strong> points that are contained in (at least or no more 
+      than) the user specified number of images 
+      
+      <strong>Type:</strong> points that are of the user specified type 
+      
+      <strong>Range:</strong> points that lie within the user specified 
+      latitudinal and longitudinal ranges 
+      
+      <strong>Distance:</strong> points that are within the user specified 
+      distance of some other point in the control network 
+      
+      <strong>Measure:</strong> points that contain at least one measure of 
+      selected type(s)  
+      
+      <strong>Goodness of Fit:</strong> points that contain at least one measure 
+      whose Goodness of Fit is within the user specified range 
+    </pre>
+    <strong>Cubes -</strong> With this selected, the user may click any of the 
+    following buttons:
+    <pre>
+      <strong>"View Cube(s)"</strong> to open all selected cubes  
+      
+      <strong>"Filter"</strong> to list all cubes from the currently displayed
+      list that meet the new filtering criteria selected.  **Note** If the 
+      currently displayed list is already filtered, the new list will only 
+      display cubes that meet the criteria of all filters previously chosen
+      until the user resets the list.
+      
+      <strong>"Show All"</strong> to reset the list to all images in the network 
+    </pre> 
+    There are 3 filters for the cubes list which display the following:
+    <pre>
+      <strong>Cube Name:</strong> cubes whose file name contains the user 
+      specified string 
+      
+      <strong>Points:</strong> cubes containing (at least or no more than) the 
+      user specified number of points 
+      
+      <strong>Distance:</strong> cubes that contain at least one pair of points 
+      that are within the user specified distance from each other 
+    </pre>
+    
+    <h3>Qnet Tool window</h3>
+      This is the point editor window of qnet for modifying or creating a 
+      point.  The window will display the cube that is the "Reference" cube 
+      on the left and the next cube in the control point on the right. Only 
+      the control measure on the right hand side can be moved.  The measure 
+      can be adjusted by:
+    <pre>
+      move to the cursor position under the crosshair by clicking the left mouse button
+
+      move 1 pixel at a time by using arrow keys on the keyboard 
+
+      move 1 pixel at a time by using arrow buttons above the right view
+    </pre>
+    Other point editor functions / options include the following:
+    <pre>
+      <i>In the Options menu:</i>
+        <strong>Registration:</strong> Set or view and save registration 
+        templates.
+      
+      <i>Along the left border of the window:</i>
+        <strong>Geom:</strong>  Geom the right view to match the left view 
+        
+        <strong>Rotate:</strong>  Rotate the right view
+    
+      <i>Below the left view:</i>
+        <strong>Blink controls:</strong>  Blink the left and right view in the
+        left view window using the "Blink Start" button (with play icon) and 
+        "Blink Stop" button (with stop icon).  The arrow keys above the right view 
+        may be used to move the right view in order to update the blinking in real 
+        time.
+      
+        <strong>Find:</strong>   Center the right view so that the same latitude / 
+        longitude is under the crosshair as the left view. 
+        
+        <strong>Add Measure(s) to Point:</strong>  Add control measure(s) to the 
+        current control point. 
+      
+      <i>Below the right view:</i>
+        <strong>Register:</strong>  Sub-pixel register the the right view to
+        the left view.
+        
+        <strong>Save Point:</strong>  Save the control measure under the right 
+        view in the control network. 
+    </pre>
   </description>
 
   <category>
@@ -93,6 +185,100 @@
     </change>
     <change name="Steven Lambright" date="2007-07-23">
       Added to Control Networks category
+    </change>
+    <change name="Tracie Sucharski" date="2008-10-06">
+      Refactor of underlying classes
+    </change>
+    <change name="Jeannie Walldren" date="2008-11-24">
+      Changed the name of the "Tie Point Tool" window to "Qnet Tool". 
+      
+      Added "Close" command to the drop down File menu on the "Qnet Tool" 
+      window's  menu bar.  
+      
+      Added Qt's wait cursor (i.e. clock or hourglass) to indicate that there is
+      background activity when the "Filter" or "View Cube(s)" buttons have been
+      clicked on the "Control Network Navigator" window. 
+      
+      Added message box when the user creates a new point and tries to give it a
+      Point ID that already exists in the Control network.  Previously this
+      resulted in a PROGRAMMER ERROR from ControlPoint. Now, the user will be
+      alerted in a message box and prompted to enter a new value for the Point
+      ID.  
+
+      Replaced references to PointEdit class with ControlPointEdit.
+
+      Added "Goodness of Fit" to "Qnet Tool" right and left measure info.
+    </change>
+    <change name="Jeannie Walldren" date="2008-11-26">
+      Added "Goodness of Fit" filter to the tabs for the "Points" section of the 
+      "Control Network Navigator" window.  This filter returns all points that 
+      have at least one measure that falls inside the user specified range.
+
+     Added "Number of Measures" to "Qnet Tool" window below "Point ID".
+
+     Modified code to pre-set the Point ID value in the "New Point Dialog" 
+     window to the last Point ID entered in the dialog box. This value is 
+     highlighted so the user may begin typing over the name without needing to 
+     backspace.
+
+      Changed the "Qnet Tool" title bar to display the name of the ControlNet 
+      file open.
+
+      Added message box when saving an "Ignore" point in the "Qnet Tool" to ask 
+      if user wants to set Ignore=false.
+
+      Modified the "Distance" filter in the "Points" section of the "Control 
+      Network Navigator" window to improve efficiency and accuracy.
+    </change>
+    <change name="Tracie Sucharski" date="2008-11-26">
+      Removed plot tool and all polygon references-this funtionality will be in 
+      qmos.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-03">
+      Modified the "Distance" filter in the "Cubes" section of the "Control 
+      Network Navigator" window to improve efficiency and accuracy, and to allow 
+      the user to select a distance in meters or pixels.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-08">
+      Added connection from "x" in upper right corner to "Exit" command under 
+      the "File" menu of the main window.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-10">
+      Added functionality to "Qnet Tool" can set, view, edit and save changes 
+      for a template file.  This is located in the "Options" menu under 
+      "Registration" as the "Set registration template" and "View/edit 
+      registration template" actions.  Added "What's this?" descriptions to 
+      "Qnet Tool" window actions.
+    </change>
+    <change name="Tracie Sucharski" date="2008-12-19">
+      Added "Ignore Points" and "Delete Points" to the Control Navigator tool.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-29">
+      Added question boxes when the "Delete Points" or "Ignore Points" buttons 
+      are clicked in the Control Navigator to verify that the user wants to 
+      delete or ignore the selected points.  Disabled "Ground Point" checkbox in 
+      Qnet Tool window and added dialog window for determining lat/lon/radius if 
+      user chooses to toggle the "Hold Point" checkbox to true.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-30">
+      Modified Qnet Tool "Save Point" button to set the left and right measures to 
+      Ignore=False if the user chooses to set the point's Ignore=False.  Also, 
+      "Save Point" button will now update ChooserName and DateTime keywords for
+      altered measures.  Modified Control Network Navigator points list to set 
+      most recently edited point to the current item so that it may be easily 
+      deleted.
+    </change>
+    <change name="Jeannie Walldren" date="2008-12-31">
+      Added keyboard shortcuts to buttons in Control Network Navigator window. 
+      Added question box to Qnet Tool "Save Point" button to ask user whether 
+      the reference measure should be replaced with the measure in the left
+      viewport. 
+    </change>
+    <change name="Jeannie Walldren" date="2009-01-08">
+      Updated user documentation.  Modified Control Network Navigator window to 
+      filter on existing filtered list until user selects the "Show All" button,
+      which will bring up all points in the control net or images in the serial
+      number list.
     </change>
   </history>
 </application>

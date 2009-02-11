@@ -1,4 +1,5 @@
 #include "Albedo.h"
+#include "SpecialPixel.h"
 #include "iException.h"
 
 #define MIN(x,y) (((x) < (y)) ? (x) : (y))
@@ -48,8 +49,8 @@ namespace Isis {
 
     // thresh is a parameter limiting how much we amplify the dns
     if (p_normPsurfref > psurf*p_normThresh) {
-      result = 0.0;
-      albedo = 0.0;
+      result = NULL8;
+      albedo = NULL8;
       mult = 0.0;
       base = 0.0;
     }
@@ -60,9 +61,9 @@ namespace Isis {
       }
       else {
         result = dn * p_normPsurfref / psurf;
-	      albedo = result;
-	      mult = p_normPsurfref / psurf;
-	      base = 0.0;
+	albedo = result;
+	mult = p_normPsurfref / psurf;
+	base = 0.0;
       }
     }
   }

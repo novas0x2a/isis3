@@ -2,8 +2,8 @@
 #define PvlFormatPds_h
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2006/12/15 01:43:17 $
+ * $Revision: 1.5 $
+ * $Date: 2008/10/01 01:09:56 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -42,6 +42,13 @@ namespace Isis {
  * @internal
  *  @history 2006-09-05 Stuart Sides - Original version
  *  @history 2006-12-14 Stuart Sides - Took out the upcaseing of units
+ *  @history 2008-09-19 Kris Becker - Put quotes around "N/A", "NULL", "UNK";
+ *                                    ensure units are placed after each element
+ *                                    in array instead of one at the end and
+ *                                    outside the closing right parenthesis.
+ *                                    These changes bring us more in line with
+ *                                    PDS compliancy.
+ * @history 2008-09-30 Christopher Austin - added FormatEOL() 
  */
 
   class PvlFormatPds : public PvlFormat {
@@ -58,6 +65,7 @@ namespace Isis {
       virtual std::string FormatName (const PvlKeyword &keyword);
       virtual std::string FormatEnd (const std::string name,
                                      const PvlKeyword &keyword);
+      virtual std::string FormatEOL () { return "\015\012"; }
 
     protected:
       virtual std::string AddQuotes (const std::string value);

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/06/18 17:02:18 $
+ * $Revision: 1.4 $
+ * $Date: 2008/10/23 15:42:29 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -39,16 +39,43 @@ namespace Isis {
   bool PushFrameCameraGroundMap::SetGround(const double lat, const double lon) {
     PushFrameCameraDetectorMap *detectorMap = (PushFrameCameraDetectorMap *) p_camera->DetectorMap();
 
-    // Get ending bounding framelets and distances for iterative loop
+    // Get ending bounding framelets and distances for iterative loop to minimize the spacecraft distance
     int startFramelet = 1;
-    double startDist = FindDistance(1, lat, lon);
+    double startDist = FindSpacecraftDistance(1, lat, lon);
 
     int endFramelet = detectorMap->TotalFramelets();
-    double endDist = FindDistance(endFramelet, lat, lon);
+    double endDist = FindSpacecraftDistance(endFramelet, lat, lon);
 
-    for (int j=0; j<30; j++) {
-      int middleFramelet = (startFramelet + endFramelet) / 2;
-      double middleDist = FindDistance(middleFramelet, lat, lon);
+    bool minimizedSpacecraftDist = false;
+
+    for (int j=0; j<30 && !minimizedSpacecraftDist; j++) {
+      int deltaX = abs(startFramelet - endFramelet) / 2;
+
+      // start + deltaX = middle framelet.
+      //  We're able to optimize this modified binary search
+      //  because the 'V' shape -- it's mostly parallel. Meaning,
+      //  if the left side is higher than the right, then the 
+      //  solution is closer to the right. The bias factor will
+      //  determine how much closer, and then back off a little so
+      //  we dont overshoot it.
+      double biasFactor = startDist / endDist;
+
+      if(biasFactor < 1.0) {
+        biasFactor = -1.0 / biasFactor;
+        biasFactor = -(biasFactor + 1) / biasFactor;
+
+        // The bias is about 10% unsure... 
+        biasFactor = std::min(biasFactor + 0.10, 0.0);
+      }
+      else {
+        biasFactor = (biasFactor - 1) / biasFactor;
+
+        // The bias is about 10% unsure... 
+        biasFactor = std::max(biasFactor - 0.10, 0.0);
+      }
+
+      int middleFramelet = startFramelet + (int)(deltaX + biasFactor*deltaX);
+      double middleDist = FindSpacecraftDistance(middleFramelet, lat, lon);
 
       if(startDist > endDist) {
         // This makes sure we don't get stuck halfway between framelets
@@ -61,37 +88,64 @@ namespace Isis {
         endDist = middleDist;
       }
 
-      // See if we converged on the point so set up the undistorted
-      // focal plane values and return
-      if (startFramelet == endFramelet) {
-        int realFramelet = startFramelet;
-        bool frameletEven = (startFramelet % 2 == 0);
-
-        // Do we need to find a neighboring framelet? Get the closest (minimize distance)
-        if(frameletEven != p_evenFramelets) {
-          double beforeDist = FindDistance(startFramelet-1, lat, lon);
-          double afterDist = FindDistance(startFramelet+1, lat, lon);
-
-          if(beforeDist < afterDist) {
-            realFramelet = startFramelet - 1;
-          }
-          else {
-            realFramelet = startFramelet + 1;
-          }
-        }
-
-        detectorMap->SetFramelet(realFramelet);
-        if (!CameraGroundMap::SetGround(lat,lon)) return false;
-        return true;
+      if(startFramelet == endFramelet) {
+        minimizedSpacecraftDist = true;
       }
     }
 
-    return false;
+    if(!minimizedSpacecraftDist) {
+      return false;
+    }
+
+    int realFramelet = (int) startFramelet + p_linearSearchOffset;
+    bool frameletEven = (realFramelet % 2 == 0);
+    bool timeAscendingFramelets = detectorMap->timeAscendingFramelets();
+
+    // Do we need to find a neighboring framelet? Get the closest (minimize distance)
+    if((timeAscendingFramelets && frameletEven != p_evenFramelets) || 
+       (!timeAscendingFramelets && frameletEven == p_evenFramelets)) {
+      realFramelet ++; // this direction doesnt really matter... it's simply a guess
+    }
+
+    int direction = 2;
+
+    double realDist = FindDistance(realFramelet, lat, lon);
+    int guessFramelet = realFramelet + direction;
+    double guessDist = FindDistance(guessFramelet, lat, lon);
+
+    if(guessDist > realDist) {
+      direction = -1 * direction; // reverse the search direction
+      guessFramelet = realFramelet + direction;
+      guessDist = FindDistance(guessFramelet, lat, lon);
+    }
+
+    for(int j = 0; (realDist >= guessDist) && (j < 30); j++) {
+      realFramelet = guessFramelet;
+      realDist = guessDist;
+
+      guessFramelet = realFramelet + direction;
+      guessDist = FindDistance(guessFramelet, lat, lon);
+
+      if(realFramelet <= 0 || realFramelet > detectorMap->TotalFramelets()) {
+        return false;
+      }
+    }
+
+    p_linearSearchOffset = realFramelet - (int) startFramelet;
+
+    // Can only offset 2% of the image to keep us near the right feature
+    if(fabs(p_linearSearchOffset) > (int)(0.02 * detectorMap->TotalFramelets())) {
+      p_linearSearchOffset = (p_linearSearchOffset/abs(p_linearSearchOffset)) * (int)(0.02 * detectorMap->TotalFramelets());
+    }
+    
+    detectorMap->SetFramelet(realFramelet);
+
+    return CameraGroundMap::SetGround(lat,lon);
   }
 
   /** 
    * This method finds the distance from the center of the framelet to the lat,lon.
-   *   The distance is only in the Y-direction and is squared.
+   *   The distance is only in the line direction and is squared.
    * 
    * @param framelet
    * @param lat 
@@ -104,61 +158,45 @@ namespace Isis {
     CameraDistortionMap *distortionMap = (CameraDistortionMap *) p_camera->DistortionMap();
 
     detectorMap->SetFramelet(framelet);
-    if (!p_camera->Sensor::SetUniversalGround (lat,lon,false)) return false;
+    if (!p_camera->Sensor::SetUniversalGround (lat,lon,false)) return DBL_MAX;
 
     double lookC[3];
     p_camera->Sensor::LookDirection(lookC);
     double ux = p_camera->FocalLength() * lookC[0] / lookC[2];
     double uy = p_camera->FocalLength() * lookC[1] / lookC[2];
 
-    if (!distortionMap->SetUndistortedFocalPlane(ux,uy)) return false;
+    if (!distortionMap->SetUndistortedFocalPlane(ux,uy)) return DBL_MAX;
 
     double dx = distortionMap->FocalPlaneX();
     double dy = distortionMap->FocalPlaneY();
 
     CameraFocalPlaneMap *focalMap = p_camera->FocalPlaneMap();
-    if (!focalMap->SetFocalPlane(dx,dy)) return false;
+    if (!focalMap->SetFocalPlane(dx,dy)) return DBL_MAX;
 
     detectorMap->SetDetector(focalMap->DetectorSample(), focalMap->DetectorLine());
+
     double actualFrameletHeight = detectorMap->frameletHeight() / detectorMap->LineScaleFactor();
     double frameletDeltaY = detectorMap->frameletLine() - (actualFrameletHeight / 2.0);
+
     return frameletDeltaY*frameletDeltaY;
   }
 
   /** 
-   * This method finds the distance from the center of the framelet to the lat,lon.
-   *   The distance is only in the Y-direction and is squared.
+   * This method finds the distance from the point on the ground to the spacecraft 
+   * at the time the specified framelet was taken. 
    * 
-   * @param framelet
-   * @param lat 
-   * @param lon
+   * @param framelet Which framelet was being captured (determines time)
+   * @param lat Latitude of the point on the ground
+   * @param lon Longitude of the point on the ground
    * 
-   * @return double Y-Distance squared from center of framelet to lat,lon
+   * @return double Distance from spacecraft to the lat,lon
    */
-  double PushFrameCameraGroundMap::FindDistance(double framelet, const double lat, const double lon) {
+  double PushFrameCameraGroundMap::FindSpacecraftDistance(int framelet, const double lat, const double lon) {
     PushFrameCameraDetectorMap *detectorMap = (PushFrameCameraDetectorMap *) p_camera->DetectorMap();
-    CameraDistortionMap *distortionMap = (CameraDistortionMap *) p_camera->DistortionMap();
 
-    detectorMap->SetFramelet((int)(framelet));
-    if (!p_camera->Sensor::SetUniversalGround (lat,lon,false)) return false;
+    detectorMap->SetFramelet(framelet);
+    if (!p_camera->Sensor::SetUniversalGround (lat,lon,false)) return DBL_MAX;
 
-    double lookC[3];
-    p_camera->Sensor::LookDirection(lookC);
-    double ux = p_camera->FocalLength() * lookC[0] / lookC[2];
-    double uy = p_camera->FocalLength() * lookC[1] / lookC[2];
-
-    if (!distortionMap->SetUndistortedFocalPlane(ux,uy)) return false;
-
-    double dx = distortionMap->FocalPlaneX();
-    double dy = distortionMap->FocalPlaneY();
-
-    CameraFocalPlaneMap *focalMap = p_camera->FocalPlaneMap();
-    if (!focalMap->SetFocalPlane(dx,dy)) return false;
-
-    detectorMap->SetDetector(focalMap->DetectorSample(), focalMap->DetectorLine());
-    double fractionalFramelet = framelet - (int)framelet;
-    double actualFrameletHeight = detectorMap->frameletHeight() / detectorMap->LineScaleFactor();
-    double frameletDeltaY = detectorMap->frameletLine() - (actualFrameletHeight * fractionalFramelet);
-    return fabs(frameletDeltaY);
+    return p_camera->SlantDistance();
   }
 }

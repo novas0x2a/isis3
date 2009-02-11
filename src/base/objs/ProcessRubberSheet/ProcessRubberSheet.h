@@ -2,8 +2,8 @@
 #define ProcessRubberSheet_h
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:09 $
+ * $Revision: 1.3 $
+ * $Date: 2008/10/30 16:22:14 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -77,52 +77,23 @@ namespace Isis {
  *                                         which will force tile containing that
  *                                         position to be processed in ProcessQuad
  *                                         even if all 4 corners of tile are bad.
- *                                                                        
+ *  @history 2008-09-10 Steven Lambright - Made tiling start and end sizes
+ *           variable
+ *   @history 2008-10-30 Steven Lambright - Fixed problem with definition
+ *            of class Quad, pointed out by "novus0x2a" (Support Board Member)
  *  @todo 2005-02-11 Stuart Sides - finish documentation and add coded and  
  *                                 implementation example to class documentation 
  */                                                                       
 
   class ProcessRubberSheet : public Isis::Process {
-    private:
-      void (*p_bandChangeFunct) (const int band);
-
-      double p_lineMap[128][128];
-      double p_sampMap[128][128];
-
-      double p_forceSamp;
-      double p_forceLine;
-                                                             
-      typedef struct Quad {
-        public:
-          int slineTile;
-          int ssampTile;
-          int sline;
-          int ssamp;
-          int eline;
-          int esamp;
-      };
-      
-      void ProcessQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
-                        double lineMap[128][128], double sampMap[128][128]);
-      void SplitQuad (std::vector<Quad *> &quadTree);
-      void SlowQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
-                     double lineMap[128][128], double sampMap[128][128]);
-      double Det4x4 (double m[4][4]);
-      double Det3x3 (double m[3][3]);
-  
-      // SlowGeom method is never used but saved for posterity
-      void SlowGeom (Isis::TileManager &otile, Isis::Portal &iportal, 
-                     Isis::Transform &trans, Isis::Interpolator &interp);
-      void QuadTree (Isis::TileManager &otile, Isis::Portal &iportal, 
-                     Isis::Transform &trans, Isis::Interpolator &interp,
-                     bool useLastTileMap);
     public:
-
       //! Constructs a RubberSheet object
-      ProcessRubberSheet() {
+      ProcessRubberSheet(int startSize = 128, int endSize = 8) {
         p_bandChangeFunct = NULL;
         p_forceSamp = Isis::Null;
         p_forceLine = Isis::Null;
+        p_startQuadSize = startSize;
+        p_endQuadSize = endSize;
       };
 
       //! Destroys the RubberSheet object.
@@ -138,7 +109,58 @@ namespace Isis {
         p_forceSamp = Samp;
         p_forceLine = Line;
       }
-    };
+
+      /**
+       * This sets the start and end tile sizes for the rubber sheet; numbers are 
+       * inclusive and must be powers of 2. 
+       * 
+       * @param start Start position; must be at least 4 and a power of 2
+       * @param end End position; must be at least 4, a power of 2 and less than start
+       */
+      void SetTiling(int start, int end) {
+         p_startQuadSize = start;
+         p_endQuadSize = end;
+      }
+
+    private:
+      class Quad {
+        public:
+          int slineTile;
+          int ssampTile;
+          int sline;
+          int ssamp;
+          int eline;
+          int esamp;
+      };
+      
+      void ProcessQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
+                        std::vector< std::vector<double> > &lineMap, 
+                        std::vector< std::vector<double> > &sampMap);
+
+      void SplitQuad (std::vector<Quad *> &quadTree);
+      void SlowQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
+                     std::vector< std::vector<double> > &lineMap, std::vector< std::vector<double> > &sampMap);
+      double Det4x4 (double m[4][4]);
+      double Det3x3 (double m[3][3]);
+  
+      // SlowGeom method is never used but saved for posterity
+      void SlowGeom (Isis::TileManager &otile, Isis::Portal &iportal, 
+                     Isis::Transform &trans, Isis::Interpolator &interp);
+      void QuadTree (Isis::TileManager &otile, Isis::Portal &iportal, 
+                     Isis::Transform &trans, Isis::Interpolator &interp,
+                     bool useLastTileMap);
+
+      void (*p_bandChangeFunct) (const int band);
+
+      std::vector< std::vector<double> > p_sampMap;
+      std::vector< std::vector<double> > p_lineMap;
+
+      double p_forceSamp;
+      double p_forceLine;
+
+      int p_startQuadSize;
+      int p_endQuadSize;
+  };
 };
 
 #endif

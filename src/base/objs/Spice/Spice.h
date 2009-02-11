@@ -2,8 +2,8 @@
 #define Spice_h
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2008/06/26 18:10:46 $
+ * $Revision: 1.12 $
+ * $Date: 2008/11/28 21:03:20 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   intellectual property information,user agreements, and related information.
@@ -135,6 +135,7 @@ namespace Isis {
  *                                    will take precidence.
  *  @history 2008-06-23 Steven Lambright - Added NaifStatus error checking
  *  @history 2008-06-25 Debbie A. Cook - Added method InstrumentVelocity to support miniRF
+ *  @history 2008-11-28 Debbie A. Cook - Added method HasKernels()
  */
   class Spice {
     public:
@@ -190,6 +191,8 @@ namespace Isis {
       SpiceRotation *BodyRotation() const { return p_bodyRotation; };
       SpiceRotation *InstrumentRotation() const { return p_instrumentRotation; };
 
+      bool HasKernels(Isis::Pvl &lab);
+
     protected:
       // Leave these protected so that inheriting classes don't
       // have to convert between double and spicedouble
@@ -236,6 +239,8 @@ namespace Isis {
       SpiceRotation *p_instrumentRotation;
       SpicePosition *p_sunPosition;
       SpiceRotation *p_bodyRotation;
+
+      bool p_keepKernelsLoaded;
 
       // Constants
       SpiceInt p_bodyCode;

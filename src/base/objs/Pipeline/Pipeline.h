@@ -2,8 +2,8 @@
 #define Pipeline_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $                                                             
- * $Date: 2008/08/04 17:06:43 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2008/12/19 21:13:06 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -31,6 +31,7 @@
 using namespace std;
 
 namespace Isis {
+  class Filename;
 
 /** 
  * This class is designed to do most of the work in the "proc" programs, such as 
@@ -83,9 +84,19 @@ namespace Isis {
  *  
  * p.Run(); 
  * 
- * @endcode 
+ * @endcode
  *  
- * @author 2008-08-04 Steven Lambright
+ * @author 2008-08-04 Steven Lambright 
+ *  
+ * @internal 
+ *   @history 2008-09-25 Added features: Application identifiers other than the
+ *            application names, branched original input, branching from
+ *            branches, partial branch merging (discontinuing branches*)
+ *   @history 2008-10-28 The input no longer has to have virtual bands if the
+ *            SetInputFile(iString,iString) has an empty parameter name for the
+ *            virtual bands parameter. SetInputListFile(...) method added.
+ *   @history 2008-12-19 List files are now fully supported, along with output
+ *            list files.
  */
   class Pipeline {
     public:
@@ -95,14 +106,23 @@ namespace Isis {
       void Prepare();
       void Run();
 
+      void SetInputFile(const iString &inputParam);
       void SetInputFile(const iString &inputParam, const iString &virtualBandsParam);
+      void SetInputListFile(const iString &inputParam);
+      void SetInputFile(const Filename &inputFilename);
+      void SetInputListFile(const Filename &inputFilename);
+
       void SetOutputFile(const iString &outputParam);
+      void SetOutputFile(const Filename &outputFile);
+      void SetOutputListFile(const iString &outputFilenameParam);
+      void SetOutputListFile(const Filename &outputFilenameList);
       void KeepTemporaryFiles(bool keep);
       //! Returns true if temporary files will not be deleted, false if they will
       bool KeepTemporaryFiles() { return p_keepTemporary; }
 
       void AddToPipeline(const iString &appname);
-      PipelineApplication &Application(const iString &appname);
+      void AddToPipeline(const iString &appname, const iString &identifier);
+      PipelineApplication &Application(const iString &identifier);
       PipelineApplication &Application(const int &index);
 
       void SetFirstApplication(const iString &appname);
@@ -115,8 +135,17 @@ namespace Isis {
       //! Returns the number of applications in the pipeline
       int Size() const { return (int)p_apps.size(); }
 
-      //! Returns the initial input file for the pipeline
-      iString OriginalInput() { return p_originalInput; }
+      /**
+       * Returns the initial input file for the pipeline
+       * 
+       * @param branch Branch of the original input to get the filename from
+       * 
+       * @return iString Name of the original input file
+       */
+      iString OriginalInput(unsigned int branch) { return ((branch < p_originalInput.size())? p_originalInput[branch] : ""); }
+
+      //! Returns the names of the original branches of the pipeline (multiple input files)
+      vector<iString> OriginalBranches() { return p_originalBranches; }
       iString FinalOutput(int branch = 0, bool addModifiers = true);
       iString TemporaryFolder();
 
@@ -124,12 +153,15 @@ namespace Isis {
 
     private:
       iString p_procAppName; //!< The name of the pipeline
-      iString p_originalInput; //!< The original input file
-      iString p_finalOutput; //!< The final output file (empty if needs calculated)
-      iString p_virtualBands; //!< The virtual bands string
+      vector<iString> p_originalInput; //!< The original input file
+      vector<iString> p_originalBranches; //!< The original branch names
+      vector<iString> p_finalOutput; //!< The final output file (empty if needs calculated)
+      vector<iString> p_virtualBands; //!< The virtual bands string
       bool p_keepTemporary; //!< True if keeping temporary files
       bool p_addedCubeatt; //!< True if the "cubeatt" program was added
       vector< PipelineApplication * > p_apps; //!< The pipeline applications
+      vector< iString > p_appIdentifiers; //!< The strings to identify the pipeline applications
+      bool p_outputListNeedsModifiers;
   };
 };
 

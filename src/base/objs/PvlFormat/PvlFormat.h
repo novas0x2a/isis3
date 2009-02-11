@@ -2,8 +2,8 @@
 #define PvlFormat_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/06/18 17:31:16 $
+ * $Revision: 1.4 $
+ * $Date: 2008/10/01 01:10:44 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -108,6 +108,7 @@ namespace Isis {
  *                                                                        
  * @internal
  *  @history 2006-09-05 Stuart Sides - Original version
+ *  @history 2008-09-30 Christopher Austin - added FormatEOL()
  */                                                                       
   class PvlFormat {
 
@@ -126,6 +127,7 @@ namespace Isis {
       virtual std::string FormatName (const PvlKeyword &keyword);
       virtual std::string FormatEnd (const std::string name,
                                      const PvlKeyword &keyword);
+      virtual std::string FormatEOL () { return "\n"; }
 
       virtual KeywordType Type (const PvlKeyword &keyword);
       virtual int Accuracy (const PvlKeyword &keyword);

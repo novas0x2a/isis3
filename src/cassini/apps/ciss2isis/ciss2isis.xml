@@ -10,7 +10,11 @@
     This program will import a PDS Cassini ISS image file into an
     Isis cube.  Some Cassini files available from PDS contain VICAR labels
     <b>THIS PROGRAM ONLY ACCEPTS PDS LABELS.</b> You must specify an
-    input file which contains PDS labels.
+    input file which contains PDS labels.  <strong>Note:</strong> Scientists 
+    indicate that zeros may be valid DN values for sky areas of CISS images,  
+    but missing pixels are also assigned a value of zero and there is no known 
+    way to distinguish them. Since the chance of a valid zero DN is so slight,
+    ciss2isis will replace all zeros with Isis::Null.
   </description>
 
   <history>
@@ -43,8 +47,21 @@
       circumstance stopped the program and threw an exception. Application now 
       outputs a warning to the log but still creates the cube.
     </change>
-
+    <change name="Jeannie Walldren" date="2008-11-05">
+      Modified FixDns method and updated documentation.
+    </change>
   </history>
+  <liens>
+    <item> 
+      Insert hyperlinks to section Related Objects and Documents, subsection
+      Documents.
+    </item>
+    <item>
+       Since zeros may be valid DNs and missing pixels are set to zero, 
+       investigate whether there is a way to distinguish the two.  If so, update 
+       FixDns method in cisscal.cpp.
+    </item>
+  </liens>
 
   <category>
     <missionItem>Cassini</missionItem>

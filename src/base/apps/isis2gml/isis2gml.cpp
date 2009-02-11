@@ -19,7 +19,7 @@ void IsisMain(){
 
   Cube cube;
   cube.Open(ui.GetFilename("FROM"));
-  ImagePolygon poly(cube.Filename());
+  ImagePolygon poly;
   poly.Create(cube);
 
   geos::geom::MultiPolygon *mPolygon = poly.Polys();

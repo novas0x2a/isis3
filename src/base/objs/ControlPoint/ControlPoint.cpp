@@ -171,6 +171,22 @@ namespace Isis {
   }
 
   /**
+   *  Return true if given serial number exists in point
+   *
+   *  @param serialNumber  The serial number
+   *  @return True if point contains serial number, false if not
+   */
+  bool ControlPoint::HasSerialNumber(std::string &serialNumber) {
+    for (int m=0; m<this->Size(); m++) {
+      if (this->operator[](m).CubeSerialNumber() == serialNumber) {
+        return true;
+      }
+    }
+    return false;
+
+  }
+
+  /**
    * Set the ground coordinate of a control point
    *
    * @param lat     planetocentric latitude in degrees
@@ -304,6 +320,10 @@ namespace Isis {
       }
       else {
         Camera *cam = m.Camera();
+        if( cam == NULL ) {
+          std::string msg = "The Camera must be set prior to calculating apriori";
+          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        }
         if (cam->SetImage(m.Sample(),m.Line())) {
           goodMeasures++;
           lat += cam->UniversalLatitude();
@@ -349,6 +369,14 @@ namespace Isis {
     SetUniversalGround(lat,lon,rad);
   }
 
+
+  /**
+   * This method computes the errors for a point. 
+   *  
+   * @history 2008-07-17  Tracie Sucharski,  Added ptid and measure serial 
+   *                            number to the unable to map to surface error. 
+   */
+
   void ControlPoint::ComputeErrors() {
     if (Ignore()) return;
 
@@ -375,7 +403,9 @@ namespace Isis {
         m.SetComputedEphemerisTime(cam->EphemerisTime());
       }
       else {
-        std::string msg = "Unable to map point to surface";
+        std::string msg = "Unable to map point to surface, ControlPoint [" +
+                          Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
+                          "]";
         throw iException::Message(iException::User,msg,_FILEINFO_);
         // TODO: What should we do?
         // m.SetError(999.0,999.0);

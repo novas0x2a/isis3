@@ -22,7 +22,11 @@
     <change name="Christopher Austin" date="2008-1-03">
       Original version
     </change>
-
+    <change name="Steven Lambright" date="2008-10-24">
+      This program was using the input folder as a temporary folder, instead of looking
+      up the user's preferences to find the correct temporary folder. This program will now
+      use the correct temporary folder.
+    </change>
   </history>
 
   <groups>

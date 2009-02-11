@@ -17,7 +17,7 @@ FKEY0 = -0
 fkey2 = 0.123456
 FKEY2 = 0.12
 fkey2 = (0.123456, 987.123) <goofys>
-FKEY2 = (0.12, 987.12) <goofys>
+FKEY2 = (0.12 <goofys>, 987.12 <goofys>)
 fkey2 = (0.123456 <goofys>, 987.123)
 FKEY2 = (0.12 <goofys>, 987.12)
 ekey = unsigned
@@ -35,11 +35,11 @@ BINKEY = 2#0001010#
 binkey16 = 65535
 BINKEY16 = 2#1111111111111111#
 intkeyarray = (1, NULL, 3, NULL)
-INTKEYARRAY = (1, NULL, 3, NULL)
-intkeyarray = (1, NULL, 3, NULL) <m>
-INTKEYARRAY = (1, NULL, 3, NULL) <m>
-dblkeyarray = (1.01, NULL, 3.4, NULL)
-DBLKEYARRAY = (1.01, NULL, 3.40, NULL)
+INTKEYARRAY = (1, "NULL", 3, "NULL")
+intkeyarray = (1 <m>, NULL <m>, 3 <m>, N/A, UNK)
+INTKEYARRAY = (1 <m>, "NULL" <m>, 3 <m>, "N/A", "UNK")
+dblkeyarray = (1.01, NULL, 3.4, UNK)
+DBLKEYARRAY = (1.01, "NULL", 3.40, "UNK")
 =============================== Before
 Group = Group1
   skey     = stringval
@@ -143,6 +143,12 @@ Group = Group2
   myfloat  = 1.234567e+93
   myarray  = (12345,"a short string",1.234)
   binkey16 = 32769
+  wrapword = "The quick brown fox jumped over the lazy duck. Repunzel 
+             Repunzel let down your hair. The little toy dog is covered with 
+             dust, but sturdy and staunch he stands; and the little toy 
+             soldier is red with rust."
+  array    = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890, 12345, 
+              67890, 12345, 67890, 12345, 67890, 12345)
 End_Group
 End
 =============================== After
@@ -184,5 +190,11 @@ GROUP = GROUP2
   MYFLOAT  = 1.234567e+93
   MYARRAY  = (12345,"a short string",1.234)
   BINKEY16 = 2#1000000000000001#
+  WRAPWORD = "The quick brown fox jumped over the lazy duck. Repunzel 
+             Repunzel let down your hair. The little toy dog is covered with 
+             dust, but sturdy and staunch he stands; and the little toy 
+             soldier is red with rust."
+  ARRAY    = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890, 12345, 
+              67890, 12345, 67890, 12345, 67890, 12345)
 END_GROUP = GROUP2
 End

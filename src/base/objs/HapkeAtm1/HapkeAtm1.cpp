@@ -1,7 +1,12 @@
 #include <cmath>
+#include "AtmosModel.h"
+#include "Constants.h"
 #include "HapkeAtm1.h"
-#include "NumericalMethods.h"
+#include "NumericalApproximation.h"
+#include "Pvl.h"
+#include "PvlGroup.h"
 #include "iException.h"
+#include "iString.h"
 
 using std::max;
 
@@ -16,6 +21,41 @@ namespace Isis {
     }
   }
 
+  /** 
+   * Henyey-Greenstein atmos scattering in the 1st approximation. 
+   * Isotropic atmospheric scattering in the first approximation, 
+   * with corrections to the singly-scattered terms (in the spirit of      
+   * Hapke's photometric function for surfaces) for a strongly             
+   * anisotropic single-particle phase function.  The particular           
+   * phase function implemented is a single-term Henyey-Greenstein.        
+   * The model for scattering for a general, non-Lambertian surface with   
+   * an atmosphere looks like this:                                        
+   *                                                                       
+   * P = Pstd + trans*(rho*Ah*munot)/(1.d0-rho*Ab*sbar) + 
+   *     trans0*rho*(Psurf-Ah*munot)                              
+   *                                                                       
+   * where P is the overall photometric function (the model of the data),  
+   * PSTD is the pure atmospheric-scattering term, PSURF is the surface    
+   * photometric function, AH*MUNOT is a Lambertian approximation to this  
+   * with hemispheric albedo AH, TRANS and TRANS0 quantify transmission    
+   * of surface reflected light through the atmosphere overall and with    
+   * no scatterings in the atmosphere, and finally SBAR quantifies the     
+   * illumination of the ground by the sky.  RHO is the ratio of the sur-  
+   * face albedo to the albedo assumed in the functional form of PSURF.    
+   *  
+   * @param phase Value of the phase angle.
+   * @param incidence Value of the incidence angle.
+   * @param emission Value of the emission angle.
+   * 
+   * @history 2000-07-07 Randy Kirk - USGS, Flagstaff - Original
+   *          code
+   * @history 2000-12-18 K Teal Thompson  Port to Unix/ISIS;
+   * @history 2007-02-20 Janet Barrett - Imported from Isis2
+   *          pht_atm_functions to Isis3. 
+   * @history 2008-11-05 Jeannie Walldren - Modified references to
+   *          NumericalMethods class and replaced Isis::PI with PI
+   *          since this is in Isis namespace.
+   */
   void HapkeAtm1::AtmosModelAlgorithm (double phase, double incidence, double emission) {
     double munot,mu;
     double xx;
@@ -41,9 +81,9 @@ namespace Isis {
     if (TauOrWhaChanged()) {
       // preparation includes exponential integrals e sub 2 through 4
       p_wha2 = 0.5 * p_atmosWha;
-      p_e2 = NumericalMethods::r8expint(2,p_atmosTau);
-      p_e3 = NumericalMethods::r8expint(3,p_atmosTau);
-      p_e4 = NumericalMethods::r8expint(4,p_atmosTau);
+      p_e2 = AtmosModel::En(2,p_atmosTau);
+      p_e3 = AtmosModel::En(3,p_atmosTau);
+      p_e4 = AtmosModel::En(4,p_atmosTau);
 
       // zeroth moments of (uncorrected) x and y times characteristic fn
       p_x0 = p_wha2;
@@ -60,7 +100,7 @@ namespace Isis {
 
       // prepare to find correct mixture of x and y in conservative case
       if (p_atmosWha == 1.0) {
-        p_e5 = NumericalMethods::r8expint(5,p_atmosTau);
+        p_e5 = AtmosModel::En(5,p_atmosTau);
 	      p_alpha2 = (1.0/3.0) + p_delta * (0.25 - p_e5);
 	      p_beta2 = p_e4 + p_delta * (0.25 - p_e5);
 	      p_fixcon = (p_beta0 * p_atmosTau - p_alpha1 + p_beta1) / 
@@ -75,7 +115,7 @@ namespace Isis {
 
       // sbar is total diffuse illumination
       // isotropic part comes from moments, correction is numerical integral
-      GetHahgTables();
+      GenerateHahgTables();
       p_sbar = 1.0 - ((2.0 - p_atmosWha * p_alpha0) * p_alpha1 + p_atmosWha * p_beta0 * p_beta1) + p_atmosHahgsb;
 
       SetOldTau(p_atmosTau);
@@ -89,7 +129,7 @@ namespace Isis {
       munot = 0.0;
     }
     else {
-      munot = cos((Isis::PI/180.0)*incidence);
+      munot = cos((PI/180.0)*incidence);
     }
 
     maxval = max(1.0e-30,hpsq1+munot*munot);
@@ -100,7 +140,7 @@ namespace Isis {
       mu = 0.0;
     }
     else {
-      mu = cos((Isis::PI/180.0)*emission);
+      mu = cos((PI/180.0)*emission);
     }
 
     maxval = max(1.0e-30, hpsq1 + mu*mu);
@@ -151,9 +191,10 @@ namespace Isis {
 
     // gamma1 functions come from x and y, with a correction for
     // highly forward-scattered light as tabulated in hahgtTable
-    NumericalMethods::r8splint(p_atmosIncTable,p_atmosHahgtTable,p_atmosHahgtTable2,p_atmosNinc,incidence,&hahgt);
+    hahgt = p_atmosHahgtSpline.Evaluate(incidence,NumericalApproximation::Extrapolate);
     gmunot = p_gammax * xmunot + p_gammay * ymunot + hahgt;
-    NumericalMethods::r8splint(p_atmosIncTable,p_atmosHahgtTable,p_atmosHahgtTable2,p_atmosNinc,emission,&hahgt);
+
+    hahgt = p_atmosHahgtSpline.Evaluate(emission,NumericalApproximation::Extrapolate);
     gmu = p_gammax * xmu + p_gammay * ymu + hahgt;
 
     // purely atmos term uses x and y (plus single-particle phase
@@ -163,7 +204,7 @@ namespace Isis {
     }
     else {
       phasefn = (1.0 - p_atmosHga * p_atmosHga) / 
-        pow(1.0 + 2.0 * p_atmosHga * cos((Isis::PI/180.0) * phase) + p_atmosHga * p_atmosHga,1.5);
+        pow(1.0 + 2.0 * p_atmosHga * cos((PI/180.0) * phase) + p_atmosHga * p_atmosHga,1.5);
     }
 
     p_pstd = 0.25 * p_atmosWha * munotp / (munotp + mup) * 
@@ -175,7 +216,7 @@ namespace Isis {
     // finally, never-scattered term is given by pure attenuation, with
     // a correction for highly forward-scattered light (on the way down
     // but not on the way up) as tabulated in hahgt0Table
-    NumericalMethods::r8splint(p_atmosIncTable,p_atmosHahgt0Table,p_atmosHahgt0Table2,p_atmosNinc,incidence,&hahgt0);
+    hahgt0 = p_atmosHahgt0Spline.Evaluate(incidence,NumericalApproximation::Extrapolate);
     p_trans0 = (emunot + hahgt0) * emu;
   }
 

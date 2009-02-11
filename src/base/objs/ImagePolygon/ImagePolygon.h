@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/08/19 22:32:52 $
+ * $Revision: 1.12 $
+ * $Date: 2009/01/28 16:30:07 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -88,12 +88,21 @@ namespace Isis {
  *  @history 2008-06-18 Stuart Sides - Fixed doc error
  *  @history 2008-08-18 Steven Lambright - Updated to work with geos3.0.0
  *           instead of geos2. Mostly namespace changes.
+ *  @history 2008-12-10 Steven Koechle - Split pole code into seperate function,
+ *           chanded the way FixPoly360 did its intersection to handle a
+ *           multipolygon being returned.
+ *  @history 2008-12-10 Steven Lambright - Fixed logical problem which could
+ *           happen when the limb of the planet was on the left and was the
+ *           first thing found in the FindPoly method.
+ *  @history 2009-01-06 Steven Koechle - Changed Constructor, removed backwards
+ *           compatibility for footprint name.
+ *  @history 2009-01-28 Steven Lambright - Fixed memory leaks
  */
 
   class ImagePolygon : public Isis::Blob {
 
     public:
-      ImagePolygon (std::string name);
+      ImagePolygon ();
       ~ImagePolygon ();
 
       void Create (Cube &cube,int pixInc=0,int ss=1,int sl=1,int ns=0,int nl=0,
@@ -120,6 +129,7 @@ namespace Isis {
       int FindFirstLine (int samp,int direction);
 
       bool Fix360Poly ();
+      bool FixPolePoly();
 
       Cube *p_cube;
       bool p_isProjected;

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2008/05/14 21:07:11 $                                                                 
+ * $Revision: 1.9 $                                                             
+ * $Date: 2009/01/07 18:25:27 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -58,7 +58,7 @@ namespace Isis {
   * Opens an input cube specified by the programmer and verifies requirements 
   * are met.
   *
-  * @param fname Programmer specified work file. For example, "myfile.cube".
+  * @param fname Programmer specified work file. For example, "myfile.cub".
   * 
   * @param att  The cube attributes to use when opening the input cube.
   * 

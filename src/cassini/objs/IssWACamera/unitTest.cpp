@@ -1,8 +1,10 @@
+// $Id: unitTest.cpp,v 1.6 2009/01/22 22:43:29 kbecker Exp $
 using namespace std;
 
 #include <iomanip>
 #include <iostream>
 #include "Camera.h"
+#include "Filename.h"
 #include "CameraFactory.h"
 #include "iException.h"
 #include "Preference.h"
@@ -15,54 +17,35 @@ int main (void)
 
   cout << "Unit Test for IssWACamera..." << endl;
   /*
-   * Sample/Line TestLineSamp points changed for the IssWACamera
+   * Sample/Line TestLineSamp points changed for the IssNACamera
    */
   try{
-    // These should be lat/lon at center of image. To obtain these numbers for a new cube/camera,
-    // set both the known lat and known lon to zero and copy the unit test output "Latitude off by: "
-    // and "Longitude off by: " values directly into these variables.
-    double knownLat = -25.41766100521921;
-    double knownLon = 198.6301944066574;
 
-    Isis::Pvl p("$cassini/testData/W1477470023_6.cub");
+    Isis::Pvl p("$cassini/testData/W1525116136_1.cub");
     Isis::Camera *cam = Isis::CameraFactory::Create(p);
-    cout << setprecision(9);
+    cout << "Filename: " << Isis::Filename(p.Filename()).Name() << endl;
+    cout << "CK Frame: " << cam->InstrumentRotation()->Frame() << endl;
+    cout.setf(std::ios::fixed);
+    cout << setprecision(4);
    
     // Test all four corners to make sure the conversions are right
-    cout << "For upper left corner ..." << endl;
-    TestLineSamp(cam, 350.0, 350.0);
+    cout << "\nFor upper left corner ..." << endl;
+    TestLineSamp(cam, 0.5, 0.5);
 
-    cout << "For upper right corner ..." << endl;
-    TestLineSamp(cam, 700.0, 350.0);
+    cout << "\nFor upper right corner ..." << endl;
+    TestLineSamp(cam, cam->Samples()+0.5, 0.5);
 
-    cout << "For lower left corner ..." << endl;
-    TestLineSamp(cam, 350.0, 650.0);
+    cout << "\nFor lower left corner ..." << endl;
+    TestLineSamp(cam, 0.5, cam->Lines()+0.5);
 
-    cout << "For lower right corner ..." << endl;
-    TestLineSamp(cam, 700.0, 650.0);
+    cout << "\nFor lower right corner ..." << endl;
+    TestLineSamp(cam, cam->Samples()+0.5, cam->Lines()+0.5);
 
-    double samp = cam->Samples() / 2;
-    double line = cam->Lines() / 2;
-    cout << "For center pixel position ..." << endl;
+    double samp = cam->Samples() / 2.0 + 0.5;
+    double line = cam->Lines() / 2.0 + 0.5;
+    cout << "\nFor center pixel position ..." << endl;
+    TestLineSamp(cam, samp, line);
 
-    if(!cam->SetImage(samp,line)) {
-      std::cout << "ERROR" << std::endl;
-      return 0;
-    }
-
-    if(abs(cam->UniversalLatitude() - knownLat) < 1E-10) {
-      cout << "Latitude OK" << endl;
-    }
-    else {
-      cout << setprecision(16) << "Latitude off by: " << cam->UniversalLatitude() - knownLat << endl;
-    }
-
-    if(abs(cam->UniversalLongitude() - knownLon) < 1E-10) {
-      cout << "Longitude OK" << endl;
-    }
-    else {
-      cout << setprecision(16) << "Longitude off by: " << cam->UniversalLongitude() - knownLon << endl;
-    }
   }
   catch (Isis::iException &e) {
     e.Report();
@@ -70,23 +53,18 @@ int main (void)
 }
 
 void TestLineSamp(Isis::Camera *cam, double samp, double line) {
+  cout << "Line, Sample: " << line << ", " << samp << endl;
   bool success = cam->SetImage(samp,line);
 
   if(success) {
-    success = cam->SetUniversalGround(cam->UniversalLatitude(), cam->UniversalLongitude());
-  }
-
-  if(success) {
-    double deltaSamp = samp - cam->Sample();
-    double deltaLine = line - cam->Line();
-    if (fabs(deltaSamp) < 0.1) deltaSamp = 0;
-    if (fabs(deltaLine) < 0.1) deltaLine = 0;
-    cout << "DeltaSample = " << deltaSamp << endl;
-    cout << "DeltaLine = " << deltaLine << endl << endl;
+    cout << "Lat, Long:    " << cam->UniversalLatitude() << ", " 
+         << cam->UniversalLongitude() << endl;
+    double westlon = -cam->UniversalLongitude();
+    while(westlon < 0.0) westlon += 360.0; 
+    cout << "WestLon:      " << westlon << endl;
   }
   else {
-    cout << "DeltaSample = ERROR" << endl;
-    cout << "DeltaLine = ERROR" << endl << endl;
+    cout << "Point not on planet!\n";
   }
-}
 
+}

@@ -117,7 +117,7 @@ int main (int argc, char *argv[]) {
     cout << endl;
 
     cout << "Testing ISIS preference variable expansion" << endl;
-    Isis::Filename g2("$TEMPORARY/unitTest.cpp");
+    Isis::Filename g2("/$TEMPORARY/unitTest.cpp");
     cout << "Original filename: " << "/$TEMPORARY/unitTest.cpp" << endl;
     cout << "New filename:      " << g2.Expanded() << endl;
     cout << "Name:              " << g2.Name() << endl;

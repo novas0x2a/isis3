@@ -2,8 +2,8 @@
 #define Isotropic2_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 20:36:52 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/11/05 23:37:17 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -30,12 +30,23 @@ namespace Isis {
 
 /**
  * @brief
- *
+ * @ingroup RadiometricAndPhotometricCorrection
+ * @author 1998-12-21 Randy Kirk
+ *  
  * @internal
+ *  @history 1998-12-21 Randy Kirk - USGS, Flagstaff - Original
+ *          code
+ *  @history 2007-02-20 Janet Barrett - Imported from Isis2.
  *  @history 2007-08-15 Steven Lambright - Refactored code
  *  @history 2008-03-07 Janet Barrett - Moved code to set standard
  *                      conditions to the AtmosModel class
  *  @history 2008-06-18 Stuart Sides - Fixed doc error
+ *  @history 2008-11-05 Jeannie Walldren - Replaced reference to
+ *          NumericalMethods::r8expint() with AtmosModel::En(),
+ *          NumericalMethods::G11Prime() with
+ *          AtmosModel::G11Prime(), and NumericalMethods::r8ei()
+ *            with AtmosModel::Ei().  Added documentation from
+ *            Isis2.
  */
   class Isotropic2 : public AtmosModel {
     public:

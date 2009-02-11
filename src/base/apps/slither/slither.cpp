@@ -3,11 +3,12 @@
 #include <fstream>
 #include <iostream>
 
+#include "ControlNet.h"
 #include "Filename.h"
+#include "NumericalApproximation.h"
 #include "ProcessRubberSheet.h"
 #include "SlitherTransform.h"
 #include "UserInterface.h"
-#include "ControlNet.h"
 #include "iTime.h"
 
 using namespace std;
@@ -26,16 +27,16 @@ void IsisMain() {
   ControlNet cn(cfile);
 
   //  Set default type to Cubic spline interpolation
-  DataInterp::InterpType iType(DataInterp::Cubic);
+  NumericalApproximation::InterpType iType(NumericalApproximation::CubicNatural);
   string splineType = ui.GetString("SPLINE");
   if (splineType == "LINEAR") {
-    iType = DataInterp::Linear;
+    iType = NumericalApproximation::Linear;
   }
   else if (splineType == "POLYNOMIAL") {
-    iType = DataInterp::Polynomial;
+    iType = NumericalApproximation::Polynomial;
   }
   else if (splineType == "AKIMA") {
-    iType = DataInterp::Akima;
+    iType = NumericalApproximation::Akima;
   }
 
   // Get the sample and line shifts

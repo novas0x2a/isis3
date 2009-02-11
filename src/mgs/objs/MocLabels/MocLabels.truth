@@ -1,9 +1,9 @@
 Unit test for MocLabels
 MocWideAngleCamera cub test...
-IsNarrowAngle?  0
-IsWideAngle?  1
-IsWideAngleRed?  1
-IsWideAngleBlue?  0
+NarrowAngle?  0
+WideAngle?  1
+WideAngleRed?  1
+WideAngleBlue?  0
 Crosstrack Summing = 4
 Downtrack Summing = 4
 First Line Sample = 673
@@ -20,10 +20,10 @@ Gain = 16.03
 Offset = 25
 
 MocNarrowAngleCamera cub test...
-IsNarrowAngle?  1
-IsWideAngle?  0
-IsWideAngleRed?  0
-IsWideAngleBlue?  0
+NarrowAngle?  1
+WideAngle?  0
+WideAngleRed?  0
+WideAngleBlue?  0
 Crosstrack Summing = 1
 Downtrack Summing = 1
 First Line Sample = 1025

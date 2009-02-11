@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2008/12/17 21:43:53 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -55,18 +55,18 @@ namespace Isis {
     std::string algorithm = algo["Name"];
 
     // Open the factory plugin file
-    Plugin *p = new Plugin;
+    Plugin p;
     Filename f("PolygonSeeder.plugin");
     if (f.Exists()) {
-      p->Read("PolygonSeeder.plugin");
+      p.Read("PolygonSeeder.plugin");
     }
     else {
-      p->Read("$ISISROOT/lib/PolygonSeeder.plugin");
+      p.Read("$ISISROOT/lib/PolygonSeeder.plugin");
     }
 
     // Get the algorithm specific plugin and return it
     PolygonSeeder* (*plugin) (Pvl &pvl);
-    plugin = (PolygonSeeder * (*)(Pvl &pvl)) p->GetPlugin(algorithm);
+    plugin = (PolygonSeeder * (*)(Pvl &pvl)) p.GetPlugin(algorithm);
     return (*plugin)(pvl);
   }
 } // end namespace isis

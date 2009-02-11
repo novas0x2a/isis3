@@ -3,6 +3,7 @@
 #include <vector>
 #include <cfloat>
 #include <cmath>
+#include <iomanip>
 
 #include "SpiceRotation.h"
 #include "Quaternion.h"
@@ -39,6 +40,9 @@ namespace Isis {
     p_degree = 2;
     p_degreeApplied = false;
     p_noOverride = true;
+    p_axis1 = 3;
+    p_axis2 = 1;
+    p_axis3 = 3;
   }
 
   /**
@@ -63,6 +67,9 @@ namespace Isis {
     p_degree = 2;
     p_degreeApplied = false;
     p_noOverride = true;
+    p_axis1 = 3;
+    p_axis2 = 1;
+    p_axis3 = 3;
 
     // Determine the axis for the velocity vector
     std::string key = "INS" + Isis::iString(frameCode) + "_TRANSX";
@@ -153,7 +160,7 @@ namespace Isis {
         std::vector<double> RJ2( p_cache[cacheIndex+1] );
         std::vector<double> RJ1 (p_cache[cacheIndex] );
         SpiceDouble J2J1[3][3];
-        mtxm_c ((SpiceDouble *) &RJ2[0], (SpiceDouble *) &RJ1[0], J2J1);
+        mtxm_c ((SpiceDouble (*)[3]) &RJ2[0], (SpiceDouble (*)[3]) &RJ1[0], J2J1);
         SpiceDouble axis[3];
         SpiceDouble angle;
         raxisa_c (J2J1, axis, &angle);
@@ -359,27 +366,19 @@ namespace Isis {
    // Clear existing matrices from cache
     p_cache.clear();
 
-
-//    std::cout <<"time cache size is " << p_cacheTime.size() << std::endl;
-
-
-
-    // Calculate new rotation matrices from polynomials fit to angles & fill cache
-//    std::cout << "Before" << std::endl;
-//    double savetime = p_cacheTime.at(0);
-//    SetEphemerisTime(savetime);
-//    std::cout << "     at time " << savetime << std::endl;
-//    for (int i=0; i<9; i++) {
-//      std::cout << p_RJ[i] << std::endl;
-//    }
+    //    std::cout<<std::setprecision(24);
+    //    std::cout<<"PolyAng1  PolyAng2  PolyAng3  time"<<std::endl;
 
     for (std::vector<double>::size_type pos=0;pos < p_cacheTime.size();pos++) {
       double et = p_cacheTime.at(pos);
       std::vector<double> rtime;
-      rtime.push_back(et - p_baseTime);
+      rtime.push_back((et - p_baseTime) / p_timeScale);
       double angle1 = function1.Evaluate (rtime);
       double angle2 = function2.Evaluate (rtime);
       double angle3 = function3.Evaluate (rtime);
+
+      //      std::cout<<angle1<<" "<<angle2<<" "<<angle3<<" "<<et<<std::endl;
+
 
 // Get the first angle back into the range Naif expects [180.,180.]
       if (angle1 < -1*pi_c() ) {
@@ -390,7 +389,7 @@ namespace Isis {
       }
 
       eul2m_c ( (SpiceDouble) angle3, (SpiceDouble) angle2, (SpiceDouble) angle1,
-                 3,                    1,                    3,
+                 p_axis3,             p_axis2,              p_axis1,
                  (SpiceDouble (*)[3]) &p_RJ[0]);
       p_cache.push_back( p_RJ );
     }
@@ -399,11 +398,6 @@ namespace Isis {
     p_et = -DBL_MAX;
     SetEphemerisTime(et);
 
-/*    std::cout << "After" << std::endl;
-    std::cout << "     at time " << et << std::endl;
-    for (int i=0; i<9; i++) {
-      std::cout << p_RJ[i] << std::endl;
-    }*/
 
     NaifStatus::CheckErrors();
   }
@@ -435,6 +429,7 @@ namespace Isis {
     Table table(tableName,record);
 
     for (int i=0; i<(int)p_cache.size(); i++) {
+
       Quaternion q(p_cache[i]);
       std::vector<double> v = q.GetQuaternion();
       record[0] = v[0];
@@ -460,9 +455,6 @@ namespace Isis {
 
     SpiceDouble ang1,ang2,ang3;
     m2eul_c ((SpiceDouble *) &p_RJ[0],axis3, axis2, axis1, &ang3,&ang2, &ang1 );
-
-
-//    std::cout << "ra="<<ang1*180./pi_c()<<std::endl;
 
     std::vector<double> angles;
     angles.push_back(ang1);
@@ -513,7 +505,7 @@ namespace Isis {
 
   /** Set the coefficients of a polynomial fit to each
    * of the three camera angles for the time period covered by the
-   * cache, angle = a + bt + ct**2, where t = time - p_baseTime.
+   * cache, angle = a + bt + ct**2, where t = (time - p_baseTime)/ p_timeScale.
    *
    */
   void SpiceRotation::SetPolynomial () {
@@ -529,13 +521,15 @@ namespace Isis {
     ComputeBaseTime ();
     std::vector<double> time;
     std::vector<double> coeffAng1,coeffAng2,coeffAng3;
-    SpiceRotation::Axes axes[3]={Axis1, Axis2, Axis3};
+
+    //    std::cout<<"Axes of rotation for axes 1, 2, and 3"<<p_axis1<<" "<<p_axis2<<" "<<p_axis3<<std::endl;
+
 
     if (p_cache.size() == 1) {
       p_degree = 0;
       double t = p_cacheTime.at(0);
       SetEphemerisTime( t );
-      std::vector<double> angles = Angles ( axes[0], axes[1], axes[2]);
+      std::vector<double> angles = Angles ( p_axis3, p_axis2, p_axis1);
       coeffAng1.push_back(angles[0]);
       coeffAng2.push_back(angles[1]);
       coeffAng3.push_back(angles[2]);
@@ -546,11 +540,13 @@ namespace Isis {
       double t1 = p_cacheTime.at(0);
       SetEphemerisTime( t1 );
       t1 -= p_baseTime;
-      std::vector<double> angles1 = Angles ( axes[0], axes[1], axes[2]);
+      t1 = t1/p_timeScale;
+      std::vector<double> angles1 = Angles ( p_axis3, p_axis2, p_axis1);
       double t2 = p_cacheTime.at(1);
       SetEphemerisTime( t2 );
       t2 -= p_baseTime;
-      std::vector<double> angles2 = Angles ( axes[0], axes[1], axes[2]);
+      t2 = t2/p_timeScale;
+      std::vector<double> angles2 = Angles ( p_axis3, p_axis2, p_axis1 );
       angles2[0] = WrapAngle ( angles1[0], angles2[0]);
       double slope[3];
       double intercept[3];
@@ -572,11 +568,16 @@ namespace Isis {
     // Load the known values to compute the fit equation
       double start1=0.;  // value of 1st angle1 in cache
 
+      //      std::cout<<"Actual CI angles"<<std::endl;
+      //      std::cout<<std::setprecision(24);
+      //      std::cout<<"Time range:  "<<p_cacheTime.at(0)<<" "<<p_cacheTime.at(p_cacheTime.size()-1)<<std::endl;
+
+
       for (std::vector<double>::size_type pos=0;pos < p_cacheTime.size();pos++) {
         double t = p_cacheTime.at(pos);
-        time.push_back( t - p_baseTime );
+        time.push_back( (t - p_baseTime) / p_timeScale );
         SetEphemerisTime( t );
-        std::vector<double> angles = Angles ( axes[0], axes[1], axes[2]);
+        std::vector<double> angles = Angles ( p_axis3, p_axis2, p_axis1);
 
 // Fix 180/-180 crossovers on angle 1 before doing fit.
         if (pos == 0) {
@@ -590,6 +591,9 @@ namespace Isis {
         fitAng2->AddKnown ( time, angles[1] );
         fitAng3->AddKnown ( time, angles[2] );
         time.clear();
+
+        //        std::cout<<angles[0]<<" "<<angles[1]<<" "<<angles[2]<<" "<<t<<std::endl;
+
       }
       //Solve the equations for the coefficients
       fitAng1->Solve();
@@ -624,7 +628,7 @@ namespace Isis {
   /** Set the coefficients of a polynomial fit to each of the
    * three camera angles for the time period covered by the
    * cache, angle = c0 + c1*t + c2*t**2 + ... + cn*t**n,
-   * where t = time - p_baseTime, and n = p_degree.
+   * where t = (time - p_baseTime) / p_timeScale, and n = p_degree.
    *
    * @param [in] coeffAng1 Coefficients of fit to Angle 1
    * @param [in] coeffAng2 Coefficients of fit to Angle 2
@@ -644,10 +648,13 @@ namespace Isis {
     function2.SetCoefficients ( coeffAng2 );
     function3.SetCoefficients ( coeffAng3 );
 
-/*    std::cout << "coeffAng1="<<coeffAng1[0]<<" "<<coeffAng1[1]<<" "<<coeffAng1[2]<<std::endl;
-    std::cout << "coeffAng2="<<coeffAng2[0]<<" "<<coeffAng2[1]<<" "<<coeffAng2[2]<<std::endl;
-    std::cout << "coeffAng3="<<coeffAng3[0]<<" "<<coeffAng3[1]<<" "<<coeffAng3[2]<<std::endl;
-*/
+/*    std::cout << "coeffAng1=";
+    for (int i=0; i<(int) coeffAng1.size(); i++) std::cout <<coeffAng1[i]<<" ";
+    std::cout << std::endl << "coeffAng2=";
+    for (int i=0; i<(int) coeffAng2.size(); i++) std::cout <<coeffAng2[i]<<" ";
+    std::cout << std::endl << "coeffAng3=";
+    for (int i=0; i<(int) coeffAng3.size(); i++) std::cout <<coeffAng3[i]<<" ";
+    std::cout << std::endl;*/
 
 
     // Compute the base time
@@ -685,7 +692,7 @@ namespace Isis {
   /**
    *  Return the coefficients of a polynomial (parabola) fit to each of the
    *  three camera angles for the time period covered by the cache, angle =
-   *  c0 + c1*t + c2*t**2 + ... + cn*t**n, where t = time - p_basetime
+   *  c0 + c1*t + c2*t**2 + ... + cn*t**n, where t = (time - p_basetime) / p_timeScale
    *  and n = p_degree.
    *
    * @param [out] coeffAng1 Coefficients of fit to Angle 1
@@ -709,10 +716,15 @@ namespace Isis {
   void SpiceRotation::ComputeBaseTime () {
     if (p_noOverride) {
       p_baseTime = (p_cacheTime.at(0) + p_cacheTime.at(p_cacheTime.size()-1))/ 2.;
+      p_timeScale = p_baseTime - p_cacheTime.at(0);
     }
     else {
       p_baseTime = p_overrideBaseTime;
+      p_timeScale = p_overrideTimeScale;
     }
+
+    if (p_cacheTime[0] == p_cacheTime[p_cacheTime.size()-1]) p_timeScale = 1.0;
+
     return;
   }
 
@@ -723,8 +735,9 @@ namespace Isis {
    * 
    * @param [in] baseTime The baseTime to use and override the computed base time
    */
-  void SpiceRotation::SetOverrideBaseTime( double baseTime ) {
+  void SpiceRotation::SetOverrideBaseTime( double baseTime, double timeScale ) {
     p_overrideBaseTime = baseTime;
+    p_overrideTimeScale = timeScale;
     p_noOverride = false;
     return;
   }
@@ -742,7 +755,7 @@ namespace Isis {
    */
   double SpiceRotation::DPolynomial ( const int coeffIndex ) {
     double derivative;
-    double time = p_et - p_baseTime;
+    double time = (p_et - p_baseTime) / p_timeScale;
 
 //    std::cout << "coeff index = " << coeffIndex << std::endl;
 
@@ -764,7 +777,7 @@ namespace Isis {
   /** Compute the derivative with respect to one of the coefficients in the
    *  angle polynomial fit equation of a vector rotated from J2000 to a
    *  reference frame.  The polynomial equation is of the form 
-   *  angle = c0 + c1*t + c2*t**2 + ... cn*t**n, where t = time - p_basetime
+   *  angle = c0 + c1*t + c2*t**2 + ... cn*t**n, where t = (time - p_basetime) / p_timeScale
    *  and n = p_degree (the degree of the equation)
    *
    * @param [in]  lookJ       Look vector in J2000 frame
@@ -781,16 +794,16 @@ namespace Isis {
     //**TODO** To save time possibly save partial matrices
 
     // Get the rotation angles and form the derivative matrix for the partialVar
-    SpiceRotation::Axes axes[3]={Axis1, Axis2, Axis3};
 
 //    std::cout << "Partial call" << std::endl;
 
-    std::vector<double> angles = Angles ( axes[0], axes[1], axes[2] );
+    std::vector<double> angles = Angles ( p_axis3, p_axis2, p_axis1 );
     int angleIndex = partialVar;
+    int axes[3]={p_axis1,p_axis2,p_axis3};
     double angle = angles.at(angleIndex);
 
     double dmatrix[3][3];
-    drotat_ (&angle, (integer *) &(axes[angleIndex]), (doublereal *) dmatrix);
+    drotat_ (&angle, (integer *) axes+angleIndex, (doublereal *) dmatrix);
     // Transpose to obtain row-major order
     xpose_c ( dmatrix, dmatrix);
 
@@ -858,7 +871,7 @@ namespace Isis {
   /** Set the degree of the polynomials to be fit to the
    * three camera angles for the time period covered by the
    * cache, angle = c0 + c1*t + c2*t**2 + ... + cn*t**n,
-   * where t = time - p_baseTime, and n = p_degree.
+   * where t = (time - p_baseTime) / p_timeScale, and n = p_degree.
    *
    * @param [in] degree Degree of the polynomial to be fit
    *
@@ -898,6 +911,26 @@ namespace Isis {
       SetPolynomial (coefAngle1, coefAngle2, coefAngle3);
       p_degree = degree;
     }
-
   }
+
+
+  /** Set the axes of rotation for decomposition of a rotation 
+   *  matrix into 3 angles.
+   *
+   * @param [in]  axis1 Axes of rotation of first angle applied (right rotation)
+   * @param [in]  axis2 Axes of rotation of second angle applied (center rotation)
+   * @param [in]  axis3 Axes of rotation of third angle applied (left rotation)
+   * @return double Wrapped angle
+   *
+   */
+  void SpiceRotation::SetAxes(int axis1, int axis2, int axis3) {
+    if (axis1 < 1  ||  axis2 < 1  || axis3 < 1  || axis1 > 3  || axis2 > 3  || axis3 > 3) {
+      std::string msg = "A rotation axis is outside the valid range of 1 to 3";
+      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+    }
+    p_axis1 = axis1;
+    p_axis2 = axis2;
+    p_axis3 = axis3;
+  }
+
 }

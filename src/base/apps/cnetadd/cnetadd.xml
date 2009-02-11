@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="cnetadd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+  <brief>
+    Adds images to an Isis3 control network file.
+  </brief>
+
+  <description>
+    <p>
+      This program takes an input list of cubes and sees if they can be added to 
+      an existing Isis3 control network file.
+    </p>
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <history>
+    <change name="Steven Koechle" date="2008-11-24">
+      Original version
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+        <parameter name="FROMLIST">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>
+            List of ISIS3 input cubes in the control net.
+          </brief>
+          <description>
+          A text file containing one column of ISIS3 cube file names. Every file
+          used in the control net file should be represented in this list. The 
+          cubes must be available for the program to open.
+          </description>
+          <filter>
+            *.lis
+          </filter>
+        </parameter>
+
+        <parameter name="NETWORK">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>
+              Isis3 existing control network file
+          </brief>
+          <description>
+            Use this parameter to specify the control network file containing
+            the information.
+            </description>
+          <filter>
+            *.net
+          </filter>
+        </parameter>
+   
+      <parameter name="FROMLIST2">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          List of ISIS3 input cubes to add to the control net.
+        </brief>
+        <description>
+          A text file containing one column of ISIS3 cube file names. The cubes
+          must be available for the program to open.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>
+              Isis3 output control network file
+          </brief>
+          <description>
+            Use this parameter to specify the control network file to output
+            the information to.
+            </description>
+          <filter>
+            *.net
+          </filter>
+        </parameter>
+
+      <parameter name="LOG">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>
+              Optional Log File
+          </brief>
+          <description>
+            This optional log file contains information about which files were 
+            added to the control net and which ones were not.
+            </description>
+            <internalDefault>NONE</internalDefault>
+        </parameter>
+    </group>
+ </groups>
+</application>

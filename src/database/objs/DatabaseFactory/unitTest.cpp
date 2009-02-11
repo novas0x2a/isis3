@@ -20,9 +20,11 @@ int main(int argc, char *argv[]) {
   df->addProfile(p1);
   df->addProfile(p2);
   vector<string> strings = df->getProfileList();
+/*  Removed to keep from having to change truth data every install.
+ *  Added specific checks below for databases we care about.
   for(int i = 0; i < (int)strings.size(); i++) {
     cout << "Profile list: " << strings[i] << endl;
-  }
+  }*/
   
   DbProfile dup = df->getProfile("test profile 1");
 
@@ -32,12 +34,10 @@ int main(int argc, char *argv[]) {
   cout << "Default profile name: " << df->getDefaultProfileName() << endl;
   
   vector<string> available = df->available();
-  for(int i = 0; i < (int)available.size(); i++) {
-    cout << "Available list: " << available[i] << endl;
-  }
-
-  cout << "Driver available: " << df->isDriverAvailable("doesntexist") << endl;
-  cout << "Driver available: " << df->isDriverAvailable("mysql") << endl;
+  cout << "Driver available [doesntexist]: " << df->isDriverAvailable("doesntexist") << endl;
+  cout << "Driver available [mysql]: " << df->isDriverAvailable("mysql") << endl;
+  cout << "Driver available [postgresql]: " << df->isDriverAvailable("postgresql") << endl;
+  cout << "Driver available [sqlite]: " << df->isDriverAvailable("sqlite") << endl;
   cout << "Is Available: " << df->isAvailable("doesntexist") << endl;
   cout << "Is connected: " << df->isConnected("doesntexist") << endl;
   cout << "Is persistant: " << df->isPersistant("doesntexist") << endl;

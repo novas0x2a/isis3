@@ -42,4 +42,69 @@ void IsisMain() {
   p2.EndProcess();
   remove(file.c_str());
   cout << endl;
+
+  //Checks the setting of special pixel ranges
+
+  Isis::ProcessImport pNull;
+  pNull.SetNull( 0.0, 45.0 );
+  try { // Should NOT throw an error
+    pNull.SetNull( 0.0, 45.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should throw an error
+    pNull.SetLRS( 35.0, 55.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should NOT throw an error
+    pNull.SetLIS( 50.0, 52.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should throw an error
+    pNull.SetHRS( -10.0, 5.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  
+  Isis::ProcessImport pLRS;
+  pLRS.SetLRS( 10.0, 145.0 );
+  try { // Should throw an error
+    pLRS.SetNull( 35.0, 55.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should throw an error
+    pNull.SetLIS( 0.0, 15.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should throw an error
+    pLRS.SetHIS( -10.0, 155.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+  try { // Should NOT throw an error
+    pLRS.SetHIS( 145.0, 155.0 );
+  } catch (Isis::iException e) {
+    cout << e.Errors() << endl;
+    e.Clear();
+  }
+  cout << endl;
+
 }

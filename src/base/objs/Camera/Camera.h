@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.11 $                                                             
- * $Date: 2008/08/08 20:03:44 $                                                                 
+ * $Revision: 1.14 $                                                             
+ * $Date: 2009/01/05 22:42:07 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -73,6 +73,10 @@ namespace Isis {
  *   @history 2008-08-08 Steven Lambright - Added the LoadCache() method which
  *            tries to find the correct time range and calls
  *            Spice::CreateCache
+ *   @history 2008-09-10 Steven Lambright - Added the geometric tiling methods
+ *            in order to optimize push frame cameras and prevent corruption of
+ *            data when running cam2map with push frame cameras
+ *   @history 2009-01-05 Steven Lambright - Added InCube method
  */
 
   class Camera : public Isis::Sensor {
@@ -286,6 +290,9 @@ namespace Isis {
 
       static double Distance(double lat1, double lon1, 
                              double lat2, double lon2, double radius);
+      
+      static double GroundAzimuth(double glat, double glon, double slat,
+                                  double slon);
 
       /**
        * Set whether or not the camera should ignore the Projection
@@ -295,6 +302,10 @@ namespace Isis {
       void IgnoreProjection (bool ignore) { p_ignoreProjection = ignore; };
 
       void LoadCache(int cacheSize = 0);
+
+      void GetGeometricTilingHint(int &startSize, int &endSize);
+
+      bool InCube();
 
     protected:
 
@@ -314,6 +325,8 @@ namespace Isis {
   
       void SetFocalLength ();
       void SetPixelPitch ();
+
+      void SetGeometricTilingHint(int startSize = 128, int endSize = 8);
 
     private:
       double p_focalLength;  //!<The focal length, in units of millimeters
@@ -362,6 +375,9 @@ namespace Isis {
                             const double lat, const double lon);
 
       bool RawFocalPlanetoImage();
+
+      int p_geometricTilingStartSize; //!< The ideal geometric tile size to start with when projecting
+      int p_geometricTilingEndSize; //!< The ideal geometric tile size to end with when projecting
   };
 };
 

@@ -386,7 +386,9 @@ int mbr;
       /* squirrel data away */
       if (!tbuf) tbuf = array_new(datlen*8);
       if (datlen && !array_append(tbuf, data, datlen)) {
-        fprintf(stderr, "can't allocate temp space (%d bytes)\n, datlen");
+        // FIXED 2008/10/29, "datalen" was part of the print statement and no arguments
+        //   were provided for the %d. - Steven Lambright, pointed out by "novas0x2a" (Support Forum Member)
+        fprintf(stderr, "can't allocate temp space (%d bytes)\n", datlen);
         exit(1);
       }
       image = 0;

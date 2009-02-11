@@ -1,11 +1,7 @@
-#include <QMenuBar>
 #include <QMenu>
-#include <QStatusBar>
-#include <QFileDialog>
 #include <QApplication>
-#include "SpecialPixel.h"
+
 #include "AdvancedTrackTool.h"
-#include "Camera.h"
 #include "SerialNumber.h"
 #include "iTime.h"
 
@@ -36,7 +32,7 @@ namespace Qisis {
     p_tableWin->installEventFilter(this);
 
     p_tableWin->addToTable (false,"Id","Id");
-    p_tableWin->addToTable (true,"Sample:Line", "Sample:Line");
+    p_tableWin->addToTable (true,"Sample:Line", "Sample:Line", -1, Qt::Horizontal, "Sample and Line");
     p_tableWin->addToTable (false,"Band","Band");
     p_tableWin->addToTable (true,"Pixel","Pixel");
     p_tableWin->addToTable (true,"Planetocentric Latitude","Planetocentric Lat");
@@ -45,9 +41,10 @@ namespace Qisis {
     p_tableWin->addToTable (false,"360 Positive West Longitude","360 West Longitude");
     p_tableWin->addToTable (true,"180 Positive East Longitude","180 East Longitude");
     p_tableWin->addToTable (false,"180 Positive West Longitude","180 West Longitude");
+    p_tableWin->addToTable (false,"Projected X:Projected Y","Projected X:Projected Y", -1, Qt::Horizontal, "X and Y values for a projected image");
     p_tableWin->addToTable (false,"Local Radius","Radius");
-    p_tableWin->addToTable (false,"Point X:Point Y:Point Z","XYZ");
-    p_tableWin->addToTable (false,"Right Ascension:Declination","Ra:Dec");
+    p_tableWin->addToTable (false,"Point X:Point Y:Point Z","XYZ", -1, Qt::Horizontal, "The X, Y, and Z of surface intersection in body-fixed coordinates");
+    p_tableWin->addToTable (false,"Right Ascension:Declination","Ra:Dec", -1, Qt::Horizontal, "Right Ascension and Declination");
     p_tableWin->addToTable (false,"Resolution","Resolution");
     p_tableWin->addToTable (false,"Phase","Phase");
     p_tableWin->addToTable (false,"Incidence","Incidence");
@@ -55,12 +52,12 @@ namespace Qisis {
     p_tableWin->addToTable (false,"North Azimuth","North Azimuth");
     p_tableWin->addToTable (false,"Sun Azimuth","Sun Azimuth");
     p_tableWin->addToTable (false,"Solar Longitude","Solar Longitude");
-    p_tableWin->addToTable (false,"Spacecraft X:Spacecraft Y:Spacecraft Z","Spacecraft Position");
+    p_tableWin->addToTable (false,"Spacecraft X:Spacecraft Y:Spacecraft Z","Spacecraft Position", -1, Qt::Horizontal, "The X, Y, and Z of the spacecraft position");
     p_tableWin->addToTable (false,"Spacecraft Azimuth","Spacecraft Azimuth");
     p_tableWin->addToTable (false,"Slant Distance","Slant Distance");
     p_tableWin->addToTable (false,"Ephemeris Time","Ephemeris iTime");
     p_tableWin->addToTable (false,"Local Solar Time","Local Solar iTime");
-    p_tableWin->addToTable (false,"UTC","UTC");
+    p_tableWin->addToTable (false,"UTC","UTC", -1, Qt::Horizontal, "Internal time in UTC format");
     p_tableWin->addToTable (false,"Path","Path");
     p_tableWin->addToTable (false,"Filename","Filename");
     p_tableWin->addToTable (false,"Serial Number","Serial Number");
@@ -372,9 +369,17 @@ namespace Qisis {
           p_tableWin->table()->item(row,WEST_LON_360)->setText(QString::number(wlon,'f',15));
           p_tableWin->table()->item(row,WEST_LON_180)->setText(QString::number(Isis::Projection::To180Domain(wlon),'f',15));
           p_tableWin->table()->item(row,RADIUS)->setText(QString::number(radius,'f',15));
-
-          
         }
+      }
+    }
+
+    //If there is a projection add the Projected X and Y coords to the table
+    if(cvp->projection() != NULL) {
+      if (cvp->projection()->SetWorld(sample,line)) {
+        double projX = cvp->projection()->XCoord();
+        double projY = cvp->projection()->YCoord();
+        p_tableWin->table()->item(row, PROJECTED_X)->setText(QString::number(projX, 'f', 15));
+        p_tableWin->table()->item(row, PROJECTED_Y)->setText(QString::number(projY, 'f', 15));
       }
     }
   }

@@ -2,8 +2,8 @@
 #define MdisCalUtils_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $
- * $Date: 2008/09/04 18:48:15 $
+ * $Revision: 1.3 $
+ * $Date: 2008/11/19 22:35:13 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -141,6 +141,13 @@ std::vector<double> loadWACCSV(const std::string &fname, int filter,
   for (int i = 0 ; i < csv.rows() ; i++) {
     CSVReader::CSVAxis row = csv.getRow(i);
     if (ToInteger(row[0]) == filter) {
+      if ((row.dim1()-1) < nvalues) {
+        std::string mess = "Number values (" + iString(row.dim1()-1) + 
+                           ") in file " + fname + 
+                           " less than number requested (" +
+                           iString(nvalues) + ")!";
+        throw iException::Message(iException::User, mess.c_str(), _FILEINFO_);
+      }
       std::vector<double> rsp;
       for(int i = 0 ; i < nvalues ; i++) {
           rsp.push_back(ToDouble(row[1+i]));
@@ -163,6 +170,13 @@ std::vector<double> loadWACCSV(const std::string &fname, int filter,
   Filename csvfile(fname);
   CSVReader csv(csvfile.Expanded(), header, skip);
   CSVReader::CSVAxis row = csv.getRow(0);
+  if (row.dim1() < nvalues) {
+    std::string mess = "Number values (" + iString(row.dim1()) + 
+                       ") in file " + fname + " less than number requested (" +
+                       iString(nvalues) + ")!";
+    throw iException::Message(iException::User, mess.c_str(), _FILEINFO_);
+
+  }
   std::vector<double> rsp;
   for(int i = 0 ; i < nvalues ; i++) {
     rsp.push_back(ToDouble(row[i]));
@@ -187,11 +201,11 @@ std::vector<double> loadResponsivity(bool isNAC, bool binned, int filter,
   // Unfortunately NAC has a slightly different format so must do it
   //  explicitly
   if (isNAC) {
-    return (loadNACCSV(fname, 3, false, 0));
+    return (loadNACCSV(fname, 4, false, 0));
   }
   else {
     // Load the WAC parameters
-    return (loadWACCSV(fname, filter, 3, false, 0));
+    return (loadWACCSV(fname, filter, 4, false, 0));
   }
 }
 

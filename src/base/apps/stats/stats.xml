@@ -87,6 +87,9 @@
       A bug where the VALIDMIN,VALIDMAX were ignored was fixed; 
       these should always be used.
     </change>
+    <change name="Stacy Alley" date="2009-01-16">
+      Added the Format option for the output file.
+    </change>
   </history>
 
   <oldName>
@@ -132,6 +135,37 @@
           *.txt
         </filter>
       </parameter>
+
+       <parameter name="FORMAT">
+        <type>string</type>
+        <brief>
+          Output Format
+        </brief>
+        <description>
+          Format type for output file.  Pvl format is default.
+        </description>  
+        <default><item>PVL</item></default>
+        <list>
+          <option value="PVL">
+            <brief>
+              Pvl Format
+            </brief>
+            <description>
+              Output file will be in pvl format
+            </description>
+          </option>
+          <option value="FLAT">
+            <brief>
+              FlatFile Format
+            </brief>
+            <description>
+              Output file will be a comma deliminated flatfile.  This file format can easily be 
+              imported into excel.
+            </description>
+          </option>
+        </list>
+      </parameter>
+
     </group>
 
     <group name="Settings">

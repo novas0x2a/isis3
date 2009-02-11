@@ -35,7 +35,10 @@ void IsisMain ()
   id.Compress();
   id.Trim(" ");
   if (id != "CHAN1-L-MRFFR-5-CDR-MAP-V1.0" && id != "CHAN1-L-MRFFR-4-CDR-V1.0" &&
-      id != "LRO-L-MRFLRO-3-CDR-V1.0" && id != "LRO-L-MRFLRO-5-CDR-MAP-V1.0") {
+      id != "CH1-ORB-L-MRFFR-4-CDR-V1.0" && id != "CH1-ORB-L-MRFFR-5-CDR-MAP-V1.0" &&
+      id != "CH1-ORB-L-MRFFR-5-CDR-MOSAIC-V1.0" &&
+      id != "LRO-L-MRFLRO-3-CDR-V1.0" && id != "LRO-L-MRFLRO-5-CDR-MAP-V1.0" &&
+      id != "LRO-L-MRFLRO-4-CDR-V1.0" && id != "LRO-L-MRFLRO-5-CDR-MOSAIC-V1.0") {
     string msg = "Input file [" + inFile.Expanded() + "] does not appear to be " +
                  "in CHANDRAYAAN-1 MINI-RF FORERUNNER level 1 or level 2 format " +
 		 "or in LUNAR RECONNAISSANCE ORBITER MINI-RF LRO level 1 or " +

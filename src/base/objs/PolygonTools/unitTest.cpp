@@ -80,7 +80,7 @@ int main () {
     cout << "Lon/Lat polygon = " << mPolygon->toString() << endl << endl;
 
     cout << "X/Y polygon radius (1) = " 
-         << (PolygonTools::XYFromLonLat(*mPolygon, proj))->toString() << endl << endl;
+         << (PolygonTools::LatLonToXY(*mPolygon, proj))->toString() << endl << endl;
 
     delete proj;
 
@@ -93,11 +93,11 @@ int main () {
 
     proj = ProjectionFactory::Create(lab);
     cout << "X/Y polygon radius (10) = " 
-         << (PolygonTools::XYFromLonLat(*mPolygon, proj))->toString() << endl << endl;
+         << (PolygonTools::LatLonToXY(*mPolygon, proj))->toString() << endl << endl;
 
     // Convert a Lon/Lat poly to X/Y and then back to Lon/Lat
     cout << "Lat/Lon polygon from X/Y with radius (10) = "
-         << PolygonTools::LonLatFromXY(*PolygonTools::XYFromLonLat(*mPolygon, proj), proj)->toString()
+         << PolygonTools::XYToLatLon(*PolygonTools::LatLonToXY(*mPolygon, proj), proj)->toString()
          << endl << endl;
 
     // Create a UniversalGroundMap so we can test the SampleLinePolygon stuff
@@ -124,7 +124,7 @@ int main () {
                            Isis::globalFactory.createLinearRing (llpts),NULL));
     geos::geom::MultiPolygon* llmPolygon = Isis::globalFactory.createMultiPolygon (llpolys);
 
-    geos::geom::MultiPolygon *slmPolygon = PolygonTools::SampleLineFromLonLat(*llmPolygon, &ugm);
+    geos::geom::MultiPolygon *slmPolygon = PolygonTools::LatLonToSampleLine(*llmPolygon, &ugm);
     cout << "Coordinates of Sample/Line polygon:" << slmPolygon->toString() << endl;
 
     cout << endl;
@@ -137,6 +137,10 @@ int main () {
     cout << "GML Ploygon:" << endl;
     std::string GMLpolygon = PolygonTools::ToGML(mPolygon, "test");
     cout << GMLpolygon << endl; 
+
+    cout << "GML Thickness:" << endl;
+    double th = PolygonTools::Thickness( mPolygon );
+    cout << iString( th ) << endl;
 
   }
   catch (Isis::iException &e) {

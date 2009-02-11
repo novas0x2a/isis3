@@ -2,8 +2,8 @@
 #define PipelineApplication_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/04 17:18:15 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/12/19 21:13:06 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -41,7 +41,18 @@ namespace Isis {
  * and outputs correctly. Calling SetNext or SetPrevious is not recommended.
  *  
  *  
- * @author 2008-08-04 Steven Lambright
+ * @author 2008-08-04 Steven Lambright 
+ *  
+ * @internal 
+ *   @history 2008-09-25 Added features: Application identifiers other than the
+ *            application names, branched original input, branching from
+ *            branches, partial branch merging (discontinuing branches*)
+ *   @history 2008-09-26 Steven Lambright Fixed introduced bug where input data
+ *            was not being found when no previous programs in the pipeline
+ *            generated output (needed to go back to original input).
+ *   @history 2008-09-26 Steven Lambright Changed CalculateOutputFile(...)
+ *            to work in more cases. Pipeline::FinalOutput is relied upon more
+ *            heavily now to do the right thing.
  */
   class PipelineApplication {
     public:
@@ -68,7 +79,10 @@ namespace Isis {
         LastOutput,
         //! A list of files from the last run application's output. 
         // Implies branches will be merged if this is set as an input parameter.
-        LastAppOutputList
+        LastAppOutputList,
+        //! A list of files from the last run application's output. 
+        // Implies branches will NOT be merged if this is set as an input parameter.
+        LastAppOutputListNoMerge
       };
 
       //! Get the name of this pipeline application
@@ -79,11 +93,14 @@ namespace Isis {
       const vector<iString> &InputBranches() const { return p_inBranches; }
       //! Get the branches this program has as output
       const vector<iString> &OutputBranches() const { 
-        if(!Enabled()) {
+        if(!Enabled() && Previous()) {
           return Previous()->OutputBranches();
         }
-        else {
+        else if(Enabled()) {
           return p_outBranches; 
+        }
+        else {
+          return p_inBranches;
         }
       }
 
@@ -100,6 +117,8 @@ namespace Isis {
       void SetInputParameter(const iString &inputParamName, CustomParameterValue value, bool supportsVirtualBands);
 
       void SetOutputParameter(const iString &outputParamName, const iString &outNameModifier, const iString &outFileExtension = "cub");
+      void SetOutputParameter(const iString &branch, const iString &outputParamName, 
+                              const iString &outNameModifier, const iString &outFileExtension);
 
       void AddBranch(const iString &modString, NameModifierType type);
 
@@ -118,15 +137,7 @@ namespace Isis {
       iString OutputExtension() { return (!p_outputExtension.empty() || !Previous())? p_outputExtension : Previous()->OutputExtension(); }
 
       //! This returns this application's output files. Only valid after BuildParamString is called.
-      vector<iString> &GetOutputs() { 
-        if(!(p_outputs.size() == 0) || !Previous()) {
-          return p_outputs; 
-        }
-        else {
-          return Previous()->GetOutputs();
-        }
-
-      }
+      vector<iString> &GetOutputs();
 
       vector<iString> TemporaryFiles();
 
@@ -170,7 +181,7 @@ namespace Isis {
       }
 
       bool SupportsVirtualBands();
-      void SetVirtualBands(iString bands);
+      void SetVirtualBands(vector<iString> bands);
 
     private:
       bool FutureOutputFileCreated();
@@ -180,12 +191,30 @@ namespace Isis {
 
       //! Return true is this application does branch (one input branch, multiple output)
       bool Branches() {
-        return p_inBranches.size() == 1 && p_outBranches.size() > 1;
+        if(p_inBranches.size() >= p_outBranches.size()) return false;
+        return true;
       }
 
       //! Returns true if this application does merge branches (multiple input branches, one output)
       bool Merges() {
-        return p_inBranches.size() > 1 && p_outBranches.size() == 1;
+        if(p_inBranches.size() == 1) return false;
+        if(p_outBranches.size() == 1) return true;
+        return false;
+      }
+
+      /**
+       * String comparison helper, returns true if from starts with compare bool
+       * 
+       * @param from Longer string ("abcdef")
+       * @param compare String to compare against ("abc") 
+       */
+      bool StringStartsWith(iString from, iString compare) { 
+        if(compare.size() > from.size()) return false;
+
+        for(unsigned int index = 0; index < compare.size(); index++)
+          if(from[index] != compare[index]) return false;
+
+        return true;
       }
 
       iString CalculateInputFile(int branch);
@@ -193,7 +222,7 @@ namespace Isis {
       iString GetRealLastOutput(bool skipOne = false);
       PipelineParameter &GetInputParameter(int branch);
 
-      int FindBranch(iString name);
+      int FindBranch(iString name, bool input = true);
 
       bool p_enabled; //!< This application enabled?
       bool p_supportsVirtualBands; //!< This application supports virtual bands?
@@ -204,10 +233,10 @@ namespace Isis {
       vector<iString> p_inBranches; //!< Input branches
       vector<iString> p_outBranches; //!< Output branches
       
-      iString p_output; //!< Output parameter name
+      vector<PipelineParameter> p_output; //!< Output parameters
       iString p_outputMod; //!< Output file name modifier
       iString p_outputExtension; //!< Output file name extension
-      iString p_virtualBands; //!< Virtual bands string to add (empty if none)
+      vector<iString> p_virtualBands; //!< Virtual bands string to add (empty if none)
 
       vector<PipelineParameter> p_input; //!< Input parameters
       vector<PipelineParameter> p_params; //!< Regular parameters
@@ -313,6 +342,7 @@ namespace Isis {
         p_branch = branch;
       }
 
+
       /**
        * Returns whether or not the specified branch is affected.
        * 
@@ -330,6 +360,8 @@ namespace Isis {
       bool IsSpecial() { return (p_special != (PipelineApplication::CustomParameterValue)-1); };
       //! Special value of the parameter
       PipelineApplication::CustomParameterValue Special() { return p_special; }
+      //! True if branch-independant
+      bool AffectsAllBranches() { return p_branch == -1; } 
 
     private:
       int p_branch; //!< Branch this affects

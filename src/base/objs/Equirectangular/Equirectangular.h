@@ -2,8 +2,8 @@
 #define Equirectangular_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/09/08 22:44:37 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/11/13 15:56:28 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -47,15 +47,18 @@ namespace Isis {
  * @internal                                                              
  *   @history 2004-02-07 Jeff Anderson - added plug-in capability.
  *   @history 2004-02-24 Jeff Anderson - Modified forward and inverse methods to 
- *                       use the local radius at the center latitude instead of  
- *                       the equitorial radius.
+ *                                       use the local radius at the center
+ *                                       latitude instead of the equitorial
+ *                                       radius.
  *   @history 2005-03-11 Elizabeth Ribelin - added TrueScaleLatitude method test
  *                                           to the unitTest
  *   @history 2007-06-29 Steven Lambright - Added Mapping, MappingLatitudes and
  *                                          MappingLongitudes methods.
  *   @history 2008-05-09 Steven Lambright - Added Name, Version, IsEquatorialCylindrical methods
  *   @history 2008-05-09 Steven Lambright - Fixed test for being too close to a
- *            pole
+ *                                           pole
+ *   @history 2008-11-12 Steven Lambright - Commented some unclear code
+ *                                          (CenterLatitudeRadius keyword)
  */                                                                       
   class Equirectangular : public Projection {
     public:

@@ -1,6 +1,7 @@
 #include <cmath>
 #include "ShadeAtm.h"
-#include "NumericalMethods.h"
+#include "AtmosModel.h"
+#include "NumericalApproximation.h"
 #include "iException.h"
 
 namespace Isis {
@@ -19,6 +20,22 @@ namespace Isis {
     }
   }
 
+  /* 
+   * @param phase Phase angle 
+   * @param incidence Incidence angle 
+   * @param emission Emission angle 
+   * @param demincidence 
+   * @param dememission 
+   * @param dn 
+   * @param albedo 
+   * @param mult 
+   * @param base 
+   *  
+   * @history 2008-11-05 Jeannie Walldren - Modified references
+   *           to NumericalMethods class and replaced Isis::PI
+   *           with PI since this is in Isis namespace.
+   * 
+   */
   void ShadeAtm::NormModelAlgorithm (double phase, double incidence,
       double emission, double demincidence, double dememission, double dn,
       double &albedo, double &mult, double &base)
@@ -39,7 +56,7 @@ namespace Isis {
     GetPhotoModel()->SetStandardConditions(false);
 
     // Get reference hemispheric albedo (Hapke opposition effect doesn't influence it much) 
-    GetAtmosModel()->PhtGetAhTable();
+    GetAtmosModel()->GenerateAhTable();
 
     if (psurfref == 0.0) {
       std::string msg = "Divide by zero error";
@@ -50,11 +67,9 @@ namespace Isis {
 
     psurf = GetPhotoModel()->CalcSurfAlbedo(phase, demincidence, dememission);
 
-    NumericalMethods::r8splint(GetAtmosModel()->AtmosIncTable(), GetAtmosModel()->AtmosAhTable(), 
-                               GetAtmosModel()->AtmosAhTable2(), GetAtmosModel()->AtmosNinc(),
-                               incidence, &ahInterp);
+    ahInterp = (GetAtmosModel()->AtmosAhSpline()).Evaluate(incidence,NumericalApproximation::Extrapolate);
 
-    munot = cos(incidence*(Isis::PI/180.0));
+    munot = cos(incidence*(PI/180.0));
     GetAtmosModel()->CalcAtmEffect(phase,incidence,emission,&pstd,&trans,&trans0,&sbar);
 
     albedo = pstd + rho * (ahInterp * munot * trans / 

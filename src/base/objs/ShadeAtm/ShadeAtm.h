@@ -2,8 +2,8 @@
 #define ShadeAtm_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 18:58:21 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/11/05 23:37:34 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -31,10 +31,13 @@ namespace Isis {
   /**
    * @brief
    *
+   * @ingroup RadiometricAndPhotometricCorrection
    * @author 1998-12-21 Randy Kirk
    *
    * @internal
    *  @history 2007-08-15 Steven Lambright - Refactored code
+   *  @history 2008-11-05 Jeannie Walldren - Modified references
+   *           to NumericalMethods class.
    */
   class ShadeAtm : public NormModel {
     public:

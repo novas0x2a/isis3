@@ -2,8 +2,8 @@
 #define HiCalUtil_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $
- * $Date: 2008/06/13 22:28:55 $
+ * $Revision: 1.6 $
+ * $Date: 2008/11/06 00:08:15 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -34,7 +34,7 @@
 #include "iString.h"
 #include "Statistics.h"
 #include "PvlKeyword.h"
-#include "DataInterp.h"
+#include "NumericalApproximation.h"
 #include "Filename.h"
 #include "Pvl.h"
 #include "iException.h"
@@ -423,26 +423,27 @@ inline double HiTempEqn(const double temperature, const double napcm2 = 2.0,
  * @param v  Input vector to rebin
  * @param n  Size of the new output vector
  * 
- * @return HiVector
+ * @return HiVector 
+ * @history 2008-11-05 Jeannie Walldren Replaced references to 
+ *          DataInterp class with NumericalApproximation.
  */
 inline HiVector rebin(const HiVector &v, int n) {
   if ( n == v.dim() ) { return (v); }
-  DataInterp nterp(DataInterp::Cubic);
+  NumericalApproximation nterp(NumericalApproximation::CubicNatural);
   double mag((double) v.dim()/ (double) n);
 
   for ( int i = 0 ; i < v.dim() ; i++ ) {
     double x((double) i);
     if ( !IsSpecial(v[i]) ) {
-      nterp.addPoint(x,v[i]);
+      nterp.AddData(x,v[i]);
     }
   }
 
   // Compute the spline and fill the output vector
-  nterp.Compute();
   HiVector vout(n);
   for ( int j = 0 ; j < n ; j++ ) {
     double x = (double) j * mag;
-    vout[j] = nterp.Evaluate(x);
+    vout[j] = nterp.Evaluate(x, NumericalApproximation::NearestEndpoint);
   }
   return (vout);
 }

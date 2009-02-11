@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $
- * $Date: 2007/06/06 00:49:46 $
+ * $Revision: 1.6 $
+ * $Date: 2008/10/30 16:40:50 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -288,7 +288,7 @@ SqlRecord SqlQuery::getRecord() const {
  * @param f Routine name issuing the error
  * @param l Line number of the offending error
  */
-void SqlQuery::tossQueryError(const std::string &message, char *f, int l) const
+void SqlQuery::tossQueryError(const std::string &message, const char *f, int l) const
                               throw (iException &) {
   string errmess = message + " - QueryError = " + 
                    iString::ToStd(lastError().text());

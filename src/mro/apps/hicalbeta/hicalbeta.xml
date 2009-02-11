@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: hicalbeta.xml,v 1.12 2008/06/13 22:28:55 kbecker Exp $ -->
+<!-- $Id: hicalbeta.xml,v 1.14 2008/11/18 06:59:48 kbecker Exp $ -->
 
 <application name="hicalbeta" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
@@ -127,6 +127,15 @@
           computations to several modules (Zf, Zz, Zb,Za);  Abstracted dark
           offset processing of Reverse Clock data to OffsetCorrect class (Zz).
       </change>
+      <change name="Jeannie Walldren" date="2008-11-05"> 
+      Replaced references to DataInterp class with NumericalApproximation.
+    </change>
+    <change name="Kris Becker" date="2008-11-17"> 
+        Added additional code to implement Zz module trigger options.  This 
+        option provides the ability to trigger a constant used in the Reverse 
+        Clock calibration data based upon noise.  See the discussion on the Zz 
+        module in this program documentation.
+    </change>
   </history>
 
   <category>
@@ -776,7 +785,13 @@ End_Object
                   <CAPTION> 
                       Computes the Offset component.    This module uses the 
                       Reverse Clock region to compute the offset that is then 
-                      subtracted from the result of the Zd module.
+                      subtracted from the result of the Zd module.  Processing 
+                      is governed by some statistical properties of this region.  
+                      The standard deviation and special counts are compared to 
+                      tolerances provided in the ReverseClockStatistics file 
+                      that will trigger the use of a constant mean value for 
+                      this correction.  The result of these values are 
+                      subtracted from each sample pixel column.
                     </CAPTION>
                 <TR>
                   <TH>Parameter</TH>
@@ -812,6 +827,97 @@ End_Object
                        Specifies the last line in the Reverse clock region in 
                        the input FROM file to average for dark current 
                        correction.
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>ReverseClockStatistics</TD>
+                    <TD>
+                  <br><h2 align="center">ReverseClockStatistics</h2>    
+                      </br>
+                  <TABLE BORDER="1">
+                        <CAPTION> 
+                            This is the name of a file that contains profiles 
+                            for individual channel images and summing modes for 
+                            trigger and mean values that govern how the offset
+                            component is determined.  The default file name is 
+                            "ReverseClockStatistics.XXXX.conf" where "XXXX" is a 
+                            version number.   Note that the contents of the 
+                            composed hicalbeta configuration profile is used to 
+                            provide initial values for the profile loaded out of 
+                            this file.  
+                          </CAPTION>
+                      <TR>
+                        <TH>Parameter</TH>
+                        <TH>Description</TH>
+                      </TR>
+                      <TR>
+                          <TD>Name</TD>
+                          <TD>
+                              This names each image profile.  The name is a 
+                              combination of FILTER(e.g., RED, BG, IR), CCD 
+                              (1-13) followed by an underscore and the channel 
+                              number (0, 1) followed by another underscore and 
+                              the summing mode (0-8).  Example: RED0_1_1.
+                          </TD>
+                      </TR>
+                      <TR>
+                         <TD>RevMeanTrigger</TD>
+                         <TD>
+                           Maximum mean value of the Reverse Clock data region.  
+                           Means that exceed this value will instead use this 
+                           value as the offset correction value for all samples.
+                         </TD>
+                      </TR>
+                      <TR>
+                          <TD>RevStdDevTrigger</TD>
+                          <TD>
+                            Maximum standard deviation value of the Reverse 
+                            Clock data region.  Standard deviations that exceed 
+                            this value will instead cause the RevMeanTrigger 
+                            value to be used as the offset constant for all 
+                            samples.
+                          </TD>
+                      </TR>
+                  </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>RevLisTolerance</TD>
+                    <TD>
+                        The maximum number of low instrument saturation (LIS)
+                        special pixels that can exist in the Reverse Clock 
+                        calibration data region.  If more LIS pixels exist in 
+                        this region, then the RevMeanTrigger value is used in 
+                        lieu of the processed Reverse Clock data.  This value 
+                        provides the default (1) for all HiRISE images which can 
+                        be changed in subsequently loaded profiles (such as the 
+                        one loaded in the ReverseClockStatistics file).
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>RevHisTolerance</TD>
+                    <TD>
+                        The maximum number of high instrument saturation (HIS)
+                        special pixels that can exist in the Reverse Clock 
+                        calibration data region.  If more HIS pixels exist in 
+                        this region, then the RevMeanTrigger value is used in 
+                        lieu of the processed Reverse Clock data.  This value 
+                        provides the default (1) for all HiRISE images which can 
+                        be changed in subsequently loaded profiles (such as the 
+                        one loaded in the ReverseClockStatistics file).
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>RevNulTolerance</TD>
+                    <TD>
+                        The maximum number of null (NULL) special pixels that 
+                        can exist in the Reverse Clock calibration data region. 
+                        If more NUL pixels exist in this region, then the
+                        RevMeanTrigger value is used in lieu of the processed
+                        Reverse Clock data.   This value  provides the default 
+                        (1) for all HiRISE images which can be changed in 
+                        subsequently loaded profiles (such as the one loaded in 
+                        the ReverseClockStatistics file).
                     </TD>
                 </TR>
             </TABLE>

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/08/19 22:32:52 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/01/20 06:40:56 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -150,6 +150,7 @@ namespace Isis {
    */
   void Chip::Load(Cube &cube, const double rotation, const double scale,
                   const int band) {
+
     // Initialize our affine transform
     p_affine.Identity();
 
@@ -162,7 +163,6 @@ namespace Isis {
 
     // Now go read the data from the cube into the chip
     Read(cube,band);
-
     // Store off the cube address in case someone wants to match
     // this chip
     p_cube = &cube;
@@ -495,7 +495,6 @@ namespace Isis {
     Interpolator interp(Interpolator::CubicConvolutionType);
     Portal port(interp.Samples(),interp.Lines(),cube.PixelType(),
                 interp.HotSample(),interp.HotLine());
-
     // Loop through the pixels in the chip and geom them
     for (int line=1; line<=Lines(); line++) {
       for (int samp=1; samp<=Samples(); samp++) {
@@ -523,6 +522,7 @@ namespace Isis {
           else {
             p_buf[line-1][samp-1] = Isis::NULL8;
           }
+	  delete pnt;
         }
       }
     }

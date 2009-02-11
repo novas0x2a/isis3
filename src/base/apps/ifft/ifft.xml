@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
 <application name="ifft" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
     Apply an Inverse Fourier Transform on a magnitude/phase pair of cubes
@@ -12,7 +11,7 @@
   </description>
 
   <category>
-    <categoryItem>Math and Statistics</categoryItem>
+    <categoryItem>Fourier Domain</categoryItem>
   </category>
 
     <seeAlso>
@@ -26,10 +25,15 @@
       Original version
     </change>
     <change name="Brendan George" date="2006-09-28">
-        Documentation fixes
+      Documentation fixes
     </change>
     <change name="Steven Lambright" date="2008-05-12">
       Removed references to CubeInfo 
+    </change>
+    <change name="Steven Lambright" date="2008-10-16">
+      Fixed documentation: example GUI screenshots were missing,
+      they should now exist. The name of the GUI screenshot was incorrect,
+      "fft" was changed to "ifft."
     </change>
   </history>
 
@@ -126,7 +130,7 @@
           <image width="512" height="512" src="assets/image/ifftGui.jpg">
             <brief>Example GUI</brief>
             <description>Screenshot of GUI with parameters filled in to perform the ifft application</description>
-            <thumbnail width="256" height="256" caption="fft GUI" src="assets/thumb/fftGui.jpg"/>
+            <thumbnail width="256" height="256" caption="ifft GUI" src="assets/thumb/ifftGui.jpg"/>
           </image>
         </guiInterface>
       </guiInterfaces>

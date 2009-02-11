@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/12/15 18:43:14 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -76,7 +76,7 @@ namespace Isis {
     std::vector<geos::geom::Point*> points;
 
     // Create some things we will need shortly
-    geos::geom::MultiPolygon *xymp = PolygonTools::XYFromLonLat(*lonLatPoly, proj);
+    geos::geom::MultiPolygon *xymp = PolygonTools::LatLonToXY(*lonLatPoly, proj);
     const geos::geom::Envelope *xyBoundBox = xymp->getEnvelopeInternal();
 
     // Call the parents standardTests member

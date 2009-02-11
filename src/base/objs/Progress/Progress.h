@@ -2,8 +2,8 @@
 #define Progress_h
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:09 $
+ * $Revision: 1.2 $
+ * $Date: 2008/12/12 17:17:52 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -83,6 +83,9 @@ namespace Isis {
   
       // Change the maximum steps
       void SetMaximumSteps (const int steps);
+
+      // Add steps before completion (for guessed initial step size)
+      void AddSteps(const int steps);
   
       // Check and report status
       void CheckStatus ();

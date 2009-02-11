@@ -1,12 +1,18 @@
 #ifndef BlinkTool_h
 #define BlinkTool_h
 
-#include <QAction>
-#include <QListWidget>
-#include <QFileInfo>
-#include <QDoubleSpinBox>
-#include "Workspace.h"
 #include "Tool.h"
+
+class QDoubleSpinBox;
+class QDialog;
+class QToolButton;
+class QSplitter;
+class QMenu;
+class QVBoxLayout;
+class QHBoxLayout;
+class QPushButton;
+class QAction;
+class QListWidget;
 
 namespace Qisis {
   class BlinkTool : public Qisis::Tool {

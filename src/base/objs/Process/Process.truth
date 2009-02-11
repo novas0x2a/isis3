@@ -20,7 +20,7 @@ Lines:  126
 Bands:  2
 
 Testing SetInputWorkCube OneBand Error ...
-**USER ERROR** Input cube [unitTest.cub] must have one band
+An exception was thrown!
 
 Testing SetInputWorkCube SizeMatch error for bands ...
 **USER ERROR** The number of bands in the input cubes must match

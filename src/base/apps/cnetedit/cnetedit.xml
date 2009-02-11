@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="cnetedit" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Edits Control Networks
+  </brief>
+
+  <description>
+    <p>
+      This application enables the editiong of Control Networks.  It may remove
+      all ignored Control Points and Control Measures.  Also, it may take a
+      list of cubes and ignore all Control Measures contained by those cubes.
+    </p>
+  </description>
+
+  <history>
+    <change name="Tracie Sucharski" date="2008-08-14">
+      Original version
+    </change>
+    <change name="Christopher Austin" date="2008-12-29">
+      Added options, including EXCLUDELIST and DELETE
+    </change>
+    <change name="Christopher Austin" date="2009-01-09">
+      Renamed EXCLUDELIST to IGNORELIST and made other similar name changes.
+    </change>
+  </history> 
+  
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <groups>
+    
+    <group name="Files">
+      
+      <parameter name="CNET">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input control network
+        </brief>
+        <description>
+          This file is a control network generated from programs such as 
+          autoseed or qnet.
+        </description>
+        <filter>
+          *.net
+        </filter>
+      </parameter>
+
+      <parameter name="IGNORELIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <internalDefault>Do not ignore</internalDefault>
+        <brief>
+          Finds all Control Measures in the Control Network that contain the
+          listed cubes and marks those measures as ignored.
+        </brief>
+        <description>
+          Use this parameter to select the filename which contains a list of
+          cube filenames to be ignored in the output Control Network. All of
+          the Control Measures contained by the cube will be ignored. If DELETE
+          is also set to true, these newly ignored control measures will be
+          deleted as well.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+      </parameter>
+
+      <parameter name="ONET">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output control network
+        </brief>
+        <description>
+          The file will contain the updated control network with edits.
+        </description>
+        <filter>
+          *.net
+        </filter>
+      </parameter> 
+
+    </group>
+
+    <group name="Output Options">
+      
+      <parameter name="DELETE">
+        <type>boolean</type>
+        <default><item>TRUE</item></default>
+        <brief>
+          Delete Ignored Points and Measures
+        </brief>
+        <description>
+          This option deletes all ignored Control Measures and Control Points.
+          If any Control Point results in less than 2 Control Measures, that
+          Control Point will be deleted as well.
+        </description>
+      </parameter>
+
+    </group>
+
+  </groups>
+
+</application>

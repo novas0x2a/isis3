@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.15 $                                                             
- * $Date: 2008/08/15 21:49:53 $                                                                 
+ * $Revision: 1.17 $                                                             
+ * $Date: 2008/12/17 20:31:55 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -885,6 +885,28 @@ namespace Isis {
 //                 blobFilename.Extension());
       blob.Write(p_cube.label,detachedStream,blobFilename.Name());
     }
+  }
+
+ /**                                                                       
+  * This method will delete a blob label object from the cube as specified by the
+  * Blob type and name. If blob does not exist it will do nothing and return 
+  * false. 
+  *  
+  * @param BlobType type of blob to search for (Polygon, Table, etc) 
+  * @param BlobName blob to be deleted 
+  * @return boolean if it found the blob and deleted it. 
+  */                                                                         
+  bool Cube::BlobDelete(std::string BlobType, std::string BlobName) {
+    for(int i = 0; i < p_cube.label.Objects();i++) {
+      Isis::PvlObject obj = p_cube.label.Object(i);
+      if (obj.Name().compare(BlobType) == 0) {
+        if(obj.FindKeyword("Name")[0] == BlobName) {
+          p_cube.label.DeleteObject(i);
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   /**

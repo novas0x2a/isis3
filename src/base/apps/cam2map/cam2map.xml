@@ -197,6 +197,16 @@
        Changed MATCHMAP to have exclusions. If MATCHMAP is true, the PIXRES and DEFAULTRANGE 
        options can not be set. Changed the code to enforce MATCHMAP.
      </change>
+     <change name="Steven Lambright" date="2008-09-10">
+       Added the ability to change ProcessRubberSheet's tiling sizes. Now the Camera will decide upon the
+       tiling sizes used in ProcessRubberSheet, in order to fix problems found with the push frame cameras which
+       have small framelet sizes (less than 64 pixels tall). This is a passive ability with respect to the user; 
+       no options or differences should be noticable.
+     </change>
+     <change name="Christopher Austin" date="2008-10-31">
+      Fixed DEFAULTRANGE > CAMERA option to accept SLAT, ELAT, SLON, and ELON
+      as overriding values.
+     </change>
   </history>
 
   <oldName>

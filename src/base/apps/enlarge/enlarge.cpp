@@ -17,9 +17,9 @@ void IsisMain() {
 
   // Set up the transform object
   UserInterface &ui = Application::GetUserInterface();
-  double lmag = ui.GetDouble("LMAG");
-  double smag = ui.GetDouble("SMAG");
-  Transform *transform = new Enlarge(icube->Samples(), icube->Lines(), smag, lmag); 
+  double lscale = ui.GetDouble("LSCALE");
+  double sscale = ui.GetDouble("SSCALE");
+  Transform *transform = new Enlarge(icube->Samples(), icube->Lines(), sscale, lscale); 
 
   string from = ui.GetFilename("FROM");
   cube.Open(from);
@@ -52,13 +52,17 @@ void IsisMain() {
   try {
     PvlGroup &mapgroup = cube.Label()->FindGroup("Mapping", Pvl::Traverse);
 
-    if(smag != lmag) {
+    if(sscale != lscale) {
       ocube->DeleteGroup("Mapping");
     }
     else {
       // Update pixel resolution
-      double pixres = mapgroup["PixelResolution"];
-      mapgroup["PixelResolution"] = pixres / smag;
+      double pixres = mapgroup["PixelResolution"];                        
+      mapgroup["PixelResolution"] = pixres / sscale;      
+
+      double scale = mapgroup["Scale"];
+      mapgroup["Scale"] = scale * sscale;    
+
       ocube->PutGroup(mapgroup);
     }
   }

@@ -1,6 +1,8 @@
 #include "HistogramTool.h"
-#include "PlotWindow.h"
+#include "HistogramToolWindow.h"
 #include "PolygonTools.h"
+
+#include <qwt_interval_data.h>
 
 namespace Qisis {
 
@@ -9,7 +11,7 @@ namespace Qisis {
    * 
    * @param parent 
    */
-  HistogramTool::HistogramTool (QWidget *parent) : Qisis::Tool(parent) {
+  HistogramTool::HistogramTool (QWidget *parent) : Qisis::PlotTool(parent) {
     p_rubberBand = NULL;
     RubberBandTool::allowPoints(1);
     p_parent = parent;
@@ -24,14 +26,6 @@ namespace Qisis {
     p_color = 0;
   }
 
-
-  /**
-   * This protected slot is called when user selects a viewport.
-   * 
-   */
-  void HistogramTool::viewportSelected(){
-    p_autoScale->setChecked(true);
-  }
 
 
   /**
@@ -82,8 +76,6 @@ namespace Qisis {
 
     p_rubberBand = new RubberBandComboBox(
       RubberBandComboBox::Rectangle |
-      RubberBandComboBox::Polygon |
-      RubberBandComboBox::Circle |
       RubberBandComboBox::Line,
       RubberBandComboBox::Rectangle
     );
@@ -121,15 +113,6 @@ namespace Qisis {
   }
 
 
-  /**
-   * This method adds the histogram tool to the menu
-   * 
-   * 
-   * @param menu 
-   */
-  void HistogramTool::addTo (QMenu *menu) {
-    menu->addAction(p_action);
-  }
 
 
   /**
@@ -152,17 +135,26 @@ namespace Qisis {
   }
 
 
+   /**
+   * displays the plot window
+   * 
+   */
+  void HistogramTool::showPlotWindow(){
+    p_histToolWindow->showWindow();
+  }
+
+
   /**
    * This method creates the default histogram plot window. 
    * 
    */
   void HistogramTool::createWindow() {
-    p_histToolWindow = new HistogramToolWindow("Active Plot Window", p_parent);
+    p_histToolWindow = new HistogramToolWindow("Active Histogram Window", p_parent);
     p_histToolWindow->setDestroyOnClose(false);
     p_histToolWindow->setDeletable(false);
     p_histToolWindow->setPasteable(false);
-    connect(p_histToolWindow, SIGNAL(curveCopied(Qisis::PlotCurve *)), this, 
-            SLOT(copyCurve(Qisis::PlotCurve *)));
+    //connect(p_histToolWindow, SIGNAL(curveCopied(Qisis::HistogramItem *)), this, 
+            //SLOT(copyCurve(Qisis::HistogramItem *)));
 
     QList<QMenu *> menu;
     QList<QAction *> actionButtons;
@@ -193,15 +185,6 @@ namespace Qisis {
 
 
   /**
-   * displays the plot window
-   * 
-   */
-  void HistogramTool::showPlotWindow(){
-    p_histToolWindow->showWindow();
-  }
-
-
-  /**
    * Called when the user has finished drawing with the rubber
    * band.  ChangePlot is called to plot the data within the
    * rubber band.
@@ -225,12 +208,12 @@ namespace Qisis {
    * users can paste curves to and copy curves from.
    */
   void HistogramTool::newPlotWindow() {
-    HistogramToolWindow *blankWindow = new HistogramToolWindow("Plot Window",p_parent);
+    HistogramToolWindow *blankWindow = new HistogramToolWindow("Histogram Window",p_parent);
     blankWindow->setDestroyOnClose(true);
     connect(blankWindow, SIGNAL(curvePaste(Qisis::PlotWindow *)), this, 
-            SLOT(pasteCurve(Qisis::HistogramToolWindow *)));
+            SLOT(pasteCurve(Qisis::PlotWindow *)));
     connect(blankWindow, SIGNAL(curvePasteSpecial(Qisis::PlotWindow *)), this, 
-            SLOT(pasteCurveSpecial(Qisis::HistogramToolWindow *)));
+            SLOT(pasteCurveSpecial(Qisis::PlotWindow *)));
     connect(blankWindow, SIGNAL(curveCopied(Qisis::PlotCurve *)), this, 
             SLOT(copyCurve(Qisis::PlotCurve *)));
     connect(blankWindow, SIGNAL(destroyed(QObject *)), this, 
@@ -463,33 +446,77 @@ namespace Qisis {
       }
     }
 
-    p_histCurve->setData(&xarray[0],&yarray[0],xarray.size());
+    //p_histCurve->setData(&xarray[0],&yarray[0],xarray.size());
+    
+
+    //These are all variables needed in the following for loop.
+    //----------------------------------------------
+    QwtArray<QwtDoubleInterval> intervals(xarray.size());
+    QwtValueList majorTicks;
+    QwtArray<double> values(yarray.size());
+    double maxYValue = DBL_MIN;
+    double minYValue = DBL_MAX;
+    // --------------------------------------------- 
+
+    for(unsigned int y = 0; y < yarray.size(); y++) {
+
+      intervals[y] = QwtDoubleInterval(xarray[y], xarray[y] + hist.BinSize());
+     
+      majorTicks.push_back(xarray[y]);
+      //std::cout << "\nmajor tick " << xarray[y] << std::endl;
+      majorTicks.push_back(xarray[y]+ hist.BinSize());
+      //std::cout << "& " << xarray[y] + hist.BinSize() << std::endl;
+
+      values[y] = yarray[y];  
+      if(values[y] > maxYValue) maxYValue = values[y]; 
+      if(values[y] < minYValue) minYValue = values[y];
+    }
+    
+    QwtScaleDiv scaleDiv;
+    scaleDiv.setTicks(QwtScaleDiv::MajorTick, majorTicks);
+    
+    p_histCurve->setData(QwtIntervalData(intervals, values));
     p_cdfCurve->setData(&xarray[0],&y2array[0],xarray.size());
+    p_cdfCurve->setVisible(true);
+    p_cdfCurve->setSymbolVisible(false);
 
     p_histToolWindow->add(p_histCurve);
     p_histToolWindow->add(p_cdfCurve);
     p_histToolWindow->fillTable();
 
     if(p_autoScale->isChecked()) {
-      p_histToolWindow->setScale(QwtPlot::xBottom,p_histCurve->minXValue(),p_histCurve->maxXValue());
-      p_histToolWindow->setScale(QwtPlot::yLeft,p_histCurve->minYValue(),p_histCurve->maxYValue());      
+      p_histToolWindow->setScale(QwtPlot::yLeft,0,maxYValue);
+      p_histToolWindow->setScale(QwtPlot::xBottom,hist.Minimum(),hist.Maximum());
+      //p_histToolWindow->setScale(QwtPlot::xBottom,0,hist.Maximum());
+      //std::cout << "hist.Minimum() = " << hist.Minimum() << " xarray[0] = " << xarray[0] << std::endl;
+      //This line causes a seg. fault if the xarray has no data!
+      //p_histToolWindow->setScale(QwtPlot::xBottom,xarray[0],hist.Maximum());
+      //p_histToolWindow->setScaleDiv(QwtPlot::xBottom, scaleDiv);
     }
-
+    
+    copyCurve();
+    p_histToolWindow->p_curveCopied = true;
     p_histToolWindow->showWindow();
     updateTool();
   }
 
 
   /**
-   * This method creates a new HistogramToolCurve and copies the properties of the
-   * curve the user clicked on into the new curve. The plotWindow class emits a 
-   * signal when a curve has been requested to be copied. 
+   * This method creates a new HistogramItem and copies the 
+   * properties of the curve the user clicked on into the new 
+   * curve. The plotWindow class emits a signal when a curve has 
+   * been requested to be copied. 
    *  
    * @param pc
    */
   void HistogramTool::copyCurve(Qisis::PlotCurve *pc){
-    p_copyCurve = new HistogramToolCurve();
-    p_copyCurve->copyCurveProperties((HistogramToolCurve*)pc);
+    p_copyCurve = new HistogramItem();
+    p_copyCurve->copyCurveProperties(p_histCurve);
+  }
+
+  void HistogramTool::copyCurve(){
+    p_copyCurve = new HistogramItem();
+    p_copyCurve->copyCurveProperties(p_histCurve);
   }
 
 
@@ -499,9 +526,9 @@ namespace Qisis {
    * command has taken place inside the window.
    * @param pw
    */
-  void HistogramTool::pasteCurve(Qisis::HistogramToolWindow *pw){
+  void HistogramTool::pasteCurve(Qisis::PlotWindow *pw){
     p_cvp = cubeViewport();
-    pw->add(p_copyCurve);
+    ((HistogramToolWindow *)pw)->add(p_copyCurve);
     updateViewPort(p_cvp);
 
   }
@@ -512,7 +539,7 @@ namespace Qisis {
    * curve a different color than the copied curve.
    * @param pw
    */
-  void HistogramTool::pasteCurveSpecial(Qisis::HistogramToolWindow *pw){
+  void HistogramTool::pasteCurveSpecial(Qisis::PlotWindow *pw){
     p_cvp = cubeViewport();
     if (p_color < p_colors.size()) {
       p_copyCurve->setColor(p_colors[p_color]);
@@ -524,54 +551,37 @@ namespace Qisis {
       }
     }
 
-    pw->add(p_copyCurve);
+    ((HistogramToolWindow *)pw)->add(p_copyCurve);
     updateViewPort(p_cvp);
     p_color++;
 
   }
 
 
-  /**
-   * This class keeps a list of how many plot windows it has
-   * created (in a QList).  When a user closes a window, we want
-   * to remove that window from our QList.  The PlotWindow class
-   * emits a signal when the window has been destroyed so we can
-   * call this slot when that signal has been sent.
-   * @param window
-   */
-  void HistogramTool::removeWindow(QObject *window){
-    for (int i = 0; i < p_plotWindows.size(); i++) {
-
-      if (p_plotWindows[i] == window) {
-        p_plotWindows.removeAt(i);
-
-      }
-    }
-    updateViewPort();
-
-  }
-
 
   /**
    * This method sets up the names, line style, and color  of the
-   * all the HistogramToolCurves that will be used in this class. This method also
-   * fills the p_colors QList with the colors that will be used when the user 
-   * copies and pastes (special) into another plot window. 
+   * all the plot items that will be used in this class. This 
+   * method also fills the p_colors QList with the colors that 
+   * will be used when the user copies and pastes (special) into 
+   * another plot window. 
    */
   void HistogramTool::setupPlotCurves() {
-    p_histCurve = new HistogramToolCurve();
-    p_histCurve->setStyle(QwtPlotCurve::Lines);
-    p_histCurve->setTitle("Frequency");
+    p_histCurve = new HistogramItem();
+    p_histCurve->setColor(Qt::darkCyan);
+    //If we give the curve a title, it will show up on the legend.
+    //p_histCurve->setTitle("Frequency");
 
-    p_cdfCurve = new HistogramToolCurve();
+    p_cdfCurve = new PlotToolCurve();
     p_cdfCurve->setStyle(QwtPlotCurve::Lines);
     p_cdfCurve->setTitle("Percentage");
 
-    QPen *pen = new QPen(Qt::red);
+    QPen *pen = new QPen(Qt::darkCyan);
     pen->setWidth(2);
     p_histCurve->setYAxis(QwtPlot::yLeft);
-    p_histCurve->setPen(*pen);
-    pen->setColor(Qt::blue);
+    //p_histCurve->setPen(*pen);
+    pen->setColor(Qt::red);
+
     p_cdfCurve->setYAxis(QwtPlot::yRight);
     p_cdfCurve->setPen(*pen);
 
@@ -588,45 +598,44 @@ namespace Qisis {
 
   }
 
+
   /** 
-   * This method paints the polygons of the copied curves 
+   * This method paints the polygons of the copied hist. items 
    * onto the cubeviewport
    * 
    * @param vp
    * @param painter
    */
   void HistogramTool::paintViewport(CubeViewport *vp, QPainter *painter) {
+   
     int sample1, line1, sample2, line2;
-
-    // loop thru the window list
+    
     for (int i = 0; i < p_plotWindows.size(); i++) {  
+      for (int c = 0; c < p_plotWindows[i]->getNumItems(); c++) {
+        HistogramItem *histItem = p_plotWindows[i]->getHistItem(c);
 
-      for (int c = 0; c < p_plotWindows[i]->getNumCurves(); c++) {
-        /*get all curves in current window*/
-        HistogramToolCurve *curve = (HistogramToolCurve *)p_plotWindows[i]->getPlotCurve(c);  
-
-        if (curve->getViewPort() == vp) {
-          QPen pen(curve->pen().color());
-          pen.setWidth(curve->pen().width());
-          pen.setStyle(curve->pen().style());
+        if (histItem->getViewPort() == vp) {
+          QPen pen(histItem->color());
+          pen.setWidth(2);
+          pen.setStyle(Qt::SolidLine);
           painter->setPen(pen);
-          QList <QPointF> points = curve->getVertices();
-         
+          QList <QPointF> points = histItem->getVertices();
+        
           for(int p = 1; p < points.size(); p++) {
             vp->cubeToViewport(points[p-1].x(),points[p-1].y(), sample1,line1);
             vp->cubeToViewport(points[p].x(),points[p].y(), sample2,line2);
             painter->drawLine(QPoint(sample1,line1), QPoint(sample2,  line2));              
           }
-
+    
           vp->cubeToViewport(points[points.size()-1].x(),
                              points[points.size()-1].y(), sample1,line1);
           vp->cubeToViewport(points[0].x(),points[0].y(), sample2,line2);
           painter->drawLine(QPoint(sample1,line1), QPoint(sample2,  line2));
-
         }
-      }
-    }
 
+      }
+
+    }
   }
 
 
@@ -641,13 +650,5 @@ namespace Qisis {
     cvp->repaint();
   }
 
-  /**
-   * This overloaded method is called to repaint the current view
-   * port.  The paintViewport() method is called.
-   */
-  void HistogramTool::updateViewPort(){
-    p_cvp->viewport()->repaint();
-
-  }
 }
 

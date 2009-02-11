@@ -72,10 +72,12 @@ void IsisMain () {
   }
   
   int maxPadding = 0;
-  colorOffset = ui.GetInteger("COLOROFFSET_SIZE");
+
   padding.resize(numFilters);
   for(int filter = 0; filter < numFilters; filter++) {
     if(ui.GetBoolean("COLOROFFSET") == true) {
+      colorOffset = ui.GetInteger("COLOROFFSET_SIZE");
+
       // find the filter num
       int filtNum = 0;
       int numKnownFilters = sizeof(knownFilters) / sizeof(std::string);
@@ -96,6 +98,7 @@ void IsisMain () {
       }
     }
     else {
+      colorOffset = 0;
       padding[filter] = 0;
     }
   }
@@ -106,19 +109,18 @@ void IsisMain () {
   int numSamples = pdsLab.FindKeyword("LINE_SAMPLES", Pvl::Traverse);
   cubeHeight = numLines;
 
-  if(ui.GetBoolean("EVENODD") == true) {
-    outputCubes.push_back(new Isis::Cube());
-    outputCubes.push_back(new Isis::Cube());
-    outputCubes[0]->SetDimensions(numSamples, numLines, numFilters);
-    outputCubes[0]->Create(ui.GetFilename("EVEN"));
-    outputCubes[1]->SetDimensions(numSamples, numLines, numFilters);
-    outputCubes[1]->Create(ui.GetFilename("ODD"));
-  }
-  else {
-    outputCubes.push_back(new Isis::Cube());
-    outputCubes[0]->SetDimensions(numSamples, numLines, numFilters);
-    outputCubes[0]->Create(ui.GetFilename("TO"));
-  }
+  outputCubes.push_back(new Isis::Cube());
+  outputCubes.push_back(new Isis::Cube());
+
+  outputCubes[0]->SetDimensions(numSamples, numLines, numFilters);
+  outputCubes[1]->SetDimensions(numSamples, numLines, numFilters);
+
+  Filename outputFile(ui.GetFilename("TO"));
+  iString evenFile = outputFile.Path() + "/" + outputFile.Basename() + ".even.cub";
+  iString oddFile = outputFile.Path() + "/" + outputFile.Basename() + ".odd.cub";
+
+  outputCubes[0]->Create(evenFile);
+  outputCubes[1]->Create(oddFile);
   
   if(ui.GetString("FLIP") == "AUTO") {
     flip = -1; // Flip is unknown, this let's us know we need to figure it out later
@@ -140,13 +142,8 @@ void IsisMain () {
 
   std::vector<iString> framelets;
 
-  if(outputCubes.size() == 1) {
-    framelets.push_back("All");
-  }
-  else {
-    framelets.push_back("Even");
-    framelets.push_back("Odd");
-  }
+  framelets.push_back("Even");
+  framelets.push_back("Odd");
 
   // Translate labels to every image and close output cubes before calling EndProcess
   for(unsigned int i = 0; i < outputCubes.size(); i++) {
@@ -274,7 +271,6 @@ void writeCubeOutput(Isis::Buffer &data) {
 }
 
 void translateMarciLabels(Pvl &pdsLabel, Pvl &cubeLabel) {
-
   PvlGroup arch("Archive");
 
   if(pdsLabel.HasKeyword("SAMPLE_BIT_MODE_ID")) {
@@ -284,7 +280,7 @@ void translateMarciLabels(Pvl &pdsLabel, Pvl &cubeLabel) {
   PvlGroup inst("Instrument");
   
   if((string)pdsLabel["SPACECRAFT_NAME"] == "MARS_RECONNAISSANCE_ORBITER") {
-    inst += PvlKeyword("SpacecraftName", "Mars_Reconaissance_Orbiter");
+    inst += PvlKeyword("SpacecraftName", "MARS RECONNAISSANCE ORBITER");
   }
   else {
     throw iException::Message(iException::User, "The input file does not appear to be a MARCI image", _FILEINFO_);
@@ -304,19 +300,47 @@ void translateMarciLabels(Pvl &pdsLabel, Pvl &cubeLabel) {
   inst += PvlKeyword("SpacecraftClockCount",(string)pdsLabel["SPACECRAFT_CLOCK_START_COUNT"]);
   inst += PvlKeyword("DataFlipped", (flip == 1));
   inst += PvlKeyword("ColorOffset", colorOffset);
+  inst += PvlKeyword("InterframeDelay", (iString)((double)pdsLabel["INTERFRAME_DELAY"]), "seconds");
+  inst += PvlKeyword("ExposureDuration", (iString)((double)pdsLabel["LINE_EXPOSURE_DURATION"] / 1000.0), "seconds");
 
   PvlGroup bandBin("BandBin");
   PvlKeyword filterName("FilterName");
+  PvlKeyword origBands("OriginalBand");
   for(int filter = 0; filter < pdsLabel["FILTER_NAME"].Size(); filter++) {
     filterName += pdsLabel["FILTER_NAME"][filter];
+    origBands += iString(filter+1);
   }
 
   bandBin += filterName;
+  bandBin += origBands;
 
   PvlObject &isisCube = cubeLabel.FindObject("IsisCube");
   isisCube.AddGroup(inst);
   isisCube.AddGroup(bandBin);
   isisCube.AddGroup(arch);
+
+  // Map VIS/UV to NaifIkCode
+  std::map<std::string, int> naifIkCodes;
+  naifIkCodes.insert( std::pair<std::string,int>("MRO_MARCI",             -74400) );
+  naifIkCodes.insert( std::pair<std::string,int>("MRO_MARCI_VIS",         -74410) );
+  naifIkCodes.insert( std::pair<std::string,int>("MRO_MARCI_UV",          -74420) );
+
+  // Map from filter name to VIS/UV
+  std::map<std::string, std::string> bandUvVis;
+  bandUvVis.insert( std::pair<std::string, std::string>("BLUE",   "MRO_MARCI_VIS") );
+  bandUvVis.insert( std::pair<std::string, std::string>("GREEN",  "MRO_MARCI_VIS") );
+  bandUvVis.insert( std::pair<std::string, std::string>("ORANGE", "MRO_MARCI_VIS") );
+  bandUvVis.insert( std::pair<std::string, std::string>("RED",    "MRO_MARCI_VIS") );
+  bandUvVis.insert( std::pair<std::string, std::string>("NIR",    "MRO_MARCI_VIS") );
+  bandUvVis.insert( std::pair<std::string, std::string>("LONG_UV",  "MRO_MARCI_UV") );
+  bandUvVis.insert( std::pair<std::string, std::string>("SHORT_UV", "MRO_MARCI_UV") );
+
+  PvlGroup kerns("Kernels");
+  string uvvis = bandUvVis.find((std::string)bandBin["FilterName"][0])->second;
+  int iakCode = naifIkCodes.find(uvvis)->second;
+  kerns += PvlKeyword("NaifIkCode", iakCode);
+
+  isisCube.AddGroup(kerns);
 }
 
 /**

@@ -59,11 +59,11 @@ namespace Isis {
       double &albedo, double &mult, double &base) {
 
     // Check validity of photometric angles
-    if (pha > 180.0 || inc > 90.0 || ema > 90.0 || pha < 0.0 ||
-        inc < 0.0 || ema < 0.0) {
-      std::string msg = "Invalid photometric angles";
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
+    //if (pha > 180.0 || inc > 90.0 || ema > 90.0 || pha < 0.0 ||
+    //    inc < 0.0 || ema < 0.0) {
+    //  std::string msg = "Invalid photometric angles";
+    //  throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    //}
 
     // Perform normalization
     NormModelAlgorithm(pha,inc,ema,dn,albedo,mult,base);
@@ -85,11 +85,11 @@ namespace Isis {
       double &mult, double &base) {
 
     // Check validity of photometric angles
-    if (pha > 180.0 || inc > 90.0 || ema > 90.0 || pha < 0.0 ||
-        inc < 0.0 || ema < 0.0) {
-      std::string msg = "Invalid photometric angles";
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
+    //if (pha > 180.0 || inc > 90.0 || ema > 90.0 || pha < 0.0 ||
+    //    inc < 0.0 || ema < 0.0) {
+    //  std::string msg = "Invalid photometric angles";
+    //  throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    //}
 
     // Perform normalization
     NormModelAlgorithm(pha,inc,ema,deminc,demema,dn,albedo,mult,base);

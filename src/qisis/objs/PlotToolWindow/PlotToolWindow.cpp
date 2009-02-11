@@ -212,7 +212,6 @@ namespace Qisis {
    * in the plotWindow  -- overridden function from PlotWindow
    */ 
   void PlotToolWindow::fillTable(){
-	
     if(p_tableWindow == NULL) return;
 	
     p_axisTitle = p_plot->axisTitle(QwtPlot::xBottom).text().toStdString();

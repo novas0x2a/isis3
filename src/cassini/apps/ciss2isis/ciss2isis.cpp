@@ -181,7 +181,7 @@ vector<double> ConvertLinePrefixPixels (unsigned char *data) {
       calibrationPixels.push_back(HIGH_REPR_SAT2);
     }
     else {
-        calibrationPixels.push_back(pix);
+      calibrationPixels.push_back(pix);
     }
   }
   return calibrationPixels;
@@ -214,21 +214,26 @@ void CreateStretchPairs() {
   return;
 }
 
-// The input buffer has a raw 16 bit buffer but the values are still 0 to 255
-//used by ConvertLinePrefixPixels() and IsisMain() for ProcessByLine p2
+// The input buffer has a raw 16 bit buffer but the values are still 0 to 255.
+// We know that 255 (stretched to 4095 if Table converted) is saturated.
+// Sky pixels could have valid DN of 0, but missing pixels are also saved as 0, 
+// so it is impossible to distinguish between them.
+// This method is used by ConvertLinePrefixPixels() and IsisMain() for ProcessByLine p2.
 // author Jeannie Walldren 2008-08-21
 void FixDns (Buffer &buf) {
   for (int i=0; i<buf.size(); i++) {
-    if (buf[i] == 0) {          
+    // zeros and negatives are valid DN values, according to scientists,
+    // but likelyhood of a zero in 16 bit is rare, 
+    // so assume these are missing pixels and set them to null
+    if (buf[i] == 0) {
       buf[i] = Null;
     }
-    else {
-      if (dataConversionType == "Table") {
-        buf[i] = stretch.Map((int)buf[i]);
-      }
-      if (buf[i] == validMax) {
-        buf[i] = Hrs;
-      }
+    else if (dataConversionType == "Table") {
+      buf[i] = stretch.Map((int)buf[i]);
+    }
+    // save max values (4095 for table-converted images and 255 for others) as HRS
+    if (buf[i] == validMax) {
+      buf[i] = Hrs;
     }
   }
 }

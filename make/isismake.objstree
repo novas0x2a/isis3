@@ -15,7 +15,7 @@ objects:
 	if [ "$(OBJECTS)" != "" ]; \
 	then \
 	for i in $(OBJECTS); do \
-	  echo "    Building object [$$i]"; \
+	  echo "    Building object [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) object; cd ..; \
 	done \
 	fi
@@ -41,7 +41,7 @@ test:
 	if [ "$(OBJECTS)" != "" ]; \
 	then \
 	for i in $(OBJECTS); do \
-	  printf %-44s "    Testing [$$i]"; \
+	  printf %-53s "    Testing [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) test; cd ..; \
 	done \
 	fi

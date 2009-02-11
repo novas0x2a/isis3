@@ -25,11 +25,13 @@ namespace Qisis {
   *   @history 2007-11-19 Stacy Alley
   *                       added the capability of the qisis
   *                       windows to remember size and location
-  *  @history 2007-11-29 Stacy Alley
+  *   @history 2007-11-29 Stacy Alley
   *                      replaced all the table stuff with the new
   *                      TableMainWindow class.
-  *  @history 2008-08-18 Christopher Austin
+  *   @history 2008-08-18 Christopher Austin
   *                      Upgraded to geos3.0.0
+
+  *   @history 2008-09-26 Steven Lambright Added Segmented line
   */
   class MeasureTool : public Tool {
     Q_OBJECT
@@ -64,6 +66,7 @@ namespace Qisis {
       
       void updateDist(CubeViewport *cvp, int row);
       void updateRow(int row);
+      void updateRows(int row);
 
       /**
        * Enum for all possible table columns.
@@ -81,6 +84,7 @@ namespace Qisis {
         AreaKm, //!< Area in kilometers.
         AreaM, //!< Area in meters.
         AreaPix, //!< Area in pixels.
+        Segments, //!< Segment lengths in kilometers.
         Path, //!< Filename path
         Filename, //!< Filename
         Notes //!< User input
@@ -106,6 +110,8 @@ namespace Qisis {
         AreaKmIndex,//!< Area in kilometers index
         AreaMIndex,//!< Area in meters index
         AreaPixIndex,//!< Area in pixels index
+        SegmentsSumIndex,//!< Segment lengths in kilometers
+        SegmentNumberIndex, //!< Segment number
         PathIndex,//!< Filename path index
         FilenameIndex//!< Filename index
       };
@@ -126,12 +132,26 @@ namespace Qisis {
       double p_kmArea;//!< area in kilometers
       double p_mArea;//!< area in meters
       double p_pixArea;//!< area in pixels
+
+      QList<double> p_distanceSegments;
+      QList<double>p_pixDistSegments;
+      QList<double>p_startSampSegments;
+      QList<double>p_endSampSegments;
+      QList<double>p_startLineSegments;
+      QList<double>p_endLineSegments;
+      QList<double>p_startLatSegments;
+      QList<double>p_endLatSegments;
+      QList<double>p_startLonSegments;
+      QList<double>p_endLonSegments;
+
+
       int p_numLinked;//!< number of linked viewports
       Isis::iString p_path;//!< filename path
       Isis::iString p_fname;//!< filename
 
       Qisis::TableMainWindow *p_tableWin;//!< table window
       RubberBandComboBox *p_rubberBand;//!< rubberband combo box
+      QCheckBox *p_showAllSegments;
   };
 
 };

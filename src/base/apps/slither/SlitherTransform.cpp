@@ -6,8 +6,8 @@
 
 #include "Cube.h"
 #include "ControlNet.h"
+#include "NumericalApproximation.h"
 #include "Statistics.h"
-#include "DataInterp.h"
 #include <gsl/gsl_math.h>
 
 #include "SlitherTransform.h"
@@ -15,34 +15,35 @@
 using namespace std;
 namespace Isis {
 
-/**
- * @brief Constructor where all the business is taking place
- * 
- * This constructor accepts a cube to be transformed and the control net file
- * generated after matching it to a reference image.  It is assumed that the
- * control net has the reference image identified via the ControlMeasure class.
- * 
- * It computes the interpolations for line and samples from the control net
- * registration data.  This interpolation preserves lines whole, shifting them
- * up and/or down and left or right.
- * 
- * @param cube Input cube to be transformed
- * @param cnet Control net that will be used to compute the spline offsets
- * @param lInterp Type of spline to compute for line offsets
- * @param sInterp Type of spline to compute for sample offsets
- * @see DataInterp
- */
-SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet, 
+  /**
+   * @brief Constructor where all the business is taking place
+   * 
+   * This constructor accepts a cube to be transformed and the control net file
+   * generated after matching it to a reference image.  It is assumed that the
+   * control net has the reference image identified via the ControlMeasure class.
+   * 
+   * It computes the interpolations for line and samples from the control net
+   * registration data.  This interpolation preserves lines whole, shifting them
+   * up and/or down and left or right.
+   * 
+   * @param cube Input cube to be transformed
+   * @param cnet Control net that will be used to compute the spline offsets
+   * @param lInterp Type of spline to compute for line offsets
+   * @param sInterp Type of spline to compute for sample offsets
+   * @see NumericalApproximation
+   */
+  SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet, 
                                    InterpType lInterp, InterpType sInterp) :
                                    _rows(), _badRows(), 
                                    _pntsTotal(0), _pntsUsed(0), _pntsTossed(0), 
-                                   _iDir(1.0), _lineSpline(lInterp), 
-                                   _sampSpline(sInterp),
+                                   _iDir(1.0), 
                                    _outputLines(cube.Lines()),
                                    _outputSamples(cube.Samples()),
                                    _lineOffset(0.0), _sampOffset(0.0) {
 
-//  Collect the points from the control file
+    // Collect the points from the control file
+    _lineSpline.SetInterpType(lInterp);
+    _sampSpline.SetInterpType(sInterp);
     vector<PointData> points;
     for (int i=0; i < cnet.Size(); i++) {
       ControlPoint &cp = cnet[i];
@@ -71,12 +72,12 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
       }
     }
 
-    //  Points must be sorted and then collapsed into one column
+    // Points must be sorted and then collapsed into one column
     sort(points.begin(), points.end(), PointLess);
     ControlByRow pts = for_each(points.begin(), points.end(), 
                                 ControlByRow(1.0));
 
-    //  Now retrieve the collapsed points identifying good ones and bad ones
+    // Now retrieve the collapsed points identifying good ones and bad ones
     _rows.clear();
     _badRows.clear();
     for (unsigned int n = 0 ; n < pts.size() ; n++) {
@@ -89,19 +90,15 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
       }
     }
 
-    //  Add the points to the spline interpolators.  It is important to use
-    //  the offsets only in this case so the reverse tranform can be provided
-    //  as well.
+    // Add the points to the spline interpolators.  It is important to use
+    // the offsets only in this case so the reverse tranform can be provided
+    // as well.
     for (unsigned int n = 0 ; n < _rows.size() ; n++) {
       RowPoint rp = _rows[n];
-      _lineSpline.addPoint(rp.refLine, rp.cLOffset.Average());
-      _sampSpline.addPoint(rp.refLine, rp.cSOffset.Average());
+      _lineSpline.AddData(rp.refLine, rp.cLOffset.Average());
+      _sampSpline.AddData(rp.refLine, rp.cSOffset.Average());
     }
-
-    // Compute splines and we'er done
-    _lineSpline.Compute();
-    _sampSpline.Compute();
-}
+  }
 
   /**
    * @brief Convert the requested output samp/line to an input samp/line
@@ -135,9 +132,12 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
    * 
    * @return Statistics Provides the statistics class that contains the
    *         statistics information
-   * @see Statistics
+   * @see Statistics 
+   * @history 2008-11-05 Jeannie Walldren - removed const from 
+   *          method so that _lineSpline is not const. 
+   *  
    */
-  Statistics SlitherTransform::LineStats() const {
+  Statistics SlitherTransform::LineStats() { 
     Statistics stats;
     for (int line = 0 ; line < _outputLines ; line++) {
       double outLine(line+1), inLine;
@@ -160,9 +160,12 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
    * 
    * @return Statistics Provides the statistics class that contains the
    *         statistics information
-   * @see Statistics
+   * @see Statistics 
+   * @history 2008-11-05 Jeannie Walldren - removed const from 
+   *          method so that _sampSpline is not const. 
+   *  
    */
-  Statistics SlitherTransform::SampleStats() const {
+  Statistics SlitherTransform::SampleStats() { 
     Statistics stats;
     for (int line = 0 ; line < _outputLines ; line++) {
       double outLine(line+1), inLine;
@@ -175,17 +178,17 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
     return (stats);
   }
 
-/**
- * @brief Provides detailed information and statistics for the current transform
- * 
- * This method produces a large volume of information pertaining to the computed
- * transform.  This information is written to the provided stream and assumes
- * the caller has created a valid stream.
- * 
- * @param out  Output stream to write data to
- * 
- * @return std::ostream&  Returns the output stream
- */
+  /**
+   * @brief Provides detailed information and statistics for the current transform
+   * 
+   * This method produces a large volume of information pertaining to the computed
+   * transform.  This information is written to the provided stream and assumes
+   * the caller has created a valid stream.
+   * 
+   * @param out  Output stream to write data to
+   * 
+   * @return std::ostream&  Returns the output stream
+   */
   std::ostream &SlitherTransform::dumpState(std::ostream &out) {
 
     std::ios::fmtflags oldFlags = out.flags();
@@ -204,7 +207,7 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
     Statistics lstats = LineStats();
     double lStd(lstats.StandardDeviation());
     out << setw(10) << "Line"
-        << setw(10) << _lineSpline.name()
+        << setw(10) << _lineSpline.Name()
         << setw(12) <<  setprecision(4) << lstats.Average()
         << setw(12) <<  setprecision(4) << ((IsSpecial(lStd)) ? 0.0 : lStd)
         << setw(12) <<  setprecision(4) << lstats.Minimum()
@@ -214,7 +217,7 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
     Statistics sstats = SampleStats();
     double sStd(sstats.StandardDeviation());
     out << setw(10) << "Sample"
-        << setw(10) << _sampSpline.name()
+        << setw(10) << _sampSpline.Name()
         << setw(12) <<  setprecision(4) << sstats.Average()
         << setw(12) <<  setprecision(4) << ((IsSpecial(sStd)) ? 0.0 : sStd)
         << setw(12) <<  setprecision(4) << sstats.Minimum()
@@ -296,5 +299,4 @@ SlitherTransform::SlitherTransform(Cube &cube, ControlNet &cnet,
     out.setf(oldFlags);
     return (out);
   }
-
 }

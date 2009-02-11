@@ -93,6 +93,10 @@ void IsisMain() {
       // Update pixel resolution
       double pixres = mapgroup["PixelResolution"];                        
       mapgroup["PixelResolution"] = pixres * sscale;      
+
+      double scale = mapgroup["Scale"];
+      mapgroup["Scale"] = scale / sscale;    
+
       ocube->PutGroup(mapgroup);
     }
   }

@@ -10,7 +10,13 @@ namespace Qisis {
   *
   * @ingroup Visualization Tools
   *
-  * @author 2007-09-11 Steven Lambright
+  * @author 2007-09-11 Steven Lambright 
+  *  
+  * @internal 
+  *   @history 2008-09-26 Steven Lambright Added Segmented line, reordered banding
+  *            options at Stuart's Request
+  *   @history 2008-10-01 Steven Lambright Fixed bug with segmented line, if
+  *            polygon was enabled then segmented line was
   */
 
   class RubberBandComboBox : public QComboBox {
@@ -23,13 +29,14 @@ namespace Qisis {
        * Enum to store rubber band shapes.
        */
       enum RubberBandOptions {
-        Angle            = 1, //!< Angle
-        Circle           = 2, //!< Circle
-        Ellipse          = 4, //!< Ellipse
-        Line             = 8, //!< Line
-        Rectangle        = 16,//!< Rectangle
-        RotatedRectangle = 32,//!< RotatedRectangle
-        Polygon          = 64 //!< Polygon
+        Circle           = 1,   //!< Circle
+        Ellipse          = 2,   //!< Ellipse
+        Rectangle        = 4,   //!< Rectangle
+        RotatedRectangle = 8,   //!< RotatedRectangle
+        Polygon          = 16,  //!< Polygon                    
+        Line             = 32,  //!< Line
+        SegmentedLine    = 64,  //!< Segmented Line                                     
+        Angle            = 128  //!< Angle
       };
 
       //! Returns the icon directory.
@@ -57,6 +64,8 @@ namespace Qisis {
       void showRotatedRectangle()  { RubberBandTool::enable(RubberBandTool::RotatedRectangle, p_showIndicatorColors); };
       //! Enables the polygon shape
       void showPolygon()           { RubberBandTool::enable(RubberBandTool::Polygon, p_showIndicatorColors);          };
+      //! Enables the segmented line shape
+      void showSegmentedLine()     { RubberBandTool::enable(RubberBandTool::SegmentedLine, p_showIndicatorColors);          };
 
       QStringList p_bandingOptionStrings; //!< List of rubberband options
       bool p_showIndicatorColors; //!< Show colors?

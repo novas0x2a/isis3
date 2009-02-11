@@ -6,7 +6,7 @@ commands:
 	$(APPNAME) from=$(INPUT)/ab102401.lev2.cub \
 	  mosaic=$(OUTPUT)/mapmosTruth1.cub \
 	  create=true \
-	  slat=10.765 \
-	  elat=34.445 \
-	  slon=219.720 \
-	  elon=236.190 > /dev/null;
+	  minlat=10.765 \
+	  maxlat=34.445 \
+	  minlon=219.720 \
+	  maxlon=236.190 > /dev/null;

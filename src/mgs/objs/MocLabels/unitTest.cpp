@@ -14,10 +14,10 @@ int main () {
     Isis::Pvl p1("$mgs/testData/ab102401.cub");
     Isis::Mgs::MocLabels lab1(p1);
 
-    cout << "IsNarrowAngle?  " << lab1.IsNarrowAngle() << endl;
-    cout << "IsWideAngle?  " << lab1.IsWideAngle() << endl;
-    cout << "IsWideAngleRed?  " << lab1.IsWideAngleRed() << endl;
-    cout << "IsWideAngleBlue?  " << lab1.IsWideAngleBlue() << endl;
+    cout << "NarrowAngle?  " << lab1.NarrowAngle() << endl;
+    cout << "WideAngle?  " << lab1.WideAngle() << endl;
+    cout << "WideAngleRed?  " << lab1.WideAngleRed() << endl;
+    cout << "WideAngleBlue?  " << lab1.WideAngleBlue() << endl;
     cout << "Crosstrack Summing = " << lab1.CrosstrackSumming() << endl;
     cout << "Downtrack Summing = " << lab1.DowntrackSumming() << endl;
     cout << "First Line Sample = " << lab1.FirstLineSample() << endl;
@@ -37,10 +37,10 @@ int main () {
     Isis::Pvl p2("$mgs/testData/fha00491.lev1.cub");
     Isis::Mgs::MocLabels lab2(p2);
 
-    cout << "IsNarrowAngle?  " << lab2.IsNarrowAngle() << endl;
-    cout << "IsWideAngle?  " << lab2.IsWideAngle() << endl;
-    cout << "IsWideAngleRed?  " << lab2.IsWideAngleRed() << endl;
-    cout << "IsWideAngleBlue?  " << lab2.IsWideAngleBlue() << endl;
+    cout << "NarrowAngle?  " << lab2.NarrowAngle() << endl;
+    cout << "WideAngle?  " << lab2.WideAngle() << endl;
+    cout << "WideAngleRed?  " << lab2.WideAngleRed() << endl;
+    cout << "WideAngleBlue?  " << lab2.WideAngleBlue() << endl;
     cout << "Crosstrack Summing = " << lab2.CrosstrackSumming() << endl;
     cout << "Downtrack Summing = " << lab2.DowntrackSumming() << endl;
     cout << "First Line Sample = " << lab2.FirstLineSample() << endl;

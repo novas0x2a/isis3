@@ -2,12 +2,12 @@ APPNAME = mdiscal
 
 include $(ISISROOT)/make/isismake.tsts
 
-default_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
-iof_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
-keepdark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
-lineardark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
-nodark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
-standarddark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder
+default_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
+iof_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
+keepdark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
+lineardark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
+nodark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
+standarddark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
 
 
 commands:

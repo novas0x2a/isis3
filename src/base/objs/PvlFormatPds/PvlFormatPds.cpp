@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2007/05/08 22:54:33 $
+ * $Revision: 1.9 $
+ * $Date: 2008/09/19 23:04:05 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -139,7 +139,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -149,14 +149,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A" || tmp == "\"N/A\"") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL" || tmp == "\"NULL\"") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK" || tmp == "\"UNK\"") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       val += keyword[num];
@@ -210,7 +204,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -225,14 +219,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else if (places >= 0) {
       stringstream out;
@@ -281,7 +269,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -296,14 +284,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       val += keyword[num];
@@ -347,7 +329,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -357,14 +339,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       val += keyword[num];
@@ -415,7 +391,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -430,14 +406,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       val += keyword[num];
@@ -481,7 +451,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     stringstream ss;
@@ -497,14 +467,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       tmp.clear();
@@ -560,7 +524,7 @@ namespace Isis {
 
     iString val;
     val.clear();
-    bool singleUnit = IsSingleUnit(keyword);
+    bool singleUnit = false;
 
     // Create a Null value if the value index is greater than the number of values
     if ((num >= keyword.Size()) || (keyword[num].size() == 0)) {
@@ -575,14 +539,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       stringstream ss;
@@ -652,14 +610,8 @@ namespace Isis {
     // Handle PDS special values "N/A" "NULL" "UNK"
     iString tmp = keyword[num];
     tmp.UpCase();
-    if (tmp == "N/A") {
-      val += "N/A";
-    }
-    else if (tmp == "NULL") {
-      val += "NULL";
-    }
-    else if (tmp == "UNK") {
-      val += "UNK";
+    if ((tmp == "N/A") || (tmp == "NULL") || (tmp == "UNK")) {
+      val += "\"" + tmp + "\"";
     }
     else {
       val += keyword[num];

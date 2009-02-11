@@ -34,23 +34,6 @@ namespace Qisis {
     QString whatsThis =
     "<b>Function:</b> This drop down will enable you to switch between drawing various shapes.";
 
-    p_bandingOptionStrings.push_back("Angle");
-    if((bandingOptions & Angle) == Angle) {
-      QIcon angleIcon;
-      angleIcon.addFile(toolIconDir()+"/qview_angle.png", QSize(24,24), QIcon::Normal);
-      //angleIcon.addFile(toolIconDir()+"/qview_angle_active.png", QSize(24,24), QIcon::Active);
-
-      addItem(angleIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)Angle));
-
-      whatsThis += "<br><br>When <b>Angle</b> is selected, you can draw an angle from zero to 180 degrees. To draw an angle, \
-                     click where the first corner should go, then click where the vertex should go. Finally, click where the final \
-                     side of the angle should end to complete the angle.";
-                     
-      if((defaultOption & Angle) == Angle) {
-        setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
-      }
-    }
-
     p_bandingOptionStrings.push_back("Circle");
     if((bandingOptions & Circle) == Circle) {
       QIcon circleIcon(toolIconDir()+"/qview_circle.png");
@@ -83,22 +66,6 @@ namespace Qisis {
       }
     }
 
-    p_bandingOptionStrings.push_back("Line");
-    if((bandingOptions & Line) == Line) {
-      QIcon lineIcon(toolIconDir()+"/qview_line.png");
-      lineIcon.addFile(toolIconDir()+"/qview_line_active.png", QSize(24,24), QIcon::Active);
-
-      addItem(lineIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)Line));
-
-      whatsThis += "<br><br>When <b>Line</b> is selected, you can draw a line. To draw a line, \
-                     click the starting point of the line, drag the mouse until the line is the correct length in the correct direction, \
-                     and release the mouse.";
-
-      if((defaultOption & Line) == Line) {
-        setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
-      }
-    }
-
     p_bandingOptionStrings.push_back("Rectangle");
     if((bandingOptions & Rectangle) == Rectangle) {
       QIcon rectangleIcon(toolIconDir()+"/qview_rectangle.png");
@@ -118,8 +85,7 @@ namespace Qisis {
     p_bandingOptionStrings.push_back("Rotated Rectangle");
     if((bandingOptions & RotatedRectangle) == RotatedRectangle) {
       QIcon rotatedRectangleIcon(toolIconDir()+"/qview_rotated_rectangle.png");
-      rotatedRectangleIcon.addFile(toolIconDir()+"/qview_rotated_rectangle_active.png", QSize(24,24), QIcon::Active);
-
+      
       addItem(rotatedRectangleIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)RotatedRectangle));
 
       whatsThis += "<br><br>When <b>Rotated Rectangle</b> is selected, you can draw a rectangle rotated about its center. To draw a rotated rectangle, \
@@ -140,7 +106,6 @@ namespace Qisis {
     p_bandingOptionStrings.push_back("Polygon");
     if((bandingOptions & Polygon) == Polygon) {
       QIcon polygonIcon(toolIconDir()+"/qview_polygon.png");
-      polygonIcon.addFile(toolIconDir()+"/qview_polygon_active.png", QSize(24,24), QIcon::Active);
 
       addItem(polygonIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)Polygon));
 
@@ -149,6 +114,54 @@ namespace Qisis {
                      When completed, double click the final vertex and the figure will close.";
 
       if((defaultOption & Polygon) == Polygon) {
+        setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
+      }
+    }
+
+    p_bandingOptionStrings.push_back("Line");
+    if((bandingOptions & Line) == Line) {
+      QIcon lineIcon(toolIconDir()+"/qview_line.png");
+      lineIcon.addFile(toolIconDir()+"/qview_line_active.png", QSize(24,24), QIcon::Active);
+
+      addItem(lineIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)Line));
+
+      whatsThis += "<br><br>When <b>Line</b> is selected, you can draw a line. To draw a line, \
+                     click the starting point of the line, drag the mouse until the line is the correct length in the correct direction, \
+                     and release the mouse.";
+
+      if((defaultOption & Line) == Line) {
+        setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
+      }
+    }
+
+    p_bandingOptionStrings.push_back("Segmented Line");
+    if((bandingOptions & SegmentedLine) == SegmentedLine) {
+      QIcon segmentedLineIcon(toolIconDir()+"/qview_segmentedline.png");
+
+      addItem(segmentedLineIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)SegmentedLine));
+
+      whatsThis += "<br><br>When <b>Segmented Line</b> is selected, you can draw any open polygon. To begin drawing a segmented line, \
+                     click where you want the start point. Now, click for any new vertices or click and drag the mouse to form irregular shapes. \
+                     When completed, double click the final vertex.";
+
+      if((defaultOption & SegmentedLine) == SegmentedLine) {
+        setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
+      }
+    }
+
+    p_bandingOptionStrings.push_back("Angle");
+    if((bandingOptions & Angle) == Angle) {
+      QIcon angleIcon;
+      angleIcon.addFile(toolIconDir()+"/qview_angle.png", QSize(24,24), QIcon::Normal);
+      //angleIcon.addFile(toolIconDir()+"/qview_angle_active.png", QSize(24,24), QIcon::Active);
+
+      addItem(angleIcon, p_bandingOptionStrings[p_bandingOptionStrings.size()-1], QVariant((int)Angle));
+
+      whatsThis += "<br><br>When <b>Angle</b> is selected, you can draw an angle from zero to 180 degrees. To draw an angle, \
+                     click where the first corner should go, then click where the vertex should go. Finally, click where the final \
+                     side of the angle should end to complete the angle.";
+                     
+      if((defaultOption & Angle) == Angle) {
         setCurrentIndex( findText(p_bandingOptionStrings[ p_bandingOptionStrings.size()-1 ]) );
       }
     }
@@ -176,6 +189,7 @@ namespace Qisis {
       case Rectangle: showRectangle(); break;
       case RotatedRectangle: showRotatedRectangle(); break;
       case Polygon: showPolygon(); break;
+      case SegmentedLine: showSegmentedLine(); break;
       default:
         // This shouldn't happen
         RubberBandTool::disable();

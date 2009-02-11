@@ -11,12 +11,16 @@
 #include "SerialNumber.h"
 #include "SessionLog.h"
 #include "ObservationNumber.h"
+#include "Preference.h"
 
 using namespace Isis;
 using namespace std;
 
 void IsisMain() {
-            
+  // Set Preferences to always turn off Terminal Output
+  PvlGroup &grp = Isis::Preference::Preferences().FindGroup("SessionLog", Isis::Pvl::Traverse);
+  grp["TerminalOutput"].SetValue("Off");
+       
   // Open the input cube
   UserInterface &ui = Application::GetUserInterface();
   Cube cube;
@@ -33,18 +37,20 @@ void IsisMain() {
 
   PvlGroup sn("Results");
 
+  if(WriteFile) sn += PvlKeyword("Filename",from);
+  if(WriteSN) sn += PvlKeyword("SerialNumber",SerialNumber::Compose(*label,ui.GetBoolean("DEFAULT")));
+  if(WriteObservation) sn += PvlKeyword("ObservationNumber",ObservationNumber::Compose(*label,ui.GetBoolean("DEFAULT")));
+
   if(ui.WasEntered("TO")) {
     // Create a serial number and observation number for this cube & put it in a pvlgroup for output
-    if(WriteFile) sn += PvlKeyword("Filename",from);
-    if(WriteSN) sn += PvlKeyword("SerialNumber",SerialNumber::Compose(*label,ui.GetBoolean("DEFAULT")));
-    if(WriteObservation) sn += PvlKeyword("ObservationNumber",ObservationNumber::Compose(*label,ui.GetBoolean("DEFAULT")));
     Pvl pvl;
     pvl.AddGroup( sn );
     if( ui.GetBoolean("APPEND") )
       pvl.Append( ui.GetFilename("TO") );
     else
       pvl.Write( ui.GetFilename("TO") );
-   // Construct a label with the results
+
+    // Construct a label with the results
     if (ui.IsInteractive()) {
       Application::GuiLog(sn);
     }

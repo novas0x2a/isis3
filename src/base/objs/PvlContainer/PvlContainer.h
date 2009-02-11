@@ -2,8 +2,8 @@
 #define PvlContainer_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/07/10 14:58:27 $
+ * $Revision: 1.8 $
+ * $Date: 2008/10/30 15:22:15 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -43,7 +43,12 @@ namespace Isis {
   *  @history 2008-07-02 Steven Lambright Added const functionality
   *  @history 2008-07-10 Steven Lambright PvlContainer is no longer a PvlKeyword,
   *           but rather has a set of pvl keywords
-  *
+  *  @history 2008-09-30 Christopher Austin Replaced all std::endl in the <<
+  *           operator with PvlFormat.FormatEOL()
+  *  @history 2008-10-30 Steven Lambright Moved Find methods' implementations to
+  *           the cpp file from the header file, added <algorithm> include,
+  *           problem pointed out by "novas0x2a" (Support Forum Member)
+  *  
   *  @todo 2005-04-04 Need coded example.
   */                                                                       
   class PvlContainer {
@@ -140,33 +145,13 @@ namespace Isis {
       //! The const keyword iterator
       typedef std::vector<PvlKeyword>::const_iterator ConstPvlKeywordIterator;
 
-      /**
-       * Find the index of a keyword, using iterators.
-       * @param name The name of the keyword.
-       * @param beg The beginning iterator.
-       * @param end The ending iterator.
-       * @return The keyword index.
-       */
       PvlKeywordIterator FindKeyword(const std::string &name,
                                      PvlKeywordIterator beg,
-                                     PvlKeywordIterator end) {
-        PvlKeyword temp(name);
-        return find(beg,end,temp);
-      };
+                                     PvlKeywordIterator end);
 
-      /**
-       * Find the index of a keyword, using iterators.
-       * @param name The name of the keyword.
-       * @param beg The beginning iterator.
-       * @param end The ending iterator.
-       * @return The keyword index.
-       */
       ConstPvlKeywordIterator FindKeyword(const std::string &name,
                                      ConstPvlKeywordIterator beg,
-                                     ConstPvlKeywordIterator end) const {
-        PvlKeyword temp(name);
-        return find(beg,end,temp);
-      };
+                                     ConstPvlKeywordIterator end) const;
 
       /**
        * Return the beginning iterator.

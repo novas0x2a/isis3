@@ -2,8 +2,8 @@
 #define MdisCamera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $
- * $Date: 2008/08/08 20:29:08 $
+ * $Revision: 1.7 $
+ * $Date: 2009/01/22 00:23:03 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -53,9 +53,12 @@ namespace Isis {
      *   @history 2007-09-06 Kris Becker - Removed test for subframe imaging mode
      *            as the team provided calification on its implications.
      *   @history 2007-12-06 Kris Becker - Added camera distortion model provided 
-     *            by Scott Turner, JHU.
+     *            by Scott Turner, JHU/APL.
      *   @history 2008-08-08 Steven Lambright Now using the new LoadCache(...)
-     *           method instead of CreateCache(...).
+     *            method instead of CreateCache(...).
+     *   @history 2009-01-21 Kris Becker Added a new implementation of the MDIS
+     *            NAC distortion model contributed by Scott Turner and Lillian
+     *            Nguyen at JHU/APL.
      */
     class MdisCamera : public Camera {
       public:

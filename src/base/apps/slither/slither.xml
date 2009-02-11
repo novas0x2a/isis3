@@ -74,6 +74,10 @@
     <change name="Steven Lambright" date="2008-05-13"> 
       Removed references to CubeInfo
     </change>
+    <change name="Jeannie Walldren" date="2008-11-05"> 
+      Removed references to DataInterp class and replaced them with 
+      NumericalApproximation class.
+    </change>
   </history>
 
   <category>

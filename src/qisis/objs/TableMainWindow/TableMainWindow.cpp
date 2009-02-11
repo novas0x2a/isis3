@@ -13,7 +13,7 @@ namespace Qisis {
    * @param parent 
    */
   TableMainWindow::TableMainWindow (QString title, QWidget *parent) : Qisis::MainWindow(title, parent) {
-	installEventFilter(this);
+    installEventFilter(this);
     p_parent = parent;
     p_title = title;
     p_table = NULL;
@@ -31,9 +31,16 @@ namespace Qisis {
    * the menu bar. Programmers can add more menus to the menu bar 
    * once an instance of this class is established. 
    */  
-  void TableMainWindow::createTable(){
-    p_tableWin = new Qisis::MainWindow(p_title, p_parent, Qt::Dialog);
-    p_tableWin->statusBar()->setSizeGripEnabled(true);
+  void TableMainWindow::createTable() {
+    #if defined(__APPLE__)
+      p_tableWin = new Qisis::MainWindow(p_title, p_parent, Qt::Tool);
+    #endif
+
+    #if !defined(__APPLE__)
+      p_tableWin = new Qisis::MainWindow(p_title, p_parent, Qt::Dialog);
+    #endif
+
+      p_tableWin->statusBar()->setSizeGripEnabled(true);
     // Create the table widget 
     p_table = new QTableWidget(p_tableWin);
     p_table->setAlternatingRowColors(true);
@@ -50,36 +57,60 @@ namespace Qisis {
             this,SLOT(syncColumns()));
 			
     // Create the file menu 
-	QMenuBar *menuBar = new QMenuBar();
+    //QMenuBar *menuBar = new QMenuBar();
+    QMenuBar *menuBar = p_tableWin->menuBar();
     QMenu *fileMenu = menuBar->addMenu("&File");
-
-    QAction *save = new QAction(p_tableWin);
-    save->setText("Save...");
-    connect(save,SIGNAL(activated()),this,SLOT(saveTable()));
-
+    
+    p_save = new QAction(p_tableWin);
+    p_save->setText("Save...");
+    p_save->setShortcut(Qt::CTRL + Qt::Key_S);
+    connect(p_save,SIGNAL(activated()),this,SLOT(saveTable()));
+    p_save->setDisabled(true);
+    
+    QAction *saveas = new QAction(p_tableWin);
+    saveas->setText("Save As...");
+    connect(saveas,SIGNAL(activated()),this,SLOT(saveAsTable()));
+    
     QAction *load = new QAction(p_tableWin);
     load->setText("Load...");
     connect(load,SIGNAL(activated()),this,SLOT(loadTable()));
-
+    
     QAction *del = new QAction(p_tableWin);
     del->setText("Delete Selected Row(s)");
     del->setShortcut(Qt::Key_Delete);
     connect(del,SIGNAL(activated()),this,SLOT(deleteRows()));
-
+    
     QAction *clear = new QAction(p_tableWin);
     clear->setText("Clear table");
     connect(clear,SIGNAL(activated()),this,SLOT(clearTable()));
-
+    
     QAction *close = new QAction(p_tableWin);
     close->setText("Close");
     connect(close,SIGNAL(activated()),p_tableWin,SLOT(hide()));
-
-    fileMenu->addAction(save);
+    
+    fileMenu->addAction(p_save);
+    fileMenu->addAction(saveas);
     fileMenu->addAction(load);
     fileMenu->addAction(del);
     fileMenu->addAction(clear);
     fileMenu->addAction(close);
-    
+
+    //2009-01-12
+    //If we have the Mainwindow flag set to Qt::Tool so that on Macs the 
+    //table window always stays on top, then we can not access the
+    //menu bar to the table window, so we need to add the file options
+    //for the table to the tool bar.
+    #if defined(__APPLE__)
+     QToolBar *toolBar = new QToolBar();
+     toolBar->addAction(p_save);
+     toolBar->addAction(saveas);
+     toolBar->addAction(load);
+     toolBar->addAction(del);
+     toolBar->addAction(clear);
+     toolBar->addAction(close);
+     p_tableWin->addToolBar(toolBar);
+   #endif 
+
     // Create the view menu
     QMenu *viewMenu = menuBar->addMenu("&View");
     QAction *cols = new QAction(p_tableWin);
@@ -87,8 +118,7 @@ namespace Qisis {
     connect(cols,SIGNAL(activated()),p_dock,SLOT(show()));
     viewMenu->addAction(cols);
 
-	p_tableWin->setMenuBar(menuBar);
-
+    p_tableWin->setMenuBar(menuBar);
   }
   
 
@@ -113,10 +143,11 @@ namespace Qisis {
    * @param menuText 
    * @param insertAt 
    * @param o 
+   * @param toolTip 
    */
   void TableMainWindow::addToTable (bool setOn, const QString &heading,
                                     const QString &menuText, int insertAt, 
-                                    Qt::Orientation o) {
+                                    Qt::Orientation o, QString toolTip) {
    // Insert the new column
    int startCol = p_table->columnCount();
 
@@ -164,7 +195,12 @@ namespace Qisis {
      }
 
      item->setText(menuText);
-     
+     if(toolTip.isEmpty()) {
+       item->setToolTip(heading);
+     }
+     else {
+       item->setToolTip(toolTip);
+     }
 
      if(insertAt >=0) {
        p_listWidget->insertItem(insertAt, item);
@@ -286,12 +322,13 @@ namespace Qisis {
    * 
    */
   void TableMainWindow::clearTable () {
+    if(p_table->rowCount() == 0) return;
     for (int r=0; r<p_table->rowCount(); r++) {
       for (int c=0; c<p_table->columnCount(); c++) {
         p_table->item(r,c)->setText("");
       }
     }
-   
+
     p_table->scrollToItem(p_table->item(0,0),QAbstractItemView::PositionAtTop);
     p_currentRow = 0;
     p_currentIndex = 0;
@@ -350,18 +387,17 @@ namespace Qisis {
     }
   }
 
-
- /**
-  * This method allows the user to save the data from the
-  * table to a comma delimited text file.
-  */ 
-  void TableMainWindow::saveTable () {
+  /**
+   * This method will select a file, set it as the current file and save the
+   * table.
+   * 
+   */
+  void TableMainWindow::saveAsTable() {
     QString fn = QFileDialog::getSaveFileName((QWidget*)parent(),
                                             "Choose filename to save under",
                                             ".",
                                             "Text Files (*.txt)");
     QString filename;
-    QString currentText;
 
     //Make sure the filename is valid
     if (!fn.isEmpty()) {
@@ -373,22 +409,34 @@ namespace Qisis {
     }
     //The user cancelled, or the filename is empty
     else {
-      QMessageBox::information((QWidget *)parent(),
-                               "Error","Saving Aborted");
       return;
     }
 
-    //Make sure the file can be opened and written to
-    QFile f( filename );
-    if(f.exists()) f.remove();
-    bool success = f.open(QIODevice::WriteOnly);
+    p_currentFile.setFileName( filename );
+
+    p_save->setEnabled(true);
+    saveTable();
+  }
+
+ /**
+  * This method allows the user to save the data from the
+  * table to the current file.
+  */ 
+  void TableMainWindow::saveTable () {
+    if(p_currentFile.fileName().isEmpty()) return;
+
+    //if(p_currentFile.exists()) p_currentFile.remove();
+    bool success = p_currentFile.open(QIODevice::WriteOnly);
     if(!success) {
       QMessageBox::critical((QWidget *)parent(),
                    "Error", "Cannot open file, please check permissions");
+      p_currentFile.setFileName("");
+      p_save->setDisabled(true);
+      return;
     }
 
-
-    QTextStream t( &f );
+    QString currentText;
+    QTextStream t( &p_currentFile );
     QString line = "";
     bool first = true;
 
@@ -434,8 +482,8 @@ namespace Qisis {
       if (line.split(",", QString::SkipEmptyParts).count() != 0)
         t << line << endl;
     }
-    f.close();
-    p_tableWin->setWindowTitle(p_title + " : " + filename);
+    p_currentFile.close();
+    p_tableWin->setWindowTitle(p_title + " : " + p_currentFile.fileName());
   }
 
 
@@ -456,6 +504,7 @@ namespace Qisis {
     std::string instanceName = this->windowTitle().toStdString();
 
     Isis::Filename config("$HOME/.Isis/" + appName + "/" + instanceName + ".config");
+    //if(p_settings != 0) delete p_settings;
     p_settings = new QSettings(QString::fromStdString(config.Expanded()), QSettings::NativeFormat);
     QByteArray state = p_settings->value("state", QByteArray("0")).toByteArray();
     bool docFloats = p_settings->value("docFloat", false).toBool();
@@ -555,7 +604,7 @@ namespace Qisis {
    * 
    */
   void TableMainWindow::loadTable () {
-    QString fn=QFileDialog::getOpenFileName((QWidget*)parent(),
+    QString fn = QFileDialog::getOpenFileName((QWidget*)parent(),
                                             "Select file to load",
                                             ".",
                                             "Text Files (*.txt)");
@@ -563,9 +612,18 @@ namespace Qisis {
     //If the user cancelled or the filename is empty return
     if (fn.isEmpty()) return;
 
-    //Open the file and clear the table
-    QFile f(fn);
-    f.open(QIODevice::ReadOnly);
+    p_currentFile.setFileName( fn );
+    p_save->setEnabled(true);
+
+    bool success = p_currentFile.open(QIODevice::ReadOnly);
+    if(!success) {
+      QMessageBox::critical((QWidget *)parent(),
+                   "Error", "Cannot open file, please check permissions");
+      p_currentFile.setFileName("");
+      p_save->setDisabled(true);
+      return;
+    }
+
     clearTable();
 
     QList<int> column = QList<int>();
@@ -576,7 +634,7 @@ namespace Qisis {
     }
 
     // Strip headers off the table into the temp string
-    QString temp = f.readLine();
+    QString temp = p_currentFile.readLine();
     temp.remove("Positive ");
     temp.remove("\"");
     temp.remove("\n");
@@ -613,6 +671,10 @@ namespace Qisis {
           p_itemList[j]->setCheckState(Qt::Checked);
           break;
         }
+        if(p_itemList[j]->text() == "Projected X:Projected Y" && (list[i] == "Projected X" || list[i] == "Projected Y")) {
+          p_itemList[j]->setCheckState(Qt::Checked);
+          break;
+        }
         if(p_itemList[j]->text() == "Radius" && list[i] == "Local Radius") {
           p_itemList[j]->setCheckState(Qt::Checked);
           break;
@@ -634,6 +696,10 @@ namespace Qisis {
           break;
         }
         if(p_itemList[j]->text() == "Local Solar iTime" && list[i] == "Local Solar Time") {
+          p_itemList[j]->setCheckState(Qt::Checked);
+          break;
+        }
+        if(p_itemList[j]->text() == "Segments Sum" && list[i] == "Segments Sum km") {
           p_itemList[j]->setCheckState(Qt::Checked);
           break;
         }
@@ -668,9 +734,19 @@ namespace Qisis {
     }
 
     // Read data into table
-    QString str = f.readLine();
+    QString str = p_currentFile.readLine();
     
     while (str.count() != 0) {
+      // Do we need more rows?
+      if (p_currentRow+1 > p_table->rowCount()) {
+        p_table->insertRow(p_currentRow);
+        for (int c=0; c<p_table->columnCount(); c++) {
+          QTableWidgetItem *item = new QTableWidgetItem("");
+          p_table->setItem(p_currentRow,c,item);
+          if (c == 0) p_table->scrollToItem(item);
+        }
+      }
+
       str.remove("\n");
 
       QStringList list = str.split(",");
@@ -684,18 +760,11 @@ namespace Qisis {
       p_currentRow++;
       p_currentIndex++;
 
-      // Do we need more rows?
-      if (p_currentRow+1 > p_table->rowCount()) {
-        p_table->insertRow(p_currentRow);
-        for (int c=0; c<p_table->columnCount(); c++) {
-          QTableWidgetItem *item = new QTableWidgetItem("");
-          p_table->setItem(p_currentRow,c,item);
-          if (c == 0) p_table->scrollToItem(item);
-        }
-      }
-      str = f.readLine();
+
+      str = p_currentFile.readLine();
     }
 
+    p_currentFile.close();
     p_tableWin->setWindowTitle(p_title + " : " + fn);
     emit fileLoaded();
   }

@@ -245,6 +245,12 @@ bool TryKernels(Cube *icube, Process &p,
   if (currentKernels.HasKeyword("Frame")) {
     currentKernels.DeleteKeyword("Frame");
   }
+  if (currentKernels.HasKeyword("StartPadding")) {
+    currentKernels.DeleteKeyword("StartPadding");
+  }
+  if (currentKernels.HasKeyword("EndPadding")) {
+    currentKernels.DeleteKeyword("EndPadding");
+  }
 
   UserInterface &ui = Application::GetUserInterface();
   // Add any time padding the user specified to the spice group

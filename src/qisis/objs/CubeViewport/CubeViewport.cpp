@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2008/08/11 20:40:43 $
- * $Revision: 1.22 $
+ * $Date: 2008/12/24 17:36:00 $
+ * $Revision: 1.26 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -18,11 +18,12 @@
  *  http://www.usgs.gov/privacy.html.
  */
 
+#include <iomanip>
 #include <iostream>
 #include <QApplication>
-#include <QScrollBar>
 #include <QCursor>
 #include <QIcon>
+#include <QPen>
 #include <QPainter>
 #include <QFileInfo>
 #include <QMessageBox>
@@ -31,10 +32,7 @@
 #include "iException.h"
 #include "Filename.h"
 #include "Histogram.h"
-#include "CameraFactory.h"
-#include "ProjectionFactory.h"
 #include "Tool.h"
-#include "UniversalGroundMap.h"
 
 namespace Qisis {
   /**
@@ -91,9 +89,9 @@ namespace Qisis {
     updateScrollBars(1,1);
 
     p_groundMap = NULL;
-    p_camera = NULL;
     p_projection = NULL;
-
+    p_camera = NULL;
+    
     // Setup a universal ground map
     try {
       p_groundMap = new Isis::UniversalGroundMap(*p_cube);
@@ -104,11 +102,22 @@ namespace Qisis {
 
     if (p_groundMap != NULL) {
       // Setup the camera or the projection
-      p_camera = p_groundMap->Camera();
-      p_projection = p_groundMap->Projection();
+      if(p_groundMap->Camera() != NULL) {
+        p_camera = p_groundMap->Camera();
+        if(p_camera->HasProjection()) {
+          try{
+            p_projection = cube->Projection();
+          } catch (Isis::iException &e) {
+            e.Clear();
+          }
+        }
+      }
+      else {
+        p_projection = p_groundMap->Projection();
+      }
     }
-
-
+    
+   
     // Setup context sensitive help
     std::string cubeFileName = p_cube->Filename();
     p_whatsThisText = QString ("<b>Function: </b>Viewport to ") + cubeFileName.c_str();
@@ -135,6 +144,12 @@ namespace Qisis {
    */
   CubeViewport::~CubeViewport() {
     delete p_cube;
+    delete p_redBrick;
+    delete p_grnBrick;
+    delete p_bluBrick;
+    delete p_gryBrick;
+    delete p_pntBrick;
+    delete p_groundMap;
 //     Isis::Camera *p_camera;
 //     Isis::Projection *p_projection;
 //     Isis::UniversalGroundMap *p_groundMap;
@@ -220,7 +235,7 @@ namespace Qisis {
     // Sanitize the scale value
     if (scale == p_scale) return;
     if (scale > 16.0) scale = 16.0;
-//    if (scale < 1.0/16.0) scale = 1.0/16.0;
+    //if (scale < 1.0/16.0) scale = 1.0/16.0;
 
     // Resize the scrollbars to reflect the new scale
     double samp,line;
@@ -1238,22 +1253,32 @@ namespace Qisis {
 
   /**
    *  Visualize the cube
-   * 
+   *  
+   *  @internal
+   *    @history 2008-12-04 Jeannie Walldren - Added try/catch to
+   *             set p_cubeShown = false if this fails.
    */
   void CubeViewport::showCube() {
     if (p_cubeShown) return;
-    p_cubeShown = true;
+    try{
+      p_cubeShown = true;
 
-    updateScrollBars(horizontalScrollBar()->value(),
+      updateScrollBars(horizontalScrollBar()->value(),
                      verticalScrollBar()->value());
 
-    p_paintPixmap = true;
-    autoStretch();
-    setCaption();
-
-    viewport()->update();
-    viewport()->setAttribute(Qt::WA_NoBackground);
-    return;
+      p_paintPixmap = true;
+      autoStretch();
+      setCaption();
+      
+      viewport()->update();
+      viewport()->setAttribute(Qt::WA_NoBackground);
+      return;
+    }
+    catch (Isis::iException &e){
+      // if autoStretch fails, we cannot show cube
+      p_cubeShown = false;
+      throw e;
+    }
   }
 
   /**
@@ -1364,6 +1389,12 @@ namespace Qisis {
    * @param eline 
    * @param lineRate 
    * @param stretch 
+   *  
+   * @internal 
+   *   @history 2008-12-03 Jeannie Walldren - Fixed bug in if
+   *            statement condition by adding a "minus
+   *            DBL_EPSILON" and changing "not equal" to "less
+   *            than"
    */
   void CubeViewport::computeStretch(Isis::Brick *brick, int band,
                                     int ssamp, int esamp,
@@ -1388,7 +1419,7 @@ namespace Qisis {
       }
 
       stretch.ClearPairs();
-      if (hist.Percent(0.5) != hist.Percent(99.5)) {
+      if (hist.Percent(0.5) < (hist.Percent(99.5) - DBL_EPSILON)) {
         stretch.AddPair(hist.Percent(0.5),0.0);
         stretch.AddPair(hist.Percent(99.5),255.0);
       }

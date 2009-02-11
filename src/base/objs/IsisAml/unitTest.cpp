@@ -3,6 +3,7 @@
 #include <sstream>
 #include "IsisAml.h"
 #include "iException.h"
+#include "Filename.h"
 #include "Pvl.h"
 #include "Preference.h"
 
@@ -156,8 +157,9 @@ int main (void)
   // Create the aml object
   cout << "Create the aml object" << endl;
   Inheritor *aml;
+  string xmlFile = Isis::Filename("./unitTest.xml").Expanded();
   try {
-    aml = new Inheritor("unitTest.xml");
+    aml = new Inheritor(xmlFile.c_str());
   }
   catch (Isis::iException &error) {
     error.Report (false);

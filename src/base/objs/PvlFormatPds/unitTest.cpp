@@ -41,6 +41,8 @@ int main () {
       {Isis::PvlKeyword key("binkey16", "binary"); key.AddValue(16); out<<key<<endl;}
       {Isis::PvlKeyword key("intkeyarray", "integer"); out<<key<<endl;}
       {Isis::PvlKeyword key("dblkeyarray", "rEaL"); key.AddValue(2); out<<key<<endl;}
+      {Isis::PvlKeyword key("wrapword", "string"); out<<key<<endl;}
+      {Isis::PvlKeyword key("array", "integer"); out<<key<<endl;}
 
       out.close();
   
@@ -53,63 +55,63 @@ int main () {
       Isis::PvlKeyword key("skey", "somestringval");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
   
     {
       Isis::PvlKeyword key("skey", "string val","chars");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
   
     {
       Isis::PvlKeyword key("notinmap", "junk string");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
   
     {
       Isis::PvlKeyword key("myint", 12345);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
   
     {
       Isis::PvlKeyword key("myfloat", -12345.67e+89,"degrees");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("fkey", -12345.6789);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("fkey0", -9876.543);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("fkey0", -9876.543e-99);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("fkey2", 0.123456);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
@@ -117,7 +119,7 @@ int main () {
       key.AddValue(987.123, "goofys");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
@@ -125,56 +127,56 @@ int main () {
       key.AddValue(987.123);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("ekey", "unsigned");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("myarray", "(12345,\"a short string\",1.234)");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("hkey0", (Isis::BigInt)0x123456789abcdeffLL);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
   
     {
       Isis::PvlKeyword key("hkey2", 0x7a8b);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("hkey4", 0x1a2b3c4d);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("binkey", 0xA);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("binkey16", 0xffff);
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
@@ -184,27 +186,28 @@ int main () {
       key.AddValue("NULL");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("intkeyarray", 1,"m");
       key.AddValue("NULL","m");
       key.AddValue("3","m");
-      key.AddValue("NULL","m");
+      key.AddValue("N/A");
+      key.AddValue("UNK");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
     {
       Isis::PvlKeyword key("dblkeyarray", 1.01);
       key.AddValue("NULL");
       key.AddValue("3.4");
-      key.AddValue("NULL");
+      key.AddValue("UNK");
       cout << key << endl;
       key.SetFormat(pdsFormatter);
-      cout << key << endl;
+      cout << key << pdsFormatter->FormatEOL();
     }
 
   
@@ -220,7 +223,7 @@ int main () {
       cout << grp << endl;
       grp.SetFormat(pdsFormatter);
       cout << "=============================== After" << endl;
-      cout << grp << endl;
+      cout << grp << pdsFormatter->FormatEOL();
     }
   
   
@@ -254,7 +257,7 @@ int main () {
       cout << obj << endl;
       obj.SetFormat(pdsFormatter);
       cout << "=============================== After" << endl;
-      cout << obj << endl;
+      cout << obj << pdsFormatter->FormatEOL();
     }
   
   
@@ -302,6 +305,25 @@ int main () {
       grp2 += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       grp2 += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
       grp2 += Isis::PvlKeyword ("binkey16", 0x8001);
+      grp2 += Isis::PvlKeyword ("wrapword", "The quick brown fox jumped over the lazy duck. "
+                                "Repunzel Repunzel let down your hair. The little toy dog is covered with dust,"
+                                " but sturdy and staunch he stands; and the little toy soldier is red with rust.");
+      Isis::PvlKeyword key( Isis::PvlKeyword ("array", 12345) );
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      key.AddValue(67890);
+      key.AddValue(12345);
+      grp2 += key;
       pvl.AddGroup(grp2);
   
   
@@ -309,7 +331,7 @@ int main () {
       cout << pvl << endl;
       pvl.SetFormat(pdsFormatter);
       cout << "=============================== After" << endl;
-      cout << pvl << endl;
+      cout << pvl << pdsFormatter->FormatEOL();
     }
 
 

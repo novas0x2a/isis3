@@ -1,9 +1,14 @@
 #include <cmath>
 #include "TopoAtm.h"
-#include "NumericalMethods.h"
+#include "NumericalApproximation.h"
 #include "iException.h"
 
 namespace Isis {
+  /*
+   * @history 2008-11-05 Jeannie Walldren - Modified references to 
+   *          NumericalMethods class and replaced Isis::PI with PI
+   *          since this is in Isis namespace.
+   */
   TopoAtm::TopoAtm (Pvl &pvl, PhotoModel &pmodel, AtmosModel &amodel) : NormModel(pvl,pmodel,amodel) {
     double psurf0;
     double emaref;
@@ -50,11 +55,11 @@ namespace Isis {
     GetPhotoModel()->SetStandardConditions(false);
 
     //  Get reference hemispheric albedo (p_photoB0 doesn't influence it much) 
-    GetAtmosModel()->PhtGetAhTable();
-    NumericalMethods::r8splint(GetAtmosModel()->AtmosIncTable(),
-                               GetAtmosModel()->AtmosAhTable(),GetAtmosModel()->AtmosAhTable2(),
-                               GetAtmosModel()->AtmosNinc(),p_normIncref,&ahref);
-    munotref = cos((Isis::PI/180.0)*p_normIncref);
+    GetAtmosModel()->GenerateAhTable();
+
+    ahref = (GetAtmosModel()->AtmosAhSpline()).Evaluate(p_normIncref,NumericalApproximation::Extrapolate);
+
+    munotref = cos((PI/180.0)*p_normIncref);
 
     // Now calculate atmosphere at standard conditions
     GetAtmosModel()->SetStandardConditions(true);
@@ -70,6 +75,11 @@ namespace Isis {
                                (psurfref - ahref * munotref));
   }
 
+  /*
+   *@history 2008-11-05 Jeannie Walldren - Modified references to 
+   *          NumericalMethods class and replaced Isis::PI with PI
+   *          since this is in Isis namespace.
+   */
   void TopoAtm::NormModelAlgorithm (double phase, double incidence,
       double emission, double demincidence, double dememission, double dn,
       double &albedo, double &mult, double &base)
@@ -95,10 +105,9 @@ namespace Isis {
 
     psurf = GetPhotoModel()->CalcSurfAlbedo(phase,demincidence,dememission);
     pprime = GetPhotoModel()->PhtTopder(phase,demincidence,dememission);
-    NumericalMethods::r8splint(GetAtmosModel()->AtmosIncTable(),
-                               GetAtmosModel()->AtmosAhTable(),GetAtmosModel()->AtmosAhTable2(),
-                               GetAtmosModel()->AtmosNinc(),incidence,&ahInterp);
-    munot = cos(incidence*(Isis::PI/180.0));
+    ahInterp = (GetAtmosModel()->AtmosAhSpline()).Evaluate(incidence,NumericalApproximation::Extrapolate);
+
+    munot = cos(incidence*(PI/180.0));
     GetAtmosModel()->CalcAtmEffect(phase,incidence,emission,&pstd,&trans,&trans0,&sbar);
     pflat = pstd + p_normRhobar * (trans * ahInterp * munot / 
                              (1.0 - p_normRhobar * GetAtmosModel()->AtmosAb() * sbar) + trans0 * (psurf - 

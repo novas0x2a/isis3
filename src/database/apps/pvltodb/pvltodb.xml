@@ -69,6 +69,13 @@
         (arg2) of their choosing if NULL is not desired (Note that whatever 
         value it is inserts into the database with that value).
     </change>
+    <change  name="Kris Becker" date="2008-10-27"> 
+        Added the NullIf(arg1,arg2[,arg3]) functor to test for specific values 
+        and return NULL or arg3 if given when they are equivalent, 
+        textually.  Also added ToMultiPolygon(arg1) to convert other Polygon 
+        types to MultiPolygons to be compatable with our GIS-capable database.
+    </change>
+
   </history>
 
   <groups>

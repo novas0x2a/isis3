@@ -33,6 +33,7 @@
 #include "SpecialPixelTool.h"
 #include "PlotTool.h"
 #include "HistogramTool.h"
+#include "StatisticsTool.h"
 #include "Preference.h"
 
 void startMonitoringMemory();
@@ -148,6 +149,9 @@ int main (int argc, char *argv[]) {
 
   Qisis::Tool *histtool = new Qisis::HistogramTool(vw);
   histtool->addTo(vw);
+
+  Qisis::Tool *statstool = new Qisis::StatisticsTool(vw);
+  statstool->addTo(vw);
 
   Qisis::Tool *htool = new Qisis::HelpTool(vw);
   htool->addTo(vw);

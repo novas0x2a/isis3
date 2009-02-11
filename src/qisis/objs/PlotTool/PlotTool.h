@@ -17,9 +17,6 @@
 #include "geos/geom/CoordinateArraySequence.h"
 #include "geos/geom/Point.h"
 
-class QDockWidget;
-class QListWidgetItem;
-
 namespace Qisis {
   /**                                                                       
    * @brief plot tool
@@ -37,7 +34,7 @@ namespace Qisis {
 
     public:
       PlotTool (QWidget *parent);
-      void paintViewport(CubeViewport *vp,QPainter *painter);
+      virtual void paintViewport(CubeViewport *vp,QPainter *painter);
       
     protected:
       //!< Returns the menu name.
@@ -53,7 +50,7 @@ namespace Qisis {
       
     protected slots:
       void createWindow();      
-      void rubberBandComplete();
+      virtual void rubberBandComplete();
       void updateViewPort();
       void viewportSelected();
 

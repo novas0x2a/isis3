@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/05/14 21:06:58 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2008/12/17 15:53:37 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -55,7 +55,7 @@ void IsisMain() {
     outCube = p.SetOutputCube("TO");
   }
   else if(ui.GetString("MODE") == "LIST") {
-    string inputFilename = ui.GetFilename("FILELIST"); 
+    string inputFilename = ui.GetFilename("FROMLIST"); 
     FileList list(inputFilename);
 
     // Run through file list and set its entries as input cubes

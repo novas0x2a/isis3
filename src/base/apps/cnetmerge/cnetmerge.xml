@@ -8,10 +8,9 @@
 
   <description>
     <p>
-    Merges 2 ControlNets into a single one.  Each ControlNet must share the same 
-    target, and be of the same type (i .e. Singleton, ImageToImage, 
-    ImageToGround ).  If the ControlNets contain the same ControlPoint, the merge
-    can be forced.
+    Merges 2 Control Nets into a single Control Net.  Each Control Net must
+    share the same  target, and be of the same type (i .e. Singleton,
+    ImageToImage, ImageToGround ).
     </p>
   </description>
 
@@ -26,6 +25,24 @@
     <change name="Christopher Austin" date="2008-08-05">
       Fix xml app name error
     </change>
+    <change name="Christopher Austin" date="2008-11-13">
+      Rebuilt for more Control Point Id control, including a REPLACE option.
+      Only FORCE prefixes the original Control Network Id to the new Control
+      Point Ids, then logs the number of duplicate Control Points.  NORMAL and
+      REPLACE leave the Control Point Ids alone.
+    </change>
+    <change name="Christopher Austin" date="2009-01-09">
+      Added the FROMLIST input option.
+    </change>
+    <change name="Christopher Austin" date="2009-01-13">
+      Changed MERGETYPE param name and options to be more clear. Changed MODE
+      to INPUTTYPE. Added the REPORT param which reveals any Control Points
+      that have been renamed or replaced durring the merge.
+    </change>
+    <change name="Christopher Austin" date="2009-01-15">
+      Added Filename expansion to the listed nets and a few other minor
+      readability changes.
+    </change>
   </history> 
   
   <category>
@@ -34,7 +51,51 @@
 
   <groups>
     
-    <group name="Files">
+    <group name="Input">
+
+      <parameter name = "INPUTTYPE">
+        <type>string</type>
+        <default><item>LIST</item></default>
+        <brief>File I/O options</brief>
+        <description>
+          There is a choice to simply specify input cubes directly, use a list of input cubes in a text file, or to create output data only.
+        </description>
+        <list>
+          <option value = "LIST">
+            <brief>Select input Control Net list</brief>
+            <description>
+              Select a list of Control Nets, all to be merged.
+            </description>
+            <exclusions>
+              <item>FROM1</item>
+              <item>FROM2</item>
+            </exclusions>
+          </option>
+          <option value = "CNETS">
+            <brief>Select input Control Nets directly</brief>
+            <description>
+              Select the 2 Control Nets to be merged directly.
+            </description>
+            <exclusions>
+              <item>FROMLIST</item>
+            </exclusions>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name = "FROMLIST">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input list file 
+        </brief>
+        <description>
+          This file contains a list of all the Control Nets to be merged
+        </description>
+        <filter>
+          *.lis, *.list, *.txt
+        </filter>
+      </parameter>
       
       <parameter name="FROM1">
         <type>filename</type>
@@ -64,6 +125,10 @@
         </filter>
       </parameter>
 
+    </group>
+
+    <group name="Output">
+
       <parameter name="TO">
         <type>filename</type>
         <fileMode>output</fileMode>
@@ -77,20 +142,25 @@
         <filter>
           *.ctl *.pvl
         </filter>
-      </parameter> 
+      </parameter>
 
-      <parameter name="FORCE">
-        <type>boolean</type>
-        <default><item>FALSE</item></default>
+      <parameter name="REPORT">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <internalDefault>No Report Output</internalDefault>
         <brief>
-          Forces the merge of the input ControlNets
+          Reports Control Points that were renamed or replaced
         </brief>
         <description>
-          If left false, cnetmerge will throw errors upon the two input 
-          ControlNets containing a ControlPoint with the same Id.  If set to 
-          false, the merge will be forced, reguardless of ControlPoint ids.
+          This file will contain a report that reveals all Control Points that
+          were renamed or replaced. If no Control Points were renamed or
+          replaced, than this file will be empty.
         </description>
       </parameter>
+
+    </group>
+
+    <group name="Output Control">
 
       <parameter name="ID">
         <type>string</type>
@@ -109,9 +179,52 @@
           The Description for the merged ControlNet
         </brief>
         <description>
-          TheDescrition keyword for the new merged ControlNet will be set to the 
+          The Descrition keyword for the new merged ControlNet will be set to the 
           given value.
         </description>
+      </parameter>
+
+      <parameter name="DUPLICATEPOINTS">
+        <type>string</type>
+        <brief>Defines how duplicate Control Points are handled</brief>
+        <default><item>ERROR</item></default>
+        <description>
+          This parameter is used to specify how duplicate Control Points of the
+          given Control Networks are handled when merging.
+        </description>
+        <list>
+           <option value="ERROR">
+              <brief>Does not merge duplicate Control Points</brief>
+              <description>
+                This option will check for duplicate Control Points in the
+                Control Nets and throw an error when a duplication occurs.
+                If no duplication occurs, all Control Points will be transfered
+                to the new Control Net as is.
+              </description>
+              <exclusions>
+                <item>REPORT</item>
+              </exclusions>
+            </option>
+           <option value="RENAME">
+              <brief>Renames duplicate Control Points</brief>
+              <description>
+                This option will add the name of Id of the Control Net to each
+                duplicate Control Point while merging.  The other Control
+                Points will be identically transferred.
+              </description>
+            </option>
+            <option value="REPLACE">
+              <brief>Replaces duplicate Control Points</brief>
+              <description>
+                This option will replace all duplicate Control Points in the
+                following Control Net over the first Control Net.  When
+                INPUTTYPE=CNETS, the FROM2 Control Net will override the
+                duplicate Control Points in FROM1. When INPUTTYPE=LIST, a
+                listed Control Net will override any and all duplicate Control
+                Points from any and all previously listed Control Nets.
+              </description>
+            </option>
+        </list>
       </parameter>
       
     </group>

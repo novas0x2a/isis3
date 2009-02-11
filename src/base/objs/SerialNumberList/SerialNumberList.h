@@ -1,9 +1,9 @@
-#if !defined(SerialNumberList_h)
+#ifndef SerialNumberList_h
 #define SerialNumberList_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/01/10 19:42:19 $
+ * $Revision: 1.4 $
+ * $Date: 2008/10/30 16:24:00 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -63,8 +63,10 @@ namespace Isis {
  *  @history 2006-09-13 Steven Koechle Added method to get the
  *                          ObservationNumber when you give it
  *                          an index
- *  @history 2008-01-10 Christopher Austin - Addapted for the
- *           new ObservationNumber class.
+ *  @history 2008-01-10 Christopher Austin - Adapted for the new
+ *           ObservationNumber class.
+ *   @history 2008-10-30 Steven Lambright - Fixed problem with definition
+ *            of struct Pair, pointed out by "novus0x2a" (Support Board Member)
  */
 
   class SerialNumberList {
@@ -89,7 +91,7 @@ namespace Isis {
       std::vector<std::string> PossibleSerialNumbers (const std::string &on);
       
     protected:
-      typedef struct Pair {
+      struct Pair {
         std::string filename;
         std::string serialNumber;
         std::string observationNumber;

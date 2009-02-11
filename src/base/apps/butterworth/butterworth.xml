@@ -7,7 +7,7 @@
       image from a spacial to frequency domain and use the ifft app to transform from frequency to spacial.
   </description>
   <category>
-    <categoryItem>Filters</categoryItem>
+    <categoryItem>Fourier Domain</categoryItem>
   </category>
   <history>
     <change name="Jacob Danton" date="2005-11-28" >
@@ -17,7 +17,10 @@
         Documentation fixes
     </change>
     <change name="Steven Lambright" date="2008-05-12">
-          Removed references to CubeInfo 
+        Removed references to CubeInfo 
+    </change>
+    <change name="Steven Lambright" date="2008-10-17">
+        Removed outdated examples from the documentation.
     </change>
   </history> 
 
@@ -98,77 +101,11 @@
           <option value="BANDSTOP">
             <brief>Bandstop filter</brief>
             <description>
-                Applies a bandstop filter to an image in the frequency domain.
+              Applies a bandstop filter to an image in the frequency domain.
             </description>
           </option>
         </list>
       </parameter>
     </group>
   </groups>
-
-  <examples>
-    <example>
-      <brief> 3x3 median filter </brief>
-      <description>
-        A 3x3 boxcar running of the median filter
-      </description>
-      <terminalInterface>
-        <commandLine> mode from=peaks.cub to=peaksMedian1.cub samples=3 lines=3 </commandLine>
-        <description> Runs a 3x3 mode filter on peaks.cub and stores the output in peaksMedian1.cub </description>
-      </terminalInterface>
-      <inputImages>
-        <image  width="512" height="512" src="assets/images/peaks.jpg">
-          <brief> Image before filtering </brief>
-          <description>
-            This is the original cube before any filters are applied.
-          </description>
-          <thumbnail caption="The image before filtering" width="128" height="128" src="assets/thumbs/peaks.jpg"/>
-          <parameterName> FROM </parameterName>
-        </image>
-      </inputImages>
-      <outputImages>
-        <image  width="512" height="512" src="assets/images/peaksMedian1.jpg">
-          <brief> Image after filtering </brief>
-          <description>
-            This is the cube after a 3x3 median filter is applied.
-          </description>
-          <thumbnail caption="The image after filtering" width="128" height="128" src="assets/thumbs/peaksMedian1.jpg"/>
-          <parameterName> TO </parameterName>
-        </image>
-      </outputImages>
-    </example>
-
-    <example>
-      <brief> 25x25 median filter </brief>
-      <description>
-        A 25x25 boxcar running of the median filter
-      </description>
-      <terminalInterface>
-        <commandLine> mode from=peaks.cub to=peaksMedian2.cub samples=25 lines=25 </commandLine>
-        <description> Runs a 25x25 filter on peaks.cub and stores the output in peaksMedian2.cub </description>
-      </terminalInterface>
-      <inputImages>
-        <image  width="512" height="512" src="assets/images/peaks.jpg">
-          <brief> Image before filtering </brief>
-          <description>
-            This is the original cube before any filters are applied.
-          </description>
-          <thumbnail caption="The image before filtering" width="128" height="128" src="assets/thumbs/peaks.jpg"/>
-          <parameterName> FROM </parameterName>
-        </image>
-      </inputImages>
-      <outputImages>
-        <image  width="512" height="512" src="assets/images/peaksMedian2.jpg">
-          <brief> Image before filtering </brief>
-          <description>
-            This is the cube after a 25x25 median filter is applied.
-          </description>
-          <thumbnail caption="The image before filtering" width="128" height="128" src="assets/thumbs/peaksMedian2.jpg"/>
-          <parameterName> TO </parameterName>
-        </image>
-      </outputImages>
-    </example>
-
-  </examples>
-
 </application>

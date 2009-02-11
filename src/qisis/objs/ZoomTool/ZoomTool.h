@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2008/06/19 18:23:37 $
- * $Revision: 1.4 $
+ * $Date: 2008/10/01 19:12:46 $
+ * $Revision: 1.5 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -76,6 +76,9 @@ namespace Qisis {
       void zoomFitWidth ();
       void zoomFitHeight ();
       void zoomManual ();
+      
+      void mouseButtonPress(QPoint p, Qt::MouseButton s);
+      void mouseButtonRelease(QPoint p, Qt::MouseButton s);
 
     private:
       void zoomBy (double factor);
@@ -92,6 +95,8 @@ namespace Qisis {
       QAction *p_zoomFit; //!< Fit the cube in the viewport action.
 
       QLineEdit *p_zoomLineEdit; //!< Line edit for manual zoom factor.
+      double p_lastScale;
+      QCursor p_userCursor;
   };
 };
 

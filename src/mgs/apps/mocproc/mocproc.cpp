@@ -7,15 +7,14 @@
 #include "Filename.h"
 #include "iException.h"
 #include "iTime.h"
+#include "Pipeline.h"
 
 using namespace std; 
 using namespace Isis;
 
-void IsisMain ()
-{
-  // Make sure they want something done
-  Process p;
+void IsisMain () {
   UserInterface &ui = Application::GetUserInterface();
+
   if (!ui.GetBoolean("INGESTION") && 
       !ui.GetBoolean("CALIBRATION") &&
       !ui.GetBoolean("MAPPING")) {
@@ -23,170 +22,83 @@ void IsisMain ()
     throw iException::Message(iException::User,m,_FILEINFO_);
   }
  
+  Pipeline p("mocproc");
 
-  // Get the input filename
-  Filename mainInput = Filename (ui.GetFilename ("FROM"));
+  p.SetInputFile("FROM", "");
+  p.SetOutputFile("TO");
 
-  // Find out what the final level of proecesing will be
-  int finalLevel = 2;
-  if (!ui.GetBoolean("MAPPING")) finalLevel = 1;
-  if (!ui.GetBoolean("CALIBRATION")) finalLevel = 0;
+  p.KeepTemporaryFiles(false);
 
-  // Get the final (last stage) output filename
-  Filename finalOutput;
-  // Use the specified output filename
-  if (ui.WasEntered("TO")) {
-    finalOutput = ui.GetFilename("TO");
+  if(ui.GetBoolean("Ingestion")) {
+    p.AddToPipeline("moc2isis");
+    p.Application("moc2isis").SetInputParameter("FROM", false);
+    p.Application("moc2isis").SetOutputParameter("TO", "lev0");
+  
+    p.AddToPipeline("spiceinit");
+    p.Application("spiceinit").SetInputParameter("FROM", false);
+    p.Application("spiceinit").AddParameter("PCK", "PCK");
+    p.Application("spiceinit").AddParameter("CK", "CK");
+    p.Application("spiceinit").AddParameter("SPK", "SPK");
+    p.Application("spiceinit").AddParameter("CKNADIR", "CKNADIR");
+    p.Application("spiceinit").AddParameter("SHAPE", "SHAPE");
+    p.Application("spiceinit").AddParameter("MODEL", "MODEL");
   }
-  // Create the output filename using the input file as a template
-  else {
-    finalOutput = mainInput.Basename() + ".lev" + iString(finalLevel) + ".cub";
-  }
 
-  // Create filenames to hold the temporary output of each app and the input
-  // to the next app
-  Filename output, input;
-  output = mainInput.Expanded();
+  if(ui.GetBoolean("Calibration")) {
+    p.AddToPipeline("moccal");
+    p.Application("moccal").SetInputParameter("FROM", true);
+    p.Application("moccal").SetOutputParameter("TO", "lev1");
+  
+    p.AddToPipeline("mocnoise50");
+    p.Application("mocnoise50").SetInputParameter("FROM", true);
+    p.Application("mocnoise50").SetOutputParameter("TO", "noise");
+  
+    p.AddToPipeline("mocevenodd");
+    p.Application("mocevenodd").SetInputParameter("FROM", true);
+    p.Application("mocevenodd").SetOutputParameter("TO", "evenodd");
 
+    Pvl inputPvl(Filename(ui.GetFilename("FROM")).Expanded());
 
-  //---------------------------------------------------------------------------
-  // Run the ingestion processing apps if requested
+    int summingMode = 0;
+    bool isNarrowAngle = false;
 
-  if (ui.GetBoolean("INGESTION")) {
-    // Run moc2isis
-    input = output.Expanded();
-    // Set up the temporary filename for the output of moc2isis
-    if (finalLevel == 0) {
-      output = finalOutput.Expanded();
+    if(inputPvl.HasKeyword("CROSSTRACK_SUMMING")) {
+      summingMode = inputPvl["CROSSTRACK_SUMMING"];
+      isNarrowAngle = ((string)inputPvl["INSTRUMENT_ID"] == "MOC-NA");
     }
     else {
-      output.Temporary (mainInput.Basename() + "_moc2isis_", "cub");
+      PvlGroup &inst = inputPvl.FindGroup("Instrument", Pvl::Traverse);
+      summingMode = inst["CrosstrackSumming"];
+      isNarrowAngle = ((string)inst["InstrumentId"] == "MOC-NA");
     }
 
-    string parameters = "FROM=" + input.Expanded() +  
-                        " TO=" + output.Expanded();
-    Isis::iApp->Exec("moc2isis",parameters);
-
-    // Run spiceinit
-    input = output.Expanded();
-    parameters = "FROM=" + input.Expanded();
-    parameters += " SHAPE=" + ui.GetString("SHAPE");
-    if (ui.GetString("SHAPE") == "USER") {
-      parameters +=  " MODEL=" + ui.GetFilename("MODEL");
-    }
-    if (ui.WasEntered("CK")) {
-      parameters += " CK=" + ui.GetFilename("CK");
-    }
-    if (ui.WasEntered("PCK"))  {
-      parameters += " PCK=" + ui.GetFilename("PCK");
-    }
-    if (ui.WasEntered("SPK")) {
-      parameters += " SPK=" + ui.GetFilename("SPK");
+    if(summingMode != 1) {
+      p.Application("mocnoise50").Disable();
+      p.Application("mocevenodd").Disable();
     }
 
-    parameters += iString(" CKNADIR=") + iString((ui.GetBoolean("CKNADIR"))? "true" : "false");
-
-    Isis::iApp->Exec("spiceinit",parameters);
-  } // end of ingestion if
-
-
-  //---------------------------------------------------------------------------
-  // Run the calibration processing apps if requested
-  if (ui.GetBoolean("CALIBRATION")) {
-    // Get some information for decisions later in this section
-    Process tmpP;
-    CubeAttributeInput att;
-    Cube *icube = tmpP.SetInputCube (output.Expanded(), att);
-
-    PvlGroup inst = icube->GetGroup("Instrument");
-    iString id = (string) inst["InstrumentId"];
-    id.UpCase();
-    int crosstrackSumming = inst["CrosstrackSumming"];
-
-    PvlGroup bandBin = icube->GetGroup("BandBin");
-    iString filterName = (string) bandBin["FilterName"];
-    filterName.UpCase();
-
-    tmpP.EndProcess();
-
-    // Run moccal
-    input = output.Expanded();
-    string inputExpanded = input.Expanded();
-    // Set up the temporary filename for the output of moccal
-
-    if (crosstrackSumming != 1 && finalLevel == 1) output = finalOutput.Expanded();
-    else output.Temporary (mainInput.Basename() + "_moccal_", "cub");
-
-    // ****NOTE****
-    // take the "+32bit" off the extension below when filenames/attributes settle down
-    string parameters = "FROM=" + input.Expanded() + 
-                        " TO=" + output.Expanded()+"+32BIT";
-    Isis::iApp->Exec("moccal",parameters);
-    remove (inputExpanded.c_str());
-
-    // Run mocnoise50 if:
-    //  the instrument id is "MOC_NA"
-    //  and the crosstrack summing is 1 (one)
-
-    if (id == "MOC_NA" && crosstrackSumming == 1) {
-      input = output.Expanded();
-      string inputExpanded = input.Expanded();
-      // Set up the temporary filename for the output of mocnoise50
-      output.Temporary (mainInput.Basename() + "_mocnoise50_", "cub");
-      parameters = "FROM=" + input.Expanded() + 
-                   " TO=" + output.Expanded();
-      Isis::iApp->Exec("mocnoise50",parameters);
-      remove (inputExpanded.c_str());
+    if(!isNarrowAngle) {
+      p.Application("mocnoise50").Disable();
     }
+  }
 
-    // Run mocevenodd if:
-    //   the crosstrackSumming is 1 (one)
-    if (crosstrackSumming == 1) {
-      input = output.Expanded();
-      string inputExpanded = input.Expanded();
-      // Set up the temporary filename for the output of mocevenodd
-      if (finalLevel == 1) {
-        output = finalOutput.Expanded();
-      }
-      else {
-        output.Temporary (mainInput.Basename() + "_mocevenodd_", "cub");
-      }
-
-      parameters = "FROM=" + input.Expanded() + 
-                   " TO=" + output.Expanded();
-      Isis::iApp->Exec("mocevenodd",parameters);
-      remove (inputExpanded.c_str());
-    }
-
-  } // end of calibration if
-
-
-  //---------------------------------------------------------------------------
-  // Run all mapping apps if requested
-  if (ui.GetBoolean("MAPPING")) {
-
-    // Run cam2map
-    input = output.Expanded();
-    string inputExpanded = input.Expanded();
-    string parameters = "FROM=" + input.Expanded();
-    parameters += " TO=" + finalOutput.Expanded();
-    parameters += " DEFAULTRANGE = CAMERA";
-    if (ui.WasEntered("MAP")) {
-      parameters +=  " MAP=" + ui.GetFilename("MAP");
-      Pvl m(ui.GetFilename("MAP"));
-      if (m.FindGroup("Mapping").HasKeyword("PixelResolution")
-            && !ui.WasEntered("PIXRES")) {
-        parameters += " PIXRES=MAP";
-      }
-    }
+  if(ui.GetBoolean("Mapping")) {
+    p.AddToPipeline("cam2map");
+    p.Application("cam2map").SetInputParameter("FROM", true);
+    p.Application("cam2map").SetOutputParameter("TO", "lev2");
+    p.Application("cam2map").AddParameter("MAP", "MAP");
+    p.Application("cam2map").AddParameter("PIXRES", "RESOLUTION");
+  
     if (ui.WasEntered("PIXRES")) {
-      parameters += " PIXRES=MPP RESOLUTION=" + ui.GetAsString("PIXRES");
+      p.Application("cam2map").AddConstParameter("PIXRES", "MPP");
     }
+    else if(ui.WasEntered("MAP")) {
+      Pvl mapPvl(Filename(ui.GetFilename("MAP")).Expanded());
+      if (mapPvl.FindGroup("Mapping", Pvl::Traverse).HasKeyword("PixelResolution")) {
+        p.Application("cam2map").AddConstParameter("PIXRES", "MAP");
+      }
+    }
+  }
 
-    Isis::iApp->Exec("cam2map",parameters);
-    remove (inputExpanded.c_str());
-
-  } // end of mapping if
-
-  return;
+  p.Run();
 }

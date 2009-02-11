@@ -55,20 +55,20 @@ void IsisMain() {
 
   // Deal with user overrides entered in the GUI. Do this by changing the user's mapping group, which
   // will then overlay anything in the output mapping group.
-  if(ui.WasEntered("SLAT") && !ui.GetBoolean("MATCHMAP")) {
-    userMappingGrp.AddKeyword( PvlKeyword("MinimumLatitude", ui.GetDouble("SLAT")), Pvl::Replace );
+  if(ui.WasEntered("MINLAT") && !ui.GetBoolean("MATCHMAP")) {
+    userMappingGrp.AddKeyword( PvlKeyword("MinimumLatitude", ui.GetDouble("MINLAT")), Pvl::Replace );
   }
 
-  if(ui.WasEntered("ELAT") && !ui.GetBoolean("MATCHMAP")) {
-    userMappingGrp.AddKeyword( PvlKeyword("MaximumLatitude", ui.GetDouble("ELAT")), Pvl::Replace );
+  if(ui.WasEntered("MAXLAT") && !ui.GetBoolean("MATCHMAP")) {
+    userMappingGrp.AddKeyword( PvlKeyword("MaximumLatitude", ui.GetDouble("MAXLAT")), Pvl::Replace );
   }
 
-  if(ui.WasEntered("SLON") && !ui.GetBoolean("MATCHMAP")) {
-    userMappingGrp.AddKeyword( PvlKeyword("MinimumLongitude", ui.GetDouble("SLON")), Pvl::Replace );
+  if(ui.WasEntered("MINLON") && !ui.GetBoolean("MATCHMAP")) {
+    userMappingGrp.AddKeyword( PvlKeyword("MinimumLongitude", ui.GetDouble("MINLON")), Pvl::Replace );
   }
 
-  if(ui.WasEntered("ELON") && !ui.GetBoolean("MATCHMAP")) {
-    userMappingGrp.AddKeyword( PvlKeyword("MaximumLongitude", ui.GetDouble("ELON")), Pvl::Replace );
+  if(ui.WasEntered("MAXLON") && !ui.GetBoolean("MATCHMAP")) {
+    userMappingGrp.AddKeyword( PvlKeyword("MaximumLongitude", ui.GetDouble("MAXLON")), Pvl::Replace );
   }
 
   /**
@@ -279,9 +279,9 @@ void IsisMain() {
 
   // If MinLon/MaxLon out of order, we weren't able to calculate the correct values
   if((double)outMappingGrp["MinimumLongitude"] >= (double)outMappingGrp["MaximumLongitude"]) {
-    if(!ui.WasEntered("SLON") || !ui.WasEntered("ELON")) {
+    if(!ui.WasEntered("MINLON") || !ui.WasEntered("MAXLON")) {
       string msg = "Unable to determine the correct [MinimumLongitude,MaximumLongitude].";
-      msg += " Please specify these values in the [SLON,ELON] parameters";
+      msg += " Please specify these values in the [MINLON,MAXLON] parameters";
       throw iException::Message(iException::Pvl,msg,_FILEINFO_);
     }
   }
@@ -370,6 +370,19 @@ map2map::map2map (const int inputSamples, const int inputLines, Projection *inma
   p_outmap = outmap;
 
   p_trim = trim;
+
+  p_inputWorldSize = 0;
+  bool wrapPossible = inmap->IsEquatorialCylindrical();
+
+  if(inmap->IsEquatorialCylindrical()) {
+    // Figure out how many samples 360 degrees is
+    wrapPossible = wrapPossible && inmap->SetUniversalGround(0, 0);
+    int worldStart = (int)(inmap->WorldX() + 0.5);
+    wrapPossible = wrapPossible && inmap->SetUniversalGround(0, 180);
+    int worldEnd = (int)(inmap->WorldX() + 0.5);
+
+    p_inputWorldSize = abs(worldEnd - worldStart)*2;
+  }
 }
 
 // Transform method mapping output line/samps to lat/lons to input line/samps
@@ -391,15 +404,30 @@ bool map2map::Xform (double &inSample, double &inLine,
   double lon = p_outmap->UniversalLongitude();
   if (!p_inmap->SetUniversalGround(lat,lon)) return false;
 
-  // Make sure the point is inside the input image
-  if (p_inmap->WorldX() < 0.5) return false;
-  if (p_inmap->WorldY() < 0.5) return false;
-  if (p_inmap->WorldX() > p_inputSamples + 0.5) return false;
-  if (p_inmap->WorldY() > p_inputLines + 0.5) return false;
-
-  // Everything is good
   inSample = p_inmap->WorldX();
   inLine = p_inmap->WorldY();
+
+  if(p_inputWorldSize != 0) {
+    // Try to correct the sample if we can,
+    //   this is the simplest way to code the
+    //   translation although it probably could
+    //   be done in one "if"
+    while(inSample < 0.5) {
+      inSample += p_inputWorldSize;
+    }
+
+    while(inSample > p_inputSamples + 0.5) {
+      inSample -= p_inputWorldSize;
+    }
+  }
+
+  // Make sure the point is inside the input image
+  if (inSample < 0.5) return false;
+  if (inLine < 0.5) return false;
+  if (inSample > p_inputSamples + 0.5) return false;
+  if (inLine > p_inputLines + 0.5) return false;
+
+  // Everything is good
   return true;
 }
 
@@ -533,24 +561,24 @@ void LoadMapRange() {
     }
   }
 
-  if(ui.WasEntered("SLAT")) {
-    ui.Clear("SLAT");
+  if(ui.WasEntered("MINLAT")) {
+    ui.Clear("MINLAT");
   }
 
-  if(ui.WasEntered("ELAT")) {
-    ui.Clear("ELAT");
+  if(ui.WasEntered("MAXLAT")) {
+    ui.Clear("MAXLAT");
   }
 
-  if(ui.WasEntered("SLON")) {
-    ui.Clear("SLON");
+  if(ui.WasEntered("MINLON")) {
+    ui.Clear("MINLON");
   }
 
-  if(ui.WasEntered("ELON")) {
-    ui.Clear("ELON");
+  if(ui.WasEntered("MAXLON")) {
+    ui.Clear("MAXLON");
   }
 
-  ui.PutDouble("SLAT", fromMapping["MinimumLatitude"]);
-  ui.PutDouble("ELAT", fromMapping["MaximumLatitude"]);
-  ui.PutDouble("SLON", fromMapping["MinimumLongitude"]);
-  ui.PutDouble("ELON", fromMapping["MaximumLongitude"]);
+  ui.PutDouble("MINLAT", fromMapping["MinimumLatitude"]);
+  ui.PutDouble("MAXLAT", fromMapping["MaximumLatitude"]);
+  ui.PutDouble("MINLON", fromMapping["MinimumLongitude"]);
+  ui.PutDouble("MAXLON", fromMapping["MaximumLongitude"]);
 }

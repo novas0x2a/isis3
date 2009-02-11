@@ -1,5 +1,5 @@
- #include <QLineEdit>
 #include <iostream>
+
 #include "BandSpinBox.h"
 #include "iException.h"
 

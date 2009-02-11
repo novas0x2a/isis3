@@ -28,6 +28,13 @@ void IsisMain() {
     }
     cam->InstrumentRotation()->SetPolynomial();
 
+    // Get the instrument pointing keyword from the kernels group and update its value to table.
+    Isis::PvlGroup kernels = cube.Label()->FindGroup("Kernels",Isis::Pvl::Traverse);
+
+    // Write out the "Table" label to the tabled kernels in the kernels group
+    kernels["InstrumentPointing"] = "Table";
+    cube.PutGroup(kernels);
+
     // Pull out the pointing cache as a table and write it
     Table cmatrix = cam->InstrumentRotation()->Cache("InstrumentPointing");
     cmatrix.Label().AddComment("Smoothed using spicefit");

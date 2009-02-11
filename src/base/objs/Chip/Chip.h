@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/19 22:32:52 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/01/20 06:40:56 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -53,9 +53,10 @@ namespace Isis {
    *   @history 2006-08-04  Stuart Sides, Added SetClipPolygon method. If the
    *                        clip polygon is set all pixel values outside the
    *                        polygon will be set to NULL.
-   *   @history 2006-10-01  Steven Koechle, Fixed inc in LoadChip to fix an
+   *   @history 2007-10-01  Steven Koechle, Fixed inc in LoadChip to fix an
    *                        infinite loop problem when x.size() never grew
    *                        to be more than 3.
+   *   @history 2009-01-19  Steven Koechle, Fixed memory leak
    * 
    * @see AutoReg
    * @see AutoRegFactory

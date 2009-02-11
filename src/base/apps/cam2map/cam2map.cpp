@@ -185,10 +185,18 @@ void IsisMain() {
         // Make the target info match the new longitude domain
         double minlat,maxlat,minlon,maxlon;
         incam->GroundRange(minlat,maxlat,minlon,maxlon,userMap);
-        userGrp.AddKeyword(PvlKeyword("MinimumLatitude",minlat),Pvl::Replace);
-        userGrp.AddKeyword(PvlKeyword("MaximumLatitude",maxlat),Pvl::Replace);
-        userGrp.AddKeyword(PvlKeyword("MinimumLongitude",minlon),Pvl::Replace);
-        userGrp.AddKeyword(PvlKeyword("MaximumLongitude",maxlon),Pvl::Replace);
+        if( !ui.WasEntered("SLAT") ) {
+          userGrp.AddKeyword(PvlKeyword("MinimumLatitude",minlat),Pvl::Replace);
+        }
+        if( !ui.WasEntered("ELAT") ) {
+          userGrp.AddKeyword(PvlKeyword("MaximumLatitude",maxlat),Pvl::Replace);
+        }
+        if( !ui.WasEntered("SLON") ) {
+          userGrp.AddKeyword(PvlKeyword("MinimumLongitude",minlon),Pvl::Replace);
+        }
+        if( !ui.WasEntered("ELON") ) {
+          userGrp.AddKeyword(PvlKeyword("MaximumLongitude",maxlon),Pvl::Replace);
+        }
       }
 
       else if (ui.GetString("LONSEAM") == "ERROR") {
@@ -218,6 +226,10 @@ void IsisMain() {
                                               ui.GetBoolean("MATCHMAP"));
     trim = ui.GetBoolean("TRIM");
   }
+
+  int tileStart, tileEnd;
+  incam->GetGeometricTilingHint(tileStart, tileEnd);
+  p.SetTiling(tileStart, tileEnd);
 
   // Output the mapping group used to the Gui session log
   Application::GuiLog(userMap);
@@ -334,6 +346,7 @@ bool cam2map::Xform (double &inSample, double &inLine,
   // Everything is good
   inSample = p_incam->Sample();
   inLine = p_incam->Line();
+
   return true;
 }
 

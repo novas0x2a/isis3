@@ -13,7 +13,7 @@
   </description>
 
   <category>
-    <categoryItem>Math and Statistics</categoryItem>
+    <categoryItem>Fourier Domain</categoryItem>
   </category>
 
     <seeAlso>
@@ -27,10 +27,14 @@
       Original version
     </change>
     <change name="Brendan George" date="2006-09-28">
-        Documentation fixes
+      Documentation fixes
     </change>
     <change name="Steven Lambright" date="2008-05-12">
       Removed references to CubeInfo 
+    </change>
+    <change name="Steven Lambright" date="2008-10-16">
+      Documentation fixes: Created images for the GUI screenshots,
+      which were missing.
     </change>
   </history>
 
@@ -127,7 +131,7 @@
           <brief> Input image for fft</brief>
           <description>This is the input image, peaks.cub.
           </description>
-          <thumbnail caption=" Input image" src="assets/thumb/peaks.jpg" width="256" height="256"/>
+          <thumbnail caption="Input image" src="assets/thumb/peaks.jpg" width="256" height="256"/>
           <parameterName>FROM</parameterName>
         </image>
       </inputImages>

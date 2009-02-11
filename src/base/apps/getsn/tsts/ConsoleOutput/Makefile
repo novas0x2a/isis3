@@ -7,7 +7,7 @@ include $(ISISROOT)/make/isismake.tsts
 
 commands:
 	$(APPNAME) FROM=$(INPUT)/peaks.cub \
-        >& $(OUTPUT)/peaks.txt \
-	FILE=false OBSERVATION=false;
+	  FILE=false OBSERVATION=false \
+          >& $(OUTPUT)/peaks.txt;
 	$(APPNAME) FROM=$(INPUT)/hirise.cub \
-	>& $(OUTPUT)/hirise.txt FILE=false;
+	FILE=FALSE OBSERVATION=TRUE >& $(OUTPUT)/hirise.txt;

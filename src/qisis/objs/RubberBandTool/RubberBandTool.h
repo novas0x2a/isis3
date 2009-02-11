@@ -17,6 +17,7 @@ namespace Qisis {
   *   @history 2008-01-03 Steven Lambright bug fix on the polygons
   *   @history 2008-05-23 Noah Hilt added getRectangle method
   *   @history 2008-08-18 Steven Koechle updated to work with Geos 3.0.0
+  *   @history 2008-09-26 Steven Lambright Added Segmented line
   */
 
   class RubberBandTool : public Qisis::Tool {
@@ -32,7 +33,8 @@ namespace Qisis {
       Line,             //<! Draw a simple line
       Rectangle,        //<! Draw a rectangle without any rotation (perfectly horizonal/verticle)
       RotatedRectangle, //<! Draw a rotatable rectangle 
-      Polygon           //<! Draw any closed shape
+      Polygon,          //<! Draw any closed shape
+      SegmentedLine     //<! Draw any open shape
     };
 
     static void enable(RubberBandMode mode, bool showIndicatorColors = false) { getInstance()->enableBanding(mode, showIndicatorColors);}

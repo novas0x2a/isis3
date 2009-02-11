@@ -1,7 +1,11 @@
 #include <cmath>
 #include "Anisotropic2.h"
-#include "NumericalMethods.h"
+#include "AtmosModel.h"
+#include "Constants.h"
+#include "Pvl.h"
+#include "PvlGroup.h"
 #include "iException.h"
+#include "iString.h"
 
 using std::min;
 using std::max;
@@ -38,6 +42,29 @@ namespace Isis {
     p_atmosHnorm = hnorm;
   }
 
+  /**
+   * Anisotropic atmospheric scattering with P1 single-particle   
+   * phase fn, in the second approximation.  This subroutine goes     
+   * through much of the derivation twice, once for the axisymmetric  
+   * (m=0) and once for the m=1 parts of scattered light.             
+   * 
+   * @param phase Value of the phase angle.
+   * @param incidence Value of the incidence angle.
+   * @param emission Value of the emission angle.
+   * 
+   * @history 1998-12-21 Randy Kirk - USGS, Flagstaff - Original
+   *          code
+   * @history 1999-03-12 K Teal Thompson  Port to Unix/ISIS;
+   *          declare vars; add implicit none.
+   * @history 2007-02-20 Janet Barrett - Imported from Isis2
+   *          pht_atm_functions to Isis3.
+   * @history 2008-11-05 Jeannie Walldren - Replaced 
+   *          NumericalMethods::r8expint() with AtmosModel::En(),
+   *          NumericalMethods::G11Prime() with
+   *          AtmosModel::G11Prime(), and NumericalMethods::r8ei()
+   *          with AtmosModel::Ei(). Replaced Isis::PI with PI
+   *          since this is in Isis namespace.
+   */
   void Anisotropic2::AtmosModelAlgorithm (double phase, double incidence, double emission)
   {
     double xx;
@@ -82,12 +109,12 @@ namespace Isis {
       // preparation includes exponential integrals e sub 2 through 5
       p_wha2 = 0.5 * p_atmosWha;
       p_wham = 1.0 - p_atmosWha;
-      p_e1 = NumericalMethods::r8expint(1,p_atmosTau);
-      p_e1_2 = NumericalMethods::r8expint(1,2.0*p_atmosTau);
-      p_e2 = NumericalMethods::r8expint(2,p_atmosTau);
-      p_e3 = NumericalMethods::r8expint(3,p_atmosTau);
-      p_e4 = NumericalMethods::r8expint(4,p_atmosTau);
-      p_e5 = NumericalMethods::r8expint(5,p_atmosTau);
+      p_e1   = AtmosModel::En(1,p_atmosTau);
+      p_e1_2 = AtmosModel::En(1,2.0*p_atmosTau);
+      p_e2   = AtmosModel::En(2,p_atmosTau);
+      p_e3   = AtmosModel::En(3,p_atmosTau);
+      p_e4   = AtmosModel::En(4,p_atmosTau);
+      p_e5   = AtmosModel::En(5,p_atmosTau);
 
       // chandra's gmn functions require fm and fn at mu=-1
       xx = -p_atmosTau;
@@ -128,7 +155,7 @@ namespace Isis {
       p_f2 = p_f1 + p_e * p_e2 - 1.0;
       p_f3 = p_f2 + p_e * p_e3 - 0.5;
       p_f4 = p_f3 + p_e * p_e4 - (1.0/3.0);
-      p_g11p = NumericalMethods::G11Prime(p_atmosTau);
+      p_g11p = AtmosModel::G11Prime(p_atmosTau);
       p_g12p = (p_atmosTau * (p_e1 - p_g11p) + p_em * (p_f1 + p_f2)) * 0.25;
       p_g13p = (p_atmosTau * (0.5 * p_e1 - p_g12p) + p_em * (p_f1 + p_f3)) * 0.2;
       p_g14p = (p_atmosTau * ((1.0/3.0) * p_e1 - p_g13p) + p_em * (p_f1 + p_f4)) * (1.0/6.0);
@@ -193,7 +220,7 @@ namespace Isis {
       munot = 0.0;
     }
     else {
-      munot = cos((Isis::PI/180.0)*incidence);
+      munot = cos((PI/180.0)*incidence);
     }
 
     maxval = max(1.0e-30,hpsq1+munot*munot);
@@ -204,7 +231,7 @@ namespace Isis {
       mu = 0.0;
     }
     else {
-      mu = cos((Isis::PI/180.0)*emission);
+      mu = cos((PI/180.0)*emission);
     }
 
     maxval = max(1.0e-30,hpsq1+mu*mu);
@@ -241,13 +268,13 @@ namespace Isis {
     if (fabs(xx-1.0) < 1.0e-10) {
       f1munot = p_f1;
       f1mmunot = xx * (log(1.0+1.0/xx) - p_e1 * emunot +
-          NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+          AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else if (xx > 0.0) {
       f1munot = xx * (log(xx/(1.0-xx)) + p_e1 / emunot +
-          NumericalMethods::r8ei(p_atmosTau*(1.0/xx-1.0)));
+          AtmosModel::Ei(p_atmosTau*(1.0/xx-1.0)));
       f1mmunot = xx * (log(1.0+1.0/xx) - p_e1 * emunot +
-          NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+          AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else {
       std::string msg = "Negative length of planetary curvature encountered";
@@ -262,11 +289,11 @@ namespace Isis {
 
     if (fabs(xx-1.0) < 1.0e-10) {
       f1mu = p_f1;
-      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else if (xx > 0.0) {
-      f1mu = xx * (log(xx/(1.0-xx)) + p_e1 / emu + NumericalMethods::r8ei(p_atmosTau*(1.0/xx-1.0)));
-      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+      f1mu = xx * (log(xx/(1.0-xx)) + p_e1 / emu + AtmosModel::Ei(p_atmosTau*(1.0/xx-1.0)));
+      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else {
       std::string msg = "Negative length of planetary curvature encountered";
@@ -306,7 +333,7 @@ namespace Isis {
       cosazss = 0.0 - munot * mu;
     }
     else {
-      cosazss = cos((Isis::PI/180.0)*phase) - munot * mu;
+      cosazss = cos((PI/180.0)*phase) - munot * mu;
     }
 
     xystuff = cxx * xmunot_0 * xmu_0 - cyy * ymunot_0 * 

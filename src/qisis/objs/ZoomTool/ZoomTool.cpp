@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2008/06/19 18:23:37 $
- * $Revision: 1.5 $
+ * $Date: 2008/10/15 22:43:36 $
+ * $Revision: 1.7 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -40,6 +40,8 @@ namespace Qisis {
    * @param parent 
    */
   ZoomTool::ZoomTool (QWidget *parent) : Qisis::Tool(parent) {
+    p_userCursor = QCursor();
+
     p_zoomIn2X = new QAction(parent);
     p_zoomIn2X->setShortcut(Qt::Key_Plus);
     p_zoomIn2X->setText("Zoom In");
@@ -411,6 +413,7 @@ namespace Qisis {
     QString strScale = p_zoomLineEdit->text();
     double scale = strScale.toDouble() / 100.;
     d->setScale(scale);
+    d->setFocus();
     updateTool();
 
     if (d->isLinked()) {
@@ -451,10 +454,10 @@ namespace Qisis {
   void ZoomTool::rubberBandComplete() {
     QApplication::processEvents();
     CubeViewport *d = cubeViewport();
-    if(!RubberBandTool::isValid()) return;
+    if (!RubberBandTool::isValid()) return;
 
     // The RubberBandTool has a rectangle
-    if(!RubberBandTool::isPoint()) {
+    if (!RubberBandTool::isPoint()) {
       QRect r = RubberBandTool::rectangle();
       if ((r.width() >= 5) && (r.height() >= 5)) {
         int x = r.x() + r.width() / 2;
@@ -462,12 +465,12 @@ namespace Qisis {
         double xscale = (double) d->viewport()->width() / r.width();
         double yscale = (double) d->viewport()->height() / r.height();
         double scale = xscale < yscale ? xscale : yscale;
+        if (RubberBandTool::mouseButton() & Qt::RightButton) scale = 1.0 / scale;
         scale *= d->scale();
-        scale = ((int)(scale * 100.0)) / 100.0;
-         d->setScale(scale,x,y);
-         updateTool();
-         if (d->isLinked()) {
-           for (int i=0; i<(int)cubeViewportList()->size(); i++) {
+        d->setScale(scale,x,y);
+        updateTool();
+        if (d->isLinked()) {
+          for (int i=0; i<(int)cubeViewportList()->size(); i++) {
             d = (*(cubeViewportList()))[i];
             if (d == cubeViewport()) continue;
             if (d->isLinked()) {
@@ -476,6 +479,7 @@ namespace Qisis {
               double xscale = (double) d->viewport()->width() / r.width();
               double yscale = (double) d->viewport()->height() / r.height();
               double scale = xscale < yscale ? xscale : yscale;
+              if (RubberBandTool::mouseButton() & Qt::RightButton) scale = 1.0 / scale;
               scale *= d->scale();
               scale = ((int)(scale * 100.0)) / 100.0;
               d->setScale(scale,x,y);
@@ -497,7 +501,7 @@ namespace Qisis {
       if (scale == 0.0) scale = 1.0;
       QPoint p = RubberBandTool::getVertices()[0];
       d->setScale(scale,p.x(),p.y());
-        updateTool();
+      updateTool();
 
       if (d->isLinked()) {
         for (int i=0; i<(int)cubeViewportList()->size(); i++) {
@@ -506,11 +510,13 @@ namespace Qisis {
           if (d->isLinked()) {
             scale = d->scale() * factor;
             if (scale == 0.0) scale = 1.0;
-              d->setScale(scale,p.x(),p.y());
-            }
-         }
+            d->setScale(scale,p.x(),p.y());
+          }
+        }
       }
+      p_lastScale = scale;
     }
+
   }
 
 
@@ -523,6 +529,35 @@ namespace Qisis {
     RubberBandTool::enable(RubberBandTool::Rectangle);
     RubberBandTool::allowPoints();
     RubberBandTool::allowAllClicks();
+  }
+
+
+  /**
+   * 
+   * 
+   * 
+   * @param p 
+   * @param s 
+   */
+  void ZoomTool::mouseButtonPress(QPoint p, Qt::MouseButton s) {
+    if(s == Qt::RightButton) {
+      cubeViewport()->viewport()->setCursor(QCursor(QPixmap(toolIconDir()+"/viewmag-.png")));
+    } else if (s == Qt::LeftButton) {
+      cubeViewport()->viewport()->setCursor(QCursor(QPixmap(toolIconDir()+"/viewmag+.png")));
+    }
+  }
+
+
+  /**
+   * 
+   * 
+   * 
+   * @param p 
+   * @param s 
+   */
+  void ZoomTool::mouseButtonRelease(QPoint p, Qt::MouseButton s) {
+    //set the cursor back to the original cursor shape.
+    cubeViewport()->viewport()->setCursor(p_userCursor); 
   }
 
 }

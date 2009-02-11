@@ -27,6 +27,20 @@ namespace Qisis {
     p_lineLabel->setToolTip("Line Position");
     p_sbar->addPermanentWidget(p_lineLabel);
 
+    p_latLabel = new QLabel(p_sbar);
+    p_latLabel->setText("9.999999E-99");
+    p_latLabel->setMinimumSize(p_latLabel->sizeHint());
+    p_latLabel->hide();
+    p_latLabel->setToolTip("Latitude Position");
+    p_sbar->addPermanentWidget(p_latLabel);
+
+    p_lonLabel = new QLabel(p_sbar);
+    p_lonLabel->setText("9.999999E-99");
+    p_lonLabel->setMinimumSize(p_lonLabel->sizeHint());
+    p_lonLabel->hide();
+    p_lonLabel->setToolTip("Longitude Position");
+    p_sbar->addPermanentWidget(p_lonLabel);
+
     p_grayLabel = new QLabel(p_sbar);
     p_grayLabel->setText("9.999999E-99");
     p_grayLabel->setMinimumSize(p_grayLabel->sizeHint());
@@ -113,6 +127,45 @@ namespace Qisis {
     text = "L " + text;
     p_lineLabel->setText(text);
 
+
+    // Do we have a projection?
+    if (cvp->projection() != NULL) {
+      p_latLabel->show();
+      p_lonLabel->show();
+
+      if (cvp->projection()->SetWorld(sample,line)) {
+        double lat = cvp->projection()->Latitude();
+        double lon = cvp->projection()->Longitude();
+        p_latLabel->setText(QString("Lat %1").arg(lat));
+        p_lonLabel->setText(QString("Lon %1").arg(lon));
+      }
+      else {
+        p_latLabel->setText("Lat n/a");
+        p_lonLabel->setText("Lon n/a");
+      }
+    }
+    // Do we have a camera model?
+    else if (cvp->camera() != NULL) {
+      p_latLabel->show();
+      p_lonLabel->show();
+
+      if (cvp->camera()->SetImage(sample,line)) {
+        double lat = cvp->camera()->UniversalLatitude();
+        double lon = cvp->camera()->UniversalLongitude();
+        p_latLabel->setText(QString("Lat %1").arg(lat));
+        p_lonLabel->setText(QString("Lon %1").arg(lon));
+      }
+      else {
+        p_latLabel->setText("Lat n/a");
+        p_lonLabel->setText("Lon n/a");
+      }
+    }
+
+    else {
+      p_latLabel->hide();
+      p_lonLabel->hide();
+    }
+
     if (cvp->isGray()) {
       p_grayLabel->show();
       p_redLabel->hide();
@@ -148,6 +201,8 @@ namespace Qisis {
   void TrackTool::clearLabels () {
     p_sampLabel->setText("S n/a");
     p_lineLabel->setText("L n/a");
+    p_latLabel->setText("Lat n/a");
+    p_lonLabel->setText("Lon n/a");
     p_grayLabel->setText("n/a");
     p_redLabel->setText("R n/a");
     p_grnLabel->setText("G n/a");

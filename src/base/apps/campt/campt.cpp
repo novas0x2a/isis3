@@ -56,8 +56,16 @@ void IsisMain() {
     throw iException::Message(iException::Camera,msg,_FILEINFO_);
   }
 
+  if(!ui.GetBoolean("ALLOWOUTSIDE")) {
+    if(!cam->InCube()) {
+      string msg = "Requested position does not project in camera model";
+      throw iException::Message(iException::Camera,msg,_FILEINFO_);
+    }
+  }
+
   // Create Brick on samp, line to get the dn value of the pixel
   Brick b(3,3,1,icube->PixelType());
+
   int intSamp = (int)(cam->Sample()+0.5);
   int intLine = (int)(cam->Line()+0.5);
   b.SetBasePosition(intSamp,intLine,1);
@@ -119,6 +127,10 @@ void IsisMain() {
     gp += PvlKeyword("SubSpacecraftLongitude",ssplon);
     gp += PvlKeyword("SpacecraftAltitude",cam->SpacecraftAltitude(),"km");
     gp += PvlKeyword("OffNadirAngle",cam->OffNadirAngle());
+    double subspcgrdaz;
+    subspcgrdaz = cam->GroundAzimuth(cam->UniversalLatitude(),cam->UniversalLongitude(),
+      ssplat,ssplon);
+    gp += PvlKeyword("SubSpacecraftGroundAzimuth",subspcgrdaz);
 
     cam->SunPosition(sB);
     PvlKeyword scoord("SunPosition");
@@ -133,6 +145,10 @@ void IsisMain() {
     cam->SubSolarPoint(sslat,sslon);
     gp += PvlKeyword("SubSolarLatitude",sslat);
     gp += PvlKeyword("SubSolarLongitude",sslon);
+    double subsolgrdaz;
+    subsolgrdaz = cam->GroundAzimuth(cam->UniversalLatitude(),cam->UniversalLongitude(),
+      sslat,sslon);
+    gp += PvlKeyword("SubSolarGroundAzimuth",subsolgrdaz);
 
     PvlKeyword phase("Phase",cam->PhaseAngle());
     phase.AddComment("Illumination and Other");

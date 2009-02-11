@@ -2,8 +2,8 @@
 #define StripPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2008/11/25 16:54:29 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -31,21 +31,28 @@ namespace Isis {
   class Pvl;
 
   /**                                                                       
-   * @brief Seed points using a grid
+   * @brief Seed points using a grid with a staggered pattern
    *                                                                        
-   * This class is used to construct a grid of points inside a polygon.
-   *                                                                        
+   * This class seeds the polygon with Control Points by creating a grid,
+   *  centered on the overlap polygon. In each grid square two points are checked
+   *  to see if they are inside the overlap polygon. One of these points lies 1/6
+   *  of a grid square up and left from the grid's center point, while the other
+   *  point lies 1/6 down and right. Each point found that is within the overlap
+   *  polygon is returned as a point.
+   *  
    * @ingroup PatternMatching
    *                                                                        
    * @author  2006-01-20 Stuart Sides
    * 
    * @internal
-   * @history 2007-05-09 Tracie Sucharski,  Changed a single spacing value
+   *   @history 2007-05-09 Tracie Sucharski,  Changed a single spacing value
    *                            to a separate value for x and y.
-   * @history 2008-02-29 Steven Lambright - Created SubGrid capabilities,
+   *   @history 2008-02-29 Steven Lambright - Created SubGrid capabilities,
    *                            cleaned up Seed methods
-   * @history 2008-04-17 Steven Lambright - Fixed naming conventions for seeders 
-   * @histroy 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
+   *   @history 2008-04-17 Steven Lambright - Fixed naming conventions for seeders
+   *   @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
+   *   @history 2008-11-12 Steven Lambright - Fixed documentation
+   *   @history 2008-11-25 Steven Lambright - Added error checking
    */                                                                       
   class StripPolygonSeeder : public PolygonSeeder {
     public:

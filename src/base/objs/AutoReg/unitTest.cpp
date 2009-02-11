@@ -67,6 +67,11 @@ int main () {
   std::cout << "Register = " << ar->Register() << std::endl;
   std::cout << "Position = " << ar->CubeSample() << " " << 
                                 ar->CubeLine() << std::endl;
+
+  Pvl regstats = ar->RegistrationStatistics();
+  std::cout << std::endl << regstats << std::endl;
+
+  delete ar;
   }
   catch (iException &e) {
     e.Report();

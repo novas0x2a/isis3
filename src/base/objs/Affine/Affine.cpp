@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 17:03:49 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2008/10/29 23:36:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -30,6 +30,8 @@
 #include "LeastSquares.h"
 #include "iException.h"
 #include "Constants.h"
+
+using namespace std;
 
 namespace Isis {
   /**
@@ -84,7 +86,7 @@ namespace Isis {
 
     // Push the knowns into the least squares class
     for (int i=0; i<n; i++) {
-      std::vector<double> coord(2);
+      vector<double> coord(2);
       coord[0] = x[i];
       coord[1] = y[i];
       xpLSQ.AddKnown(coord,xp[i]);
@@ -120,7 +122,7 @@ namespace Isis {
     svd.getS(invS);
     for (int i=0; i<invS.dim1(); i++) {
       if (invS[i][i] == 0.0) {
-        std::string msg = "Affine transform not invertible";
+        string msg = "Affine transform not invertible";
         throw iException::Message(iException::Math,msg,_FILEINFO_);
       }
       invS[i][i] = 1.0 / invS[i][i];

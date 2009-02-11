@@ -2,8 +2,8 @@
 #define PvlGroup_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/07/10 15:00:45 $
+ * $Revision: 1.4 $
+ * $Date: 2008/10/01 01:15:11 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -44,6 +44,8 @@ namespace Isis {
    *  @history 2008-07-02 Steven Lambright Added const functionality and fixed +=
    *  @history 2008-07-02 Steven Lambright Updated to compensate for PvlKeyword no
    *           longer being a parent
+   *  @history 2008-09-30 Christopher Austin Replaced all std::endl in the <<
+   *           operator with PvlFormat.FormatEOL()
    * 
    *  @todo 2005-04-04 Needs coded example.                                                   
    */                                                                       

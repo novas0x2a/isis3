@@ -3,7 +3,6 @@
 #include "iException.h"
 #include "ViewportMainWindow.h"
 #include "QnetFileTool.h"
-#include "QnetPlotTool.h"
 #include "QnetNavTool.h"
 #include "BandTool.h"
 #include "ZoomTool.h"
@@ -13,7 +12,7 @@
 #include "WindowTool.h"
 #include "AdvancedTrackTool.h"
 #include "HelpTool.h"
-#include "TieTool.h"
+#include "QnetTool.h"
 #include "RubberBandTool.h"
 
 #define IN_QNET
@@ -22,35 +21,27 @@
 int main (int argc, char *argv[]) {
   Qisis::Qnet::g_controlNetwork = NULL;
   Qisis::Qnet::g_serialNumberList = NULL;
-  Qisis::Qnet::g_imageOverlap = NULL;
 
   try {
     QApplication *app = new QApplication(argc,argv);
     QApplication::setApplicationName("qnet");
     app->setStyle("windows");
 
-    Qisis::ViewportMainWindow *vw = new Qisis::ViewportMainWindow("qnet");
+    Qisis::Qnet::g_vpMainWindow = new Qisis::ViewportMainWindow("qnet");
 
-    Qisis::Tool *rubberBandTool = Qisis::RubberBandTool::getInstance(vw);
-    rubberBandTool->addTo(vw);
+    Qisis::Tool *rubberBandTool = Qisis::RubberBandTool::getInstance(Qisis::Qnet::g_vpMainWindow);
+    rubberBandTool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    Qisis::QnetFileTool *ftool = new Qisis::QnetFileTool(vw);
-    ftool->Tool::addTo(vw);
-    vw->permanentToolBar()->addSeparator();
+    Qisis::QnetFileTool *ftool = new Qisis::QnetFileTool(Qisis::Qnet::g_vpMainWindow);
+    ftool->Tool::addTo(Qisis::Qnet::g_vpMainWindow);
+    Qisis::Qnet::g_vpMainWindow->permanentToolBar()->addSeparator();
 
-    Qisis::QnetNavTool *ntool = new Qisis::QnetNavTool(vw);
-    ntool->Tool::addTo(vw);
-
-    Qisis::QnetPlotTool *pltool = new Qisis::QnetPlotTool(vw);
-    pltool->Tool::addTo(vw);
+    Qisis::QnetNavTool *ntool = new Qisis::QnetNavTool(Qisis::Qnet::g_vpMainWindow);
+    ntool->Tool::addTo(Qisis::Qnet::g_vpMainWindow);
 
     // The fileTool needs to know when the navTool wants to load images
     QObject::connect(ntool,SIGNAL(loadImage(const QString &)),
                      ftool,SLOT(loadImage(const QString &)));
-    // The fileTool needs to know when to load the images associated with an
-    // overlap polygon
-    QObject::connect(ntool,SIGNAL(loadOverlap(Isis::ImageOverlap *)),
-                     ftool,SLOT(loadOverlap(Isis::ImageOverlap *)));
     // The fileTool needs to know when to load the images associated with a
     // point
     QObject::connect(ntool,SIGNAL(loadPoint(Isis::ControlPoint *)),
@@ -58,65 +49,72 @@ int main (int argc, char *argv[]) {
 
     // The navTool needs to know when the file tool has changed the serialNumberList
     QObject::connect(ftool,SIGNAL(serialNumberListUpdated()),
-                     ntool,SLOT(updateList()));
-    // The navTool needs to know when the plotTool has modified the currently
-    // active images, overlaps or points lists
-    //QObject::connect(pltool,SIGNAL(selectionUpdate()),
-    //                 ntool,SLOT(updateSelected()));
-    // The plotTool need to know when the navTool has modified the currently
-    // active image, overlaps or points lists
-    //QObject::connect(ntool,SIGNAL(selectionUpdate()),
-    //                 pltool,SLOT(updateSelected()));
+                     ntool,SLOT(resetList()));
 
-    Qisis::Tool *btool = new Qisis::BandTool(vw);
-    btool->addTo(vw);
+    Qisis::Tool *btool = new Qisis::BandTool(Qisis::Qnet::g_vpMainWindow);
+    btool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    Qisis::Tool *ztool = new Qisis::ZoomTool(vw);
-    ztool->addTo(vw);
-    vw->getMenu("&View")->addSeparator();
+    Qisis::Tool *ztool = new Qisis::ZoomTool(Qisis::Qnet::g_vpMainWindow);
+    ztool->addTo(Qisis::Qnet::g_vpMainWindow);
+    Qisis::Qnet::g_vpMainWindow->getMenu("&View")->addSeparator();
 
-    Qisis::Tool *ptool = new Qisis::PanTool(vw);
-    ptool->addTo(vw);
-    vw->getMenu("&View")->addSeparator();
+    Qisis::Tool *ptool = new Qisis::PanTool(Qisis::Qnet::g_vpMainWindow);
+    ptool->addTo(Qisis::Qnet::g_vpMainWindow);
+    Qisis::Qnet::g_vpMainWindow->getMenu("&View")->addSeparator();
 
-    Qisis::Tool *stool = new Qisis::StretchTool(vw);
-    stool->addTo(vw);
+    Qisis::Tool *stool = new Qisis::StretchTool(Qisis::Qnet::g_vpMainWindow);
+    stool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    Qisis::Tool *findTool = new Qisis::FindTool(vw);
-    findTool->addTo(vw);
+    Qisis::Tool *findTool = new Qisis::FindTool(Qisis::Qnet::g_vpMainWindow);
+    findTool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    Qisis::Tool *ttool = new Qisis::AdvancedTrackTool(vw);
-    ttool->addTo(vw);
+    Qisis::Tool *ttool = new Qisis::AdvancedTrackTool(Qisis::Qnet::g_vpMainWindow);
+    ttool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    Qisis::Tool *wtool = new Qisis::WindowTool(vw);
-    wtool->addTo(vw);
+    Qisis::Tool *wtool = new Qisis::WindowTool(Qisis::Qnet::g_vpMainWindow);
+    wtool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-    vw->permanentToolBar()->addSeparator();
-    Qisis::Tool *htool = new Qisis::HelpTool(vw);
-    htool->addTo(vw);
+    Qisis::Qnet::g_vpMainWindow->permanentToolBar()->addSeparator();
+    Qisis::Tool *htool = new Qisis::HelpTool(Qisis::Qnet::g_vpMainWindow);
+    htool->addTo(Qisis::Qnet::g_vpMainWindow);
 
-
-    Qisis::Tool *tieTool = new Qisis::TieTool(vw);
-    tieTool->addTo(vw);
-    tieTool->activate(true);
-
+    Qisis::Tool *qnetTool = new Qisis::QnetTool(Qisis::Qnet::g_vpMainWindow);
+    qnetTool->addTo(Qisis::Qnet::g_vpMainWindow);
+    qnetTool->activate(true);
     QObject::connect(ntool,SIGNAL(modifyPoint(Isis::ControlPoint *)),
-                     tieTool,SLOT(modifyPoint(Isis::ControlPoint *))); 
+                     qnetTool,SLOT(modifyPoint(Isis::ControlPoint *))); 
+    QObject::connect(ntool,SIGNAL(ignoredPoints()),qnetTool,SLOT(refresh()));
+    QObject::connect(ntool,SIGNAL(deletedPoints()),qnetTool,SLOT(refresh()));
+    
+    // The QnetTool needs to know when the file tool has changed the
+    // serialNumberList and the controlnetwork.
+//  QObject::connect(ftool,SIGNAL(serialNumberListUpdated()),
+//                   qnetTool,SLOT(updateList()));
 
-    //  The plotTool needs to know when the TieTool has modified a point and
-    //  needs to redraw viewports.  TODO:?? redraw all viewports for now,
-    //  this might need to be smartened up to only draw viewports point is
-    //  on if it gets too slow.
-    QObject::connect(tieTool,SIGNAL(editPointChanged(std::string)),
-                     pltool,SLOT(paintAllViewports(std::string)));
+    // the next command was uncommented to allows the QnetTool to display the name 
+    // of the control network file and update when a new control network is selected 
+    // 2008-11-26 Jeannie Walldren
+    QObject::connect(ftool,SIGNAL(controlNetworkUpdated(QString)),   
+                     qnetTool,SLOT(updateNet(QString)));             
+    QObject::connect(qnetTool,SIGNAL(editPointChanged(std::string)),
+                     ntool,SLOT(updateEditPoint(std::string)));
+    QObject::connect(qnetTool,SIGNAL(refreshNavList()),
+                     ntool,SLOT(refreshList()));
     //  The FileTool needs to now if the control network has changed (delete/
-    //  edit/create point) so that user can be prompted to save net
-    QObject::connect(tieTool,SIGNAL(netChanged()),
-                     ftool,SLOT(setSaveNet()));
+    //  edit/create/ignore point) so that user can be prompted to save net
+    QObject::connect(qnetTool,SIGNAL(netChanged()),ftool,SLOT(setSaveNet()));
+    QObject::connect(ntool,SIGNAL(netChanged()),ftool,SLOT(setSaveNet()));
 
-    QObject::connect(tieTool,SIGNAL(tieToolSave()),ftool,SLOT(saveAs()));
+    QObject::connect(qnetTool,SIGNAL(qnetToolSave()),ftool,SLOT(saveAs()));
 
-    vw->show();
+
+    // Connect the viewport's close signal to the file tool's exit method
+    // Added 2008-12-04 by Jeannie Walldren
+    QObject::connect(Qisis::Qnet::g_vpMainWindow , 
+                     SIGNAL(closeWindow()), ftool, SLOT(exit()));
+    //-----------------------------------------------------------------
+
+    Qisis::Qnet::g_vpMainWindow->show();
 
     return app->exec();
   }

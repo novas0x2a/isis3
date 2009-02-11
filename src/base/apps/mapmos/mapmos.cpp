@@ -1,8 +1,6 @@
 #include "Isis.h"
 #include "ProcessMapMosaic.h"
-#include "ProcessByLine.h"
-#include "FileList.h"
-#include "iException.h"
+#include "PvlGroup.h"
 
 using namespace std; 
 using namespace Isis;
@@ -25,16 +23,16 @@ void IsisMain() {
     inCube.Close();
 
     mapGroup.AddKeyword(PvlKeyword("MinimumLatitude",
-                                       ui.GetDouble("SLAT")),
+                                       ui.GetDouble("MINLAT")),
                                        Pvl::Replace);
     mapGroup.AddKeyword(PvlKeyword("MaximumLatitude",
-                                       ui.GetDouble("ELAT")),
+                                       ui.GetDouble("MAXLAT")),
                                        Pvl::Replace);
     mapGroup.AddKeyword(PvlKeyword("MinimumLongitude",
-                                       ui.GetDouble("SLON")),
+                                       ui.GetDouble("MINLON")),
                                        Pvl::Replace);
     mapGroup.AddKeyword(PvlKeyword("MaximumLongitude",
-                                       ui.GetDouble("ELON")),
+                                       ui.GetDouble("MAXLON")),
                                        Pvl::Replace);
 
     CubeAttributeOutput oAtt = ui.GetOutputAttribute("MOSAIC");
@@ -54,6 +52,13 @@ void IsisMain() {
     priority = input;
   }
 
-  m.StartProcess(ui.GetFilename("FROM"), priority);
+  PvlGroup outsiders("Outside");
+
+  // Logs the cube if it falls outside of the given mosaic
+  if(!m.StartProcess(ui.GetFilename("FROM"), priority)) {
+    outsiders += PvlKeyword("File", ui.GetFilename("FROM"));
+  }
   m.EndProcess();
+
+  Application::Log(outsiders);
 }

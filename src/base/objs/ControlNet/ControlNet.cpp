@@ -23,7 +23,10 @@ namespace Isis {
 
 
  /**
-  * Adds a ControlPoint to the ControlNet
+  * Adds a ControlPoint to the ControlNet 
+  * @param point Control point to be added 
+  * @throws Isis::iException::Programmer - "ControlPoint must 
+  *             have unique Id"
   */
   void ControlNet::Add (const ControlPoint &point) {
     for (int i=0; i<Size(); i++) {
@@ -41,7 +44,8 @@ namespace Isis {
   *
   * @param index The index of the ControlPoint to be deleted
   *
-  * @throws Isis::iException::User - Invalid Index Value
+  * @throws Isis::iException::User - "There is no ControlPoint at 
+  *             the given index number"
   */
   void ControlNet::Delete (int index) {
     if (index >= (int)p_points.size() || index < 0) {
@@ -59,8 +63,9 @@ namespace Isis {
   *
   * @param id The id of the ControlPoint to be deleted
   *
-  * @throws Isis::iException::User - A matching ControlPoint was not found in
-  *                                  the ControlNet
+  * @throws Isis::iException::User - "A ControlPoint matching 
+  *                                  the id was not found in the
+  *                                  ControlNet"
   */
   void ControlNet::Delete (const std::string &id) {
     for (int i=0; i<(int)p_points.size(); i++) {
@@ -71,7 +76,7 @@ namespace Isis {
     }
     // If a match was not found, throw an error
     std::string msg = "A ControlPoint matching the id [" + id
-      + "] was not found";
+      + "] was not found in the ControlNet";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
 
@@ -82,7 +87,10 @@ namespace Isis {
   * @param ptfile Name of file containing a Pvl list of control points 
   * @param progress A pointer to the progress of reading in the control points 
   *
-  * @throws Isis::iException::User - Error Creating ControlMeasure
+  * @throws Isis::iException::User - "Invalid Network Type"
+  * @throws Isis::iException::User - "Invalid Control Point" 
+  * @throws Isis::iException::User - "Invalid Format" 
+  *  
   */
   void ControlNet::ReadControl(const std::string &ptfile, Progress *progress) {
     Pvl p(ptfile);
@@ -142,7 +150,11 @@ namespace Isis {
  /**
   * Writes out the ControlPoints
   *
-  * @param ptfile Name of file containing a Pvl list of control points
+  * @param ptfile Name of file containing a Pvl list of control points 
+  * @throws Isis::iException::Programmer - "Invalid Net 
+  *             Enumeration"
+  * @throws Isis::iException::Io - "Unable to write PVL
+  *             infomation to file"
   */
   void ControlNet::Write(const std::string &ptfile) {
     Pvl p;
@@ -190,10 +202,12 @@ namespace Isis {
   *
   * @param id The id of the ControlPoint to be deleted
   *
-  * @return Pointer to the ControlPoint with the given id
+  * @return <B>ControlPoint*</B> Pointer to the ControlPoint with
+  *         the given id
   *
-  * @throws Isis::iException::User - A matching ControlPoint was not found in
-  *                                  the ControlNet
+  * @throws Isis::iException::User - "A ControlPoint matching the 
+  *                                  id was not found in the
+  *                                  ControlNet"
   */
   ControlPoint *ControlNet::Find(const std::string &id) {
     for (int i=0; i<(int)p_points.size(); i++) {
@@ -202,7 +216,7 @@ namespace Isis {
       }
     }
     std::string msg = "A ControlPoint matching the id [" + id
-      + "] was not found";
+      + "] was not found in the ControlNet";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
 
@@ -213,7 +227,7 @@ namespace Isis {
    *  
    * @param point The ControlPoint whos id is being compared 
    *  
-   * @return bool If the ControlPoint id was found 
+   * @return <B>bool</B> If the ControlPoint id was found 
    */
   bool ControlNet::Exists( ControlPoint &point ) {
     for (int i=0; i<(int)p_points.size(); i++) {
@@ -234,8 +248,8 @@ namespace Isis {
   * @param sample The sample number of the ControlMeasure
   * @param line The line number of the ControlMeasure
   *
-  * @return Pointer to the ControlPoint closest to the given line, sample
-  *         position
+  * @return <B>ControlPoint*</B> Pointer to the ControlPoint 
+  *         closest to the given line, sample position
   */
   ControlPoint *ControlNet::FindClosest(const std::string &serialNumber,
                                         double sample, double line) {
@@ -282,7 +296,8 @@ namespace Isis {
 
 
   /**
-   * Return the maximum error of all points in the network
+   * Determine the maximum error of all points in the network 
+   * @return <B>double</B> Max error of points
    */
   double ControlNet::MaximumError() {
     // TODO:  Make sure the cameras have been initialized
@@ -296,7 +311,8 @@ namespace Isis {
 
 
   /**
-   * Return the average error of all points in the network
+   * Compute the average error of all points in the network 
+   * @return <B>double</B> Average error of points
    */
   double ControlNet::AverageError() {
     // TODO:  Make sure the cameras have been initialized
@@ -327,7 +343,14 @@ namespace Isis {
    * Creates the ControlNet's image camera's based on the list of Serial Numbers
    * 
    * @param list The list of Serial Numbers
-   * @param progress A pointer to the progress of creating the cameras
+   * @param progress A pointer to the progress of creating the cameras 
+   * @throws Isis::iException::System - "Unable to create camera 
+   *        for cube file"
+   * @throws Isis::iException::User - "Control point measure does 
+   *        not have a cube with a matching serial number"
+   * @internal 
+   *   @history 2009-01-06 Jeannie Walldren - Fixed typo in
+   *            exception output.
    */
   void ControlNet::SetImages (SerialNumberList &list, Progress *progress) {
     // Prep for reporting progress
@@ -365,7 +388,7 @@ namespace Isis {
         }
         else {
           std::string msg = "Control point [" + p_points[p].Id() + "], ";
-          msg += "mesaure [" + p_points[p][m].CubeSerialNumber() + "] ";
+          msg += "measure [" + p_points[p][m].CubeSerialNumber() + "] ";
           msg += "does not have a cube with a matching serial number";
           throw Isis::iException::Message(iException::User,msg,_FILEINFO_);
           // TODO: DO we allow to continue or not?

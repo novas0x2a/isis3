@@ -32,6 +32,9 @@
     <change name="Steven Lambright" date="2008-05-13"> 
       Removed references to CubeInfo
     </change>
+     <change name="Stacy Alley" date="2008-12-19"> 
+      Updating documentation and adding examples
+    </change>
   </history>
 
   <oldName>
@@ -73,6 +76,7 @@
 
       <parameter name="CONTROL">
         <type>filename</type>
+        <fileMode>input</fileMode>
         <brief>
           Control Net file
         </brief>
@@ -80,7 +84,7 @@
           This file will contain the control net used to find the translation.
         </description>
         <filter>
-          *.txt
+          *.net
         </filter>
       </parameter>
     </group>
@@ -223,6 +227,118 @@
       </parameter>
     </group>
   </groups>
+
+   <examples>
+    <example>
+      <brief> Warp Example 1</brief>
+      <description>
+       Warp Example 1
+      </description>
+      <terminalInterface>
+        <commandLine> warp from=warp_from.cub to=warp_example1.cub control=warp_example1.net osize=user onl=1000 ons=1000
+        </commandLine>
+        <description>
+         This warp command will warp the from cube (warp_from.cub) which is a 
+         100Sx1000L image, to a 1000Sx1000L image and match the points from the 
+         control points in warp_example1.net. 
+         See the control net input file for more details.
+        </description>
+      </terminalInterface>
+        <inputImages>
+        <image src="assets/image/warp_from.jpg" width="55" height="550">
+          <brief> Input image for warp</brief>
+          <description>This is the input image for the warp examples.
+          </description>
+          <thumbnail caption=" Input image" src="assets/thumb/warp_from.jpg" width="200" height="200"/>
+          <parameterName>FROM</parameterName>
+        </image>
+      </inputImages>
+
+      <outputImages>
+        <image src="assets/image/warp_example1.jpg" width="550" height="550">
+          <brief> Output image for warp</brief>
+          <description> This is the output image for this example of warp.  
+           The control net file link below contains the points required to 
+           create this kind of a warp output.
+          </description>
+          <thumbnail caption="Output image showing results of the warp application." src="assets/thumb/warp_example1.jpg" width="200" height="200"/>
+          <parameterName>TO</parameterName>
+        </image>
+      </outputImages>
+
+      <dataFiles>
+        <dataFile path="assets/warp_example1.net">
+          <brief>
+            Control net input file.
+          </brief>
+          <description>
+            This is the require input for the CONTROL parameter.  User can edit 
+            this file to fit individual needs.  In each control point there are 
+            two measures.  Measure 1 is the point on the from file you would 
+            like to map to measure 2.
+          </description>
+          <parameterName></parameterName>
+        </dataFile>
+      </dataFiles>
+
+    </example>
+
+      <example>
+      <brief> Warp Example 2</brief>
+      <description>
+       Warp Example 2
+      </description>
+      <terminalInterface>
+        <commandLine> warp from=warp_from.cub to=warp_example2.cub 
+          control=warp_example2.net osize=user onl=1000 ons=1000
+        </commandLine>
+        <description>
+         This warp command will warp the from cube (warp_from.cub) which is a 
+         100Sx1000L image, to a 1000Sx1000L image and match the points from the 
+         control points in warp_example1.net. 
+         See the control net input file for more details.
+        </description>
+      </terminalInterface>
+        <inputImages>
+        <image src="assets/image/warp_from.jpg" width="55" height="550">
+          <brief> Input image for warp</brief>
+          <description>This is the input image for the warp examples.
+          </description>
+          <thumbnail caption=" Input image" src="assets/thumb/warp_from.jpg" width="200" height="200"/>
+          <parameterName>FROM</parameterName>
+        </image>
+      </inputImages>
+
+      <outputImages>
+        <image src="assets/image/warp_example2.jpg" width="550" height="550">
+          <brief> Output image for warp</brief>
+          <description> This is the output image for this example of warp.  
+           The control net file link below contains the points required to 
+           create this kind of a warp output.
+          </description>
+          <thumbnail caption="Output image showing results of the warp application." src="assets/thumb/warp_example1.jpg" width="200" height="200"/>
+          <parameterName>TO</parameterName>
+        </image>
+      </outputImages>
+
+      <dataFiles>
+        <dataFile path="assets/warp_example2.net">
+          <brief>
+            Control net input file.
+          </brief>
+          <description>
+            This is the require input for the CONTROL parameter.  User can edit 
+            this file to fit individual needs.  In each control point there are 
+            two measures.  Measure 1 is the point on the from file you would 
+            like to map to measure 2.
+          </description>
+          <parameterName></parameterName>
+        </dataFile>
+      </dataFiles>
+
+    </example>
+
+   </examples>
 
 </application>
 

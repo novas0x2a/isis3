@@ -41,6 +41,11 @@ namespace Qisis {
    *           be opened. Additionally, if a cube is opened with 3
    *           bands it will be opened in RGB mode with red,
    *           green, and blue set to the 3 bands respectively.
+   *  @history 2008-12-04 Jeannie Walldren - Removed "delete cube"
+   *           since this was causing a segfault and this
+   *           deallocation is already taking place in
+   *           addCubeViewport(cube).
+   *  
    */
   void Workspace::addCubeViewport(QString cubename) {
     Isis::Cube *cube = new Isis::Cube;
@@ -64,7 +69,7 @@ namespace Qisis {
       }
     }
     catch (...) {
-      delete cube;
+      // delete cube; ***Removed this line since this is being taken care of in addCubeViewport(cube) using cvp->close()
       QMessageBox::information( this, "Error","Unable to open cube " + cubename);
     }
   }
@@ -83,7 +88,9 @@ namespace Qisis {
    *           method to modify the CubeViewport.
    * @history 2008-08-20 Stacy Alley - Changed the setScale call 
    *          to match the zoomTool's fit in view
-   *  
+   * @history 2008-12-04 Jeannie Walldren - Added try/catch to 
+   *          close the CubeViewport if showCube() is not
+   *          successful.
    */
   CubeViewport* Workspace::addCubeViewport(Isis::Cube *cube) {
     Qisis::CubeViewport *cvp = new Qisis::CubeViewport(cube,this);
@@ -92,7 +99,18 @@ namespace Qisis {
     //  Initially, Load entire image
     double scale = cvp->fitScale();
     cvp->setScale(scale, cvp->cubeSamples()/2.0, cvp->cubeLines()/2.0);
-    cvp->showCube();
+    try{
+      cvp->showCube();
+    }
+    catch (Isis::iException &e){
+      // close CubeViewport window
+      cvp->close();
+      // add a new message to the caught exception and throw
+      throw e.Message(Isis::iException::Programmer, 
+                                      "Exception caught when attempting to show cube " 
+                                      + cube->Filename(), 
+                                      _FILEINFO_);
+    }
     populateList();
     emit cubeViewportAdded (cvp);
     return cvp;

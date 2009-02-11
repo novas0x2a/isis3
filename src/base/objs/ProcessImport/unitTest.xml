@@ -19,6 +19,9 @@
     <change name="Stuart Sides" date="2003-05-16">
       Modified schema from astrogeology... isis.astrogeology...
     </change>
+    <change name="Christopher Austin" date="2008-09-16">
+      Added the special pixel range error throwing.
+    </change>
   </history>
 
   <groups>

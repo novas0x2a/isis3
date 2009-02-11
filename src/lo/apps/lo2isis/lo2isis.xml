@@ -30,6 +30,9 @@
     <change name="Christopher Austin" date="2008-03-18">
       Checks if input file is rdr.
     </change>
+    <change name="Steven Koechle" date="2009-01-08">
+      Changed to accept PDS files.
+    </change>
   </history>
 
   <category>

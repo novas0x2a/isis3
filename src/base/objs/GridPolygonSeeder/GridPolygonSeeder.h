@@ -2,8 +2,8 @@
 #define GridPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2008/12/06 00:39:34 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -31,13 +31,13 @@
 namespace Isis {
   class Pvl;
 
-  /**                                                                       
+  /**
    * @brief Seed points using a grid
-   *                                                                        
+   * 
    * This class is used to construct a grid of points inside a polygon.
-   *                                                                        
+   * 
    * @ingroup PatternMatching
-   *                                                                        
+   * 
    * @author  2006-01-20 Stuart Sides
    * 
    * @internal
@@ -46,8 +46,11 @@ namespace Isis {
    * @history 2008-02-29 Steven Lambright - Created SubGrid capabilities,
    *                            cleaned up Seed methods
    * @history 2008-06-18 Christopher Austin - Fixed documentation errors 
-   * @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
-   */                                                                       
+   * @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0
+   * @history 2008-11-25 Steven Lambright - Added error checking 
+   * @history 2008-12-05 Christopher Austin - capped the subgrid to 127x127 to 
+   *          prevent segfaults on too high a precision
+   */
   class GridPolygonSeeder : public PolygonSeeder {
     public:
       GridPolygonSeeder (Pvl &pvl);

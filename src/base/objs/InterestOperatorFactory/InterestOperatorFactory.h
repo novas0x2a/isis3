@@ -2,8 +2,8 @@
 #define InterestOperatorFactory_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:07 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/01/16 16:25:09 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -34,7 +34,9 @@ namespace Isis {
  * object which contains a InterestOperator definition it will create that specific
  * instance of the class.
  *
- * @author 2006-02-04 Jacob Danton
+ * @author 2006-02-04 Jacob Danton 
+ * @internal 
+ *   @history 2009-01-16 Steven Koechle - Fixed memory leak
  */
 
   class InterestOperatorFactory {

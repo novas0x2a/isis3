@@ -62,7 +62,13 @@ namespace Qisis {
   /**
    * Filters a list of points for points that are of the selected
    * Range or in the given range. The filtered list will appear in
-   * the navtools point list display.
+   * the navtools point list display. 
+   * @internal  
+   *   @history 2009-01-08 Jeannie Walldren - Modified to remove
+   *                          new filter points from the existing
+   *                          filtered list. Previously, a new
+   *                          filtered list was created from the
+   *                          entire control net each time.
    */
   void QnetPointRangeFilter::filter() {
     // Make sure there is a control net loaded
@@ -125,21 +131,23 @@ namespace Qisis {
       geos::geom::Polygon *poly = factory->createPolygon(ring, 
                                                    new std::vector<geos::geom::Geometry*>);
 
-      // Loop through the control net checking to see if each point is in the
-      // polygon we created above
-      for (int i=0; i<g_controlNetwork->Size(); i++) {
+      // Loop through each value of the filtered points list 
+      // checking to see if each point is in the polygon we created above
+    // Loop in reverse order since removal list of elements affects index number
+      for (int i = g_filteredPoints.size()-1; i >= 0; i--) {
         // Get the current control point
-        Isis::ControlPoint p = (*g_controlNetwork)[i];
+        Isis::ControlPoint cp = (*g_controlNetwork)[g_filteredPoints[i]];
 
         // Create a new point
         const geos::geom::Coordinate *coord = 
-        new geos::geom::Coordinate(p.UniversalLatitude(),p.UniversalLongitude());
+        new geos::geom::Coordinate(cp.UniversalLatitude(),cp.UniversalLongitude());
         geos::geom::Point *pt = factory->createPoint(*coord);
 
         // See if the point is in the polygon & add it if it is
         if (poly->contains(pt)) {
-          g_filteredPoints.push_back(i);
+          continue;
         }
+        else g_filteredPoints.removeAt(i);
       }
     }
 

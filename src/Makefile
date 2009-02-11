@@ -10,7 +10,7 @@ applications:
 
 api: 
 	for i in $(PACKAGES); do \
-          echo "  Working on Package [$$i]"; \
+          echo "  Working on Package [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) api; cd ..; \
 	done
 
@@ -24,7 +24,7 @@ objects:
 
 includes:
 	for i in $(PACKAGES); do \
-          echo "  Working on Package [$$i]"; \
+          echo "  Working on Package [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) includes; cd ..; \
 	done
 

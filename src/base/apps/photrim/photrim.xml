@@ -137,7 +137,7 @@
           trimmed.
         </description>
         <minimum inclusive="yes">0.0</minimum>
-        <maximum inclusive="yes">90.0</maximum>
+        <maximum inclusive="yes">180.0</maximum>
         <lessThanOrEqual><item>MAXINCIDENCE</item></lessThanOrEqual>
       </parameter>
       <parameter name="MAXINCIDENCE">
@@ -149,7 +149,7 @@
           trimmed.
         </description>
         <minimum inclusive="yes">0.0</minimum>
-        <maximum inclusive="yes">90.0</maximum>
+        <maximum inclusive="yes">180.0</maximum>
         <greaterThanOrEqual><item>MININCIDENCE</item></greaterThanOrEqual>
       </parameter>
     </group>

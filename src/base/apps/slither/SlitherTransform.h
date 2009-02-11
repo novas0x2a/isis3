@@ -4,20 +4,33 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include "Transform.h"
-#include "PvlGroup.h"
-#include "ControlNet.h"
-#include "DataInterp.h"
 #include "ControlByRow.h"
+#include "ControlNet.h"
+#include "NumericalApproximation.h"
+#include "PvlGroup.h"
+#include "Transform.h"
 
 namespace Isis {
 
 class SlitherTransform : public Transform {
+  /**
+   * @author 2006-06-22 Kris Becker
+   *
+   * @internal
+   *  @history 2008-11-05 Jeannie Walldren - Updated references to
+   *           DataInterp with NumericalApproximation.  Removed
+   *           const from LineStats() and SampleStats(),
+   *           getOffset(), getLineXform(), and getSampXform()
+   *           since calling NumericalApproximation::Evaluate()
+   *           changes class variables.
+   *  
+   */
+
     public:
-      typedef DataInterp::InterpType InterpType;
+      typedef NumericalApproximation::InterpType InterpType;
       SlitherTransform(Cube &cube, ControlNet &cnet, 
-                       InterpType lInterp = DataInterp::Cubic,
-                       InterpType sInterp = DataInterp::Cubic);
+                       InterpType lInterp = NumericalApproximation::CubicNatural,
+                       InterpType sInterp = NumericalApproximation::CubicNatural);
 
       /**
        * @brief Destructor
@@ -183,29 +196,29 @@ class SlitherTransform : public Transform {
         return;
       }
 
-      Statistics LineStats() const;
-      Statistics SampleStats() const;
+      Statistics LineStats();
+      Statistics SampleStats();
 
       std::ostream &dumpState(std::ostream &out);
   
     private:
       typedef ControlByRow::RowPoint RowPoint;
       typedef std::vector<RowPoint> RowList;
-      RowList     _rows;                  //!<  Collected row points
-      RowList     _badRows;               //!<  Collects bad row points
-      int         _pntsTotal;             //!<  Total number points in control
-      int         _pntsUsed;              //!<  Total number points not ignored
-      int         _pntsTossed;            //!<  Total number points tossed
-      double      _iDir;                  //!<  Interpolation direction
+      RowList     _rows;                   //!<  Collected row points
+      RowList     _badRows;                //!<  Collects bad row points
+      int         _pntsTotal;              //!<  Total number points in control
+      int         _pntsUsed;               //!<  Total number points not ignored
+      int         _pntsTossed;             //!<  Total number points tossed
+      double      _iDir;                   //!<  Interpolation direction
                                           
-      DataInterp  _lineSpline;            //!< Line spline interpolation
-      DataInterp  _sampSpline;            //!< Sample spline interpolation
+      NumericalApproximation  _lineSpline; //!< Line spline interpolation
+      NumericalApproximation  _sampSpline; //!< Sample spline interpolation
 
-      int _outputLines;                   //!< Number output lines
-      int _outputSamples;                 //!< Number output samples
-
-      double _lineOffset;                 //!< Additional spatial line offset
-      double _sampOffset;                 //!< Additional spatial sample offset
+      int _outputLines;                    //!< Number output lines
+      int _outputSamples;                  //!< Number output samples
+                                           
+      double _lineOffset;                  //!< Additional spatial line offset
+      double _sampOffset;                  //!< Additional spatial sample offset
 
       /**
        * @brief Compute the relative shift of the given axis
@@ -222,10 +235,13 @@ class SlitherTransform : public Transform {
        * 
        * @return double Relative shift at the specified coordinate
        * @see getLineXform
-       * @see getSampXform
+       * @see getSampXform 
+       * @history 2008-11-05 Jeannie Walldren - removed const from 
+       *          interp parameter since call to Evaluate() will
+       *          fill values of class variables
        */
-      inline double getOffset(const double &x, const DataInterp &interp) const {
-         return (_iDir * interp.Evaluate(x));
+      inline double getOffset(const double &x, NumericalApproximation &interp) const {
+         return (_iDir * interp.Evaluate(x,NumericalApproximation::NearestEndpoint));
       }
 
       /**
@@ -238,9 +254,11 @@ class SlitherTransform : public Transform {
        * 
        * @param line Output line coordinate to compute input line for
        * 
-       * @return double Input line coordinate at the output line coordinate
+       * @return double Input line coordinate at the output line coordinate 
+       * @history 2008-11-05 Jeannie Walldren - removed const from 
+       *          method so that _lineSpline is not const.
        */
-      inline double getLineXform(const double line) const {
+      inline double getLineXform(const double line) { 
         return (line - getOffset(line, _lineSpline) + _lineOffset);
       }
 
@@ -257,8 +275,10 @@ class SlitherTransform : public Transform {
        * 
        * @return double Input sample coordinate at the output line, sample
        *         coordinate
+       * @history 2008-11-05 Jeannie Walldren - removed const from 
+       *          method so that _sampSpline is not const. 
        */
-      inline double getSampXform(const double line, const double samp) const {
+      inline double getSampXform(const double line, const double samp){
         return (samp - getOffset(line, _sampSpline) + _sampOffset);
       }
 

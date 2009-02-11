@@ -198,11 +198,42 @@ namespace Isis {
     PvlTranslationManager Xlator(*inputLabel, transfile.Expanded());
     Xlator.Auto(mainPvl);
 
+    // Calculate the core base/mult for this cube
+    double base = 0.0;
+    double multiplier = 1.0;
+    double x1,x2;
+
+    double minimum = (p_inputMinimum.size())? p_inputMinimum[0] : 0.0;
+    double maximum = (p_inputMaximum.size())? p_inputMaximum[0] : 0.0;
+
+    for(unsigned int i = 0; i < p_inputMinimum.size(); i ++) {
+      minimum = std::min(minimum, p_inputMinimum[i]);
+      maximum = std::max(maximum, p_inputMaximum[i]);
+    }
+
+    x1 = p_outputMinimum;
+    x2 = p_outputMaximum;
+
+    if (p_inputMinimum.size() && p_pixelType == Isis::UnsignedByte) {
+      multiplier = (maximum - minimum) / (x2 - x1);
+      base = minimum - multiplier * x1;
+    }
+    else if (p_inputMinimum.size() && p_pixelType == Isis::SignedWord) {
+      multiplier = (maximum - minimum) / (x2 - x1);
+      base = minimum - multiplier * x1;
+    }
+    else if (p_inputMinimum.size() && p_pixelType == Isis::UnsignedWord) {
+      multiplier = (maximum - minimum) / (x2 - x1);
+      base = minimum - multiplier * x1;
+    }
+
     // Manually set the keyword for the number of bits in a pixel
     // NOTE: this is dependent on settings in ProcessExport and not the cube
     PvlObject &imgObj = mainPvl.FindObject("IMAGE");
 
     imgObj += PvlKeyword("BAND_STORAGE_TYPE", "BAND_SEQUENTIAL");
+    imgObj += PvlKeyword("OFFSET", base);
+    imgObj += PvlKeyword("SCALING_FACTOR", multiplier);
 
     // Manually set the keyword for pixel type and special pixels
     if (p_pixelType == Isis::UnsignedByte) {
@@ -450,7 +481,12 @@ namespace Isis {
    */
   int ProcessExportPds::LabelSize(){
     ostringstream temp;
-    temp << *p_label << endl;
+    if( p_label->GetFormat() != NULL ) {
+      temp << *p_label << p_label->GetFormat()->FormatEOL();
+    }
+    else {
+      temp << *p_label << endl;
+    }
     return temp.tellp();
   }
 
@@ -467,7 +503,12 @@ namespace Isis {
     if ( p_exportType == Stream ) {
       (*p_label)["LABEL_RECORDS"].SetValue(iString(labSize), "BYTES");
       (*p_label)["^IMAGE"].SetValue(iString(labSize+1), "BYTES");
-      os << *p_label << endl;
+      if( p_label->GetFormat() != NULL ) {
+        os << *p_label << p_label->GetFormat()->FormatEOL();
+      }
+      else {
+        os << *p_label << endl;
+      }
       // Fill the difference between the old and new label size with nulls.
       for (int i=LabelSize(); i<labSize; ++i) os << '\0';
     }
@@ -481,7 +522,12 @@ namespace Isis {
       (*p_label)["LABEL_RECORDS"].SetValue( iString(labelRecords) );
       (*p_label)["FILE_RECORDS"].SetValue( iString(labelRecords + (InputCubes[0])->Lines()) );
       (*p_label)["^IMAGE"].SetValue( iString(labelRecords+1) );
-      os << *p_label << endl;
+      if( p_label->GetFormat() != NULL ) {
+        os << *p_label << p_label->GetFormat()->FormatEOL();
+      }
+      else {
+        os << *p_label << endl;
+      }
       for (int i=LabelSize(); i<labelRecords*lineBytes; ++i) os << '\0';
     }
   }

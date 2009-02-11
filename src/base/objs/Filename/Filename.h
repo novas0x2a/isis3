@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/10/03 19:06:19 $
+ * $Revision: 1.3 $
+ * $Date: 2009/01/07 18:55:22 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -82,6 +82,8 @@ namespace Isis {
  *   @history 2005-07-28 Drew Davidson - added new member NewVersion.
  *   @history 2007-10-03 Steven Koechle - Fixed Temporary() so if a path was
  *                       specified it will have the cwd put on in front of it.
+ *   @history 2009-01-07 Steven Lambright - Expanded(...) no longer behaves
+ *                       differently for unit tests
  * 
  * 
  */

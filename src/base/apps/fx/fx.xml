@@ -317,6 +317,9 @@
     <change name="Steven Lambright" date="2008-04-16">
       Upgraded to work with new Calculator classes
     </change>
+    <change name="Steven Lambright" date="2008-12-17">
+      Renamed parameter FILELIST to FROMLIST
+    </change>
   </history>
 
   <groups>     
@@ -426,7 +429,7 @@
               Select up to five input cubes manually.
             </description>
             <exclusions>
-              <item>FILELIST</item>
+              <item>FROMLIST</item>
               <item>LINES</item>
               <item>SAMPLES</item>
               <item>BANDS</item>
@@ -461,7 +464,7 @@
               <item>F3</item>
               <item>F4</item>
               <item>F5</item>
-              <item>FILELIST</item>
+              <item>FROMLIST</item>
             </exclusions>
           </option>
         </list>
@@ -469,7 +472,7 @@
     </group>
 
     <group name = "File list">
-      <parameter name = "FILELIST">
+      <parameter name = "FROMLIST">
         <type>filename</type>
         <fileMode>input</fileMode>
         <brief>

@@ -2,8 +2,8 @@
 #define Workspace_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/05/27 17:04:36 $
+ * $Revision: 1.6 $
+ * $Date: 2008/12/04 17:21:24 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -44,6 +44,10 @@ namespace Qisis {
  *           opened with additional arguments read by the
  *           CubeAttributeInput class, specifically to open
  *           certain bands as well as open 3 bands in RGB mode.
+ * @history 2008-12-04 Jeannie Walldren - Fixed bug in 
+ *          addCubeViewport(cubename).  Added exception catch to
+ *          addCubeViewport(cube) to close the CubeViewport from
+ *          the ViewportMainWindow if it cannot be shown.
  */
 
   class CubeViewport;

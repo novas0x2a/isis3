@@ -1,7 +1,10 @@
 #include <cmath>
+#include "AtmosModel.h"
 #include "Isotropic2.h"
-#include "NumericalMethods.h"
+#include "Pvl.h"
+#include "PvlGroup.h"
 #include "iException.h"
+#include "iString.h"
 
 using std::min;
 using std::max;
@@ -15,6 +18,42 @@ namespace Isis {
       SetAtmosHnorm(algorithm["Hnorm"]);
     }
   }
+
+  /**
+   * Isotropic atmospheric scattering in the first approximation  
+   * The model for scattering for a general, non-Lambertian surface with     
+   * an atmosphere looks like this:                                          
+   *                                                                         
+   * P = Pstd + trans*(rho*Ah*munot)/(1.d0-rho*Ab*sbar)                      
+   *     trans0*rho*(psurf-Ah*munot)                                         
+   *                                                                         
+   * where P is the overall photometric function (the model of the data),    
+   * PSTD is the pure atmospheric-scattering term, PSURF is the surface      
+   * photometric function, AH*MUNOT is a Lambertian approximation to this    
+   * with hemispheric albedo AH, TRANS and TRANS0 quantify transmission      
+   * of surface reflected light through the atmosphere overall and with      
+   * no scatterings in the atmosphere, and finally SBAR quantifies the       
+   * illumination of the ground by the sky.  RHO is the ratio of the sur-    
+   * face albedo to the albedo assumed in the functional form of PSURF.      
+   *  
+   * @param phase Value of the phase angle.
+   * @param incidence Value of the incidence angle.
+   * @param emission Value of the emission angle. 
+   *  
+   * @history 1998-12-21 Randy Kirk, USGS, Flagstaff - Original 
+   *          code
+   * @history 1999-03-12 K Teal Thompson  Port to Unix/ISIS; 
+   *          declare vars; add implicit none. 
+   * @history 2007-02-20 Janet Barrett - Imported from Isis2
+   *          pht_atm_functions to Isis3.
+   * @history 2008-11-05 Jeannie Walldren - Replaced reference to
+   *          NumericalMethods::r8expint() with AtmosModel::En(),
+   *          NumericalMethods::G11Prime() with
+   *          AtmosModel::G11Prime(), and NumericalMethods::r8ei()
+   *          with AtmosModel::Ei().  Replaced Isis::PI with PI
+   *          since this is in Isis namespace.
+   *  
+   */
 
   void Isotropic2::AtmosModelAlgorithm (double phase, double incidence, 
       double emission)
@@ -42,11 +81,11 @@ namespace Isis {
     if (TauOrWhaChanged()) {
       // preparation includes exponential integrals p_e sub 2 through 4
       p_wha2 = 0.5 * p_atmosWha;
-      p_e1 = NumericalMethods::r8expint(1,p_atmosTau);
-      p_e1_2 = NumericalMethods::r8expint(1,2.0*p_atmosTau);
-      p_e2 = NumericalMethods::r8expint(2,p_atmosTau);
-      p_e3 = NumericalMethods::r8expint(3,p_atmosTau);
-      p_e4 = NumericalMethods::r8expint(4,p_atmosTau);
+      p_e1   = AtmosModel::En(1,p_atmosTau);
+      p_e1_2 = AtmosModel::En(1,2.0*p_atmosTau);
+      p_e2   = AtmosModel::En(2,p_atmosTau);
+      p_e3   = AtmosModel::En(3,p_atmosTau);
+      p_e4   = AtmosModel::En(4,p_atmosTau);
 
       // chandra's gmn functions require fm and fn at mu=-1
       xx = -p_atmosTau;
@@ -78,7 +117,7 @@ namespace Isis {
       p_f1 = Eulgam() + log(p_atmosTau) + p_e * p_e1;
       p_f2 = p_f1 + p_e * p_e2 - 1.0;
       p_f3 = p_f2 + p_e * p_e3 - 0.5;
-      p_g11p = NumericalMethods::G11Prime(p_atmosTau);
+      p_g11p = AtmosModel::G11Prime(p_atmosTau);
       p_g12p = (p_atmosTau * (p_e1 - p_g11p) + p_em * (p_f1 + p_f2)) * 0.25;
       p_g13p = (p_atmosTau * (0.5 * p_e1 - p_g12p) + p_em * (p_f1 + p_f3)) * 0.2;
 
@@ -97,7 +136,7 @@ namespace Isis {
 
       // prepare to find correct mixture of x and y in conservative case
       if (p_atmosWha == 1.0) {
-        p_e5 = NumericalMethods::r8expint(5,p_atmosTau);
+        p_e5 = AtmosModel::En(5,p_atmosTau);
         p_f4m = -1.0 * (p_f3m + p_em * p_e4 - (1.0/3.0));
         p_g14 = (p_atmosTau * p_e1 * p_e4 + p_f1m + p_f4m) * 0.25;
         p_f4 = p_f3 + p_e * p_e4 - (1.0/3.0);
@@ -120,11 +159,11 @@ namespace Isis {
 
     // correct the path lengths for planetary curvature
     hpsq1 = pow((1.0+p_atmosHnorm),2.0) - 1.0;
-    munot = cos((Isis::PI/180.0)*incidence);
+    munot = cos((PI/180.0)*incidence);
     maxval = max(1.0e-30,hpsq1+munot*munot);
     munotp = p_atmosHnorm / (sqrt(maxval) - munot);
     munotp = max(munotp,p_atmosTau/69.0);
-    mu = cos((Isis::PI/180.0)*emission);
+    mu = cos((PI/180.0)*emission);
     maxval = max(1.0e-30,hpsq1+mu*mu);
     mup = p_atmosHnorm / (sqrt(maxval) - mu);
     mup = max(mup,p_atmosTau/69.0);
@@ -157,13 +196,13 @@ namespace Isis {
     if (fabs(xx-1.0) < 1.0e-10) {
       f1munot = p_f1;
       f1mmunot = xx * (log(1.0+1.0/xx) - p_e1 * emunot +
-          NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+          AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else if (xx > 0.0) {
       f1munot = xx * (log(xx/(1.0-xx)) + p_e1 / emunot +
-          NumericalMethods::r8ei(p_atmosTau*(1.0/xx-1.0)));
+          AtmosModel::Ei(p_atmosTau*(1.0/xx-1.0)));
       f1mmunot = xx * (log(1.0+1.0/xx) - p_e1 * emunot +
-          NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+          AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else {
       std::string msg = "Negative length of planetary curvature ";
@@ -174,11 +213,11 @@ namespace Isis {
     xx = mup;
     if (fabs(xx-1.0) < 1.0e-10) {
       f1mu = p_f1;
-      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else if (xx > 0.0) {
-      f1mu = xx * (log(xx/(1.0-xx)) + p_e1 / emu + NumericalMethods::r8ei(p_atmosTau*(1.0/xx-1.0)));
-      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + NumericalMethods::r8expint(1,p_atmosTau*(1.0+1.0/xx)));
+      f1mu = xx * (log(xx/(1.0-xx)) + p_e1 / emu + AtmosModel::Ei(p_atmosTau*(1.0/xx-1.0)));
+      f1mmu = xx * (log(1.0+1.0/xx) - p_e1 * emu + AtmosModel::En(1,p_atmosTau*(1.0+1.0/xx)));
     }
     else {
       std::string msg = "Negative length of planetary curvature encountered";

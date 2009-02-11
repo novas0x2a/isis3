@@ -2,6 +2,7 @@
 #include "UserInterface.h"
 #include "iException.h"
 #include "Preference.h"
+#include "Filename.h"
 
 using namespace std;
 
@@ -15,48 +16,49 @@ int main (int argc, char *argv[]) {
   int myArgc = 2;
   char *myArgv[2] = {"unitTest","from=input.cub to=output.cub"};
 
-  Isis::UserInterface ui("unitTest.xml",myArgc,myArgv);
-  cout << "FROM:    " << ui.GetFilename("FROM") << endl;
-  cout << "TO:      " << ui.GetFilename("TO") << endl;
+  Isis::iString unitTestXml = Isis::Filename("unitTest.xml").Expanded();
+  Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+  cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+  cout << "TO:      " << ui.GetAsString("TO") << endl;
   cout << "GUI:     " << ui.IsInteractive() << endl;
   cout << endl;
 
   string highpass = Isis::Filename("$ISISROOT/src/base/apps/highpass/highpass.xml").Expanded();
   char *myArgv2[2] = {"highpass","from=dog to=biscuit line=3 samp=3"};
   Isis::UserInterface ui2(highpass,myArgc,myArgv2);
-  cout << "FROM:    " << ui2.GetFilename("FROM") << endl;
-  cout << "TO:      " << ui2.GetFilename("TO") << endl;
+  cout << "FROM:    " << ui2.GetAsString("FROM") << endl;
+  cout << "TO:      " << ui2.GetAsString("TO") << endl;
   cout << "GUI:     " << ui2.IsInteractive() << endl;
   cout << endl;
 
   myArgc = 1;
   char *myArgv3[1] = {"unitTest"};
-  Isis::UserInterface ui3("unitTest.xml",myArgc,myArgv3);
-  cout << "FROM:    " << ui3.GetFilename("FROM") << endl;
-  cout << "TO:      " << ui3.GetFilename("TO") << endl;
+  Isis::UserInterface ui3(unitTestXml,myArgc,myArgv3);
+  cout << "FROM:    " << ui3.GetAsString("FROM") << endl;
+  cout << "TO:      " << ui3.GetAsString("TO") << endl;
   cout << "GUI:     " << ui3.IsInteractive() << endl;
   cout << endl;
 
   myArgc = 1;
   char *myArgv5[1] = {"unitTest"};
-  Isis::UserInterface ui5("unitTest.xml",myArgc,myArgv5);
+  Isis::UserInterface ui5(unitTestXml,myArgc,myArgv5);
   cout << "GUI:     " << ui5.IsInteractive() << endl;
   cout << endl;
 
   myArgc = 1;
   char *myArgv6[1] = {"./unitTest"};
-  Isis::UserInterface ui6("unitTest.xml",myArgc,myArgv6);
+  Isis::UserInterface ui6(unitTestXml,myArgc,myArgv6);
   cout << "GUI:     " << ui6.IsInteractive() << endl;
   cout << endl;
 
   cout << "Starting Batchlist Test" << endl;
   myArgc = 2;
   char *myArgv8[2] = {"unitTest","from= $1 to= $2 -batchlist=unitTest.lis"};
-  Isis::UserInterface ui8("unitTest.xml",myArgc,myArgv8);
+  Isis::UserInterface ui8(unitTestXml,myArgc,myArgv8);
   for (int i=0; i< ui8.BatchListSize(); i++) {
     ui8.SetBatchList(i);
-    cout << "FROM:    " << ui.GetFilename("FROM") << endl;
-    cout << "TO:      " << ui.GetFilename("TO") << endl;
+    cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+    cout << "TO:      " << ui.GetAsString("TO") << endl;
     cout << "GUI:     " << ui.IsInteractive() << endl;
     cout << endl;
   }
@@ -66,9 +68,9 @@ int main (int argc, char *argv[]) {
   try {
   myArgc = 2;
   char *myArgv7[2] = {"./unitTest","-restore=unitTest.par"};
-  Isis::UserInterface ui7("unitTest.xml",myArgc,myArgv7);
-  cout << "FROM:    " << ui7.GetFilename("FROM") << endl;
-  cout << "TO:      " << ui7.GetFilename("TO") << endl;
+  Isis::UserInterface ui7(unitTestXml,myArgc,myArgv7);
+  cout << "FROM:    " << ui7.GetAsString("FROM") << endl;
+  cout << "TO:      " << ui7.GetAsString("TO") << endl;
   cout << "GUI:     " << ui7.IsInteractive() << endl;
   cout << endl;
   }

@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.13 $                                                             
- * $Date: 2008/06/19 16:48:26 $
+ * $Revision: 1.15 $                                                             
+ * $Date: 2008/11/18 18:30:35 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -23,23 +23,7 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.                                    
  */                                                                       
-#include <QMenuBar>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QDialog>
-#include <QPushButton>
-#include <QToolButton>
-#include <QPainter>
-#include <QLabel>
-#include <QPixmap>
-#include <QMessageBox>
-#include <QFileDialog>
-#include <QPrinter>
-#include <QPrintDialog>
-#include <QPalette>
-#include <QAction>
-#include <QLineEdit>
-#include <QComboBox>
+
 #include <QtGui>
 #include <Qt>
 #include "Workspace.h"
@@ -49,6 +33,7 @@
 #include "MainWindow.h"
 #include "TableMainWindow.h"
 #include <qwt_plot.h>
+#include <qwt_plot_spectrogram.h>
 #include <qwt_plot_zoomer.h>
 #include <qwt_legend.h>
 #include <qwt_legend_item.h>
@@ -76,12 +61,19 @@ namespace Qisis {
       void setAutoScaleAxis(int axisId);
       void setPlotBackground(QColor c);
       void setPlotTitle(QString pt);
-      void setScale(int axisId, double minimum, double maximum);  
+      void setScale(int axisId, double minimum, double maximum, double stepSize = 0); 
+      void setScaleDiv(int axisId, QwtScaleDiv scaleDiv); 
       void showWindow();
       void setupDefaultMenu();
       void setCustomMenu(QList<QMenu *> &menu, QList<QAction *> &actions);
       void getDefaultMenus(QList<QMenu *> &menu, QList<QAction *> &actions); 
-      //! Returns the number of curves in the plot window.
+
+      /**
+       * 
+       * 
+       * 
+       * @return int 
+       */
       int getPlotCurveCount() { return p_plotCurves.size(); }
       /**
        *  Reuturns the plot curve at the given index.
@@ -202,6 +194,8 @@ namespace Qisis {
       QComboBox     *p_symbolBox;//!< Symbol style combo box for the config dialog.
       QComboBox     *p_plotTypeCombo;//!< Plot type combo box for the config dialog.
       QComboBox     *p_titleBox;//!< Curve selection combo box for the config dialog.
+      QCheckBox     *p_xLogCheckBox;
+      QCheckBox     *p_yLogCheckBox;
       
       QMenuBar      *p_menubar;//!< Plot window's menu bar.
         
@@ -227,6 +221,8 @@ namespace Qisis {
       bool p_copyable;//!< Is this curve copy-able?
       bool p_destroyOnClose;//!< Should the curve be destroyed on close?
       bool p_scaled;//!< Has this window been rescaled?
+      bool p_xLogScale;
+      bool p_yLogScale;
 
       static PlotCurve *p_dragCurve;//!< The curve to drag to a new window.
   

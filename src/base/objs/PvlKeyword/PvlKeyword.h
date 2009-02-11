@@ -2,8 +2,8 @@
 #define PvlKeyword_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/07/10 15:03:01 $
+ * $Revision: 1.8 $
+ * $Date: 2008/10/01 01:12:19 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -59,6 +59,9 @@ namespace Isis {
  *  @history 2008-07-03 Steven Lambright - Added const functionality
  *  @history 2008-07-10 Steven Lambright - StringEqual is now static, all
  *           AddComments methods are public
+ *  @history 2008-09-30 Christopher Austin - replaced all std::endl in the <<
+ *           operator as well as WriteWithWrap() with PvlFormat.FormatEOL(), and
+ *           formatted wraps accordingly
  */                                                                       
   class PvlSequence;
   class PvlFormat;
@@ -142,7 +145,8 @@ namespace Isis {
       std::string ToPvl(const std::string &value) const;
       std::string ToIPvl(const std::string &value) const;
       std::ostream& WriteWithWrap(std::ostream &os, const std::string &texttowrite, 
-                                     int startColumn, int &charsLeft) const;
+                                  int startColumn, int &charsLeft,
+                                  PvlFormat *tempFormat) const;
 
       PvlFormat *p_formatter;
 

@@ -20,6 +20,8 @@ using namespace Isis;
 Camera *cam;
 Cube *icube;
 Photometry *pho;
+double maxema; 
+double maxinc; 
 
 void photomet (Buffer &in, Buffer &out);
 
@@ -38,6 +40,9 @@ void IsisMain() {
   UserInterface &ui = Application::GetUserInterface();
   // Get the name of the parameter file
   Pvl par(ui.GetFilename("PHOPAR"));
+  // Set value for maximum emission/incidence angles chosen by user
+  maxema = ui.GetDouble("MAXEMISSION");
+  maxinc = ui.GetDouble("MAXINCIDENCE");
 
   // Get the BandBin Center from the image
   PvlGroup pvlg = icube->GetGroup("BandBin");
@@ -62,24 +67,47 @@ void IsisMain() {
   p.EndProcess();
 }
 
+/**
+ * Perform photometric correction 
+ * 
+ * @param in Buffer containing input DN values
+ * @param out Buffer containing output DN values 
+ * @author Janet Barrett 
+ * @internal 
+ *   @history 2009-01-08 Jeannie Walldren - Modified to set off
+ *            target pixels to null.  Added check for new maxinc
+ *            and maxema parameters.
+ */
 void photomet (Buffer &in, Buffer &out) {
 
   double pha,inc,ema,mult,base;
   for (int i=0; i<in.size(); i++) {
-    if (cam->SetImage(in.Sample(i),in.Line(i)) &&
-        IsValidPixel(in[i])) {
-      pha = cam->PhaseAngle();
-      pha = MIN(180.0,pha);
-      pha = MAX(0.0,pha);
-      inc = cam->IncidenceAngle();
-      inc = MIN(90.0,inc);
-      inc = MAX(0.0,inc);
-      ema = cam->EmissionAngle();
-      ema = MIN(90.0,ema);
-      ema = MAX(0.0,ema);
-      pho->Compute(pha,inc,ema,in[i],out[i],mult,base);
-    } else {
+    // if special pixel, copy to output
+    if (!IsValidPixel(in[i])) {
       out[i] = in[i];
     }
+    // if off the target, set to null
+    else if (!cam->SetImage(in.Sample(i),in.Line(i))) {
+      out[i] = NULL8;
+    }
+    // otherwise, compute angle values
+    else{
+      pha = cam->PhaseAngle();
+      inc = cam->IncidenceAngle();
+      ema = cam->EmissionAngle();
+      
+      // if invalid angles, set to null
+      if (inc >= 90.0 || ema >= 90.0) {
+        out[i] = NULL8;
+      } 
+      // if angles greater than max allowed by user, set to null
+      else if (inc > maxinc || ema > maxema) {
+        out[i] = NULL8;
+      }
+      // otherwise, do photometric correction
+      else {
+        pho->Compute(pha,inc,ema,in[i],out[i],mult,base);
+      }
+    } 
   }
 }

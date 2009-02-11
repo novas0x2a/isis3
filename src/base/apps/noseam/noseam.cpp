@@ -2,6 +2,7 @@
 #include "Application.h"
 #include "FileList.h"
 #include "Cube.h"
+#include "Preference.h"
 
 #include <iostream>
 #include <fstream>
@@ -24,7 +25,9 @@ void IsisMain() {
   
   //Sets upt the pathName to be used for most application calls
   Filename inFile = Isis::Filename( cubes[0] );
-  string pathName = inFile.Path() + "/";
+
+  Pvl &pref = Preference::Preferences();
+  string pathName = (string)pref.FindGroup("DataDirectory")["Temporary"] + "/";
 
   /** 
    * Creates a mosaic from the original images.  It is placed here 

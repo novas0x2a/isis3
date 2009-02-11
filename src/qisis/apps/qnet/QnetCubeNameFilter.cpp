@@ -5,7 +5,6 @@
 #include "QnetNavTool.h"
 #include "ControlNet.h"
 #include "SerialNumberList.h"
-#include "FindImageOverlaps.h"
 
 #include "qnet.h"
 
@@ -35,7 +34,14 @@ namespace Qisis {
 
   /**
    * Filters a list of images looking for cube names using the regular expression
-   * entered.  The filtered list will appear in the navtools cube list display.
+   * entered.  The filtered list will appear in the navtools cube list display. 
+   * @internal 
+   *   @history 2009-01-08 Jeannie Walldren - Modified to create
+   *                          new filtered list from images in the
+   *                          existing filtered list. Previously,
+   *                          a new filtered list was created from
+   *                          the entire serial number list each
+   *                          time.
    */
   void QnetCubeNameFilter::filter() {
     // Make sure we have a list of images to filter
@@ -55,12 +61,16 @@ namespace Qisis {
     }
 
 
-    // Loop through each image in the list
-    for (int i=0; i<g_serialNumberList->Size(); i++) {
-      string tempFilename = g_serialNumberList->Filename(i);
+    // Loop through each image in the filtered list
+    // Loop in reverse order since removal list of elements affects index number
+    for (int i = g_filteredImages.size()-1; i >= 0; i--) {
+      string tempFilename = g_serialNumberList->Filename(g_filteredImages[i]);
+      // this name contains the string, keep it in the filtered list
       if (rx.indexIn(QString(tempFilename.c_str())) != -1) {
-        g_filteredImages.push_back(i);
+        continue;
       }
+      // if there is no match, remove image from filtered list
+      else g_filteredImages.removeAt(i);
 
     }
     // Tell the navtool a list has been filtered and it needs to update

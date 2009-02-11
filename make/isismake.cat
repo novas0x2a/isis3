@@ -80,7 +80,7 @@ catTest:
 	  echo "no tsts folder"; \
 	elif [ -f "tsts/Makefile" ]; \
 	then \
-	  cd tsts; $(MAKE) tests; \
+	  cd tsts; $(MAKE) test; \
 	else \
 	  echo "no makefile"; \
 	fi

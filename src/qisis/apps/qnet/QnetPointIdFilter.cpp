@@ -5,7 +5,6 @@
 #include "QnetNavTool.h"
 #include "ControlNet.h"
 #include "SerialNumberList.h"
-#include "FindImageOverlaps.h"
 
 #include "qnet.h"
 
@@ -22,7 +21,7 @@ namespace Qisis {
    */
   QnetPointIdFilter::QnetPointIdFilter (QWidget *parent) : QnetFilter(parent) {
     // Create the components for the filter window
-    QLabel *label = new QLabel("Filter by cube name (Regular Expressions");
+    QLabel *label = new QLabel("Filter by Point ID (Regular Expressions)");
     p_pointIdEdit = new QLineEdit();
 
     // Create the layout and add the components to it
@@ -35,7 +34,12 @@ namespace Qisis {
 
   /**
    * Filters a list of images looking for cube names using the regular expression
-   * entered.  The filtered list will appear in the navtools cube list display.
+   * entered.  The filtered list will appear in the navtools cube list display. 
+   * 
+   * @internal
+   *   @history 2009-01-08 Jeannie Walldren - Modified to remove
+   *                          new filter points from the existing
+   *                          filtered list.
    */
   void QnetPointIdFilter::filter() {
 
@@ -56,14 +60,16 @@ namespace Qisis {
     }
 
 
-    // Loop through the control net checking the types of each control measure 
-    // for each of the control points
-    for (int i=0; i<g_controlNetwork->Size(); i++) {
+    // Loop through each value of the filtered points list checking 
+    // the types of each control measure for each of the control points
+    // Loop in reverse order since removal list of elements affects index number
+    for (int i = g_filteredPoints.size()-1; i >= 0; i--) {
 
-      string cNetId = (*g_controlNetwork)[i].Id();
+      string cNetId = (*g_controlNetwork)[g_filteredPoints[i]].Id();
       if (rx.indexIn(QString(cNetId.c_str())) != -1) {
-        g_filteredPoints.push_back(i);
+        continue;
       }
+      else g_filteredPoints.removeAt(i);
     }
 
     // Tell the navtool a list has been filtered and it needs to update

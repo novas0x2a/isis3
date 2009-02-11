@@ -9,12 +9,14 @@
 
 namespace Isis {
   BundleAdjust::BundleAdjust(const std::string &cnetFile,
-                             const std::string &cubeList) {
+                             const std::string &cubeList,
+                             bool printSummary) {
     // Get control net and serial number list  
     p_cleanUp = true;
     Progress progress;
     p_cnet = new Isis::ControlNet(cnetFile, &progress);
     p_snlist = new Isis::SerialNumberList(cubeList);
+    p_printSummary = printSummary;
     p_heldsnlist = NULL;
     p_observationMode = false;
     p_solutionMethod = "SVD";
@@ -25,13 +27,15 @@ namespace Isis {
 
   BundleAdjust::BundleAdjust(const std::string &cnetFile,
                              const std::string &cubeList,
-                             const std::string &heldList) {
+                             const std::string &heldList,
+                             bool printSummary) {
      // Get control net, serial number list, and held serial number list
      p_cleanUp = true;
      Progress progress;
      p_cnet = new Isis::ControlNet(cnetFile, &progress);
      p_snlist = new Isis::SerialNumberList(cubeList);
      p_heldsnlist = new Isis::SerialNumberList(heldList);
+     p_printSummary = printSummary;
      p_observationMode = false;
      p_solutionMethod = "SVD";
      p_onlist = NULL;
@@ -39,11 +43,14 @@ namespace Isis {
      Init( &progress );
    }
 
-  BundleAdjust::BundleAdjust(Isis::ControlNet &cnet, Isis::SerialNumberList &snlist) {
+  BundleAdjust::BundleAdjust(Isis::ControlNet &cnet,
+                             Isis::SerialNumberList &snlist,
+                             bool printSummary) {
     // Get control net and serial number list
     p_cleanUp = false;
     p_cnet = &cnet;
     p_snlist = &snlist;
+    p_printSummary = printSummary;
     p_heldsnlist = NULL;
     p_observationMode = false;
     p_solutionMethod = "SVD";
@@ -52,13 +59,16 @@ namespace Isis {
     Init();
   }
 
-  BundleAdjust::BundleAdjust(Isis::ControlNet &cnet, Isis::SerialNumberList &snlist,
-                             Isis::SerialNumberList &heldsnlist) {
+  BundleAdjust::BundleAdjust(Isis::ControlNet &cnet,
+                             Isis::SerialNumberList &snlist,
+                             Isis::SerialNumberList &heldsnlist,
+                             bool printSummary) {
     // Get control net, image serial number list and hold image serial number list
     p_cleanUp = false;
     p_cnet = &cnet;
     p_snlist = &snlist;
     p_heldsnlist = &heldsnlist;
+    p_printSummary = printSummary;
     p_observationMode = false;
     p_solutionMethod = "SVD";
     p_onlist = NULL;
@@ -174,9 +184,11 @@ namespace Isis {
 
     for (int i=0; i<p_cnet->Size(); i++) {
       ControlPoint &pt = (*p_cnet)[i];
+      if (pt.Ignore()) continue;
 
       for (int j=0; j<pt.Size(); j++) {
         ControlMeasure &m = pt[j];
+        if (m.Ignore()) continue;
 
         if (p_heldsnlist->HasSerialNumber(m.CubeSerialNumber())) {
           Camera *cam=m.Camera();
@@ -415,8 +427,9 @@ namespace Isis {
             std::vector<double> anglePoly1, anglePoly2, anglePoly3;
             orot->GetPolynomial( anglePoly1, anglePoly2, anglePoly3);
             double baseTime = orot->GetBaseTime();
+            double timeScale = orot->GetTimeScale();
             rot->SetPolynomialDegree( p_solveCamDegree ); // Update to the solve polynomial fit degree
-            rot->SetOverrideBaseTime( baseTime );
+            rot->SetOverrideBaseTime( baseTime, timeScale );
             rot->SetPolynomial( anglePoly1, anglePoly2, anglePoly3);
           }
           else {
@@ -471,7 +484,9 @@ namespace Isis {
       p_cnet->ComputeErrors();
       p_error = p_cnet->MaximumError();
       averageError = p_cnet->AverageError();
-      IterationSummary(averageError,sigmaXY,sigmaHat,sigmaX,sigmaY);
+      if (p_printSummary) {
+        IterationSummary(averageError,sigmaXY,sigmaHat,sigmaX,sigmaY);
+      }
       p_statx.Reset();
       p_staty.Reset();
 
@@ -855,6 +870,18 @@ namespace Isis {
       int index = PointIndex(i);
       lat += (180.0 / Isis::PI) * (basis.Coefficient(index)); index++;
       lon += (180.0 / Isis::PI) * (basis.Coefficient(index)); index++;
+      // Make sure updated values are still in valid range.  
+      // TODO What is the valid lon range?
+      if (lat < -90.) {
+        lat = -180. - lat;
+        lon = lon + 180.;
+      }
+      if (lat > 90.) {
+        lat = 180. - lat;
+        lon = lon + 180.;
+      }
+      while (lon > 360.) lon = lon - 360.;
+      while (lon < 0) lon = lon + 360.;
 
       if (p_solveRadii) {
         rad += 1000.*basis.Coefficient(index); index++;

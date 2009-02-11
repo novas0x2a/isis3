@@ -51,7 +51,9 @@ void IsisMain() {
     flatFile.Open(ui.GetFilename("FLATFILE"));
   }
   else {
-    flatFile.Open("$mro/calibration/ctxFlatCrop_01.cub");
+    Filename flat("$mro/calibration/ctxFlat_????.cub");
+    flat.HighestVersion();
+    flatFile.Open(flat.Expanded());
   }
   flat = new Brick(5000,1,1,flatFile.PixelType());
   flat->SetBasePosition(1,1,1);

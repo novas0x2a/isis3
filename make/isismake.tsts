@@ -108,15 +108,15 @@ help:
 
 #----------------------------------------------------------------------------
 # Target = test
-# Dependencies = cleanoutput output compare
+# Dependencies = clean output compare
 #
-# Cleanoutput is to make sure that there is nothing in the 
+# Clean is to make sure that there is nothing in the 
 # output directory other than what is generated in the test.
 # Output then generates the file from the test.  Finally 
 # comparefiles shows the result of the test.  If the truth
 # directory doesn't exist that a message is printed stating so.
 #----------------------------------------------------------------------------
-test: cleanoutput; \
+test: clean; \
 	TIME1=`date +"%s"`; \
 	if [ -d "$(TRUTH)" ]; \
 	then \
@@ -131,7 +131,7 @@ test: cleanoutput; \
 	    $(MAKE) comparefiles; \
 	    if [  "$(findstring $(TESTNOCLEAN), $(MODE))" != "$(TESTNOCLEAN)" ]; \
 	    then \
-	      $(MAKE) cleanoutput; \
+	      $(MAKE) clean; \
 	    fi; \
 	  fi; \
 	else \
@@ -265,12 +265,12 @@ temp:
 	temp="";
 
 #----------------------------------------------------------------------------
-# Target = cleanoutput
+# Target = clean
 # Dependencies = 
 #
 # Deletes the output directory.
 #----------------------------------------------------------------------------
-cleanoutput:
+clean:
 	$(RM) -r $(OUTPUT); \
 	$(RM) print.prt; \
 
@@ -658,7 +658,7 @@ copyOutTruth:
 
 #----------------------------------------------------------------------------
 # Target = release
-# Dependencies = cleanoutput 
+# Dependencies = clean
 #
 # Deletes the input, output, and truth directories.  To be used
 # after checkin to clear the test of data.  If any of the folders
@@ -670,7 +670,7 @@ copyOutTruth:
 # are deleted.  If the user types any other letter than y the 
 # folders are not deleted.
 #----------------------------------------------------------------------------
-release: cleanoutput
+release: clean
 	remove="";\
 	for i in $(notdir $(filter-out CVS Makefile print.prt  $(OUTPUT), $(wildcard *))); do \
 	  if [ -d "$(TESTDATA_PATH)/$$i" ]; \

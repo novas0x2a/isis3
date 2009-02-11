@@ -121,8 +121,8 @@ Testing ToReferencePartial method
 For angles (ra,dec,twist) = 1.9442166 2.1350998 -0.92284879
  For lookJ = 0.78673089 0.3082437 -0.53482738
 Right ascension partial on A applied to lookJ =:  -0.50997743 -0.67370817 0
-Right ascension partial on B applied to lookJ =:  -78.281536 -103.4142 0
-Right ascension partial on C applied to lookJ =:  -12016.216 -15874.08 0
+Right ascension partial on B applied to lookJ =:  -0.50997743 -0.67370817 0
+Right ascension partial on C applied to lookJ =:  -0.50997743 -0.67370817 0
 Declination partial on A applied to lookJ =:  -0.79732425 0.6035512 0
 
 Twist partial on A applied to lookJ =:  0 0 0

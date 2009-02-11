@@ -2,8 +2,8 @@
 #define MocLabels_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 21:52:30 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2008/11/07 22:58:46 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -23,12 +23,16 @@
  */    
 
 #include <map>
-#include "Pvl.h"
 #include "Filename.h"
 
+
 namespace Isis {
+  class Pvl;
   namespace Mgs {
-    /**                                              
+    /** 
+     * @brief Read values from MOC labels 
+     *  
+     * @ingroup MarsGlobalSurveyor
      * @author 2007-01-30 Author Unknown
      *                                                                        
      * @internal                                                              
@@ -36,24 +40,88 @@ namespace Isis {
      *  @history 2008-05-29  Steven Lambright Fixed binary search indexing,
      *          bad calls to std::string::_cstr() references
      *  @history 2008-06-18  Steven Koechle - Fixed Documentation Errors
+     *   @history 2008-08-11 Steven Lambright - Fixed definition of WAGO,
+     *            problem pointed out by "novas0x2a" (Support Board Member)
+     *   @history 2008-11-05 Jeannie Walldren - Changed
+     *            IsNarrowAngle(), IsWideAngle(), IsWideAngleBlue(),
+     *            and IsWideAngleRed() to NarrowAngle(),
+     *            WideAngle(), WideAngleBlue(), and WideAngleRed(),
+     *            respectively.  Added documentation.
+     *   @history 2008-11-07 Jeannie Walldren - Fixed documentation
      */  
     class MocLabels {
       public:
-        MocLabels (Isis::Pvl &lab);
+        MocLabels (Pvl &lab);
         MocLabels (const std::string &file);
+        //! Empty destructor.
         ~MocLabels () {};
         
-        inline bool IsNarrowAngle () const { return p_mocNA; };
-        inline bool IsWideAngle () const { return !p_mocNA; };
-        inline bool IsWideAngleRed () const { return p_mocRedWA; };
-        inline bool IsWideAngleBlue () const { return p_mocBlueWA; };
+        /**
+         * Indicates whether the camera was narrow angle.
+         * @return @b bool True if the instrument ID is MOC-NA.
+         */
+        inline bool NarrowAngle () const { return p_mocNA; };
+        /**
+         * Indicates whether the camera was wide angle.
+         * @return @b bool True if the instrument ID is MOC-WA.
+         */
+        inline bool WideAngle () const { return !p_mocNA; };
+        /**
+         * Indicates whether the camera was red wide angle.
+         * @return @b bool True if the instrument ID is MOC-WA and 
+         *         filter name is RED.
+         */
+        inline bool WideAngleRed () const { return p_mocRedWA; };
+        /**
+         * Indicates whether the camera was blue wide angle.
+         * @return @b bool True if the instrument ID is MOC-WA and 
+         *         filter name is BLUE.
+         */
+        inline bool WideAngleBlue () const { return p_mocBlueWA; };
+        /**
+         * Returns value for CrosstrackSumming from the instrument
+         * group.
+         * @return @b int Crosstrack summing
+         */
         inline int CrosstrackSumming () const { return p_crosstrackSumming; };
+        /**
+         * Returns value for DowntrackSumming from the instrument group.
+         * @return @b int Downtrack summing
+         */
         inline int DowntrackSumming () const { return p_downtrackSumming; };
+        /**
+         * Returns value for FirstLineSample from the instrument group.
+         * @return @b int First line sample
+         */
         inline int FirstLineSample () const { return p_startingSample; };
+        /**
+         * Returns value for FocalPlaneTemperature from the instrument 
+         * group. 
+         * @return @b double Focal plane temperature
+         */
         inline double FocalPlaneTemperature () const { return p_focalPlaneTemp; };
+        /**
+         * Returns the value for the true line rate.  This is calculated 
+         * by dividing the product of LineExposureDuration and the 
+         * DowntrackSumming by 1000.
+         * @return @b double Value for the true line rate
+         */
         inline double LineRate () const { return p_trueLineRate; };
+        /**
+         * Returns the value for LineExposureDuration from the 
+         * instrument group.
+         * @return @b double Line exposure duration
+         */
         inline double ExposureDuration() const { return p_exposureDuration; };
-        inline std::string StartTime() const { return p_startTime; };    
+        /**
+         * Returns the value for StartTime from the instrument group.
+         * @return @b std::string Start time
+         */
+        inline std::string StartTime() const { return p_startTime; };  
+        /**
+         * Returns 2048 if narrow angle and 3456 if wide angle.
+         * @return @b int Value of detectors.
+         */
         inline int Detectors() const { return p_mocNA ? 2048 : 3456; };
         int StartDetector(int sample) const;
         int EndDetector(int sample) const;
@@ -63,8 +131,8 @@ namespace Isis {
         double Offset(int line=1);
     
       private:
-        void Init (Isis::Pvl &lab);
-        void ReadLabels (Isis::Pvl &lab);
+        void Init (Pvl &lab);
+        void ReadLabels (Pvl &lab);
         void ValidateLabels ();
         void Compute();
     
@@ -101,7 +169,7 @@ namespace Isis {
         double p_sample[3456];
         void InitDetectorMaps();
     
-        typedef struct WAGO {
+        struct WAGO {
           double et;
           double gain;
           double offset;
@@ -111,8 +179,8 @@ namespace Isis {
         std::vector<WAGO> p_wagos;
         void InitWago();
     
-        Isis::Filename p_lsk;
-        Isis::Filename p_sclk;
+        Filename p_lsk;
+        Filename p_sclk;
     };
   };
 };

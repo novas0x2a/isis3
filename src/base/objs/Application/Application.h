@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2008/07/08 22:13:10 $
+ * $Revision: 1.11 $
+ * $Date: 2009/01/21 16:09:17 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -73,6 +73,8 @@ namespace Isis {
    *   @history 2008-06-24 Steven Koechle - Added Preferences to Debugging Log.
    *   @history 2008-07-08 Steven Lambright - Singletons now destroy themselves
    *            instead of Application deleting them
+   *   @history 2008-07-08 Steven Lambright - p_ui is no longer static, which
+   *            fixes issues with the mac unit tests.
    **/
   class Application {
     public:
@@ -114,7 +116,7 @@ namespace Isis {
       int p_startPageFaults;
       int p_startProcessSwaps;
 
-      static UserInterface *p_ui;  //!<Pointer to a User Interface object
+      UserInterface *p_ui;  //!<Pointer to a User Interface object
 
       static bool HasParent ();
       static void SendParentData (const std::string code, const std::string &message);

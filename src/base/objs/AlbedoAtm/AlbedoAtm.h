@@ -1,9 +1,9 @@
-#if !defined(AlbedoAtm_h)
+#ifndef AlbedoAtm_h
 #define AlbedoAtm_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 17:31:59 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2008/11/07 23:06:49 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -31,16 +31,21 @@ namespace Isis {
 /**
  * @brief Albedo normalization with atmosphere
  * 
- *
+ * @ingroup RadiometricAndPhotometricCorrection
  * @author 1998-12-21 Randy Kirk
  *
  * @internal
  *  @history 2007-08-15 Steven Lambright - Refactored code and fixed unit test
  *  @history 2008-06-18 Christopher Austin - Fixed documentation errors
+ *  @history 2008-11-05 Jeannie Walldren - Modified references
+ *          to NumericalMethods class.
+ *  @history 2008-11-07 Jeannie Walldren - Fixed documentation.
+ *  
  */
   class AlbedoAtm : public NormModel {
     public:
       AlbedoAtm (Pvl &pvl, PhotoModel &pmodel, AtmosModel &amodel);
+      //! Empty Destructor
       virtual ~AlbedoAtm() {};
 
     protected:

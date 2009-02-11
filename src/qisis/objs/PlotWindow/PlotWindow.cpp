@@ -5,6 +5,7 @@
 #include "QHistogram.h"
 #include "Interpolator.h"
 #include <qwt_symbol.h>
+#include <qwt_scale_engine.h>
 #include <algorithm>
 
 namespace Qisis {
@@ -20,20 +21,19 @@ namespace Qisis {
    * @param title 
    * @param parent 
    */
-  PlotWindow::PlotWindow (QString title,QWidget *parent) : Qisis::MainWindow(title, parent) {
-
-    parent->installEventFilter(this);
+  PlotWindow::PlotWindow (QString title,QWidget *parent) : Qisis::MainWindow(title, 0) {
     p_selected = -1;
     p_toolBar = NULL;
     p_menubar = NULL;
     p_tableWindow = NULL;
-  
     p_parent = parent;
     createWindow();
     createConfigDialog();
     createLegendMenu();
     p_scaled = false; 
     p_curvePropsSaved = false;
+    p_xLogScale = false;
+    p_yLogScale = false;
     p_plotCurves.clear();
     setWindowTitle(title);
     readSettings();
@@ -48,15 +48,16 @@ namespace Qisis {
     /*Create plot*/
     p_plot = new QwtPlot();
     p_plot->installEventFilter(this);
-    p_plot->setAxisMaxMinor(0, 5);
-    p_plot->setAxisMaxMajor(2, 30);
-    p_plot->setAxisMaxMinor(2, 5);
+    p_plot->setAxisMaxMinor(QwtPlot::yLeft, 5);
+    p_plot->setAxisMaxMajor(QwtPlot::xBottom, 30);
+    p_plot->setAxisMaxMinor(QwtPlot::xBottom, 5);
    
     /*Plot Legend*/
     p_legend = new QwtLegend();
     p_legend->setItemMode(QwtLegend::ClickableItem);
     p_legend->setWhatsThis("Right Click on a legend item to display the context menu.");
     p_plot->insertLegend(p_legend, QwtPlot::RightLegend, 1.0);
+
     /*Plot Grid*/
     p_grid = new QwtPlotGrid;
     p_grid->enableXMin(true);
@@ -64,12 +65,12 @@ namespace Qisis {
     p_grid->setMinPen(QPen(Qt::gray, 1, Qt::DotLine));
     p_grid->attach(p_plot);
     p_grid->setVisible(false);
+
     /*Plot Zoomer*/
     p_zoomer = new QwtPlotZoomer(p_plot->canvas());
     p_zoomer->setRubberBandPen(QPen(Qt::lightGray));
     p_zoomer->setTrackerPen(QPen(Qt::lightGray));
     
-
     /* Create the Plot window*/
     p_mainWindow = new Qisis::MainWindow(this->windowTitle(), p_parent);
     p_mainWindow->installEventFilter(this);
@@ -94,7 +95,7 @@ namespace Qisis {
   }
 
   /**
-   * Sets the plot toe auto scale the given axis.
+   * Sets the plot to auto scale the given axis.
    * 
    * 
    * @param axisId 
@@ -179,20 +180,30 @@ namespace Qisis {
    * 
    * @param pc 
    */
-  void PlotWindow::add(PlotCurve *pc){
-    
+  void PlotWindow::add(PlotCurve *pc){ 
     p_plotCurves.push_back(pc);
     pc->attach(p_plot);
     if(p_tableWindow!= NULL && p_tableWindow->tableWindow()->isVisible()) fillTable();  
     pc->attachSymbols(p_plot);
-    pc->setVisible(false);
+    //check to see if the curve is visible.
+    if(pc->isVisible()) {
+      pc->setVisible(true);
+    } else {
+      pc->setVisible(false);
+    }
+    //check to see if the symbols are visible.
+    if(pc->isSymbolVisible()) {
+      pc->setSymbolVisible(true);
+    } else {
+      pc->setSymbolVisible(false);
+    }
     p_plot->replot();
     /*The zoomer base needs to reset after the replot in order for the y-axis 
     scale to adjust after a zoom action*/
     p_zoomer->setZoomBase();
      /*Installing the event filter is what enables the user to cut and paste 
      curves from one plot window to another*/
-   p_legend->find(pc)->installEventFilter(this);
+    p_legend->find(pc)->installEventFilter(this);
   }
 
 
@@ -202,11 +213,10 @@ namespace Qisis {
   * calls the necessary method to delete the table stuff
   */
   void PlotWindow::clearPlot() {
-
-    for (int i = 0; i<p_plotCurves.size(); i++) {
+ 
+    for (int i = 0; i < p_plotCurves.size(); i++) {
       p_plotCurves[i]->detach();
     }
-
     /*Need to clear all the qlists associated with the plot items.*/
     p_plotCurves.clear();
     p_plot->replot();
@@ -359,7 +369,7 @@ namespace Qisis {
    * @param minimum 
    * @param maximum 
    */
-  void PlotWindow::setScale(int axisId, double minimum, double maximum) {
+  void PlotWindow::setScale(int axisId, double minimum, double maximum, double stepSize) {
     if(axisId == QwtPlot::xBottom){
       p_xMax = maximum;
       p_xMin = minimum;
@@ -370,10 +380,23 @@ namespace Qisis {
       p_yMin = minimum;
     }
 
-    p_plot->setAxisScale(axisId,minimum,maximum);
+    p_plot->setAxisScale(axisId,minimum,maximum, stepSize);
+
     p_plot->replot();
     p_zoomer->setZoomBase();
     p_scaled = true;
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * @param axisId 
+   * @param scaleDiv 
+   */
+  void PlotWindow::setScaleDiv(int axisId, QwtScaleDiv scaleDiv){
+    p_plot->setAxisScaleDiv(axisId, scaleDiv);
+    p_plot->replot();
   }
 
 
@@ -388,6 +411,23 @@ namespace Qisis {
     p_yMax = p_yMaxEdit->text().toDouble();
     setScale(QwtPlot::xBottom, p_xMin, p_xMax);
     setScale(QwtPlot::yLeft, p_yMin, p_yMax);
+
+    if(p_xLogCheckBox->isChecked()) {
+      p_plot->setAxisScaleEngine(QwtPlot::xBottom, new QwtLog10ScaleEngine);
+      p_xLogScale = true;
+    } else {
+      p_plot->setAxisScaleEngine(QwtPlot::xBottom, new QwtLinearScaleEngine);
+      p_xLogScale = false;
+    }
+
+    if(p_yLogCheckBox->isChecked()) {
+      p_plot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLog10ScaleEngine);
+      p_yLogScale = true;
+    } else {
+      p_plot->setAxisScaleEngine(QwtPlot::yLeft, new QwtLinearScaleEngine);
+      p_yLogScale = false;
+    }
+
   }
 
 
@@ -818,13 +858,20 @@ namespace Qisis {
     QLabel *yMinLabel = new QLabel("Minimum: ");
     QLabel *yMaxLabel = new QLabel("Maximum: ");
 
+    p_xLogCheckBox = new QCheckBox("x - Log Scale");
+    p_xLogCheckBox->setChecked(p_xLogScale);
+    p_yLogCheckBox = new QCheckBox("y - Log Scale");
+    p_yLogCheckBox->setChecked(p_yLogScale);
+
     QVBoxLayout *vlayout = new QVBoxLayout();
     vlayout->addWidget(xLabel);
     vlayout->addWidget(xMinLabel);
     vlayout->addWidget(xMaxLabel);
+    vlayout->addWidget(p_xLogCheckBox);
     vlayout->addWidget(yLabel);    
     vlayout->addWidget(yMinLabel);
     vlayout->addWidget(yMaxLabel);
+    vlayout->addWidget(p_yLogCheckBox);
     labels->setLayout(vlayout);
 
     p_xMinEdit = new QLineEdit(QString::number(p_xMin),dialog);
@@ -837,9 +884,12 @@ namespace Qisis {
     v2layout->addWidget(p_xMinEdit);
     v2layout->addWidget(p_xMaxEdit);
     v2layout->addWidget(new QLabel(""));
+    v2layout->addWidget(new QLabel(""));
     v2layout->addWidget(p_yMinEdit);
     v2layout->addWidget(p_yMaxEdit);
+    v2layout->addWidget(new QLabel(""));
     textAreas->setLayout(v2layout);
+
 
     QHBoxLayout *mainLayout = new QHBoxLayout();
     mainLayout->addWidget(labels);
@@ -1337,7 +1387,7 @@ namespace Qisis {
     if (rows != p_plotCurves[p_plotCurves.size()-1]->data().size()) {
       int diff = p_plotCurves[p_plotCurves.size()-1]->data().size() - rows;
 
-      for (int i = 1; i <= abs(diff); i++) {
+      for (int i = 0; i <= abs(diff); i++) {
 
         if (diff > 0) {
           p_tableWindow->table()->insertRow(rows + i);
@@ -1368,7 +1418,7 @@ namespace Qisis {
 
     }
 
-    for (int c = 0; c< p_plotCurves.size(); c++) {
+    for (int c = 0; c < p_plotCurves.size(); c++) {
       //adding columns to the table if more curves had been added to the plotWindow
       //columns
       if (c > p_tableWindow->table()->columnCount()-2 ) {
@@ -1376,7 +1426,7 @@ namespace Qisis {
                                    p_plotCurves[c]->title().text());          
       }
       //rows
-      for (unsigned int r = 0; r<p_plotCurves[c]->data().size(); r++) {
+      for (unsigned int r = 0; r < p_plotCurves[c]->data().size(); r++) {
         //creates a widget item with the data from the curves.
         QTableWidgetItem *item = new QTableWidgetItem
                                  (Isis::iString(p_plotCurves[c]->data().y(r)).ToQt());
@@ -1416,9 +1466,9 @@ namespace Qisis {
        p_tableWindow = new Qisis::TableMainWindow("Plot Table", p_parent);
        p_tableWindow->setTrackListItems(false);
     }
-    
     fillTable();
     p_tableWindow->tableWindow()->show();
+    p_tableWindow->syncColumns();
   }
 
 

@@ -17,7 +17,10 @@ namespace Qisis {
    * properties.
    */
  PlotCurve::PlotCurve ()  : QwtPlotCurve() {
-              p_markerIsVisible = false;
+              //The default is to show the symbols but not the curves.
+              setVisible(false);
+              setSymbolVisible(true);
+
               p_symbolStyle.setStyle(QwtSymbol::XCross);
               p_symbolStyle.setSize(6,6);
               p_markerPen.setColor(this->pen().color());
@@ -41,6 +44,7 @@ namespace Qisis {
       if(data.y(i) != Isis::Null ) { 
         QwtPlotMarker *marker = new QwtPlotMarker();
         marker->setValue(data.x(i), data.y(i));
+        marker->setAxis(this->xAxis(), this->yAxis());
         p_plotMarkers.push_back( marker);
         
       }
@@ -68,8 +72,9 @@ namespace Qisis {
       if(yData[i] != 0 ) {
         QwtPlotMarker *marker = new QwtPlotMarker();  
         marker->setValue(xData[i], yData[i]);
-        marker->setVisible(true);
-        setSymbolVisible(true);
+        marker->setAxis(this->xAxis(), this->yAxis());
+        //marker->setVisible(true);
+        //setSymbolVisible(true);
         p_plotMarkers.push_back( marker);
       } 
     }
@@ -111,7 +116,6 @@ namespace Qisis {
     this->setSymbolColor(pc->symbolColor());
     this->setSymbolStyle(pc->symbolStyle().style());
     this->setSymbolVisible(pc->isSymbolVisible());
-
   }
 
 

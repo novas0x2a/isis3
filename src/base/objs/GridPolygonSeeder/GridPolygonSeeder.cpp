@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.9 $                                                             
+ * $Date: 2008/12/15 18:43:06 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -29,6 +29,7 @@
 #include "PvlGroup.h"
 #include "iException.h"
 #include "PolygonTools.h"
+#include "iString.h"
 
 #include "GridPolygonSeeder.h"
 
@@ -84,7 +85,7 @@ namespace Isis {
     std::vector<geos::geom::Point*> points;
 
     // Create some things we will need shortly
-    geos::geom::MultiPolygon *xymp = PolygonTools::XYFromLonLat(*lonLatPoly, proj);
+    geos::geom::MultiPolygon *xymp = PolygonTools::LatLonToXY(*lonLatPoly, proj);
     const geos::geom::Envelope *xyBoundBox = xymp->getEnvelopeInternal();
 
     // Call the parents standardTests member
@@ -153,7 +154,7 @@ namespace Isis {
     std::vector<geos::geom::Point*> points;
 
     // Create some things we will need shortly
-    geos::geom::MultiPolygon *xymp = PolygonTools::XYFromLonLat(*lonLatPoly, proj);
+    geos::geom::MultiPolygon *xymp = PolygonTools::LatLonToXY(*lonLatPoly, proj);
     const geos::geom::Envelope *xyBoundBox = xymp->getEnvelopeInternal();
 
     // Call the parents standardTests member
@@ -283,6 +284,7 @@ namespace Isis {
           }
         }
       }
+
     }
     while(!bGridCleared);
 
@@ -315,7 +317,7 @@ namespace Isis {
     // We'll make a 2D array detailing which points to check, and which not to, in this rectangle.
     // Figure out how many points across and vertically we need to check
     int gridSize = 1;
-    for(int prec = 0; prec < precision; prec ++) {
+    for(int prec = 0; prec < precision  &&  prec < 6; prec ++) {
       // Maybe solve the recurrence relation for a single equation??
       gridSize = gridSize*2+1;
     }
@@ -431,7 +433,7 @@ namespace Isis {
 
       p_subGrid = false;
       if(algo.HasKeyword("SubGrid")) {
-        p_subGrid = (int)algo["SubGrid"] != 0;
+        p_subGrid = iString((std::string)algo["SubGrid"]).UpCase() != "FALSE";
       }
     }
     catch (iException &e) {

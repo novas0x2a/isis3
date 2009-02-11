@@ -385,6 +385,7 @@ void IsisMain(){
 
     icube->ReOpen( "rw" );
     icube->Write( table );
+    p.WriteHistory(*icube);
     icube->Close();
 
   }

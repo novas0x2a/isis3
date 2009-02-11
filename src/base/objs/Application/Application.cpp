@@ -24,8 +24,8 @@ extern int errno;
 
 /**
  * @file
- * $Revision: 1.16 $
- * $Date: 2008/07/08 22:13:10 $
+ * $Revision: 1.17 $
+ * $Date: 2009/01/21 16:09:17 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -47,7 +47,6 @@ extern int errno;
 
 namespace Isis {
   Application *iApp = NULL;
-  UserInterface *Application::p_ui = NULL;
 
   /**
    * Constuctor for the Application object   
@@ -63,6 +62,7 @@ namespace Isis {
     p_socket = -1;
     p_childSocket = -1;
     p_socketFile = "";
+    p_ui = NULL;
 
     // Save the application name
     p_appName = argv[0];
@@ -103,6 +103,7 @@ namespace Isis {
       if (!p_ui->IsInteractive()) {
         new QCoreApplication(argc,argv);
       }
+      
     } catch (Isis::iException &e) {
       exit(e.Report());
     }
@@ -316,12 +317,12 @@ namespace Isis {
     }
 
     // Otherwise see if we need to write to our gui
-    else if (p_ui->IsInteractive()) {
+    else if (iApp->GetUserInterface().IsInteractive()) {
       std::ostringstream ostr;
       if (blankLine) ostr << std::endl;
       ostr << results << std::endl;
-      p_ui->TheGui()->Log(ostr.str());
-      p_ui->TheGui()->ShowLog();
+      iApp->GetUserInterface().TheGui()->Log(ostr.str());
+      iApp->GetUserInterface().TheGui()->ShowLog();
     }
 
     // Otherwise its command line mode
@@ -347,11 +348,11 @@ namespace Isis {
     }
 
     // Otherwise see if we need to write to our gui
-    else if (p_ui->IsInteractive()) {
+    else if (iApp->GetUserInterface().IsInteractive()) {
       std::ostringstream ostr;
       ostr << results << std::endl;
-      p_ui->TheGui()->Log(ostr.str());
-      p_ui->TheGui()->ShowLog();
+      iApp->GetUserInterface().TheGui()->Log(ostr.str());
+      iApp->GetUserInterface().TheGui()->ShowLog();
     }
   }
 
@@ -370,11 +371,11 @@ namespace Isis {
     }
 
     // Otherwise see if we need to write to our gui
-    else if (p_ui->IsInteractive()) {
+    else if (iApp->GetUserInterface().IsInteractive()) {
       std::ostringstream ostr;
       ostr << results << std::endl;
-      p_ui->TheGui()->Log(ostr.str());
-      p_ui->TheGui()->ShowLog();
+      iApp->GetUserInterface().TheGui()->Log(ostr.str());
+      iApp->GetUserInterface().TheGui()->ShowLog();
     }
   }
 
@@ -390,9 +391,9 @@ namespace Isis {
     }
 
     // Otherwise see if we need to write to our gui
-    else if (p_ui->IsInteractive()) {
-      p_ui->TheGui()->Log(results);
-      p_ui->TheGui()->ShowLog();
+    else if (iApp->GetUserInterface().IsInteractive()) {
+      iApp->GetUserInterface().TheGui()->Log(results);
+      iApp->GetUserInterface().TheGui()->ShowLog();
     }
   }
 
@@ -402,7 +403,7 @@ namespace Isis {
    * @return A pointer to the UserInterface object
    */
   Isis::UserInterface &Application::GetUserInterface() {
-    return *p_ui;
+    return *iApp->p_ui;
   }
 
   /**
@@ -412,8 +413,8 @@ namespace Isis {
    */
   bool Application::HasParent () {
     if (iApp == NULL) return false;
-    if (p_ui == NULL) return false;
-    if (p_ui->ParentId() == 0) return false;
+    if (iApp->p_ui == NULL) return false;
+    if (iApp->p_ui->ParentId() == 0) return false;
     return true;
   }
 
@@ -445,7 +446,7 @@ namespace Isis {
   void Application::SendParentData(const std::string code, const std::string &message) {
     // See if we need to connect to the parent
     if (p_childSocket < 0) {
-      std::string socketFile = "/tmp/isis_" + Isis::iString(p_ui->ParentId());
+      std::string socketFile = "/tmp/isis_" + Isis::iString(iApp->GetUserInterface().ParentId());
       sockaddr_un socketName;
       socketName.sun_family = AF_UNIX;
       strcpy(socketName.sun_path,socketFile.c_str());
@@ -463,7 +464,7 @@ namespace Isis {
       int status = connect(p_childSocket,(struct sockaddr *)&socketName,len);
       if (status == -1) {
         std::string msg = "Unable to connect to parent [" +
-                          Isis::iString(p_ui->ParentId()) + "] errno = " +
+                          Isis::iString(iApp->GetUserInterface().ParentId()) + "] errno = " +
                           iString(errno);
         std::cout << msg << std::endl;
         throw Isis::iException::Message(Isis::iException::System,
@@ -481,7 +482,7 @@ namespace Isis {
 
     if (send (p_childSocket,data.c_str(),data.size(),0) < 0) {
       std::string msg = "Unable to send to parent [" +
-                        Isis::iString(p_ui->ParentId()) + "]";
+                        Isis::iString(iApp->GetUserInterface().ParentId()) + "]";
       std::cout << msg << std::endl;
       throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
     }

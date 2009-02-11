@@ -45,35 +45,62 @@ void TranslateLunarLabels (Filename &labelFile, Cube *ocube) {
   iString transDir = (string) dataDir["Lo"] + "/translations/";
   Pvl inputLabel (labelFile.Expanded());
   Filename transFile;
+  Filename bandBinTransFile;
 
   bool hasFiducial = false;
-  if(inputLabel.HasKeyword("FIDUCIAL_ID", Pvl::Traverse)){
-    hasFiducial = true;
-    transFile = transDir + "LunarOrbiterFiducial.trn";
-  } else if(inputLabel.HasKeyword("BORESIGHT_SAMPLE", Pvl::Traverse)){
-    transFile = transDir + "LunarOrbiterBoresight.trn";
-  } else {
-    string msg = "[" + labelFile.Name() + "] does not contain boresight or fiducial information.";
-    throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+  // Check to see if file is PDS
+  if(inputLabel.HasKeyword("PDS_VERSION_ID", Pvl::None)) {
+    if(inputLabel.FindKeyword("PDS_VERSION_ID", Pvl::None)[0].compare("PDS3")==0) {
+      if(inputLabel.FindKeyword("FIDUCIAL_ID", Pvl::None)[0].compare("NULL")!=0) {
+        hasFiducial = true;
+        bandBinTransFile = transDir + "LunarOrbiterFiducial.trn";
+      }
+      else if (inputLabel.FindKeyword("BORESIGHT_SAMPLE", Pvl::None)[0].compare("NULL")!=0) {
+        bandBinTransFile = transDir + "LunarOrbiterBoresight.trn";
+      }
+      else{
+        string msg = "[" + labelFile.Name() + "] does not contain boresight or fiducial information.";
+        throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+      }
+    }
+    else {
+      string msg = "[" + labelFile.Name() + "] contains unknown PDS version type ["+version+"].";
+      throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+    }
+  }
+  else { // else input is an ISIS2 cube
+    if(inputLabel.HasKeyword("FIDUCIAL_ID", Pvl::Traverse)){
+      hasFiducial = true;
+      bandBinTransFile = transDir + "LunarOrbiterFiducial.trn";
+    } else if(inputLabel.HasKeyword("BORESIGHT_SAMPLE", Pvl::Traverse)){
+      bandBinTransFile = transDir + "LunarOrbiterBoresight.trn";
+    } else {
+      string msg = "[" + labelFile.Name() + "] does not contain boresight or fiducial information.";
+      throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+    }
   }
 
+  transFile = transDir + "LunarOrbiter.trn";
   // Get the translation manager ready
-  PvlTranslationManager labelXlater (inputLabel, transFile.Expanded());
+  PvlTranslationManager commonlabelXlater (inputLabel, transFile.Expanded());
   // Pvl outputLabels;
   Pvl *outputLabel = ocube->Label();
+  commonlabelXlater.Auto(*(outputLabel));
+
+  PvlTranslationManager labelXlater (inputLabel, bandBinTransFile.Expanded());
   labelXlater.Auto(*(outputLabel));
 
   PvlGroup &inst = outputLabel->FindGroup("Instrument",Pvl::Traverse);
 
+  //Creates FiducialCoordinateMicron with the proper units
+  iString fcm = (string) inst.FindKeyword("FiducialCoordinateMicron");
+  iString fcmUnits = fcm;
+  fcmUnits = iString::TrimHead("0123456789.",fcmUnits);
+  fcm = iString::TrimTail("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",fcm);
+  inst.FindKeyword("FiducialCoordinateMicron").SetValue((int)fcm, fcmUnits);
+
   // High Resolution & Fiducial Medium Case
   if (hasFiducial) {
-    //Creates FiducialCoordinateMicron with the proper units
-    iString fcm = (string) inst.FindKeyword("FiducialCoordinateMicron");
-    iString fcmUnits = fcm;
-    fcmUnits = iString::TrimHead("0123456789.",fcmUnits);
-    fcm = iString::TrimTail("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",fcm);
-    inst.FindKeyword("FiducialCoordinateMicron").SetValue((int)fcm, fcmUnits);
-
     //Add units to some keywords
     PvlKeyword fxc = inst.FindKeyword("FiducialXCoordinates");
     inst.FindKeyword("FiducialXCoordinates").Clear();
@@ -100,13 +127,6 @@ void TranslateLunarLabels (Filename &labelFile, Cube *ocube) {
     }
   } else if(!hasFiducial){
     //What needs to be done if it contains Boresight info
-
-    //Creates FiducialCoordinateMicron with the proper units
-    iString fcm = (string) inst.FindKeyword("FiducialCoordinateMicron");
-    iString fcmUnits = fcm;
-    fcmUnits = iString::TrimHead("0123456789.",fcmUnits);
-    fcm = iString::TrimTail("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",fcm);
-    inst.FindKeyword("FiducialCoordinateMicron").SetValue((int)fcm, fcmUnits);
   }
 
   string instrumentID = inst.FindKeyword("InstrumentId");

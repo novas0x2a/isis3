@@ -16,19 +16,26 @@
 using namespace std;
 namespace Isis {
   namespace Mgs {
-    // Construct with filename
-    MocLabels::MocLabels(const std::string &file) {
-      Isis::Pvl lab(file);
+    /**
+     * Construct MocLabels object using the file name
+     */
+    MocLabels::MocLabels(const string &file) {
+      Pvl lab(file);
       Init(lab);
     }
 
-    // Construct with pvl object
-    MocLabels::MocLabels(Isis::Pvl &lab) {
+    /**
+     * Construct MocLabels object using a Pvl object
+     */
+    MocLabels::MocLabels(Pvl &lab) {
       Init(lab);
     }
 
-    // General initializer
-    void MocLabels::Init(Isis::Pvl &lab) {
+    /**
+     * General initializer
+     * @param lab MOC label for the image
+     */
+    void MocLabels::Init(Pvl &lab) {
       // Initialize gain tables
       InitGainMaps();
 
@@ -37,16 +44,18 @@ namespace Isis {
         ValidateLabels();
         Compute();
       }
-      catch (Isis::iException &e) {
+      catch (iException &e) {
         string msg = "Labels do not appear contain a valid MOC instrument";
-        throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+        throw iException::Message(iException::Pvl,msg,_FILEINFO_);
       }
     }
-    
-    // Read required keywords from labels
-    void MocLabels::ReadLabels(Isis::Pvl &lab) {
+    /**
+     * Reads required keywords from the labels
+     * @param MOC label for the image
+     */
+    void MocLabels::ReadLabels(Pvl &lab) {
       // Get stuff out of the instrument group
-      Isis::PvlGroup &inst = lab.FindGroup("Instrument",Isis::Pvl::Traverse);
+      PvlGroup &inst = lab.FindGroup("Instrument",Pvl::Traverse);
       p_instrumentId = (string) inst["InstrumentId"];
       p_startingSample = inst["FirstLineSample"];
       p_crosstrackSumming = inst["CrosstrackSumming"];
@@ -64,13 +73,13 @@ namespace Isis {
     
       // Get stuff out of the archive group
       p_dataQuality = "Unknown";
-      Isis::PvlGroup &arch = lab.FindGroup("Archive",Isis::Pvl::Traverse);
+      PvlGroup &arch = lab.FindGroup("Archive",Pvl::Traverse);
       if (arch.HasKeyword("DataQualityDesc")) {
         p_dataQuality = (string) arch["DataQualityDesc"];
       }
     
       // Get Stuff out of the band bind group
-      Isis::PvlGroup &bandBin = lab.FindGroup("BandBin",Isis::Pvl::Traverse);
+      PvlGroup &bandBin = lab.FindGroup("BandBin",Pvl::Traverse);
       p_filter = (string) bandBin["FilterName"];
     
       // Get the number of samples in the initial cube as it may have been
@@ -80,13 +89,14 @@ namespace Isis {
       p_nl = a.AlphaLines();
     
       // Get the two kernels for time computations
-      Isis::PvlGroup &kerns = lab.FindGroup("Kernels",Isis::Pvl::Traverse);
+      PvlGroup &kerns = lab.FindGroup("Kernels",Pvl::Traverse);
       p_lsk = kerns["LeapSecond"];
       p_sclk = kerns["SpacecraftClock"];
     }
     
-    
-    // Make sure the labels were good
+    /**
+     * Verifies that the labels are valid
+     */
     void MocLabels::ValidateLabels() {
       // Validate the camera type
       p_mocNA = false;
@@ -102,21 +112,21 @@ namespace Isis {
       if (!p_mocNA && !p_mocRedWA && !p_mocBlueWA) {
         string msg = "InstrumentID [" + p_instrumentId + "] and/or FilterName ["
                    + p_filter + "] are inappropriate for the MOC camera";
-        throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);      
+        throw iException::Message(iException::Pvl,msg,_FILEINFO_);      
       }
     
       // Validate summing modes for narrow angle camera
       if (p_mocNA) {
         if ((p_crosstrackSumming < 1) || (p_crosstrackSumming > 8)) {
           string msg = "MOC-NA keyword [CrosstrackSumming] must be between ";
-          msg += "1 and 8, but is [" + Isis::iString(p_crosstrackSumming) + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);      
+          msg += "1 and 8, but is [" + iString(p_crosstrackSumming) + "]";
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);      
         }
     
         if ((p_downtrackSumming < 1) || (p_downtrackSumming > 8)) {
           string msg = "MOC-NA keyword [DowntrackSumming] must be between ";
-          msg += "1 and 8, but is [" + Isis::iString(p_downtrackSumming) + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+          msg += "1 and 8, but is [" + iString(p_downtrackSumming) + "]";
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);
         }
       }
     
@@ -124,37 +134,38 @@ namespace Isis {
       if ((p_mocRedWA) || (p_mocBlueWA)) {
         if ((p_crosstrackSumming < 1) || (p_crosstrackSumming > 127)) {
           string msg = "MOC-WA keyword [CrosstrackSumming] must be between ";
-          msg += "1 and 127, but is [" + Isis::iString(p_crosstrackSumming) + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);      
+          msg += "1 and 127, but is [" + iString(p_crosstrackSumming) + "]";
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);      
         }
     
         if ((p_downtrackSumming < 1) || (p_downtrackSumming > 127)) {
           string msg = "MOC-WA keyword [DowntrackSumming] must be between ";
-          msg += "1 and 127, but is [" + Isis::iString(p_downtrackSumming) + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+          msg += "1 and 127, but is [" + iString(p_downtrackSumming) + "]";
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);
         }
       }
     }
-    
-    // Compute some constants
+    /**
+     * Computes some constants
+     */
     void MocLabels::Compute() {
       // Compute line rate in seconds
       p_trueLineRate = p_exposureDuration * (double) p_downtrackSumming;
       p_trueLineRate /= 1000.0;
     
       // Fix the exposure duration for NA images
-      if (IsNarrowAngle() && (p_downtrackSumming != 1)) {
+      if (NarrowAngle() && (p_downtrackSumming != 1)) {
         p_exposureDuration *= p_downtrackSumming;
       }
 
       // Lookup the gain using the gain mode in the gain maps
       map<string,double>::iterator p;
-      if (IsNarrowAngle()) {
+      if (NarrowAngle()) {
         p = p_gainMapNA.find(p_gainModeId);
         if (p == p_gainMapNA.end()) {
           string msg = "Invalid value for keyword GainModeId [" + 
                        p_gainModeId + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);
         }
       }
       else {
@@ -162,7 +173,7 @@ namespace Isis {
         if (p == p_gainMapWA.end()) {
           string msg = "Invalid value for keyword GainModeId [" + 
                        p_gainModeId + "]";
-          throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+          throw iException::Message(iException::Pvl,msg,_FILEINFO_);
         }
       }
       p_gain = p->second;
@@ -173,9 +184,9 @@ namespace Isis {
       // Ok the gain computation for narrow angle changed from 
       // pre-mapping to mapping phase.  Fix it up if necessary 
       // (when the Downtrack summing is not 1)
-      if (IsNarrowAngle() && (p_downtrackSumming != 1)) {
-        Isis::iTime currentTime(p_startTime);
-        Isis::iTime mappingPhaseBeginTime("1999-04-03T01:00:40.441");
+      if (NarrowAngle() && (p_downtrackSumming != 1)) {
+        iTime currentTime(p_startTime);
+        iTime mappingPhaseBeginTime("1999-04-03T01:00:40.441");
         if (currentTime < mappingPhaseBeginTime) {
           double newGain = p_gain / (double) p_downtrackSumming;
           double mindiff = DBL_MAX;
@@ -195,7 +206,7 @@ namespace Isis {
           p = p_gainMapNA.find(index);
           if (p == p_gainMapNA.end()) {
             string msg = "Could not find new gain for pre-mapping narrow angle image";
-            throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+            throw iException::Message(iException::Pvl,msg,_FILEINFO_);
           }
           p_gain = p->second;
         }
@@ -219,8 +230,10 @@ namespace Isis {
       unload_c(sclk.c_str());
     }
     
-    // Create a lookup of gain modes to gain values
-    // These come from MSSS calibration report
+/**
+ * Creates a lookup of gain modes to gain values.  These come 
+ * from the MSSS calibration report. 
+ */
     void MocLabels::InitGainMaps() {
       p_gainMapNA["F2"] = 1.0;
       p_gainMapNA["D2"] = 1.456;
@@ -261,34 +274,45 @@ namespace Isis {
       p_gainMapWA["06"] = 363.400;
     };
     
-    // Convert from sample to starting detector
+    /**
+     * Converts from sample to starting detector 
+     * @param sample Sample to be converted 
+     * @returns @b int Converted start detector
+     */
     int MocLabels::StartDetector(int sample) const {
       if ((sample < 1) || (sample > p_ns)) {
         string msg = "Out of array bounds in MocLabels::StartDetector";
-        throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
       }
       return p_startDetector[sample-1];
     }
-    
-    // Convert from sample to ending detector 
+    /**
+     * Converts from sample to ending detector 
+     * @param sample Sample to be converted 
+     * @returns @b int Converted ending detector
+     */
     int MocLabels::EndDetector(int sample) const {
       if ((sample < 1) || (sample > p_ns)) {
         string msg = "Out of array bounds in MocLabels::EndDetector";
-        throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
       }
       return p_endDetector[sample-1];
     }
-    
-    // Convert from sample to ending detector 
+    /**
+     * Converts from detector to sample
+     * @param detector Detector to be converted 
+     * @returns @b double Converted sample
+     */
     double MocLabels::Sample(int detector) const {
       if ((detector < 0) || (detector >= Detectors())) {
         string msg = "Out of array bounds in MocLabels::Sample";
-        throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
       }
       return p_sample[detector];
     }
-    
-    // Create lookup table from sample to detectors and vice versa
+    /**
+     * Creates lookup table from sample to detectors and vice versa.
+     */
     void MocLabels::InitDetectorMaps() {
       // Create sample to detector maps
       if (p_crosstrackSumming == 13) {
@@ -333,15 +357,22 @@ namespace Isis {
         }
       }
     }
-    
-    // return ephemeris time at a line
+    /** 
+     * Returns the ephemeris time at the given line. 
+     * @param line Line to evaluate 
+     * @returns @b double Ephemeris time
+     */
     double MocLabels::EphemerisTime(double line) const {
       return p_etStart + (line - 0.5) * p_trueLineRate;
     }
-    
+    /** 
+     * Returns the true gain at a given line.
+     * @param line Line to evaluate 
+     * @returns @b double True gain
+     */
     // return gain at a line
     double MocLabels::Gain(int line) {
-      if (IsNarrowAngle()) return p_gain;
+      if (NarrowAngle()) return p_gain;
 
       InitWago();
 
@@ -354,10 +385,13 @@ namespace Isis {
 
       return p_gain;
     }
-    
-    // return offset at a line
+    /** 
+     * Returns the offset at the given line. 
+     * @param line Line to evaluate 
+     * @returns @b double Offset
+     */
     double MocLabels::Offset(int line) {
-      if (IsNarrowAngle()) return p_offset;
+      if (NarrowAngle()) return p_offset;
       InitWago();
       
       double etLine = EphemerisTime((double)line);
@@ -368,8 +402,9 @@ namespace Isis {
       }
       return p_offset;
     }
-    
-    // Read the wide-angle gain/offset table and internalize
+    /**
+     * Reads the wide-angle gain/offset table and internalizes
+     */
     void MocLabels::InitWago() {
       // Only do this once
       static bool firstTime = true;
@@ -383,7 +418,7 @@ namespace Isis {
       furnsh_c(sclkKern.c_str());
     
       //Set up file for reading
-      Isis::Filename wagoFile("$mgs/calibration/MGSC_????_wago.tab");
+      Filename wagoFile("$mgs/calibration/MGSC_????_wago.tab");
       wagoFile.HighestVersion();
       string nameOfFile = wagoFile.Expanded();
       ifstream temp(nameOfFile.c_str());
@@ -402,7 +437,7 @@ namespace Isis {
       int low = 1;
       int high = wholeFile.size()/35;
       int middle;
-      Isis::iString line,filter,sclk,gainId,offsetId;
+      iString line,filter,sclk,gainId,offsetId;
       WAGO wago;
 
       //Binary search. This determines the middle of the current range and 
@@ -490,8 +525,8 @@ namespace Isis {
             filter.Trim(" ");
   
             // If it's not the filter we want then skip to loop end
-            if ((filter == "RED")  && (IsWideAngleBlue())) continue;
-            if ((filter == "BLUE") && (IsWideAngleRed()))  continue;
+            if ((filter == "RED")  && (WideAngleBlue())) continue;
+            if ((filter == "BLUE") && (WideAngleRed()))  continue;
   
             // Get the sclk and convert to et
             sclk = line.Token(",");
@@ -520,7 +555,7 @@ namespace Isis {
               unload_c(sclkKern.c_str());
   
               string msg = "Invalid GainModeId [" + gainId + "] in wago table";
-              throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+              throw iException::Message(iException::Programmer,msg,_FILEINFO_);
             }
             double gain = p->second;
   

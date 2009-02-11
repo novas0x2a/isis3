@@ -128,6 +128,9 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Steven Koechle" date="2008-12-04">
+      Removed hard coded flatfile, now searchs for highest version
+    </change>
   </history>
 
   <category>

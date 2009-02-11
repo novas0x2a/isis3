@@ -1,4 +1,5 @@
 #include <QtGui>
+#include <QString>
 
 #include <algorithm>
 
@@ -11,12 +12,22 @@ using namespace Qisis::Qnet;
 using namespace std;
 
 namespace Qisis {
+  // initialize static variable
+  QString QnetNewPointDialog::lastPtIdValue = "";
 
+  /** 
+   * QnetNewPointDialog constructor
+   * @internal 
+   *   @history 2008-11-26 Jeannie Walldren - Set lastPointIdValue
+   *            to the p_ptIdValue 
+   */
   QnetNewPointDialog::QnetNewPointDialog (QWidget *parent) : QDialog (parent) {
 
     p_ptIdLabel = new QLabel("Point ID:");
     ptIdValue = new QLineEdit;
     p_ptIdLabel->setBuddy(ptIdValue);
+    ptIdValue->setText(lastPtIdValue);
+    ptIdValue->selectAll();
     connect(ptIdValue,SIGNAL(textChanged(const QString &)),
             this,SLOT(enableOkButton(const QString &)));
 
@@ -72,7 +83,15 @@ namespace Qisis {
   }
 
 
+  /** 
+   *  
+   * @param text 
+   * @internal 
+   *   @history 2008-11-26 Jeannie Walldren - Set lastPointIdValue
+   *            to the p_ptIdValue 
+   */
   void QnetNewPointDialog::enableOkButton (const QString &text) {
+    QnetNewPointDialog::lastPtIdValue = ptIdValue->text();
     p_okButton->setEnabled(!text.isEmpty());
   }
 

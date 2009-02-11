@@ -32,7 +32,10 @@ namespace Qisis {
     p_tabWidget = NULL;
     p_groundTab = NULL;
     p_imageTab = NULL;
-   
+
+    p_pressed = false;
+    p_released = true;
+    p_paint = false;
     //Set up dialog box
     createDialog(parent);
 
@@ -49,7 +52,7 @@ namespace Qisis {
 
   }
 
-  FindTool::~FindTool(){
+  FindTool::~FindTool() {
     delete p_groundTab->p_latLineEdit->validator();
     delete p_groundTab->p_lonLineEdit->validator();
     /*delete p_findPoint;
@@ -254,16 +257,19 @@ namespace Qisis {
       p_findPtButton->setEnabled(false);
       p_syncScale->setEnabled(false);
       p_status->setText("None");
+      if(p_dialog->isVisible()) {
+        p_dialog->close();
+      }
     }
     else { 
-      if (cubeViewportList()->size() > 1) {
+      /*if (cubeViewportList()->size() > 1) {
         p_linkButton->setEnabled(true);
         p_syncScale->setEnabled(true);
       }
       else {
         p_linkButton->setEnabled(false);
         p_syncScale->setEnabled(false);
-      }
+      }*/
 
       // Update Status Text Field
       if (cubeViewport()->universalGroundMap() == NULL) {
@@ -271,11 +277,14 @@ namespace Qisis {
         p_findPoint->setEnabled(false);
         p_findPtButton->setEnabled(false);
         p_syncScale->setEnabled(false);
-        if (cubeViewportList()->size() > 1) {
-          p_linkButton->setEnabled(true);
-        }
-        else {
+        //if (cubeViewportList()->size() > 1) {
+        //  p_linkButton->setEnabled(true);
+        //}
+        //else {
           p_linkButton->setEnabled(false);
+        //}
+        if(p_dialog->isVisible()) {
+          p_dialog->close();
         }
       }
       else {
@@ -311,7 +320,7 @@ namespace Qisis {
    * Slot called when the okay button is clicked
    * 
    */
-  void FindTool::okAction(){
+  void FindTool::okAction() {
 
     if (p_tabWidget->tabText(p_tabWidget->currentIndex()) == "Ground") {
       getUserGroundPoint();
@@ -354,10 +363,11 @@ namespace Qisis {
     }
 
     double lat = Isis::iString(latitude.toStdString()).ToDouble();
-    double lon = Isis::iString(p_groundTab->p_lonLineEdit->text().toStdString()).ToDouble();
+    double lon = Isis::iString(longitude.toStdString()).ToDouble();
 
-    if (d->universalGroundMap()->SetUniversalGround(lat,lon)) {
-      //p_dialog->hide();
+    if (d->universalGroundMap()->SetUniversalGround(lat,lon) &&
+        d->universalGroundMap()->Sample() > 0 && d->universalGroundMap()->Sample() <= d->cubeSamples() &&
+        d->universalGroundMap()->Line() > 0 && d->universalGroundMap()->Line() <= d->cubeLines()) {
       double sample = d->universalGroundMap()->Sample();
       double line = d->universalGroundMap()->Line();
       int x,y;
@@ -400,6 +410,7 @@ namespace Qisis {
 
    int x,y;
    d->cubeToViewport(sample,line,x,y);
+
    emit findPoint(QPoint(x,y));
   }
 
@@ -412,7 +423,7 @@ namespace Qisis {
    */
   void FindTool::findPoint (QPoint p) {
     CubeViewport *d = cubeViewport();
-   
+
     if (d == NULL) return;
 
     // Check to make sure that all the linked images have a UniversalGroundMap  
@@ -440,7 +451,7 @@ namespace Qisis {
           }
         }
         else {
-          p_dialog->hide();
+          //p_dialog->hide();
           return;
         }
       }
@@ -459,6 +470,14 @@ namespace Qisis {
 
     if  (d->universalGroundMap()->SetImage(sample,line)) {
       d->setScale(d->scale(),sample,line);
+      p_paint = true;
+
+      int x = 0;
+      int y = 0;
+      d->cubeToViewport(sample, line, x, y);
+      p_point.setX(x);
+      p_point.setY(y);
+      d->viewport()->repaint();
 
       if (d->isLinked()) {
         // Get the lat/lon and scale values from the universalGroundMap
@@ -472,7 +491,9 @@ namespace Qisis {
           if (d->isLinked()) {
 
             // Make sure the lat/lon exists in the image & set it to the center
-            if (d->universalGroundMap()->SetUniversalGround(lat,lon)) {
+          if (d->universalGroundMap()->SetUniversalGround(lat,lon) &&
+              d->universalGroundMap()->Sample() > 0 && d->universalGroundMap()->Sample() <= d->cubeSamples() &&
+              d->universalGroundMap()->Line() > 0 && d->universalGroundMap()->Line() <= d->cubeLines()) {
 
               sample = d->universalGroundMap()->Sample();
               line = d->universalGroundMap()->Line();
@@ -483,6 +504,10 @@ namespace Qisis {
                  scale = fixedScale / d->universalGroundMap()->Resolution();
               }
               d->setScale(scale,sample,line);
+              d->cubeToViewport(sample, line, x, y);
+              p_point.setX(x);
+              p_point.setY(y);
+              d->viewport()->repaint();
             }
             else {
               QApplication::beep();
@@ -490,17 +515,11 @@ namespace Qisis {
           }
         }
       }
+      p_paint = false;
     }
     else {
       QApplication::beep();
     }
-
-    int x = 0;
-    int y = 0;
-    d->cubeToViewport(sample, line, x, y);
-    p_point.setX(x);
-    p_point.setY(y);
-    d->viewport()->repaint();
   }
 
   /** 
@@ -510,16 +529,15 @@ namespace Qisis {
    * @param s 
    */
   void FindTool::mouseButtonRelease(QPoint p, Qt::MouseButton s) {
-    if (s == Qt::MidButton) {
+    /*if (s == Qt::MidButton) {
       if (cubeViewport()->universalGroundMap() == NULL) {
         QApplication::beep();
       }
       else {
         //emit findPoint(p);
-        mouseMove(p);
+        //mouseMove(p);
       }
-    }
-    p_released = true;
+    }*/
     p_pressed = false;
   }
 
@@ -530,7 +548,7 @@ namespace Qisis {
    * @param s 
    */
   void FindTool::mouseButtonPress(QPoint p, Qt::MouseButton s) {
-    p_released = false;
+    if(cubeViewport()->universalGroundMap() == NULL) return;
     p_pressed = true;
     p_point = p;
     mouseMove(p);
@@ -551,56 +569,72 @@ namespace Qisis {
    * @param p
    */
   void FindTool::mouseMove(QPoint p) {
-    CubeViewport *d;
-    double sample, line, lat=0, lon=0;
-    Isis::UniversalGroundMap *groundMap;
+    CubeViewport *d = cubeViewport();
     int x,y;
     if(p_pressed) {
-      if(!p_released) {
+        double sample, line;
         p_point = p;
+        d->viewportToCube(p_point.x(),p_point.y(),sample,line);
+        p_paint = true;
+        d->setScale(d->scale(), sample, line);
 
-        /*convert the viewport x,y to line,sample */
-        cubeViewport()->viewportToCube(p_point.x(),p_point.y(),sample,line);
-
-        /*convert the line,sample to lat,lon*/
-        if (cubeViewport()->camera() != NULL) {
-          if (cubeViewport()->camera()->SetImage(sample,line)) {
-            lat = cubeViewport()->camera()->UniversalLatitude();
-            lon = cubeViewport()->camera()->UniversalLongitude();
-          }
-        }
+        d->cubeToViewport(sample,line, x, y);
+        p_point.setX((int)x);
+        p_point.setY((int)y);
+        d->viewport()->repaint();
 
         /* now convert this lat lon to viewport coordinates for the paintViewport
            method to use.*/
+        if(d->isLinked()) {
+          /*convert the line,sample to lat,lon*/
+          double lat=0, lon=0;
+          double fixedScale = d->universalGroundMap()->Resolution() * d->scale();
 
-        for (int i=0; i < (int)cubeViewportList()->size(); i++) {
-          d = (*(cubeViewportList()))[i];
-          //if((d->isLinked()) && (d != cubeViewport())) {
-          if(d->isLinked()) {
-            groundMap = new Isis::UniversalGroundMap(*d->cube());
-            /*convert the lat,lon to line,sample of the linked cvp */
-            if(groundMap->SetUniversalGround(lat, lon)){
-              sample = groundMap->Sample();
-              line = groundMap->Line();
-
-              double scale = d->scale();
-              //This line moves the selected point of the companion image to the
-              //center of the viewport.
-              if(d != cubeViewport()) d->setScale(scale,sample,line);
-
-              /*convert the line,sample to viewport x,y*/
-              d->cubeToViewport(sample,line, x,y);
-              p_point.setX((int)x);
-              p_point.setY((int)y);
-              d->viewport()->repaint();
-              clearPoint();
+          if (d->universalGroundMap() != NULL) {
+            if (d->universalGroundMap()->SetImage(sample,line)) {
+              lat = d->universalGroundMap()->UniversalLatitude();
+              lon = d->universalGroundMap()->UniversalLongitude();
             }
-            delete groundMap;
-
           }
-        }// end for cubeViewportList
 
-      } // end if !p_released      
+          for (int i=0; i < (int)cubeViewportList()->size(); i++) {
+            d = (*(cubeViewportList()))[i];
+            if(d == cubeViewport()) continue;
+            if(d->isLinked()) { 
+              if(d->universalGroundMap() != NULL) {
+                /*convert the lat,lon to line,sample of the linked cvp */
+                if (d->universalGroundMap()->SetUniversalGround(lat,lon) &&
+                  d->universalGroundMap()->Sample() > 0 && d->universalGroundMap()->Sample() <= d->cubeSamples() &&
+                  d->universalGroundMap()->Line() > 0 && d->universalGroundMap()->Line() <= d->cubeLines()) {
+                  sample = d->universalGroundMap()->Sample();
+                  line = d->universalGroundMap()->Line();
+
+                  double scale = d->scale();
+
+                  // If sync scale is checked, recalculate the scale
+                  if (p_syncScale->isChecked()) {
+                     scale = fixedScale / d->universalGroundMap()->Resolution();
+                  }
+                  //This line moves the selected point of the companion image to the
+                  //center of the viewport.
+                  d->setScale(scale,sample,line);
+    
+                  /*convert the line,sample to viewport x,y*/
+                  d->cubeToViewport(sample,line, x,y);
+                  p_point.setX((int)x);
+                  p_point.setY((int)y);
+                  d->viewport()->repaint();
+                }
+                else {
+                  p_point.setX(0);
+                  p_point.setY(0);
+                  d->viewport()->repaint();
+                }
+              }
+            }
+          }// end for cubeViewportList 
+        }
+       p_paint = false;
     } //end if p_pressed
   }
 
@@ -611,17 +645,16 @@ namespace Qisis {
    * @param painter 
    */
   void FindTool::paintViewport(CubeViewport *vp, QPainter *painter) {
-    if(vp != cubeViewport() && p_dialog->isVisible()) return; 
-    if(!vp->isLinked() && !p_dialog->isVisible())return;
-
-    painter->setPen(p_pen);  
-
-    if((p_point.x() > 0) && (p_point.y() > 0)) {
-      painter->drawRoundRect(p_point.x(), p_point.y(), 4, 4);
-      //p_point.setX(0);
-      //p_point.setY(0);
+    if(!p_paint || vp->universalGroundMap() == NULL)return;
+    if(vp == cubeViewport() || vp->isLinked()) {
+      painter->setPen(p_pen);  
+  
+      if((p_point.x() > 0) && (p_point.y() > 0)) {
+        painter->drawRoundRect(p_point.x(), p_point.y(), 4, 4);
+        //p_point.setX(0);
+        //p_point.setY(0);
+      }
     }
-    
   }
 
 
@@ -629,10 +662,15 @@ namespace Qisis {
    * 
    * 
    */
-  void FindTool::clearPoint(){
+  void FindTool::clearPoint() {
+     p_paint = false;
      p_point.setX(0);
      p_point.setY(0);
-     cubeViewport()->viewport()->repaint();
+     CubeViewport *cvp;
+    for (int i=0; i<(int)cubeViewportList()->size(); i++) {
+      cvp = (*(cubeViewportList()))[i];
+      cvp->viewport()->repaint();
+    }
   }
 
 

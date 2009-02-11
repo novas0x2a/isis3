@@ -2,8 +2,8 @@
 #define ControlNet_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/06/18 22:18:55 $
+ * $Revision: 1.5 $
+ * $Date: 2009/01/06 15:05:31 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -49,6 +49,9 @@ namespace Isis {
    *   @history 2008-04-18 Debbie A. Cook Added Progress reports to loading and SetImages
    *            and calculates the total number of measurements in the control net
    *   @history 2008-06-18 Christopher Austin Fixed documentation errors
+   *   @history 2009-01-06 Jeannie Walldren - Fixed typo in
+   *            SetImages() exception output. Added
+   *            documentation.
    *                              
    */
   class ControlNet {

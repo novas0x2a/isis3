@@ -9,6 +9,6 @@ commands:
 	$$ISISROOT/bin/blobdump \
 	  from=$(OUTPUT)/ab102401.cub \
 	  to=$(OUTPUT)/ab102401.txt \
-	  name=\"MGS/561812335:32/MOC-WA/RED\" \
+	  name=\"footprint\" \
 	  type=Polygon > /dev/null;
 	rm $(OUTPUT)/ab102401.cub
