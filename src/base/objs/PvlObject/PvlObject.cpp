@@ -96,6 +96,18 @@ namespace Isis {
    */
   const Isis::PvlGroup &PvlObject::FindGroup(const std::string &name, 
                                            PvlObject::FindOptions opts) const {
+    ConstPvlGroupIterator ret = FindGroupSafe(name, opts);
+
+    if (ret != EndGroup())
+        return *ret;
+
+    string msg = "Unable to find group [" + name + "]";
+    if (p_filename.size() > 0) msg += " in file [" + p_filename + "]";
+    throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+  }
+
+  PvlObject::ConstPvlGroupIterator PvlObject::FindGroupSafe( const std::string &name,
+                                                             FindOptions opts) const {
     vector<const PvlObject *> searchList;
     searchList.push_back(this);
 
@@ -104,7 +116,7 @@ namespace Isis {
       searchList[0]->FindGroup(name,
                                searchList[0]->BeginGroup(),
                                searchList[0]->EndGroup());
-      if (it != searchList[0]->EndGroup()) return *it;
+      if (it != searchList[0]->EndGroup()) return it;
       if (opts == Traverse) {
         for (int i=0; i<searchList[0]->Objects(); i++) {
           searchList.push_back(&searchList[0]->Object(i));
@@ -113,9 +125,7 @@ namespace Isis {
       searchList.erase(searchList.begin());
     }
 
-    string msg = "Unable to find group [" + name + "]";
-    if (p_filename.size() > 0) msg += " in file [" + p_filename + "]";
-    throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+    return EndGroup();
   }
 
 

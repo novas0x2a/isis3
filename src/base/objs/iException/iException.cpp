@@ -39,16 +39,21 @@ namespace Isis {
    * output, and whether the exception should be reported in PVL format.
    */
   iException::iException () {
+    atexit(Shutdown);
+    PvlObject::ConstPvlGroupIterator ef = Isis::Preference::Preferences().FindGroupSafe("ErrorFacility");
+    if (ef == Isis::Preference::Preferences().EndGroup()) {
+      std::cerr << "Did not find preference file (from iException::iException())" << std::endl;
+      return;
+    }
+
     // See if we should output the file and line number  
-    Isis::PvlGroup &ef = Isis::Preference::Preferences().FindGroup("ErrorFacility");
-    Isis::iString fileline = (std::string) ef["FileLine"];
+    Isis::iString fileline = (std::string) (*ef)["FileLine"];
     p_reportFileLine = (fileline.UpCase() == "ON");
 
     // Should we report in pvl format??
     p_pvlFormat = false;
-    Isis::iString pvlForm = (std::string) ef["Format"];
+    Isis::iString pvlForm = (std::string) (*ef)["Format"];
     p_pvlFormat = (pvlForm.UpCase() == "PVL");
-    atexit(Shutdown);
   }
 
   //! Exception object pointer (Default is NULL)
@@ -71,11 +76,13 @@ namespace Isis {
       p_exception = new iException();
     }
 
-    PvlGroup &errPref = Preference::Preferences().FindGroup("ErrorFacility");
+    PvlObject::ConstPvlGroupIterator errPref = Isis::Preference::Preferences().FindGroupSafe("ErrorFacility");
     bool printTrace = false;
 
-    if (errPref.HasKeyword("StackTrace")) {
-      printTrace = (((iString)errPref["StackTrace"][0]).UpCase() == "ON");
+    if (errPref != Isis::Preference::Preferences().EndGroup()) {
+      if (errPref->HasKeyword("StackTrace")) {
+        printTrace = (((iString)(*errPref)["StackTrace"][0]).UpCase() == "ON");
+      }
     }
 
     if (printTrace && p_list.empty()) {

@@ -167,6 +167,10 @@ namespace Isis {
 
       const Isis::PvlGroup &FindGroup(const std::string &name, 
                               FindOptions opts = None) const;
+
+      ConstPvlGroupIterator FindGroupSafe(const std::string &name,
+                              FindOptions opts = None) const;
+
       /**
        * Add a group to the object.
        * @param group The PvlGroup object to add.
