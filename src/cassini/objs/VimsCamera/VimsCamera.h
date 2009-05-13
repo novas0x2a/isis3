@@ -17,6 +17,8 @@ namespace Isis{
      * @internal
      *
      * @history 2006-03-16 Tracie Sucharski Original version
+     * @history 2009-04-06 Steven Lambright Fixed problem that caused double 
+     *          deletion of sky map / ground map.
      *
      *
      */

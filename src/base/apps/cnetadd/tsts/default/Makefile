@@ -8,7 +8,7 @@ commands:
 	$(LS) $(INPUT)/*M.cub > $(OUTPUT)/add.lis;
 	$(LS) $(INPUT)/*cal.cub > $(OUTPUT)/files.lis;
 	$(APPNAME) fromlist=$(OUTPUT)/files.lis \
-        network=$(INPUT)/input.net fromlist2=$(OUTPUT)/add.lis \
+        cnet=$(INPUT)/input.net fromlist2=$(OUTPUT)/add.lis \
 	to=$(OUTPUT)/outnet.pvl log=$(OUTPUT)/outlog.pvl \
 	> /dev/null;
 	$(RM) $(OUTPUT)/add.lis;

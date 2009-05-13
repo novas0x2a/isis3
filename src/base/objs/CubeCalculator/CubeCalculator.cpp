@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/18 22:08:45 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/03/03 17:15:59 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -250,6 +250,11 @@ namespace Isis {
       // Tangent
       else if(token == "tan") {
         AddMethodCall(&Isis::Calculator::Tangent);
+      }
+  
+      // Secant
+      else if(token == "sec") {
+        AddMethodCall(&Isis::Calculator::Secant);
       }
   
       // Cosecant

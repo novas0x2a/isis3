@@ -90,6 +90,9 @@ namespace Isis {
       new VimsGroundMap(this,lab);
       new VimsSkyMap(this,lab);
 
+      ((VimsGroundMap*)GroundMap())->Init(lab);
+      ((VimsSkyMap*)SkyMap())->Init(lab);
+
       if (channel == "VIS") CreateCache(etStart,etStop,64*64);
       if (channel == "IR") CreateCache(etStart,etStop,64*64);
 

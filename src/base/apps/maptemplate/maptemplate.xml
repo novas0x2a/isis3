@@ -41,6 +41,9 @@
     <change name="Steven Lambright" date="2008-04-23">
       Added oblique cylindrical projection
     </change>
+    <change name="Steven Lambright" date="2009-02-05">
+      Fixed a problem that occurred when using "TARGOPT=USER", "RNGOPT=CALC" and not entering "EQRADIUS" or "POLRADIUS"
+    </change>
   </history>
 
   <seeAlso>

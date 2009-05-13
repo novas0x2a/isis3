@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.14 $                                                             
- * $Date: 2009/01/05 22:42:07 $                                                                 
+ * $Revision: 1.16 $                                                             
+ * $Date: 2009/03/02 15:46:59 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -77,6 +77,9 @@ namespace Isis {
  *            in order to optimize push frame cameras and prevent corruption of
  *            data when running cam2map with push frame cameras
  *   @history 2009-01-05 Steven Lambright - Added InCube method
+ *   @history 2009-03-02 Steven Lambright - This class now keeps track of the
+ *            current child band, has added error checks, and now hopefully
+ *            resets state when methods like GroundRangeResolution are called.
  */
 
   class Camera : public Isis::Sensor {
@@ -130,7 +133,7 @@ namespace Isis {
       * 
       * @param band Band Number
       */
-      virtual void SetBand (const int band) {};
+      virtual void SetBand (const int band) { p_childBand = band; };
 
      /**
       * Returns the current sample number
@@ -138,6 +141,13 @@ namespace Isis {
       * @return double Sample Number
       */
       inline double Sample() { return p_childSample; };
+
+      /**
+       * Returns the current band
+       * 
+       * @return int Band
+       */
+      inline int Band() { return p_childBand; }
 
      /**
       * Returns the current line number
@@ -343,6 +353,8 @@ namespace Isis {
       double p_maxlon180;                 //!<The maximum longitude in the 180 domain
       bool p_groundRangeComputed;         /**<Flag showing if the ground range 
                                               was computed successfully.*/
+
+      bool p_pointComputed;               //!<Flag showing if Sample/Line has been computed
                          
       int p_samples;                      //!<The number of samples in the image
       int p_lines;                        //!<The number of lines in the image
@@ -363,8 +375,9 @@ namespace Isis {
                                           has been computed successfully.*/
 
       Isis::AlphaCube *p_alphaCube;   //!<A pointer to the AlphaCube
-      double p_childSample;           //!<The number of samples in the AlphaCube
-      double p_childLine;             //!<The number of lines in the AlphaCube
+      double p_childSample;           //!<
+      double p_childLine;             //!<
+      int p_childBand;               //!<
       CameraDistortionMap *p_distortionMap;  //!<A pointer to the DistortionMap
       CameraFocalPlaneMap *p_focalPlaneMap;  //!<A pointer to the FocalPlaneMap
       CameraDetectorMap *p_detectorMap;      //!<A pointer to the DetectorMap

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2009/01/20 06:40:56 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/04/23 23:35:53 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -75,8 +75,33 @@ namespace Isis {
       //! Return the number of lines in the chip
       inline int Lines () const { return p_chipLines; };
 
-      double &operator()(int sample,int line);
-      const double &operator()(int sample,int line) const;
+      /**
+       * Loads a Chip with a value.  For example, 
+       * @code
+       * Chip c(10,5);
+       * c(1,1) = 1.1;
+       * c(10,5) = 1.2;
+       * @endcode
+       * 
+       * @param sample    Sample position to load (1-based)
+       * @param line      Line position to load (1-based)
+       */
+      inline double &operator()(int sample,int line) {
+        return p_buf[line-1][sample-1];
+      }
+
+     /** Get a value from a Chip.  For example, 
+       * @code
+       * Chip c(10,5);
+       * cout << c[3,3] << endl;
+       * @endcode
+       * 
+       * @param sample    Sample position to get (1-based)
+       * @param line      Line position to get (1-based)
+       */
+      inline const double &operator()(int sample,int line) const {
+        return p_buf[line-1][sample-1];
+      }
 
       void TackCube (const double cubeSample, const double cubeLine);
 
@@ -127,10 +152,18 @@ namespace Isis {
 
       void SetValidRange (const double minimum = Isis::ValidMinimum,
                           const double maximum = Isis::ValidMaximum);
-      bool IsValid(int sample, int line);
+      //bool IsValid(int sample, int line);
       bool IsValid(double percentage);
 
+      inline bool IsValid(int sample, int line) {
+        double value = (*this)(sample,line);
+        if (value < p_validMinimum) return false;
+        if (value > p_validMaximum) return false;
+        return true;
+      }
+
       Chip Extract (int samples, int lines, int samp, int line);
+      void Extract (int samp, int line, Chip &output);
       void Write (const std::string &filename);
 
       void SetClipPolygon (const geos::geom::MultiPolygon &clipPolygon);

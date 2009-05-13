@@ -27,6 +27,7 @@
 #include "QnetPointMeasureFilter.h"
 #include "QnetPointGoodnessFilter.h"
 #include "QnetPointImagesFilter.h"
+#include "QnetPointCubeNameFilter.h"
 #include "MainWindow.h"
 #include "CubeViewport.h"
 #include "Workspace.h"
@@ -197,6 +198,9 @@ namespace Qisis {
    *                           Fit to the filter tabs.
    *   @history  2008-12-31 Jeannie Walldren - Added keyboard 
    *                           shortcuts to tabs.
+   *   @history  2009-01-26 Jeannie Walldren - Clarified tab
+   *                           names. Added points cube name
+   *                           filter tab.
    */
   void QnetNavTool::createFilters() {
     // Set up the point filters
@@ -223,7 +227,7 @@ namespace Qisis {
     QWidget *ptImageFilter = new QnetPointImagesFilter();
     connect(ptImageFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    pointFilters->insertTab(NumberImages,ptImageFilter,"Im&ages");
+    pointFilters->insertTab(NumberImages,ptImageFilter,"&Number of Measures");
     pointFilters->setTabToolTip(NumberImages,"Filter Points by Number of Images");
     pointFilters->setTabWhatsThis(NumberImages,"<b>Function: </b> Filter points list \
                                      by the number of images that are in  \
@@ -237,7 +241,7 @@ namespace Qisis {
     QWidget *typeFilter = new QnetPointTypeFilter();
     connect(typeFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    pointFilters->insertTab(Type,typeFilter,"&Type");
+    pointFilters->insertTab(Type,typeFilter,"Point &Type");
     pointFilters->setTabToolTip(Type,"Filter Points by Type");
     pointFilters->setTabWhatsThis(Type,"<b>Function: </b> Filter points list by \
                                      the type of each control point");
@@ -252,20 +256,20 @@ namespace Qisis {
     QWidget *ptDistFilter = new QnetPointDistanceFilter();
     connect(ptDistFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    pointFilters->insertTab(Distance,ptDistFilter,"Dista&nce");
+    pointFilters->insertTab(Distance,ptDistFilter,"Dist&ance");
     pointFilters->setTabToolTip(Distance,"Filter Points by Distance");
     pointFilters->setTabWhatsThis(Distance,
                                     "<b>Function: </b> Filter points list by \
-                                     the distance from each point to the point \
-                                     closest to it.");
+                                     a user specified maximum distance from \
+                                     any other point.");
     QWidget *measureFilter = new QnetPointMeasureFilter();
     connect(measureFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    pointFilters->insertTab(MeasureType,measureFilter,"&Measure");
-    pointFilters->setTabToolTip(MeasureType,"Filter Points by Measure Type");
+    pointFilters->insertTab(MeasureType,measureFilter,"Measure T&ype(s)");
+    pointFilters->setTabToolTip(MeasureType,"Filter Points by Measure Type(s)");
     pointFilters->setTabWhatsThis(MeasureType,
                                     "<b>Function: </b> Filter points list by \
-                                     the type of measures they contain. If one \
+                                     the types of measures they contain. If one \
                                      or more measure from a point is found to \
                                      match a selected measure type, the point \
                                      will be left in the filtered list.  More \
@@ -279,6 +283,20 @@ namespace Qisis {
     pointFilters->setTabWhatsThis(GoodnessOfFit,
                                     "<b>Function: </b> Filter points list by \
                                      the goodness of fit.");
+    QWidget *cubeNamesFilter = new QnetPointCubeNameFilter();
+    connect(cubeNamesFilter,SIGNAL(filteredListModified()),
+            this,SLOT(filterList()));
+    connect(this,SIGNAL(serialListModified()),
+            cubeNamesFilter,SLOT(createCubeList()));
+
+    pointFilters->insertTab(CubeName,cubeNamesFilter,"&Cube Name(s)");
+    pointFilters->setTabToolTip(CubeName,"Filter Points by Cube Filename(s)");
+    pointFilters->setTabWhatsThis(CubeName,
+                                    "<b>Function: </b> Filter points list by \
+                                     the filenames of cubes. This filter will \
+                                     show all points contained in a single \
+                                     image or all points contained in every \
+                                     cube selected.");
     // Set up the cube filters
     QTabWidget *cubeFilters = new QTabWidget();
 
@@ -291,7 +309,7 @@ namespace Qisis {
     QWidget *cubePtsFilter = new QnetCubePointsFilter();
     connect(cubePtsFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    cubeFilters->insertTab(NumberPoints,cubePtsFilter,"&Points");
+    cubeFilters->insertTab(NumberPoints,cubePtsFilter,"&Number of Points");
     cubeFilters->setTabToolTip(NumberPoints,"Filter Images by Number of Points");
     cubeFilters->setTabWhatsThis(NumberPoints,
                                    "<b>Function: </b> Filter images list by \
@@ -305,12 +323,13 @@ namespace Qisis {
     QWidget *cubeDistFilter = new QnetCubeDistanceFilter();
     connect(cubeDistFilter,SIGNAL(filteredListModified()),
             this,SLOT(filterList()));
-    cubeFilters->insertTab(PointDistance,cubeDistFilter,"Dista&nce");
-    cubeFilters->setTabToolTip(PointDistance,"Filter Images by Distance");
+    cubeFilters->insertTab(PointDistance,cubeDistFilter,"Dist&ance");
+    cubeFilters->setTabToolTip(PointDistance,"Filter Images by Distance between Points");
     cubeFilters->setTabWhatsThis(PointDistance,
                                    "<b>Function: </b> Filter images list by \
-                                    the shortest distance between two points \
-                                    in the image.");
+                                    a user specified distance between points \
+                                    in the image. This may be calculated in \
+                                    meters or by pixel distance.");
     
     // Add widgets to the filter stack
     p_filterStack->addWidget(pointFilters);
@@ -459,7 +478,7 @@ namespace Qisis {
    * 
    */
   void QnetNavTool::filterList() {
-    // Dont do anything if there are no cubes loaded
+    // Don't do anything if there are no cubes loaded
     if (g_serialNumberList == NULL) return;
 
     // Clears the old list and puts the filtered list in its place
@@ -718,6 +737,8 @@ namespace Qisis {
    *   @history  2009-01-08 Jeannie Walldren - Removed command to 
    *                           clear filtered points and images
    *                           lists
+   *   @history  2009-01-26 Jeannie Walldren - Added filter call
+   *                           for points cube name filter.
    * 
    */
   void QnetNavTool::filter() {
@@ -779,6 +800,12 @@ namespace Qisis {
           (QnetPointGoodnessFilter*)(tab->currentWidget());
         widget->filter();
       }
+      // We have a cube name filter
+      else if (pointIndex == CubeName) {
+        QnetPointCubeNameFilter *widget = 
+          (QnetPointCubeNameFilter*)(tab->currentWidget());
+        widget->filter();
+      }
     }
 
     // We're dealing with cubes
@@ -828,5 +855,16 @@ namespace Qisis {
       p_multiDelete->setEnabled(false);
     }
   }
+
+  /**
+   * This slot is connected to the file tool in qnet.cpp. 
+   * It emits a signal that the serial list has been modified so 
+   * the points cube name filter knows to change the list box 
+   * displayed. 
+   * @see QnetPointCubeNameFilter 
+   * @internal 
+   *   @history 2009-01-26 Jeannie Walldren - Original version. 
+   */
+  void QnetNavTool::resetCubeList(){ emit serialListModified(); }
 }
 

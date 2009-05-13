@@ -104,6 +104,23 @@ int main () {
       e.Report(false);
   }
 
+  std::cout << "testing copy pairs" << std::endl;
+  s.ClearPairs();
+  s.AddPair(0.0, 0.0);
+  s.AddPair(255.0, 255.0);
+
+  std::cout << "original stretch pairs" << std::endl;
+  for (int i=0; i<s.Pairs(); i++) {
+    std::cout << s.Input(i) << ", " << s.Output(i) << std::endl;
+  }
+
+  Isis::Stretch sCopy;
+  sCopy.CopyPairs(s);
+  std::cout << "copy stretch pairs" << std::endl;
+  for (int i=0; i<s.Pairs(); i++) {
+    std::cout << sCopy.Input(i) << ", " << sCopy.Output(i) << std::endl;
+  }
+
   return 0;
 }           
 

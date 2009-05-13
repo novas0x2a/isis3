@@ -17,10 +17,14 @@ int main(int argc, char *argv[])
   Isis::PvlGroup group2("TestGroup");
   Isis::PvlKeyword keyword("TestKeyword","TestValue");
   Isis::PvlKeyword startKey("StartTime","2005 JUN 15 12:00:00.000 TDB");
+  Isis::PvlKeyword spacecraft("SpacecraftName", "IdealSpacecraft");
+  Isis::PvlKeyword instrument("InstrumentId", "IdealCamera");
   Isis::PvlKeyword endKey("EndTime","2005 DEC 15 12:00:00.000 TDB");
   group2.AddKeyword(keyword);
   group.AddKeyword(startKey);
   group.AddKeyword(endKey);
+  group.AddKeyword(spacecraft);
+  group.AddKeyword(instrument);
   obj.AddGroup(group);
   obj.AddGroup(group2);
   lab.AddObject(obj);

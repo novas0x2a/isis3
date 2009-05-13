@@ -9,10 +9,12 @@
 using namespace std;
 using namespace Isis;
 
+void PrintMap ();
 void LoadMapRange();
 
 map <string,void*> GuiHelpers(){
   map <string,void*> helper;
+  helper ["PrintMap"] = (void*) PrintMap;
   helper ["LoadMapRange"] = (void*) LoadMapRange;
   return helper;
 }
@@ -437,6 +439,20 @@ int map2map::OutputSamples () const {
 
 int map2map::OutputLines () const {
   return p_outputLines;
+}
+
+
+// Helper function to print out mapfile to session log
+void PrintMap() {
+  UserInterface &ui = Application::GetUserInterface();
+
+  // Get mapping group from map file
+  Pvl userMap;
+  userMap.Read(ui.GetFilename("MAP"));
+  PvlGroup &userGrp = userMap.FindGroup("Mapping",Pvl::Traverse);
+
+  //Write map file out to the log
+  Isis::Application::GuiLog(userGrp);
 }
 
 void LoadMapRange() {

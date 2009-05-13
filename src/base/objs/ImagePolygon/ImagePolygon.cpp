@@ -1,7 +1,7 @@
 /**                                                                       
 * @file                                                                  
-* $Revision: 1.15 $                                                             
-* $Date: 2009/01/28 16:30:07 $                                                                 
+* $Revision: 1.19 $                                                             
+* $Date: 2009/05/06 18:04:59 $                                                                 
 *                                                                        
 *   Unless noted otherwise, the portions of Isis written by the USGS are 
 *   public domain. See individual third-party library and package descriptions 
@@ -32,9 +32,11 @@
 #include "geos/geom/Polygon.h"
 #include "geos/geom/CoordinateArraySequence.h"
 #include "geos/util/IllegalArgumentException.h"
+#include "geos/util/TopologyException.h"
 #include "geos/util/GEOSException.h"
 #include "geos/io/WKTReader.h"
 #include "geos/io/WKTWriter.h"
+#include "geos/operation/distance/DistanceOp.h"
 
 using namespace std;
 
@@ -45,7 +47,6 @@ namespace Isis {
    */
   ImagePolygon::ImagePolygon () : Blob ("Footprint","Polygon") {
     p_name = "Footprint";
-    p_pole = 0;
     p_polygons = NULL;
 
   }
@@ -60,8 +61,6 @@ namespace Isis {
    * 
    * @param[in]  cube                 (Cube &)    Cube used to create polygon
    * 
-   * @param[in]  pixInc (Default=0)   (in)       The pixel increment used to 
-   *                                               calculate polygon vertices
    * @param[in]  ss    (Default=1)    (in)       Starting sample number
    * @param[in]  sl    (Default=1)    (in)       Starting Line number
    * @param[in]  ns    (Default=0)    (in)       Number of samples used to create 
@@ -77,7 +76,7 @@ namespace Isis {
    * @history 2008-12-30 Tracie Sucharski - If ground map returns pole make 
    *                        sure it is actually on the image. 
    */
-  void ImagePolygon::Create (Cube &cube,int pixInc,int ss,int sl,int ns,int nl,
+  void ImagePolygon::Create (Cube &cube,int ss,int sl,int ns,int nl,
                              int band) {
 
     p_pts = new geos::geom::CoordinateArraySequence ();
@@ -115,75 +114,23 @@ namespace Isis {
     p_cubeSamps = cube.Samples ();
     p_cubeLines = cube.Lines ();
 
-    p_iss = ss;
-    p_isl = sl;
-    p_ins = ns;
-    p_inl = nl;
-    if (p_ins == 0) p_ins = p_cubeSamps;
-    if (p_inl == 0) p_inl = p_cubeLines;
-    p_ies = p_iss + p_ins - 1;
-    if (p_ies > p_cubeSamps) p_ies = p_cubeSamps;
-    p_iel = p_isl + p_inl - 1;
-    if (p_iel > p_cubeLines) p_iel = p_cubeLines;
-
-    /*----------------------------------------------------------------------
-    /  If pixInc not entered calculate based on longest edge.  This 
-    /  might need to be refined.
-    /---------------------------------------------------------------------*/
-    if (pixInc != 0) {
-      p_pixInc = pixInc;
-    } else {
-      p_pixInc = (int)(max(p_ins,p_inl) * .03);
-    }
-    if (p_pixInc == 0) p_pixInc = 1;
-    /*-----------------------------------------------------------------------
-    /  First find out if this image contains a pole and save off that info.
-    /  2008-12-30  There have been case where we are getting a "false positive"
-    /  on the pole-the pt being returned is actually off of the image.
-    /  This check is added until it is dealt with in Isis lower level routines?
-    /----------------------------------------------------------------------*/
-    if ( (p_gMap->SetUniversalGround (90,0)) &&
-         (p_gMap->Sample() >= 1 && p_gMap->Sample() <= p_ins &&
-          p_gMap->Line() >= 1 && p_gMap->Line() <= p_inl) ) {
-      p_pole = 90.;
-    }
-    if ( (p_gMap->SetUniversalGround (-90,0)) &&
-         (p_gMap->Sample() >= 1 && p_gMap->Sample() <= p_ins &&
-          p_gMap->Line() >= 1 && p_gMap->Line() <= p_inl) ) {
-      p_pole = -90.;
-    }
     try {
-      FindPoly ();
+      WalkPoly();
     } catch (iException &e) {
-      std::string msg = "Cannot find polygon for image [" + cube.Filename();
+      std::string msg = "Cannot find polygon for image [" + cube.Filename()+"]";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
-    //  Close off polygon by adding the first point as the last point
-    p_pts->add (p_pts->getAt(0));
-
     /*------------------------------------------------------------------------
     /  If image contains 0/360 boundary, the polygon needs to be split up
-    /  into 2 polygons, one on each side of the boundary.
+    /  into multi polygons.
     /-----------------------------------------------------------------------*/
     Pvl defaultMap;
     cam->BasicMapping (defaultMap);
-    bool fixed = false;
+
     if (cam->IntersectsLongitudeDomain(defaultMap)) {
-      if (p_pole != 0) {
-        fixed = FixPolePoly();
-      } else {
-        // If this is a sub-poly, it might not intersect the lon domain
-        // save bool indicating if the pts had to be split up into multi-
-        // polygons.  If not, the pts will still need to be put into a poly.
-        fixed = Fix360Poly ();
-      }
-    }
-    /*----------------------------------------------------------------------
-    /  If this is a sub-poly and did not contain the boundary, copy polys
-    /  to vector.
-    /---------------------------------------------------------------------*/
-    if (!fixed) {
+      Fix360Poly ();
+    } else {
       vector<geos::geom::Geometry *> *polys = new vector<geos::geom::Geometry *>;
       try {
         polys->push_back (globalFactory.createPolygon 
@@ -205,251 +152,269 @@ namespace Isis {
         delete geosExc;
         throw iException::Message(iException::Programmer,msg,_FILEINFO_);
       }
-
     }
-
-
     if (p_brick != 0) delete p_brick;
   }
 
+   /**
+   * Finds the next point on the image using a left hand rule walking algorithm. To 
+   * initiate the walk pass it the same point for both currentPoint and lastPoint.
+   * 
+   * @param[in] currentPoint  (geos::geom::Coordinate *currentPoint)   This is the 
+   *       currentPoint in the path. You are looking for its successor.
+   *  
+   * @param[in] lastPoint  (geos::geom::Coordinate lastPoint)   This is the 
+   *       lastPoint in the path, it allows the algorithm to calculate direction.
+   *  
+   * @param[in] recursionDepth  (int)   This optional parameter keeps track
+   *       of how far it has walked around a point. By default it is zero.
+   *  
+   * throws Isis::iException::Programmer - Error walking the file
+   * 
+   */
+  geos::geom::Coordinate ImagePolygon::FindNextPoint(geos::geom::Coordinate *currentPoint, geos::geom::Coordinate lastPoint, int recursionDepth){
+    double x = lastPoint.x - currentPoint->x;
+    double y = lastPoint.y - currentPoint->y;
+    geos::geom::Coordinate result;
 
-  //!  Calculate the polygon vertices
-
-  void ImagePolygon::FindPoly () {
-
-    int ssamp,sline;
-    int lastSamp,lastLine;
-    int samp,line;
-    double lat,lon;
-    int sampPixInc = p_pixInc;
-    int linePixInc = p_pixInc;
-
-    /*------------------------------------------------------------------------
-    /  Top edge
-    /-----------------------------------------------------------------------*/
-
-    //  First find the first valid pixel
-    ssamp = p_iss;
-    line = 0;
-    while ( ssamp <= p_ies && !(line = FindFirstLine(ssamp,+1)) ) {
-      ssamp++;
+    // Check to see if depth is too deep (walked all the way around and found nothing)
+    if (recursionDepth > 6) {
+      return *currentPoint;
     }
-    if (line != 0) {
-      // Keep track of first pixel found, so that the last edge which is the
-      // left edge will stop at this pixel.
-      lastSamp = ssamp;
-      lastLine = line;
-      SetImage (ssamp,line);
-      lon = p_gMap->UniversalLongitude ();
-      lat = p_gMap->UniversalLatitude ();
-      p_pts->add (geos::geom::Coordinate (lon,lat));
-    } else {
-      std::string msg = "No lat/lon data found for image";
-      throw iException::Message(iException::User,msg,_FILEINFO_);
-    }
-    //  Now get the rest of the points on the top edge
-    for (samp=ssamp+sampPixInc; samp<=p_ies; samp+=sampPixInc) {
-      if ((line = FindFirstLine (samp,+1))) {
-        if (abs(line - lastLine) > p_pixInc) {
-          // reset loop samp to previous point and try new increment
-          samp = samp - sampPixInc;
-          sampPixInc = (int)((float)sampPixInc * 
-                             ((float)sampPixInc / abs(line - lastLine)));
-          //  If we can't converge, and we are not close to the right edge
-          //  delete all points before current point and
-          //  start edge from here.  The points deleted will be picked up
-          //  while processing the left edge.
-          if (sampPixInc == 0) {
-            if (samp > (p_ins/2)) break;
-            while (!p_pts->isEmpty()) p_pts->deleteAt(0);
-            // Could not converge, start at new point
-            samp = samp + p_pixInc;
-            line = FindFirstLine (samp,+1);
-            lon = p_gMap->UniversalLongitude ();
-            lat = p_gMap->UniversalLatitude ();
-            p_pts->add (geos::geom::Coordinate(lon,lat));
-            lastSamp = samp;
-            lastLine = line;
-            sampPixInc = p_pixInc;
+    // Check and walk in appropriate direction
+    if (x == 0.0 && y == 0.0) { // Find the starting point on an image
+      for(int line = -1; line <= 1; line++) {
+        for(int samp = -1; samp <= 1; samp++) {
+          double s = currentPoint->x + samp;
+          double l = currentPoint->y + line;
+          if(!SetImage (s,l) || !p_gMap->Camera()->InCube()) {
+            geos::geom::Coordinate next(s, l);
+            return FindNextPoint(currentPoint, next);
           }
-          continue;
         }
+      }
 
-        lon = p_gMap->UniversalLongitude ();
-        lat = p_gMap->UniversalLatitude ();
-        p_pts->add (geos::geom::Coordinate (lon,lat));
-        lastSamp = samp;
-        lastLine = line;
-        sampPixInc = p_pixInc;
+      std::string msg = "Unable to create image footprint. Starting point is not on the edge of the image.";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+      
+    } else if ( x == -1.0 && y == -1.0) { // current is top left
+      geos::geom::Coordinate next (currentPoint->x, currentPoint->y - 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
       } else {
-        break;
+        result = next;
       }
-    }
-    //  If top right corner is valid, include
-    if (SetImage (p_ies,p_isl)) {
-      lon = p_gMap->UniversalLongitude ();
-      lat = p_gMap->UniversalLatitude ();
-      p_pts->add (geos::geom::Coordinate (lon,lat));
-      lastSamp = p_ies;
-      lastLine = p_isl;
-    }
-
-    //  Set the starting point so we know where to end the polygon
-    p_gMap->SetUniversalGround (p_pts->getAt(0).y,p_pts->getAt(0).x);
-
-    int startPolyLine = (int)(p_gMap->Line() + .5);
-
-    /*------------------------------------------------------------------------
-    /  Right edge
-    /-----------------------------------------------------------------------*/
-    linePixInc = p_pixInc;
-
-    //  First find the first valid pixel
-    samp = 0;
-    sline = lastLine + 1;
-    while ( sline <= p_iel && !(samp = FindFirstSamp(sline,-1)) ) {
-      sline++;
-    }
-    if (samp != 0) {
-      lastSamp = samp;
-      lastLine = sline;
-      SetImage (samp,sline);
-      lon = p_gMap->UniversalLongitude ();
-      lat = p_gMap->UniversalLatitude ();
-      p_pts->add (geos::geom::Coordinate (lon,lat));
-
-      //  Now get the rest of the points on the right edge
-      for (line=sline+linePixInc; line<=p_iel; line+=linePixInc) {
-        if ((samp = FindFirstSamp (line,-1))) {
-          if (abs(samp - lastSamp) > p_pixInc) {
-            //  Reset loop line to previous point and try new increment
-            line = line - linePixInc;
-            linePixInc = (int)((float)linePixInc * 
-                               ((float)linePixInc / abs(samp - lastSamp)));
-            //  If we can't converge, abandon right edge, go to bottom edge
-            if (linePixInc == 0) break;
-            continue;
-          }
-
-          lon = p_gMap->UniversalLongitude ();
-          lat = p_gMap->UniversalLatitude ();
-          p_pts->add (geos::geom::Coordinate (lon,lat));
-          lastSamp = samp;
-          lastLine = line;
-          linePixInc = p_pixInc;
-        } else {
-          break;
-        }
+    } else if ( x == 0.0 && y == -1.0) { // current is top
+      geos::geom::Coordinate next (currentPoint->x + 1, currentPoint->y - 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
       }
-      //  If bottom corner is valid, include
-      if (SetImage (p_ies,p_iel)) {
-        lon = p_gMap->UniversalLongitude ();
-        lat = p_gMap->UniversalLatitude ();
-        p_pts->add (geos::geom::Coordinate (lon,lat));
-        lastSamp = p_ies;
-        lastLine = p_iel;
+    } else if ( x == 1.0 && y == -1.0) { // current is top right
+      geos::geom::Coordinate next (currentPoint->x + 1, currentPoint->y);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
       }
-    }
-
-
-
-    /*------------------------------------------------------------------------
-    /  Bottom edge
-    /-----------------------------------------------------------------------*/
-    sampPixInc = p_pixInc;
-
-    //  First find the first valid pixel on edge
-    ssamp = lastSamp - 1;
-    line = 0;
-    while ( ssamp >= p_iss && !(line = FindFirstLine(ssamp,-1)) ) {
-      ssamp--;
-    }
-    if (line != 0) {
-      lastSamp = ssamp;
-      lastLine = line;
-      SetImage (ssamp,line);
-      lon = p_gMap->UniversalLongitude ();
-      lat = p_gMap->UniversalLatitude ();
-      p_pts->add (geos::geom::Coordinate (lon,lat));
-
-      //  Now get the rest of the points on the top edge
-      for (samp=ssamp-sampPixInc; samp>=p_iss; samp-=sampPixInc) {
-        if ((line = FindFirstLine (samp,-1))) {
-          if (abs(line - lastLine) > p_pixInc) {
-            // reset loop samp to previous point and try new increment
-            samp = samp + sampPixInc;
-            sampPixInc = (int)((float)sampPixInc * 
-                               ((float)sampPixInc / abs(line - lastLine)));
-            //  If we can't converge, abandon bottom edge, go to left edge
-            if (sampPixInc == 0) break;
-            continue;
-          }
-
-          lon = p_gMap->UniversalLongitude ();
-          lat = p_gMap->UniversalLatitude ();
-          p_pts->add (geos::geom::Coordinate (lon,lat));
-          lastSamp = samp;
-          lastLine = line;
-          sampPixInc = p_pixInc;
-        } else {
-          break;
-        }
+    } else if ( x == 1.0 && y == 0.0) { // current is right
+      geos::geom::Coordinate next (currentPoint->x + 1, currentPoint->y + 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
       }
-      //  If left bottom corner is valid, include
-      if (SetImage (p_iss,p_iel)) {
-        lon = p_gMap->UniversalLongitude ();
-        lat = p_gMap->UniversalLatitude ();
-        p_pts->add (geos::geom::Coordinate (lon,lat));
-        lastSamp = p_iss;
-        lastLine = p_iel;
+    } else if ( x == 1.0 && y == 1.0) { // current is bottom right
+      geos::geom::Coordinate next (currentPoint->x, currentPoint->y + 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
       }
-    }
-
-    /*------------------------------------------------------------------------
-    /  Left edge
-    /-----------------------------------------------------------------------*/
-    linePixInc = p_pixInc;
-
-    //  First find the first valid pixel on edge
-    samp = 0;
-    sline = lastLine - 1;
-    while ( sline >= p_isl && !(samp = FindFirstSamp(sline,+1)) ) {
-      sline--;
-    }
-    if (samp != 0) {
-      lastSamp = samp;
-      lastLine = sline;
-      SetImage (samp,sline);
-      lon = p_gMap->UniversalLongitude ();
-      lat = p_gMap->UniversalLatitude ();
-      p_pts->add (geos::geom::Coordinate (lon,lat));
-
-      //  Now get the rest of the points on the left edge
-      for (line=sline-linePixInc; line>startPolyLine; line-=linePixInc) {
-        if ((samp = FindFirstSamp (line,+1))) {
-          if (abs(samp - lastSamp) > p_pixInc) {
-            //  Reset loop line to previous point and try new increment
-            line = line + linePixInc;
-            linePixInc = (int)((float)linePixInc * 
-                               ((float)linePixInc / abs(samp - lastSamp)));
-            //  If we can't converge, abandon right edge, go to bottom edge
-            if (linePixInc == 0) break;
-            continue;
-          }
-
-          lon = p_gMap->UniversalLongitude ();
-          lat = p_gMap->UniversalLatitude ();
-          p_pts->add (geos::geom::Coordinate (lon,lat));
-          lastSamp = samp;
-          lastLine = line;
-          linePixInc = p_pixInc;
-        } else {
-          break;
-        }
+    } else if ( x == 0.0 && y == 1.0) { // current is bottom
+      geos::geom::Coordinate next (currentPoint->x - 1, currentPoint->y + 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
       }
+    } else if ( x == -1.0 && y == 1.0) { // current is bottom left
+      geos::geom::Coordinate next (currentPoint->x - 1, currentPoint->y);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
+      }
+    } else if ( x == -1.0 && y == 0.0) { // current is left
+      geos::geom::Coordinate next (currentPoint->x - 1, currentPoint->y - 1);
+      if(!SetImage (next.x ,next.y) || !p_gMap->Camera()->InCube()){
+        result = FindNextPoint(currentPoint, next, recursionDepth+1);
+      } else {
+        result = next;
+      }
+    } else {
+      std::string msg = "Unable to create image footprint. Error walking image.";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
+    return result;
   }
 
+  /** 
+  * Finds the first point that projects in an image
+  * 
+  * @return geos::geom::Coordinate A starting point that is on the edge of the 
+  *         polygon.
+  */
+  geos::geom::Coordinate ImagePolygon::FindFirstPoint(){
+    // @todo: Brute force method, should be improved
+    for (int sample = 1; sample <= p_cubeSamps; sample++) {
+      for (int line = 1; line <= p_cubeLines; line++) {
+        if(SetImage (sample,line)) {
+          return geos::geom::Coordinate (sample, line);
+        }
+      }
+    }
+    // Check to make sure a point was found
+    std::string msg = "No lat/lon data found for image";
+    throw iException::Message(iException::User,msg,_FILEINFO_);
+  }
+
+  /**
+   * Walks the image finding its lon lat polygon and stores it to p_pts. 
+   */
+  void ImagePolygon::WalkPoly (){
+    vector<geos::geom::Coordinate> *points = new vector<geos::geom::Coordinate>;
+    double lat, lon, prevLat, prevLon;
+
+    // Find the edge of the polygon
+    geos::geom::Coordinate firstPoint = FindFirstPoint();
+    points->push_back(firstPoint);
+    //************************
+    // Start walking the edge
+    //************************
+
+    // set up for intialization
+    geos::geom::Coordinate currentPoint = firstPoint;
+    geos::geom::Coordinate lastPoint = firstPoint;
+    geos::geom::Coordinate tempPoint;
+
+    do {
+      tempPoint = FindNextPoint(&currentPoint, lastPoint);
+      // Failed to find the next point
+      if(tempPoint.equals(currentPoint)) {
+        // Init vars for first run through the loop
+        tempPoint = lastPoint;
+
+        do {
+          lastPoint = currentPoint;
+          currentPoint = tempPoint;
+          // remove last point from the list
+          if (points->size()<2) {
+            std::string msg = "Failed to find next point in the image.";
+            throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+          }
+          points->pop_back();
+
+          tempPoint = FindNextPoint(&currentPoint, lastPoint, 1);
+
+        } while(tempPoint.equals(points->at(points->size()-2)));
+      }
+
+      lastPoint = currentPoint;
+      currentPoint = tempPoint;
+      points->push_back(currentPoint);
+      
+    }while(!currentPoint.equals(firstPoint));
+
+    prevLat = 0;
+    prevLon = 0;
+    // this vector stores crossing points, where the image crosses the 
+    // meridian. It stores the first coordinate of the pair in its vector
+    vector<geos::geom::Coordinate> *crossingPoints = new vector<geos::geom::Coordinate>;
+    for(unsigned int i = 0; i<points->size(); i++) {
+      geos::geom::Coordinate *temp = &(points->at(i));
+      SetImage (temp->x, temp->y);
+      lon = p_gMap->UniversalLongitude ();
+      lat = p_gMap->UniversalLatitude ();
+      if (abs(lon - prevLon) >= 180 && i!=0 ) {
+        crossingPoints->push_back(geos::geom::Coordinate(prevLon, prevLat));
+      }
+      p_pts->add (geos::geom::Coordinate (lon,lat));
+      prevLon = lon;
+      prevLat = lat;
+    }
+    FixPolePoly(crossingPoints);
+    delete crossingPoints;
+   }
+
+  /** 
+  *  If the cube crosses the 0/360 boundary and contains a pole, Some  points are
+  *  added to allow the polygon to unwrap properly. Throws an error if both poles
+  *  are in the image. Returns if there is no pole in the image.
+  *  
+  */ 
+  void ImagePolygon::FixPolePoly (vector<geos::geom::Coordinate> *crossingPoints) {
+    // We currently do not support both poles in one image
+    if (p_gMap->SetUniversalGround (90,0) && p_gMap->SetUniversalGround (-90,0)) {
+      std::string msg = "Unable to create image footprint because image has both poles";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    } else if (!p_gMap->SetUniversalGround (90,0) && !p_gMap->SetUniversalGround (-90,0)) {
+      // Nothing to do, no pole
+      return;
+    }
+    geos::geom::Coordinate *closestPoint = &crossingPoints->at(0);
+    geos::geom::Coordinate *pole;
+
+    // Setup the right pole
+    if(p_gMap->SetUniversalGround (90,0)){
+      pole = new geos::geom::Coordinate(0,90);
+    } else {
+      pole = new geos::geom::Coordinate(0,-90);
+    }
+
+    // Find where the pole needs to be split
+    double closestDistance = 999999999;
+    for(unsigned int i = 0; i < crossingPoints->size(); i++) {
+      geos::geom::Coordinate *temp = &crossingPoints->at(i);
+      double tempDistance = Distance(temp, pole);
+      if (tempDistance < closestDistance) {
+        closestDistance = tempDistance;
+        closestPoint = temp;
+      }
+    }
+
+    if (closestDistance == 999999999) {
+      std::string msg = "Image contains a pole but did not detect a meridian crossing!";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    }
+
+    // split image at the pole
+    geos::geom::CoordinateSequence *new_points = new geos::geom::CoordinateArraySequence();
+    for(unsigned int i = 0; i < p_pts->size(); i++) {
+      geos::geom::Coordinate temp = p_pts->getAt(i);
+      new_points->add(temp);
+      if(temp.equals(*closestPoint)) {
+
+        // Setup direction
+        double fromLon, toLon;
+        if ((p_pts->getAt(i+1).x - closestPoint->x) > 0) {
+          fromLon = 0.;
+          toLon = 360.;
+        } else {
+          fromLon = 360.;
+          toLon = 0.;
+        }
+        new_points->add(geos::geom::Coordinate(fromLon, closestPoint->y));
+        new_points->add(geos::geom::Coordinate(fromLon, pole->y));
+        new_points->add(geos::geom::Coordinate(toLon, pole->y));
+        new_points->add(geos::geom::Coordinate(toLon, closestPoint->y));
+      }
+    }
+    delete p_pts;
+    p_pts = new_points;
+    delete pole;
+  }
 
   /**
    * Sets the sample/line values of the cube to get lat/lon values.  This
@@ -465,7 +430,6 @@ namespace Isis {
    */
 
   bool ImagePolygon::SetImage (const double sample,const double line) {
-
     bool found = false;
     if (!p_isProjected) {
       found = p_gMap->SetImage (sample,line);
@@ -494,203 +458,12 @@ namespace Isis {
   }
 
 
-  /**
-   * Finds the first valid image sample on given line working forward
-   * or backward depending on the value given in the direction parameter.
-   * 
-   * @param[in] line      (int)   Line to search
-   * 
-   * @param[in] direction (int)   Direction to search,
-   *                              1=search forward starting at sample 1,
-   *                              2=search in reverse starting at the last sample
-   *
-   * @return int  Returns the first valid sample found on this line.  Returns
-   *              a 0 if no valid data is found on this line.
-   */
-
-  int ImagePolygon::FindFirstSamp (int line,int direction) {
-
-    int samp;
-    if (direction == 1) {
-      samp = p_iss;
-    } else {
-      samp = p_ies;
-    }
-
-    while ((samp >= p_iss && samp <= p_ies) && !SetImage (samp,line)) {
-      samp += direction;
-    }
-
-    //  Nothing found, return 0
-    if (samp < p_iss || samp > p_ies) {
-      return 0;
-    } else {
-      return samp;
-    }
-  }
-
-  /**
-   * Finds the line in the given column with the first valid pixel.  Searches
-   * forward or backward depending on the value given in the direction parameter.
-   * 
-   * @param[in] samp      (int)   Sample column to search
-   * 
-   * @param[in] direction (int)   Direction to search,
-   *                              1=search forward starting at line 1,
-   *                              2=search in reverse starting at the last line
-   *
-   * @return int  Returns the first valid line found on this sample column.
-   */
-
-  int ImagePolygon::FindFirstLine (int samp,int direction) {
-
-    int line;
-    if (direction == 1) {
-      line = p_isl;
-    } else {
-      line = p_iel;
-    }
-
-    while ((line >= p_isl && line <= p_iel) && !SetImage (samp,line)) {
-      line += direction;
-    }
-
-    //  Nothing found, return 0
-    if (line < p_isl || line > p_iel) {
-      return 0;
-    } else {
-      return line;
-    }
-  }
-
-  /** 
-   * If the cube crosses the 0/360 boundary and contains a pole, Some  points are
-   * added to allow the polygon to unwrap properly. Throws an error if both poles 
-   * are in the image. 
-   * 
-   * Returns True if points were added.
-   */ 
-  bool ImagePolygon::FixPolePoly(){
-    // We currently do not support both poles in one image
-    if (p_gMap->SetUniversalGround (90,0) && p_gMap->SetUniversalGround (-90,0)) {
-      std::string msg = "Unable to create image footprint because image has both poles";
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
-
-    /*------------------------------------------------------------------------
-   /  When the points cross the 0/360 boundary, convert coordinates to
-   /  either negative values if going from 0 to 360, or convert to values
-   /  greater than 360 if going from 360 to 0.  This conversion is not
-   /  done if the image contains a pole.  ??? Should the pole handling
-   /  code be put into a different method ???
-   /-----------------------------------------------------------------------*/
-    bool poleAdded = false;  // only add pole 1x
-    bool convertLon = false;
-    bool newCoords = false;  //  coordinates have been adjusted
-    geos::geom::CoordinateSequence *newPts = new geos::geom::CoordinateArraySequence ();
-    double lon,lat;
-    double fromLon=0,toLon=0;
-    double prevLon = p_pts->getAt(0).x;
-    double prevLat = p_pts->getAt(0).y;
-    newPts->add (geos::geom::Coordinate (prevLon,prevLat));
-    for (unsigned int i=1; i<p_pts->getSize (); i++) {
-      lon = p_pts->getAt(i).x;
-      lat = p_pts->getAt(i).y;
-      if (abs(lon - prevLon) > 180) {
-        newCoords = true;
-        if (convertLon) {
-          convertLon = false;
-        } else {
-          if ((lon - prevLon) > 0) {
-            fromLon = 0.;
-            toLon = 360.;
-          } else if ((lon - prevLon) < 0) {
-            fromLon = 360.;
-            toLon = 0.;
-          }
-
-          if (!poleAdded) {
-            newPts->add (geos::geom::Coordinate (fromLon,prevLat));
-            newPts->add (geos::geom::Coordinate (fromLon,p_pole));
-            newPts->add (geos::geom::Coordinate (toLon,p_pole));
-            newPts->add (geos::geom::Coordinate (toLon,prevLat));
-            poleAdded = true;
-          }
-        }
-      }
-
-      prevLon = lon;
-      prevLat = lat;
-
-      /*----------------------------------------------------------------------
-      /  Meridian images-convert lon so that all are in same coordinate
-      /  sequence.
-      /---------------------------------------------------------------------*/
-      if (convertLon) {
-        if (fromLon == 360.) lon = 360. + abs(lon);
-        if (fromLon == 0.) lon = lon - 360.;
-      }
-
-      newPts->add (geos::geom::Coordinate (lon,lat));
-      /*----------------------------------------------------------------------
-      /  Meridian images-convert lon back to original value.
-      /---------------------------------------------------------------------*/
-      if (convertLon) {
-        if (fromLon == 360.) lon = lon - 360.;
-        if (fromLon == 0.) lon = lon + 360.;
-      }
-    }
-
-    /*----------------------------------------------------------------------
-    /  If this is a sub-polygon, this particular poly might not have the
-    /  boundary or pole, so just return the input poly.
-    /---------------------------------------------------------------------*/
-    if (!newCoords) {
-      delete newPts;
-      return false;
-    }
-
-    /*-----------------------------------------------------------------------
-    /  Create polygon with the new converted points.
-    /----------------------------------------------------------------------*/
-    try {
-      vector<geos::geom::Geometry *> *polys = new vector<geos::geom::Geometry *>;
-      geos::geom::CoordinateSequence *pts = new geos::geom::CoordinateArraySequence ();
-
-      polys->push_back (globalFactory.createPolygon
-                        (globalFactory.createLinearRing (newPts),NULL));
-
-      p_polygons = globalFactory.createMultiPolygon (*polys);
-
-      delete polys;
-      delete newPts;
-      delete pts;
-    } catch (geos::util::IllegalArgumentException *geosIll) {
-      std::string msg = "Unable to create image footprint (FixPolePoly) due to ";
-      msg += "geos illegal argument [" + iString(geosIll->what()) + "]";
-      delete geosIll;
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    } catch (geos::util::GEOSException *geosExc) {
-      std::string msg = "Unable to create image footprint (FixPolePoly) due to ";
-      msg += "geos exception [" + iString(geosExc->what()) + "]";
-      delete geosExc;
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
-
-    return true;
-  }
-
-  /**
+ /**
   * If the cube crosses the 0/360 boundary and does not include a pole,
   * the polygon is separated into two polygons, one on each side of the
-  * boundary.  These two polygons are put into a geos Multipolygon.  If
-  * the image includes a pole, the polygon is left as a single polygon in
-  * the geos Multipolygon.
-  * 
-  * Returns True if pts have changed,  if input is a sub-poly and doesn't
-  *  contain the boundary, there is no change.
+  * boundary.  These two polygons are put into a geos Multipolygon. 
   */
-  bool ImagePolygon::Fix360Poly () {
+  void ImagePolygon::Fix360Poly () {
     bool convertLon = false;
     bool negAdjust = false;
     bool newCoords = false;  //  coordinates have been adjusted
@@ -699,12 +472,13 @@ namespace Isis {
     double lonOffset=0;
     double prevLon = p_pts->getAt(0).x;
     double prevLat = p_pts->getAt(0).y;
+
     newPts->add (geos::geom::Coordinate (prevLon, prevLat));
     for (unsigned int i=1; i<p_pts->getSize (); i++) {
       lon = p_pts->getAt(i).x;
       lat = p_pts->getAt(i).y;
       // check to see if you just crossed the Meridian
-      if (abs(lon - prevLon) > 180) {
+      if (abs(lon - prevLon) > 180 && ( prevLat != 90 && prevLat != -90 )) {
         newCoords = true;
         // if you were already converting then stop (crossed Meridian even number of times)
         if (convertLon) {
@@ -730,173 +504,112 @@ namespace Isis {
       prevLat = lat;
     }
 
-    // Nothing was done so return false
+    // Nothing was done so return
     if (!newCoords) {
+      geos::geom::Polygon *newPoly = globalFactory.createPolygon
+                                     (globalFactory.createLinearRing(newPts),NULL);
+      p_polygons = PolygonTools::MakeMultiPolygon(newPoly);
       delete newPts;
-      return false;
+      return;
     }
+
     // bisect into seperate polygons
     try {
       geos::geom::Polygon *newPoly = globalFactory.createPolygon
                                      (globalFactory.createLinearRing(newPts),NULL);
-      vector<geos::geom::Geometry *> *polys = new vector<geos::geom::Geometry *>;
+
       geos::geom::CoordinateSequence *pts = new geos::geom::CoordinateArraySequence ();
       geos::geom::CoordinateSequence *pts2 = new geos::geom::CoordinateArraySequence ();
 
       // Depending on direction of compensation bound accordingly
+      //***************************************************
+      // LOGIC IN NEXT FOR LOOP DEPENDS ON VALUES OF pts
+      // please verify correct if you change these values
+      //***************************************************
       if (negAdjust) {
         pts->add (geos::geom::Coordinate (0.,90.));
-        pts->add (geos::geom::Coordinate (-180.,90.));
-        pts->add (geos::geom::Coordinate (-180.,-90.));
+        pts->add (geos::geom::Coordinate (-360.,90.));
+        pts->add (geos::geom::Coordinate (-360.,-90.));
         pts->add (geos::geom::Coordinate (0.,-90.));
         pts->add (geos::geom::Coordinate (0.,90.));
         pts2->add (geos::geom::Coordinate (0.,90.));
-        pts2->add (geos::geom::Coordinate (180.,90.));
-        pts2->add (geos::geom::Coordinate (180.,-90.));
+        pts2->add (geos::geom::Coordinate (360.,90.));
+        pts2->add (geos::geom::Coordinate (360.,-90.));
         pts2->add (geos::geom::Coordinate (0.,-90.));
         pts2->add (geos::geom::Coordinate (0.,90.));
       } else {
         pts->add (geos::geom::Coordinate (360.,90.));
-        pts->add (geos::geom::Coordinate (540.,90.));
-        pts->add (geos::geom::Coordinate (540.,-90.));
+        pts->add (geos::geom::Coordinate (720.,90.));
+        pts->add (geos::geom::Coordinate (720.,-90.));
         pts->add (geos::geom::Coordinate (360.,-90.));
         pts->add (geos::geom::Coordinate (360.,90.));
         pts2->add (geos::geom::Coordinate (360.,90.));
-        pts2->add (geos::geom::Coordinate (180.,90.));
-        pts2->add (geos::geom::Coordinate (180.,-90.));
+        pts2->add (geos::geom::Coordinate (0.,90.));
+        pts2->add (geos::geom::Coordinate (0.,-90.));
         pts2->add (geos::geom::Coordinate (360.,-90.));
         pts2->add (geos::geom::Coordinate (360.,90.));
       }
+
       geos::geom::Polygon *boundaryPoly = globalFactory.createPolygon
                                           (globalFactory.createLinearRing(pts),NULL);
       geos::geom::Polygon *boundaryPoly2 = globalFactory.createPolygon
                                            (globalFactory.createLinearRing(pts2),NULL);
+      /*------------------------------------------------------------------------
+      /  Intersecting the original polygon (converted coordinates) with the 
+      /  boundary polygons will create the multi polygons with the converted coordinates.
+      /  These will need to be converted back to the original coordinates.
+      /-----------------------------------------------------------------------*/
+
+      geos::geom::Geometry *intersection = PolygonTools::Intersect(newPoly,boundaryPoly);
+      geos::geom::MultiPolygon *convertPoly = PolygonTools::MakeMultiPolygon(intersection);
+      delete intersection;
+
+      intersection = PolygonTools::Intersect(newPoly,boundaryPoly2);
+      geos::geom::MultiPolygon *convertPoly2 = PolygonTools::MakeMultiPolygon(intersection);
+      delete intersection;
 
       /*------------------------------------------------------------------------
-        /  Intersecting the original polygon (converted coordinates) with the 
-        /  boundary polygon will create
-        /  the right side polygon with the converted coordinates.  These will need
-        /  to be converted back to the original coordinates.
-        /-----------------------------------------------------------------------*/
-
-      geos::geom::MultiPolygon *convertPoly = 
-      PolygonTools::MakeMultiPolygon( newPoly->intersection(boundaryPoly));
-
-      geos::geom::MultiPolygon *convertPoly2 = 
-      PolygonTools::MakeMultiPolygon( newPoly->intersection(boundaryPoly2));
-
-      /*------------------------------------------------------------------------
-      /  Get rid of any points on the other side of the boundary due to
-      /  constructed points from geos intersections.  These points are created
-      /  from intersections between line segments in the edges of the polygons.
-      /  Constructed points are not constructed exactly because of precision
-      /  problems.  So if fromLon = 0 , check for points in the positive x
-      /  for the convertPoly and check for points in the negative x
-      /  for the polygon left after subtraction.
-      /  If fromLon = 360, check for points less than 360 in x for the convertPoly
-      /  and for points greater than 360 for the polygon left after subtraction.
+      / Adjust points created in the negative space or >360 space to be back in 
+      / the 0-360 world.  This will always only need to be done on convertPoly. 
+      / Then add geometries to finalpolys.
       /-----------------------------------------------------------------------*/
       vector<geos::geom::Geometry *> *finalpolys = new vector<geos::geom::Geometry *>;
+      geos::geom::Geometry *newGeom = NULL;
+ 
       for (unsigned int i=0; i<convertPoly->getNumGeometries();i++) {
-        geos::geom::Geometry *newGeom = (convertPoly->getGeometryN(i))->clone();
-        if (newGeom->getGeometryTypeId() == geos::geom::GEOS_POLYGON) {
-          polys->push_back(newGeom);
-        } else {
-          std::string msg = "Should only contain polygons";
-          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-        }
-      }
-      for (unsigned int i=0; i<convertPoly2->getNumGeometries();i++) {
-        geos::geom::Geometry *newGeom = (convertPoly2->getGeometryN(i))->clone();
-        if (newGeom->getGeometryTypeId() == geos::geom::GEOS_POLYGON) {
-          polys->push_back(newGeom);
-        } else {
-          std::string msg = "Should only contain polygons";
-          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-        }
-      }
-      // Fix the points
-      geos::geom::CoordinateSequence *newPts = new geos::geom::CoordinateArraySequence ();
-      for (unsigned int i = 0; i< polys->size() ; i++) {
-        pts = polys->at(i)->getCoordinates();
-        newPts = new geos::geom::CoordinateArraySequence ();
-        for (unsigned int k=0; k < pts->getSize() ; k++) {
-          lon = pts->getAt(k).x;
-          // Make sure to check boundary cases to see what side it should be on
-          if (negAdjust) {
-            if (lon <= 0) {
-              if (lon != 0) {
-                lon = lon + 360;
-              } else {
-                // setup a direction to search through polygon
-                // (to see what side of the meridian this point belongs on)
-                int delta = k-(pts->getSize()/2);
-                if (delta > 0) {
-                  delta = -1;
-                } else {
-                  delta = 1;
-                }
-                unsigned int m = k;
-                // should exit while loop after a few iterations
-                while (m < pts->getSize() && m >=0) {
-                  if (pts->getAt(m).x < 0) {
-                    lon = lon + 360;
-                    break;
-                  } else if (pts->getAt(m).x > 0) {
-                    break;
-                  }
-                  // if search point == 0 keep searching
-                  m = m + delta;
-                }
-              }
-
+        newGeom = (convertPoly->getGeometryN(i))->clone();
+        pts = convertPoly->getGeometryN(i)->getCoordinates();
+        geos::geom::CoordinateSequence *newPts = new geos::geom::CoordinateArraySequence ();
+          // fix the points
+  
+          for (unsigned int k=0; k < pts->getSize() ; k++) {
+            double lon = pts->getAt(k).x;
+            double lat = pts->getAt(k).y;
+            if (negAdjust) {
+              lon = lon + 360;
+            } else {
+              lon = lon - 360;
             }
-          } else {
-            if (lon >= 360) {
-              if (lon != 360) {
-                lon = lon - 360;
-              } else {
-                // setup a direction to search through polygon
-                // (to see what side of the meridian this point belongs on)
-                int delta = k-(pts->getSize()/2);
-                if (delta > 0) {
-                  delta = -1;
-                } else {
-                  delta = 1;
-                }
-                unsigned int m = k;
-                // should exit while loop after a few iterations
-                while (m < pts->getSize() && m >=0) {
-                  if (pts->getAt(m).x < 360) {
-                    break;
-                  } else if (pts->getAt(m).x > 360) {
-                    lon = lon - 360;
-                    break;
-                  }
-                  // if search point == 360 keep searching
-                  m = m + delta;
-                }
-              }
-            }
+            newPts->add(geos::geom::Coordinate(lon,lat), k);
           }
-
-          geos::geom::Coordinate newPt;
-          newPt.x = lon;
-          newPt.y = pts->getAt(k).y;
-          newPts->add(newPt,k);
-        }
         // Add the points to polys
         finalpolys->push_back (globalFactory.createPolygon
-                               (globalFactory.createLinearRing (newPts),NULL));
+                             (globalFactory.createLinearRing (newPts),NULL));
       }
 
+      // This loop is over polygons that will always be in 0-360 space no need to convert
+      for (unsigned int i=0; i<convertPoly2->getNumGeometries();i++) {
+        newGeom = (convertPoly2->getGeometryN(i))->clone();
+        finalpolys->push_back(newGeom);
+      }
+     
       p_polygons = globalFactory.createMultiPolygon (*finalpolys);
 
       delete finalpolys;
-      delete polys;
+      delete newGeom;
+      delete newPts;
       delete pts;
       delete pts2;
-      delete newPts;
     } catch (geos::util::IllegalArgumentException *geosIll) {
       std::string msg = "Unable to create image footprint (Fix360Poly) due to ";
       msg += "geos illegal argument [" + iString(geosIll->what()) + "]";
@@ -907,11 +620,11 @@ namespace Isis {
       msg += "geos exception [" + iString(geosExc->what()) + "]";
       delete geosExc;
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
-
-    // Convert points back to what they were
-
-    return true;
+    } catch (...) {
+      std::string msg = "Unable to create image footprint (Fix360Poly) due to ";
+      msg += "unknown exception";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    } 
   }
 
   /**
@@ -953,6 +666,12 @@ namespace Isis {
   //!  Initializes for writing polygon to cube blob
   void ImagePolygon::WriteInit () {
     geos::io::WKTWriter *wkt = new geos::io::WKTWriter ();
+   
+    // Check to see p_polygons is valid data
+    if(!p_polygons) {
+      string msg = "Cannot write a NULL polygon!";
+      throw Isis::iException::Message(iException::Programmer,msg,_FILEINFO_);
+    }
     p_polyStr = wkt->write(p_polygons);
     p_nbytes = p_polyStr.size();
 
@@ -969,6 +688,13 @@ namespace Isis {
 
   void ImagePolygon::WriteData (std::fstream &os) {
     os.write (p_polyStr.c_str(),p_nbytes);
+  }
+
+  /**
+   * Calculates the distance squared between two coordinates.
+   */
+  double ImagePolygon::Distance(geos::geom::Coordinate *p1, geos::geom::Coordinate *p2){
+    return ((p2->x - p1->x)*(p2->x - p1->x)) + ((p2->y - p1->y)*(p2->y - p1->y));
   }
 
 } // end namespace isis

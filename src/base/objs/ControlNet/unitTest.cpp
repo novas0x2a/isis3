@@ -82,6 +82,8 @@ int main () {
   cn1.SetTarget("Mars");
   cn1.SetNetworkId("Test");
   cn1.SetUserName("jdoe");
+  cn1.SetCreatedDate( "2009-02-05T14:20:15" );
+  cn1.SetModifiedDate( "2009-02-05T14:20:55" );
   cn1.SetDescription("UnitTest of ControlNetwork");
   cn1.Add(cp1);
   cn1.Add(cp2); 

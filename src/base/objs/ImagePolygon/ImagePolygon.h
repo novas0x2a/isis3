@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/01/28 16:30:07 $
+ * $Revision: 1.16 $
+ * $Date: 2009/05/06 18:04:59 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -24,6 +24,7 @@
 
 #include <string>
 #include <sstream>
+#include <vector>
 
 #include "iException.h"
 #include "Cube.h"
@@ -32,6 +33,7 @@
 #include "Projection.h"
 #include "UniversalGroundMap.h"
 #include "Blob.h"
+#include "geos/geom/Coordinate.h"
 #include "geos/geom/MultiPolygon.h"
 #include "geos/geom/CoordinateSequence.h"
 
@@ -97,6 +99,14 @@ namespace Isis {
  *  @history 2009-01-06 Steven Koechle - Changed Constructor, removed backwards
  *           compatibility for footprint name.
  *  @history 2009-01-28 Steven Lambright - Fixed memory leaks
+ *  @history 2009-02-20 Steven Koechle - Fixed Fix360Poly to use the
+ *           PolygonTools Intersect method.
+ *  @history 2009-04-17 Steven Koechle - Rewrote most of the class. Implemented
+ *           a left-hand rule AI walking algotithm in the walkpoly method. Pole
+ *           and 360 boundary logic was more integrated and simplified. Method
+ *           of finding the first point was seperated into its own method.
+ *  @history 2009-05-06 Steven Koechle - Fixed Error where a NULL polygon was
+ *           being written.
  */
 
   class ImagePolygon : public Isis::Blob {
@@ -105,7 +115,7 @@ namespace Isis {
       ImagePolygon ();
       ~ImagePolygon ();
 
-      void Create (Cube &cube,int pixInc=0,int ss=1,int sl=1,int ns=0,int nl=0,
+      void Create (Cube &cube,int ss=1,int sl=1,int ns=0,int nl=0,
                    int band=1);
 
       //!  Return a geos Multipolygon
@@ -124,41 +134,31 @@ namespace Isis {
     //Polygon manipulation should be done in the PolygonTools class.
       bool SetImage (const double sample, const double line);
 
-      void FindPoly ();
-      int FindFirstSamp (int line,int direction);
-      int FindFirstLine (int samp,int direction);
+      geos::geom::Coordinate FindFirstPoint ();
+      void WalkPoly ();
+      geos::geom::Coordinate FindNextPoint(geos::geom::Coordinate *currentPoint, geos::geom::Coordinate lastPoint, int recursionDepth=0);
+      
+      double Distance(geos::geom::Coordinate *p1, geos::geom::Coordinate *p2);
 
-      bool Fix360Poly ();
-      bool FixPolePoly();
+      void Fix360Poly ();
+      void FixPolePoly(std::vector<geos::geom::Coordinate> *crossingPoints);
 
       Cube *p_cube;
       bool p_isProjected;
-      int p_band;
 
       Brick *p_brick;
 
       geos::geom::CoordinateSequence *p_pts;
 
       geos::geom::MultiPolygon *p_polygons;
-      int p_pixInc;
 
-      std::string p_uniqueImageId;
       std::string p_name;
       std::string p_polyStr;
-      std::stringstream p_ss;
 
       UniversalGroundMap *p_gMap;
-      int p_iss;
-      int p_isl;
-      int p_ies;
-      int p_iel;
-      int p_ins;
-      int p_inl;
 
       int p_cubeSamps;
       int p_cubeLines;
-      double p_pole;
-
 
   };
 };

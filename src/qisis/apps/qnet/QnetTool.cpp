@@ -327,6 +327,15 @@ namespace Qisis {
     viewTemplate->setWhatsThis(whatsThis);
     connect (viewTemplate,SIGNAL(activated()),this,SLOT(viewTemplateFile()));
 
+    QAction *saveChips = new QAction(p_qnetTool);
+//    saveChips->setCheckable(true);
+    saveChips->setText("Save registration chips");
+    whatsThis = 
+      "<b>Function:</b> Save registration chips to file.  \
+       Each chip: pattern, search, fit will be saved to a separate file.";
+    saveChips->setWhatsThis(whatsThis);
+    connect (saveChips,SIGNAL(activated()),this,SLOT(saveChips()));
+
 //     QAction *interestOp = new QAction(p_pointEditor);
 //     interestOp->setText("Choose interest operator");
 //     connect (interestOp,SIGNAL(activated()),this,SLOT(setInterestOp()));
@@ -336,6 +345,7 @@ namespace Qisis {
 
     regMenu->addAction(templateFile);
     regMenu->addAction(viewTemplate);
+    regMenu->addAction(saveChips);
     //    registrationMenu->addAction(interestOp);
 
   }
@@ -632,8 +642,13 @@ namespace Qisis {
    *   @history 2008-12-03  Tracie Sucharski - Add error message and cancel
    *                              create new point if the point falls on a
    *                              single image.
-   *   @history 2008-15-2008  Jeannie Walldren - Throw and catch
-   *            error before creating QMessageBox 
+   *   @history 2008-12-15  Jeannie Walldren - Throw and catch
+   *                              error before creating
+   *                              QMessageBox
+   *   @history 2009-03-09  Jeannie Walldren - Clear error message
+   *                              stack after it is displayed to
+   *                              user in message box.
+   *   @history 2009-04-20  Tracie Sucharski - Set camera for each measure. 
    */
   void QnetTool::createPoint(double lat,double lon) {
 
@@ -672,6 +687,7 @@ namespace Qisis {
       catch (Isis::iException &e){
         QString message = e.Errors().c_str();
         QMessageBox::warning((QWidget *)parent(),"Warning",message);
+        e.Clear();
         return;
       }
     }
@@ -709,6 +725,7 @@ namespace Qisis {
         m->SetType(Isis::ControlMeasure::Estimated);
         m->SetDateTime();
         m->SetChooserName();
+        m->SetCamera(cam);
         newPoint->Add(*m);
       }
       //  Add new control point to control network
@@ -903,7 +920,7 @@ namespace Qisis {
     p_leftCube->Open(file);
 
     //  Update left measure of pointEditor
-    p_pointEditor->setLeftMeasure (p_leftMeasure,p_leftCube);
+    p_pointEditor->setLeftMeasure (p_leftMeasure,p_leftCube,p_controlPoint->Id());
     updateLeftMeasureInfo ();
 
   }
@@ -925,7 +942,7 @@ namespace Qisis {
     p_rightCube->Open(file);
 
     //  Update left measure of pointEditor
-    p_pointEditor->setRightMeasure (p_rightMeasure,p_rightCube);
+    p_pointEditor->setRightMeasure (p_rightMeasure,p_rightCube,p_controlPoint->Id());
     updateRightMeasureInfo ();
 
   }
@@ -1192,6 +1209,18 @@ namespace Qisis {
       QMessageBox::warning((QWidget *)parent(),"Error",message);
     }
   }
+
+
+
+  /**
+   * Slot which calls ControlPointEditor slot to save chips
+   * @author 2009-03-17 Tracie Sucharski
+   */
+
+  void QnetTool::saveChips() {
+    p_pointEditor->saveChips();
+  }
+
 
 
 

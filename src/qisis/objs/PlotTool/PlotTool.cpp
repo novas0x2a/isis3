@@ -1,6 +1,7 @@
 #include "PlotTool.h"
 #include "PlotWindow.h"
 #include "PolygonTools.h"
+#include "Statistics.h"
 
 namespace Qisis {
 
@@ -12,7 +13,8 @@ namespace Qisis {
    * @param parent 
    */
   PlotTool::PlotTool (QWidget *parent) : Qisis::Tool(parent) {
-    p_rubberBand = NULL;
+    p_spectralRubberBand = NULL;
+    p_spacialRubberBand = NULL;
     RubberBandTool::allowPoints(1);
     p_parent = parent;
     createWindow();   
@@ -45,15 +47,28 @@ namespace Qisis {
    *   rectangle or line, depending on the current plot type.
    */
   void PlotTool::enableRubberBandTool() {
-    if(p_rubberBand) {
-      p_rubberBand->reset();
-      if (!p_currentPlotType == SpectralPlot) {
-        RubberBandTool::enable(RubberBandTool::Line);
-        p_rubberBand->setEnabled(false);
+    if(p_spectralRubberBand) {
+      if (p_currentPlotType == SpatialPlot) {
+        p_spacialRubberBand->reset();
+
+        p_spacialRubberBand->setVisible(true);
+        p_spacialRubberBand->setEnabled(true);
+
+        p_spectralRubberBand->setEnabled(false);
+        p_spectralRubberBand->setVisible(false);
+
         plotType->setEnabled(false);
-      } else {
+      } 
+      else {
+        p_spectralRubberBand->reset();
+
+        p_spectralRubberBand->setEnabled(true);
+        p_spectralRubberBand->setVisible(true);
+
+        p_spacialRubberBand->setVisible(false);
+        p_spacialRubberBand->setEnabled(false);
+
         plotType->setEnabled(true);
-        p_rubberBand->setEnabled(true);
       }
     }
   }
@@ -208,11 +223,19 @@ namespace Qisis {
   QWidget *PlotTool::createToolBarWidget (QStackedWidget *parent) {
     QWidget *hbox = new QWidget(parent);
 
-    p_rubberBand = new RubberBandComboBox(
+    p_spectralRubberBand = new RubberBandComboBox(
       RubberBandComboBox::Polygon |
       RubberBandComboBox::Rectangle,
       RubberBandComboBox::Rectangle
     );
+
+    p_spacialRubberBand = new RubberBandComboBox(
+      RubberBandComboBox::Line |
+      RubberBandComboBox::RotatedRectangle,
+      RubberBandComboBox::Line,
+      true
+    );
+
     
     QToolButton *newWindowButton = new QToolButton();
     newWindowButton->setText("New");
@@ -244,7 +267,8 @@ namespace Qisis {
 
     QHBoxLayout *layout = new QHBoxLayout(hbox);
     layout->setMargin(0);
-    layout->addWidget(p_rubberBand);
+    layout->addWidget(p_spectralRubberBand);
+    layout->addWidget(p_spacialRubberBand);
     layout->addWidget(p_plotTypeCombo);
     layout->addWidget(plotType);
     layout->addWidget(newWindowButton);
@@ -871,10 +895,10 @@ namespace Qisis {
     p_dnCurve->setViewPort(cvp);
     p_dnCurve->setVertices(vertices); 
 
-    ss = ss + 1;
-    sl = sl + 1;
-    es = es + 1;
-    el = el + 1;
+    ss = ss + 0.5;
+    sl = sl + 0.5;
+    es = es + 0.5;
+    el = el + 0.5;
 
     Isis::Interpolator interp;
 
@@ -888,29 +912,73 @@ namespace Qisis {
       interp.SetType(Isis::Interpolator::NearestNeighborType);
     }
 
-    Isis::Portal dataReader(interp.Samples(),interp.Lines(),cvp->cube()->PixelType());
+    Isis::Portal dataReader(interp.Samples(), interp.Lines(), cvp->cube()->PixelType());
 
     int lineLength = (int)(sqrt(pow(ss-es,2)+pow(sl-el,2)) + 0.5); //round to the nearest pixel increment
     int band = ((cvp->isGray())? cvp->grayBand() : cvp->redBand());
     p_plotToolWindow->setAxisLabel(QwtPlot::xBottom, "Data Point");
     xmax = lineLength;
 
-    for (int index = 0; index < lineLength; index++) {
-      double x = (index / (double)lineLength) * (es - ss) + ss; // % across * delta x + initial = x position of point
-      x -= (interp.Samples() / 2.0); // move back for interpolation
-      double y = (index / (double)lineLength) * (el - sl) + sl;
-      y -= (interp.Lines() / 2.0); // move back for interpolation
-
-      dataReader.SetPosition(x,y,band);
-      cvp->cube()->Read(dataReader);
-      double result = interp.Interpolate(x,y,dataReader.DoubleBuffer());
-
-      if (!Isis::IsSpecial(result)) {
-        labels.push_back(index+1);
-        data.push_back(result);
+    if(RubberBandTool::getMode() == RubberBandTool::Line) {
+      for (int index = 0; index < lineLength; index++) {
+        double x = (index / (double)lineLength) * (es - ss) + ss; // % across * delta x + initial = x position of point
+        x -= (interp.Samples() / 2.0); // move back for interpolation
+        double y = (index / (double)lineLength) * (el - sl) + sl;
+        y -= (interp.Lines() / 2.0); // move back for interpolation
+  
+        dataReader.SetPosition(x,y,band);
+        cvp->cube()->Read(dataReader);
+        double result = interp.Interpolate(x,y,dataReader.DoubleBuffer());
+  
+        if (!Isis::IsSpecial(result)) {
+          labels.push_back(index+1);
+          data.push_back(result);
+        }
       }
     }
+    // If its not a line, it must be a rotated rect...
+    else {
+      double es2, el2;
 
+      // Convert them to line sample values
+      cvp->viewportToCube(vertices[3].x(),vertices[3].y(),es2,el2);
+
+      es2 = es2 + 0.5;
+      el2 = el2 + 0.5;
+
+      // these are for walking across the rotated rect
+      int numStepsAcross = (int)(sqrt(pow(ss-es2,2)+pow(sl-el2,2)) + 0.5); //round to the nearest pixel increment;
+      double deltaX = (1.0 / (double)numStepsAcross) * (es2 - ss);
+      double deltaY = (1.0 / (double)numStepsAcross) * (el2 - sl);
+
+      // walk the "green" line on the screen
+      for (int index = 0; index < lineLength; index++) {
+        Isis::Statistics lineStats;
+        double x = (index / (double)lineLength) * (es - ss) + ss; // % across * delta x + initial = x position of point
+        x -= (interp.Samples() / 2.0); // move back for interpolation
+        double y = (index / (double)lineLength) * (el - sl) + sl;
+        y -= (interp.Lines() / 2.0); // move back for interpolation
+
+        // x/y are now the centered on the appropriate place of the green line, i.e. the start of our walk across the rectangle
+        for(int walkIndex = 0; walkIndex < numStepsAcross; walkIndex++) {
+          dataReader.SetPosition(x,y,band);
+          cvp->cube()->Read(dataReader);
+          double result = interp.Interpolate(x,y,dataReader.DoubleBuffer());
+    
+          if (!Isis::IsSpecial(result)) {
+            lineStats.AddData(result);
+          }
+
+          x += deltaX;
+          y += deltaY;
+        }
+
+        if(!Isis::IsSpecial(lineStats.Average())) {
+          labels.push_back(index+1);
+          data.push_back(lineStats.Average());
+        }
+      }
+    }
   }
 
 

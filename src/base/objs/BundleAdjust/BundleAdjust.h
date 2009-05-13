@@ -2,8 +2,8 @@
 #define BundleAdjust_h
 /**
  * @file
- * $Revision: 1.17 $
- * $Date: 2008/11/27 02:05:39 $
+ * $Revision: 1.18 $
+ * $Date: 2009/03/07 17:31:56 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -46,6 +46,13 @@
  *   @history 2008-11-22 Debbie A. Cook Added code to wrap longitude to keep it in [0.,360.]
  *   @history 2008-11-22 Debbie A. Cook Added new call to get timeScale and set for the observation along with basetime
  *   @history 2008-11-26 Debbie A. Cook Added check to ApplyHeldList for Ignored points and measures
+ *   @history 2009-01-08 Debbie A. Cook Revised AddPartials and PointPartial to avoid using the camera methods
+ *                          to map a body-fixed vector to the camera because they compute a new time for line
+ *                          scan cameras based on the lat/lon/radius and the new time is used to retrieve Spice.
+ *                          The updated software uses the Spice at the time of the measurement.
+ *   @history 2009-02-15 Debbie A. Cook Corrected focal length to include its sign and removed obsolete calls to X/Y
+ *                          direction methods.  Also modified PointPartial to use lat/lon/radius from the point 
+ *                          instead of the camera.
  */
 
 #include "ControlNet.h"
@@ -167,7 +174,7 @@ namespace Isis {
         WRT_Radius
       };
 
-      std::vector<double> PointPartial(Isis::Camera *cam, PartialDerivative wrt);
+      std::vector<double> PointPartial(Isis::ControlPoint &point, PartialDerivative wrt);
 
       int p_heldPoints;
       int p_groundPoints;

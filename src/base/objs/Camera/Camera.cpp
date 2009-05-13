@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.16 $
- * $Date: 2009/01/05 22:42:07 $
+ * $Revision: 1.17 $
+ * $Date: 2009/03/02 15:45:03 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -67,6 +67,7 @@ namespace Isis {
     p_focalLength = 0.0;
     p_pixelPitch = 1.0;
     p_referenceBand = 0;
+    p_childBand = 1;
 
     p_distortionMap = NULL;
     p_focalPlaneMap = NULL;
@@ -82,6 +83,7 @@ namespace Isis {
 
     p_groundRangeComputed = false;
     p_raDecRangeComputed = false;
+    p_pointComputed = false;
   }
 
   //! Destroys the Camera Object
@@ -133,11 +135,12 @@ namespace Isis {
   *              was not
   */
   bool Camera::SetImage (const double sample, const double line) {
+    p_childSample = sample;
+    p_childLine = line;
+    p_pointComputed = true;
+
     // Case of no map projection
     if (p_projection == NULL || p_ignoreProjection) {
-      // Given cube/child coordinate of the cube
-      p_childSample = sample;
-      p_childLine = line;
       // Convert to parent coordinate (remove crop, pad, shrink, enlarge)
       double parentSample = p_alphaCube->AlphaSample(sample);
       double parentLine = p_alphaCube->AlphaLine(line);
@@ -163,8 +166,6 @@ namespace Isis {
 
     // The projection is a sky map
     else if (p_projection->IsSky()) {
-      p_childSample = sample;
-      p_childLine = line;
       if (p_projection->SetWorld(sample,line)) {
         if (SetRightAscensionDeclination(p_projection->Longitude(),
                                          p_projection->UniversalLatitude())) {
@@ -178,8 +179,6 @@ namespace Isis {
 
     // We have map projected camera model
     else {
-      p_childSample = sample;
-      p_childLine = line;
       if (p_projection->SetWorld(sample,line)) {
         if (SetUniversalGround(p_projection->UniversalLatitude(),
                                p_projection->UniversalLongitude())) {
@@ -240,6 +239,8 @@ namespace Isis {
          if (p_detectorMap->SetDetector(detectorSample,detectorLine)) {
            double parentSample = p_detectorMap->ParentSample();
            double parentLine = p_detectorMap->ParentLine();
+           p_pointComputed = true;
+
            if (p_projection == NULL || p_ignoreProjection) {
              p_childSample = p_alphaCube->BetaSample(parentSample);
              p_childLine = p_alphaCube->BetaLine(parentLine);
@@ -373,6 +374,11 @@ namespace Isis {
     // Have we already done this
     if (p_groundRangeComputed) return;
     p_groundRangeComputed = true;
+
+    bool computed = p_pointComputed;
+    double originalSample = Sample();
+    double originalLine = Line();
+    int originalBand = Band();
 
     // Initializations
     p_minlat    = DBL_MAX;
@@ -514,6 +520,16 @@ namespace Isis {
         }
       }
     }
+
+    SetBand(originalBand);
+
+    if(computed) {
+      SetImage(originalSample, originalLine);
+    }
+    else {
+      p_pointComputed = false;
+    }
+
     // Checks for invalide lat/lon ranges
     if ( p_minlon == DBL_MAX  ||  p_minlat == DBL_MAX  ||  p_maxlon == -DBL_MAX  ||  p_maxlat == -DBL_MAX ) {
       string message = "Camera missed planet or SPICE data off.";
@@ -698,6 +714,8 @@ namespace Isis {
           if (p_detectorMap->SetDetector(detectorSamp,detectorLine)) {
             double parentSample = p_detectorMap->ParentSample();
             double parentLine = p_detectorMap->ParentLine();
+            p_pointComputed = true;
+
             if (p_projection == NULL || p_ignoreProjection) {
               p_childSample = p_alphaCube->BetaSample(parentSample);
               p_childLine = p_alphaCube->BetaLine(parentLine);
@@ -742,6 +760,17 @@ namespace Isis {
   */
   bool Camera::RaDecRange (double &minra, double &maxra,
                            double &mindec, double &maxdec) {
+    if(p_projection != NULL && !p_projection->IsSky()) {
+      iString msg = "Camera::RaDecRange can not calculate a right ascension, declination range";
+      msg += " for projected images which are not projected to sky";
+      throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+    }
+
+    bool computed = p_pointComputed;
+    double originalSample = Sample();
+    double originalLine = Line();
+    int originalBand = Band();
+
     // Have we already done this
     if (!p_raDecRangeComputed) {
       p_raDecRangeComputed = true;
@@ -857,6 +886,15 @@ namespace Isis {
     mindec = p_mindec;
     maxdec = p_maxdec;
 
+    SetBand(originalBand);
+
+    if(computed) {
+      SetImage(originalSample, originalLine);
+    }
+    else {
+      p_pointComputed = false;
+    }
+
     return true;
   }
 
@@ -868,6 +906,17 @@ namespace Isis {
    * @return double The resutant RaDec resolution
    */
   double Camera::RaDecResolution () {
+    if(p_projection != NULL && !p_projection->IsSky()) {
+      iString msg = "Camera::RaDecResolution can not calculate a right ascension, declination resolution";
+      msg += " for projected images which are not projected to sky";
+      throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+    }
+
+    bool computed = p_pointComputed;
+    double originalSample = Sample();
+    double originalLine = Line();
+    int originalBand = Band();
+
     SetImage(1.0,1.0);
     double ra1 = RightAscension();
     double dec1 = Declination();
@@ -887,6 +936,15 @@ namespace Isis {
     dist = (ra1 - ra2) * (ra1 - ra2) + (dec1 - dec2) * (dec1 - dec2);
     dist = sqrt(dist);
     double sampRes = dist / (p_samples - 1);
+
+    SetBand(originalBand);
+
+    if(computed) {
+      SetImage(originalSample, originalLine);
+    }
+    else {
+      p_pointComputed = false;
+    }
 
     return (sampRes < lineRes) ? sampRes : lineRes;
   }
@@ -943,6 +1001,10 @@ namespace Isis {
   double Camera::ComputeAzimuth(const double radius,
                                 const double lat, const double lon) {
     if (!HasSurfaceIntersection()) return -1.0;
+
+    bool computed = p_pointComputed;
+    double originalSample = Sample();
+    double originalLine = Line();
 
     NaifStatus::CheckErrors();
 
@@ -1003,6 +1065,13 @@ namespace Isis {
     if (azimuth > 360.0) azimuth -= 360.0;
 
     NaifStatus::CheckErrors();
+
+    if(computed) {
+      SetImage(originalSample, originalLine);
+    }
+    else {
+      p_pointComputed = false;
+    }
 
     return azimuth;
   }

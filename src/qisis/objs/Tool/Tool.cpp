@@ -14,7 +14,7 @@ namespace Qisis {
    */
   Tool::Tool (QWidget *parent) : QObject(parent) {      
     p_cvp = NULL;
-    p_cvpList = NULL;
+    p_workspace = NULL;
     p_active = false;
     p_toolPadAction = NULL;
     p_toolBarWidget = NULL;
@@ -29,7 +29,8 @@ namespace Qisis {
    * @param ws
    */
   void Tool::addTo (Qisis::Workspace *ws) {
-    setCubeViewportList(ws->cubeViewportList());
+    p_workspace = ws;
+
     connect (ws,SIGNAL(cubeViewportAdded(Qisis::CubeViewport *)),
              this,SLOT(setCubeViewport(Qisis::CubeViewport *)));
     connect (ws,SIGNAL(cubeViewportActivated(Qisis::CubeViewport *)),
@@ -37,7 +38,6 @@ namespace Qisis {
     connect (ws,SIGNAL(cubeViewportAdded(Qisis::CubeViewport *)),
              this,SLOT(registerTool(Qisis::CubeViewport *)));
   }
-
 
   /** 
    * Adds the tool to the application
@@ -150,9 +150,6 @@ namespace Qisis {
     connect(p_cvp,SIGNAL(scaleChanged()),
             this,SLOT(scaleChanged()));
 
-    connect(p_cvp,SIGNAL(scaleChanged()),
-            this,SLOT(scaleChanged()));
-
     connect(RubberBandTool::getInstance(),SIGNAL(measureChange()),
             this,SLOT(updateMeasure()));
 
@@ -192,7 +189,7 @@ namespace Qisis {
    */
   void Tool::removeViewportConnections() {
     if (p_cvp == NULL) return;
-    
+
     disconnect(p_cvp,SIGNAL(scaleChanged()),
                this,SLOT(scaleChanged()));
 
@@ -280,3 +277,6 @@ namespace Qisis {
     RubberBandTool::disable();
   }
 }
+
+
+

@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.15 $                                                             
- * $Date: 2008/11/18 18:30:35 $
+ * $Revision: 1.17 $                                                             
+ * $Date: 2009/04/07 16:19:40 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -100,6 +100,7 @@ namespace Qisis {
       QToolBar *p_toolBar;//!< Tool bar on the plot window
       std::string p_header;//!< Header name
       std::string p_axisTitle;//!< Header name and axis title
+      Qisis::MainWindow  *p_mainWindow;
          
     protected slots:
       void cancelConfig();
@@ -173,7 +174,6 @@ namespace Qisis {
       QWidget       *p_parent;//!< Parent widget
       QDialog       *configDialog;//!<Dialog box to configure the entire plot window and curves.
       QPen          *p_pen;//!<Plot window's pen.
-      Qisis::MainWindow  *p_mainWindow;//!< The main window
       QwtPlotZoomer *p_zoomer;//!< Plot Zoomer
       QwtLegend     *p_legend;//!< Plot legend
       QwtPlotGrid   *p_grid;//!< Plot grid lines
@@ -192,7 +192,6 @@ namespace Qisis {
       QComboBox     *p_styleBox;//!< Line style combo box for the config dialog.
       QComboBox     *p_sizeBox;//!< Line size combo box for the config dialog.
       QComboBox     *p_symbolBox;//!< Symbol style combo box for the config dialog.
-      QComboBox     *p_plotTypeCombo;//!< Plot type combo box for the config dialog.
       QComboBox     *p_titleBox;//!< Curve selection combo box for the config dialog.
       QCheckBox     *p_xLogCheckBox;
       QCheckBox     *p_yLogCheckBox;

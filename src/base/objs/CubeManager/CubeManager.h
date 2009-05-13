@@ -3,6 +3,7 @@
 
 #include <QString>
 #include <QMap>
+#include <QQueue>
 
 /*
  *   Unless noted otherwise, the portions of Isis written by the
@@ -31,20 +32,25 @@ namespace Isis {
    * This class holds cubes in static memory for reading.
    * This is helpful to prevent reading of the same cube many times. Files will remain
    * opened for reading, this is not for use with a cube that will ever be written
-   * to. The pointers returned from this class are DANGEROUS, because they may be 
-   * deleted at any time, and other objects may be manipulating them. Use this 
-   * class sparingly. 
+   * to. You can either use the static methods of the class, in which case cubes 
+   * will be cleaned up after IsisMain(...) is done executing, or you can 
+   * instantiate the class for more control. 
    * 
    * @author 2008-05-20 Steven Lambright 
    *  
    * @internal 
-   *   @author 2008-06-19 Steven Lambright Added CleanUp methods
+   *   @author 2008-06-19 Steven Lambright - Added CleanUp methods
    *   @history 2008-08-19 Steven Koechle - Removed Geos includes
+   *   @author 2009-02-12 Steven Lambright - Made the class available as an
+   *           instance and not just statically. Added optional cube open limits.
    */
   class CubeManager  {
     public:
+      CubeManager();
+      ~CubeManager();
+
       /**
-       * This method calls the private method OpenCube() 
+       * This method calls the method OpenCube() on the static instance
        *  
        * @see OpenCube 
        * 
@@ -55,7 +61,8 @@ namespace Isis {
       static Cube *Open(const std::string &cubeFilename) { return p_instance.OpenCube(cubeFilename); }
 
       /**
-       * This method calls CleanCubes(const std::string &cubeFilename) 
+       * This method calls CleanCubes(const std::string &cubeFilename)  on the static 
+       * instance 
        *  
        * @see CleanCubes(const std::string &cubeFilename)
        * 
@@ -64,27 +71,37 @@ namespace Isis {
       static void CleanUp(const std::string &cubeFilename) { p_instance.CleanCubes(cubeFilename); }
 
       /**
-       * This method calls CleanCubes()
+       * This method calls CleanCubes() on the static instance
        *  
        * @see CleanCubes 
        */
       static void CleanUp() { p_instance.CleanCubes(); };
 
-    protected:
-      //! This is the constructor... nothing needs done
-      CubeManager() {};
-      ~CubeManager();
-
       void CleanCubes(const std::string &cubeFilename);
       void CleanCubes();
 
-      //! There is always one instance of CubeManager around
-      static CubeManager p_instance;
-
       Cube *OpenCube(const std::string &cubeFilename);
+
+      /**
+       * This sets the maximum number of opened cubes for this instance of 
+       * CubeManager. The last "maxCubes" opened cubes are guaranteed to be 
+       * valid as long as one of the CleanCubes(...) are not called.
+       * 
+       * @param maxCubes 
+       */
+      void SetNumOpenCubes(unsigned int numCubes) { p_minimumCubes = numCubes; }
+
+    protected:
+      //! There is always at least one instance of CubeManager around
+      static CubeManager p_instance;
 
       //! This keeps track of the open cubes
       QMap<QString, Cube *> p_cubes;
+      //! This keeps track of cubes that have been opened
+      QQueue<QString> p_opened;
+
+      //! At least this many cubes must be allowed in memory, more can be cleaned up, 0 means no limit
+      unsigned int p_minimumCubes;
   };
 }
 

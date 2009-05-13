@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/05/04 20:06:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -62,12 +62,14 @@ namespace Isis {
   void MultivariateStatistics::AddData (const double *x, const double *y, 
                              const unsigned int count) {
     for (unsigned int i=0; i<count; i++) {
+      double yVal = y[i];
+      double xVal = x[i];
       p_totalPixels++;
   
-      if (Isis::IsValidPixel(x[i]) && Isis::IsValidPixel(y[i])) {
-        p_x.AddData(&x[i],1);
-        p_y.AddData(&y[i],1);
-        p_sumxy += x[i] * y[i];
+      if (Isis::IsValidPixel(xVal) && Isis::IsValidPixel(yVal)) {
+        p_x.AddData(&xVal,1);
+        p_y.AddData(&yVal,1);
+        p_sumxy += xVal * yVal;
         p_validPixels++;
       }
       else {

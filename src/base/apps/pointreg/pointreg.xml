@@ -85,6 +85,12 @@
       reference measurements. Modified app test truth files to 
       reflect changes.
     </change>
+    <change name="Steven Lambright" date="2009-02-13">
+      This program now uses CubeManager to more properly balance
+      memory usage and run time. This program should run faster
+      because it is leaving more cubes in memory instead of opening
+      and closing them each time.
+    </change>
   </history>
 
   <groups>

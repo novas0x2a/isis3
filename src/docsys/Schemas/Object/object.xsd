@@ -478,10 +478,12 @@
   </xs:simpleType>
   <xs:simpleType name="categoryItem_type" final="restriction">
     <xs:restriction base="xs:string">
+      <xs:enumeration value="Footprint"/>
       <xs:enumeration value="Geometry"/>
       <xs:enumeration value="High Level Cube I/O"/>
       <xs:enumeration value="Low Level Cube I/O"/>
       <xs:enumeration value="Map Projection"/>
+      <xs:enumeration value="Mosaicking"/>
       <xs:enumeration value="Parsing"/>
       <xs:enumeration value="Spice, Instruments, and Cameras"/>
       <xs:enumeration value="Statistics"/>
@@ -496,11 +498,13 @@
     </xs:annotation>
     <xs:restriction base="xs:string">
       <xs:enumeration value="Cassini"/>
+      <xs:enumeration value="Chandrayaan"/>
       <xs:enumeration value="Clementine"/>
       <xs:enumeration value="Mariner"/>
       <xs:enumeration value="Galileo"/>
       <xs:enumeration value="Lunar Orbiter"/>
       <xs:enumeration value="Lunar Reconnaissance Orbiter"/>
+      <xs:enumeration value="Mars Express"/>
       <xs:enumeration value="Mars Reconnaissance Orbiter"/>
       <xs:enumeration value="Mars Global Surveyor"/>
       <xs:enumeration value="Mars Odyssey"/>

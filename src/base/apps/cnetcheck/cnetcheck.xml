@@ -38,6 +38,13 @@
     <change name="Steven Lambright" date="2008-11-24">
       Renamed parameters: "LIST" is now "FROMLIST" and "CONTROL" is now "NETWORK"
     </change>
+    <change name="Christopher Austin" date="2009-04-07">
+      Added the IGNORE option, which ignores ignored Control Points.
+    </change>
+    <change name="Christopher Austin" date="2009-04-23">
+      Added a results group that correlates parameter names to keywords,  fixed
+      the newline character outputs, and changed NOMATCH to NOCONTROL.
+    </change>
   </history>
 
   <category>
@@ -91,7 +98,19 @@
         </description>
       </parameter>
 
-      <parameter name="NOMATCH">
+      <parameter name="IGNORE">
+        <type>boolean</type>
+        <default><item>True</item></default>
+        <brief>
+          Ignores ignored Control Points when checking the Control Net.
+        </brief>
+        <description>
+  	       When true, all ignored Control Points provided by the Control Net
+           will be discarded during calculations.
+        </description>
+      </parameter>
+
+      <parameter name="NOCONTROL">
         <type>boolean</type>
         <default><item>True</item></default>
         <brief>
@@ -128,8 +147,8 @@
         <description>
           When true, a file named [PREFIX]SinglePointCubes.txt will be created, 
           which will list all of the Cubes which exist as a single Control 
-          Measure in a Control Point within the provided Control Net.  If there 
-          are no such singe Control Measures, then no file is created.
+          Measure in any Control Point within the provided Control Net.  If there 
+          are no such single Control Measures, then no file is created.
         </description>
       </parameter>
 

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/10/23 15:44:07 $
+ * $Revision: 1.4 $
+ * $Date: 2009/03/07 18:00:23 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -41,6 +41,7 @@ namespace Isis {
    * @internal
    *   @history 2008-06-18 Steven Lambright Added documentation
    *   @history 2008-10-23 Steven Lambright Added optimizations, fixed misc. bugs
+   *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute CameraDetectorMap methods
    */
   class PushFrameCameraDetectorMap : public CameraDetectorMap {
   public:
@@ -63,7 +64,6 @@ namespace Isis {
       p_frameletRate = frameletRate;
       p_frameletHeight = frameletHeight;
       p_frameletOffset = 0;
-      p_yAxisTimeDependent = true;
       p_flippedFramelets = true;
       p_timeAscendingFramelets = true;
       p_nframelets = 0;

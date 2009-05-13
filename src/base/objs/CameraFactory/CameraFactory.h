@@ -2,8 +2,8 @@
 #define CameraFactory_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:06 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/05/12 19:31:55 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -49,11 +49,14 @@ namespace Isis {
  *  @history 2005-10-06 Elizabeth Miller - added unitTest.exclude file
  *  @history 2006-05-17 Elizabeth Miller - changed CameraManager.plugin to 
  *                                         Camera.plugin
+ *  @history 2009-05-12 Steven Lambright - Added CameraVersion(...) and version
+ *           checking.
  */                                                                       
 
   class CameraFactory {
     public:
       static Camera *Create(Pvl &pvl);
+      static int CameraVersion(Pvl &pvl);
 
     private:
      /** 

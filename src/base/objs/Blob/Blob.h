@@ -2,8 +2,8 @@
 #define Blob_h
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/02/23 18:49:21 $
+ * $Revision: 1.3 $
+ * $Date: 2009/02/18 16:21:50 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -34,6 +34,7 @@ namespace Isis {
  *          blobs correctly.
  * @history Elizabeth Miller 02-20-2007 Fixed bug with OriginalLabel
  *          naming and modified to be backwards compatible
+ * @history Steven Lambright Added copy constructor, assignment operator
  * 
  * @todo Write class description, history, etc.
  */
@@ -42,6 +43,7 @@ namespace Isis {
       Blob (const std::string &name, const std::string &type);
       Blob (const std::string &name, const std::string &type,
             const std::string &file);
+      Blob (const Blob& other);
       virtual ~Blob();
 
       void Read (const std::string &file);
@@ -55,6 +57,8 @@ namespace Isis {
       std::string Name() const { return p_blobName; };
 
       PvlObject &Label() { return p_blobPvl; };
+
+      Blob &operator=(const Blob &other);
 
     protected:
       void Find (Isis::Pvl &pvl);

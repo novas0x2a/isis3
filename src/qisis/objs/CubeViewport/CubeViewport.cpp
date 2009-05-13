@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2008/12/24 17:36:00 $
- * $Revision: 1.26 $
+ * $Date: 2009/05/11 16:41:07 $
+ * $Revision: 1.32 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -64,14 +64,21 @@ namespace Qisis {
     setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     viewport()->setCursor(QCursor(Qt::CrossCursor));
     viewport()->installEventFilter(this);
+    viewport()->setAttribute(Qt::WA_OpaquePaintEvent);
 //    viewport()->setAttribute(Qt::WA_NoSystemBackground);
 //    viewport()->setAttribute(Qt::WA_PaintOnScreen,false);
 
     p_saveEnabled = false;
     // Save off info about the cube
-    p_scale = 1.0;
+    //p_scale = 1.0;
     p_color = false;
-    setLinked(false);
+    p_linked = false;
+
+    std::string unlinkedIcon = Isis::Filename("$base/icons/unlinked.png").Expanded();
+    static QIcon unlinked(unlinkedIcon.c_str());
+    setWindowIcon(unlinked);
+
+
     setCaption();
 
     p_redBrick = new Isis::Brick(4,1,1,cube->PixelType());
@@ -82,11 +89,9 @@ namespace Qisis {
 
     p_paintPixmap = false;
     p_image = NULL;
-    p_cubeShown = false;
-    p_rubberBandEnabled = false;
-    p_rubberBandDrawing = false;
+    p_cubeShown = true;
 
-    updateScrollBars(1,1);
+    //updateScrollBars(1,1);
 
     p_groundMap = NULL;
     p_projection = NULL;
@@ -136,7 +141,29 @@ namespace Qisis {
       CubeBandsStretch *stretch = new CubeBandsStretch();
       p_bandsStretchList.push_back(stretch); 
     }
+
+    p_grayBuffer = new ViewportBuffer(this, p_cube);
+    p_grayBuffer->enable(false);
+    p_grayBuffer->setBand(1);
+
+    p_redBuffer = NULL;
+    p_greenBuffer = NULL;
+    p_blueBuffer = NULL;
  }
+
+  /*
+
+  */
+  void CubeViewport::show() {
+    QAbstractScrollArea::show();
+    setScale(fitScale(), cubeSamples()/2.0, cubeLines()/2.0);
+
+    autoStretch();
+
+    p_grayBuffer->enable(true);
+    p_paintPixmap = true;
+    paintPixmap();
+  }
 
   /**
    * Destructor
@@ -248,7 +275,12 @@ namespace Qisis {
     int x,y;
     cubeToContents(samp,line,x,y);
     updateScrollBars(x,y);
-    
+
+    if(p_grayBuffer) p_grayBuffer->scaleChanged();
+    if(p_redBuffer) p_redBuffer->scaleChanged();
+    if(p_greenBuffer) p_greenBuffer->scaleChanged();
+    if(p_blueBuffer) p_blueBuffer->scaleChanged();
+
     // Notify other tools about the scale change
     emit scaleChanged();
     
@@ -284,10 +316,30 @@ namespace Qisis {
    */
   void CubeViewport::setScale (double scale, double sample, double line) {
     viewport()->setUpdatesEnabled(false);
-    p_paintPixmap = false;
-    setScale(scale);
-    p_paintPixmap = true;
+
+    bool wasEnabled = (p_grayBuffer && p_grayBuffer->enabled()) || (p_redBuffer && p_redBuffer->enabled());
+    if(p_grayBuffer) p_grayBuffer->enable(false);
+    if(p_redBuffer) p_redBuffer->enable(false); 
+    if(p_greenBuffer) p_greenBuffer->enable(false);
+    if(p_blueBuffer) p_blueBuffer->enable(false);
+
+    if(p_paintPixmap) {
+      p_paintPixmap = false;
+      setScale(scale);
+      p_paintPixmap = true;
+    }
+    else {
+      setScale(scale);
+    }
+
     center(sample,line);
+
+    if(p_grayBuffer) p_grayBuffer->enable(wasEnabled);
+    if(p_redBuffer) p_redBuffer->enable(wasEnabled); 
+    if(p_greenBuffer) p_greenBuffer->enable(wasEnabled);
+    if(p_blueBuffer) p_blueBuffer->enable(wasEnabled);
+
+    paintPixmap();
     viewport()->setUpdatesEnabled(true);
     viewport()->update();
   }
@@ -320,7 +372,16 @@ namespace Qisis {
 
     int x,y;
     cubeToContents(sample,line,x,y);
+
+    int panX = horizontalScrollBar()->value() - x;
+    int panY = verticalScrollBar()->value() - y;
+
     updateScrollBars(x,y);
+
+    if(p_grayBuffer) p_grayBuffer->pan(panX, panY);
+    if(p_redBuffer) p_redBuffer->pan(panX, panY);
+    if(p_greenBuffer) p_greenBuffer->pan(panX, panY);
+    if(p_blueBuffer) p_blueBuffer->pan(panX, panY);
 
     paintPixmap();
     viewport()->update();
@@ -448,7 +509,14 @@ namespace Qisis {
    */
   void CubeViewport::scrollContentsBy(int dx, int dy) {
     // We shouldn't do anything if scrollbars are being updated
-    if (viewport()->signalsBlocked()) return;
+    if (viewport()->signalsBlocked()) {
+      return;
+    }
+
+    if(p_grayBuffer) p_grayBuffer->pan(dx, dy);
+    if(p_redBuffer) p_redBuffer->pan(dx, dy);
+    if(p_greenBuffer) p_greenBuffer->pan(dx, dy);
+    if(p_blueBuffer) p_blueBuffer->pan(dx, dy);
 
     // Prep to scroll the pixmap
     int x = dx;
@@ -464,15 +532,7 @@ namespace Qisis {
       y = 0;
       sy = -dy;
     }
-
-    // See if we need to repaint the whole viewport
-    if ((abs(dx) >= viewport()->width()*0.9) ||
-        (abs(dy) >= viewport()->height()*0.9)) {
-      paintPixmap();
-      viewport()->repaint();
-      return;
-    }
-
+  
     // Ok we can shift the pixmap and filling
     QPainter p(&p_pixmap);
 
@@ -486,6 +546,8 @@ namespace Qisis {
     p.drawPixmap(x,y,p_pixmap,sx,sy,p_pixmap.width()-sx+1,p_pixmap.height()-sy+1);
 #endif
     p.end();
+
+    
 
     // Now fillin the left or right side
     if (dx > 0) {
@@ -564,10 +626,10 @@ namespace Qisis {
 
     p_linked = b;
     if (p_linked) {
-      setWindowIcon(linked);
+      parentWidget()->setWindowIcon(linked);
     }
     else {
-      setWindowIcon(unlinked);
+      parentWidget()->setWindowIcon(unlinked);
     }
     if (notify) emit linkChanging(b);
   }
@@ -580,6 +642,11 @@ namespace Qisis {
    * @param e 
    */
   void CubeViewport::resizeEvent (QResizeEvent *e) {
+    if(p_grayBuffer) p_grayBuffer->resizedViewport();
+    if(p_redBuffer) p_redBuffer->resizedViewport();
+    if(p_greenBuffer) p_greenBuffer->resizedViewport();
+    if(p_blueBuffer) p_blueBuffer->resizedViewport();
+
     // Change the size of the image and pixmap
     if (p_image != NULL) delete p_image;
     p_image = new QImage (viewport()->size(),QImage::Format_RGB32);
@@ -617,28 +684,11 @@ namespace Qisis {
     painter.drawPixmap(0,0,p_pixmap);
     emit viewportUpdated();
 
-    // Write the rubberband if necessary
-    if (p_rubberBandDrawing) {
-      QPen pen(Qt::DashDotLine);
-      pen.setColor(QColor("Red"));
-      painter.setPen(pen);
-
-      if (p_rubberBandShape == Rectangle) {
-        painter.drawLine(p_rubberBandRect.topLeft(),p_rubberBandRect.topRight());
-        painter.drawLine(p_rubberBandRect.topRight(),p_rubberBandRect.bottomRight());
-        painter.drawLine(p_rubberBandRect.bottomRight(),p_rubberBandRect.bottomLeft());
-        painter.drawLine(p_rubberBandRect.bottomLeft(),p_rubberBandRect.topLeft());
-      }
-      else {
-        painter.drawLine(p_rubberBandLine.p1(),p_rubberBandLine.p2());
-      }
-    }
-
     // Draw anything the tools might need
     for (int i=0; i < p_toolList.size(); i++) {
       p_toolList[i]->paintViewport(this,&painter);
     }
-
+    
     painter.end(); 
   }
 
@@ -659,81 +709,51 @@ namespace Qisis {
     if (!p_paintPixmap) return;
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
-    // Get the chunk to paint
-    int clipx = rect.x();
-    int clipy = rect.y();
-    int clipw = rect.width();
-    int cliph = rect.height();
-
-    // Prep to create minimal buffer(s) to read the cube
-    double ssamp,esamp,temp;
-    viewportToCube(clipx,clipy,ssamp,temp);
-    viewportToCube(clipx+clipw-1,clipy,esamp,temp);
-    int bufns = (int) (ceil(esamp) - floor(ssamp)) + 1;
-
-    // Write to the qimage in color if selected
-    if (p_color) {
-      p_redBrick->Resize(bufns,1,1);
-      p_grnBrick->Resize(bufns,1,1);
-      p_bluBrick->Resize(bufns,1,1);
-
-      double samp,line;
-      for (int y=clipy; y <= (const int)(clipy+cliph-1); y++) {
-        viewportToCube(clipx,y,samp,line);
-        p_redBrick->SetBasePosition((int)(samp+0.5),(int)(line+0.5),p_red.band);
-        p_grnBrick->SetBasePosition((int)(samp+0.5),(int)(line+0.5),p_green.band);
-        p_bluBrick->SetBasePosition((int)(samp+0.5),(int)(line+0.5),p_blue.band);
-        p_cube->Read(*p_redBrick);
-        p_cube->Read(*p_grnBrick);
-        p_cube->Read(*p_bluBrick);
-        QRgb *rgb = (QRgb *) p_image->scanLine(y-clipy);
-        int r,g,b,index;
-        for (int x=clipx; x <= (const int)(clipx+clipw-1); x++) {
-          viewportToCube(x,y,samp,line);
-          index = (int)(samp + 0.5) - p_redBrick->Sample();
-          if ((index < 0) || (index >= p_redBrick->size())) {
-            rgb[x-clipx] = qRgb(0,0,0);
-          }
-          else {
-            r = (int) p_red.stretch.Map((*p_redBrick)[index]);
-            g = (int) p_green.stretch.Map((*p_grnBrick)[index]);
-            b = (int) p_blue.stretch.Map((*p_bluBrick)[index]);
-            rgb[x-clipx] = qRgb(r,g,b);
-          }
-        }
-      }
-    }
-
-    // Otherwise write to the qimage in b/w
-    else {
-      p_gryBrick->Resize(bufns,1,1);
-
-      double samp,line;
-      for (int y=clipy; y <= (const int)(clipy+cliph-1); y++) {
-        viewportToCube(clipx,y,samp,line);
-        p_gryBrick->SetBasePosition((int)(samp+0.5),(int)(line+0.5),p_gray.band);
-        p_cube->Read(*p_gryBrick);
-        QRgb *rgb = (QRgb *) p_image->scanLine(y-clipy);
-        int r,g,b,index;
-        for (int x=clipx; x <= (const int)(clipx+clipw-1); x++) {
-          viewportToCube(x,y,samp,line);
-          index = (int)(samp + 0.5) - p_gryBrick->Sample();
-          if ((index < 0) || (index >= p_gryBrick->size())) {
-            rgb[x-clipx] = qRgb(0,0,0);
-          }
-          else {
-            r = (int) p_red.stretch.Map((*p_gryBrick)[index]);
-            g = (int) p_green.stretch.Map((*p_gryBrick)[index]);
-            b = (int) p_blue.stretch.Map((*p_gryBrick)[index]);
-            rgb[x-clipx] =  qRgb(r,g,b);
-          }
-        }
-      }
-    }
-
-    // Copy image to the pixmap
     QPainter p(&p_pixmap);
-    p.drawImage(QPoint(clipx,clipy),*p_image,QRect(0,0,clipw,cliph));
+    p.fillRect(rect, QBrush(Qt::black));
+
+    QRect dataArea;
+
+    if(p_grayBuffer && p_grayBuffer->enabled()) {
+      dataArea = QRect( p_grayBuffer->bufferXYRect().intersected( rect ) );
+
+      for(int y = dataArea.top(); !dataArea.isNull() && y <= dataArea.bottom(); y++) {
+        const std::vector<double> &line = p_grayBuffer->getLine(y - p_grayBuffer->bufferXYRect().top());
+        QRgb *rgb = (QRgb *) p_image->scanLine(y);
+  
+        for(int x = dataArea.left(); x <= dataArea.right(); x++) {
+          //int grayscalePix = (int)(p_gray.stretch.Map( line[ x - p_grayBuffer->bufferXYRect().left() ] ) + 0.5);
+
+          int redPix = (int)(p_red.stretch.Map( line[ x - p_grayBuffer->bufferXYRect().left() ] ) + 0.5);
+          int greenPix = (int)(p_green.stretch.Map( line[ x - p_grayBuffer->bufferXYRect().left() ] ) + 0.5);
+          int bluePix = (int)(p_blue.stretch.Map( line[ x - p_grayBuffer->bufferXYRect().left() ] ) + 0.5);
+          rgb[x] =  qRgb(redPix, greenPix, bluePix);
+        }
+      }
+    }
+    else if(p_redBuffer && p_redBuffer->enabled()) {
+      dataArea = QRect( p_redBuffer->bufferXYRect().intersected( rect ) );
+
+      for(int y = dataArea.top(); !dataArea.isNull() && y <= dataArea.bottom(); y++) {
+        const std::vector<double> &redLine = p_redBuffer->getLine(y - p_redBuffer->bufferXYRect().top());
+        const std::vector<double> &greenLine = p_greenBuffer->getLine(y - p_greenBuffer->bufferXYRect().top());
+        const std::vector<double> &blueLine = p_blueBuffer->getLine(y - p_blueBuffer->bufferXYRect().top());
+
+        QRgb *rgb = (QRgb *) p_image->scanLine(y);
+  
+        for(int x = dataArea.left(); x <= dataArea.right(); x++) {
+          int redPix = (int)(p_red.stretch.Map( redLine[ x - p_redBuffer->bufferXYRect().left() ] ) + 0.5);
+          int greenPix = (int)(p_green.stretch.Map( greenLine[ x - p_greenBuffer->bufferXYRect().left() ] ) + 0.5);
+          int bluePix = (int)(p_blue.stretch.Map( blueLine[ x - p_blueBuffer->bufferXYRect().left() ] ) + 0.5);
+          rgb[x] =  qRgb(redPix, greenPix, bluePix);
+        }
+      }
+    }
+
+    if(!dataArea.isNull()) {
+      p.drawImage(dataArea.topLeft(), *p_image, dataArea);
+    }
+    
     QApplication::restoreOverrideCursor();
 
     // Change whats this info
@@ -767,57 +787,6 @@ namespace Qisis {
                              p_cubeWhatsThisText+
                              p_viewportWhatsThisText);
   }
-
-
-  /**
-   * Turn the rubberband on/off
-   * 
-   * 
-   * @param enable 
-   * @param shape 
-   */
-  void CubeViewport::enableRubberBand(bool enable,RubberBandShape shape) {
-    p_rubberBandEnabled = enable;
-    p_rubberBandShape = shape;
-  }
-
-
-  /**
-   * Return the rubber band rectangle
-   * 
-   * 
-   * @return QRect 
-   */
-  QRect CubeViewport::rubberBandRect () {
-    QRect r = p_rubberBandRect.normalized();
-    if (r.top() < 0) r.setTop(0);
-    if (r.left() < 0) r.setLeft(0);
-    if (r.bottom() >= viewport()->height()) r.setBottom(viewport()->height()-1);
-    if (r.right() >= viewport()->width()) r.setRight(viewport()->width()-1);
-    return r;
-  }
-
-
-  /**
-   * Return the points making up a rubberBand line
-   * 
-   * 
-   * @return QLine 
-   */
-  QLine CubeViewport::rubberBandLine () {
-
-    QPoint p1 = p_rubberBandLine.p1();
-    if (p1.x() < 0) p1.setX(0);
-    if (p1.y() < 0) p1.setY(0);
-    QPoint p2 = p_rubberBandLine.p2();
-    if (p2.x() > viewport()->width()) p2.setX(viewport()->width() - 1);
-    if (p2.y() > viewport()->height()) p2.setX(viewport()->height() - 1);
-
-    QLine l(p1,p2);
-    
-    return l;
-  }
-
 
   /**
    * Return the red pixel value at a sample/line
@@ -900,76 +869,44 @@ namespace Qisis {
         {
           viewport()->setMouseTracking(true);
           emit mouseEnter();
-          return TRUE;
+          return true;
         }
 
         case QEvent::MouseMove:
         {
           QMouseEvent *m = (QMouseEvent *) e;
-          if (p_rubberBandDrawing) {
-            if (p_rubberBandShape == Rectangle) {
-              p_rubberBandRect = QRect(p_rubberBandRect.topLeft(),m->pos());
-            }
-            else {
-              p_rubberBandLine = QLine(p_rubberBandLine.p1(),m->pos());
-            }
-            viewport()->repaint();
-          }
-
           emit mouseMove(m->pos());
-          return TRUE;
+          return true;
         }
 
         case QEvent::Leave: {
           viewport()->setMouseTracking(false);
           emit mouseLeave();
-          return TRUE;
+          return true;
         }
 
         case QEvent::MouseButtonPress: {
           QMouseEvent *m = (QMouseEvent *) e;
-          if ((m->button() == Qt::LeftButton) &&
-              (m->modifiers() == 0) &&
-              (p_rubberBandEnabled)) {
-            p_rubberBandDrawing = true;
-            if (p_rubberBandShape == Rectangle) {
-              p_rubberBandRect = QRect(m->pos(),m->pos());
-            }
-            else {
-              p_rubberBandLine = QLine(m->pos(),m->pos());
-            }
-          }
-
           emit mouseButtonPress(m->pos(),
                                (Qt::MouseButton)(m->button()+m->modifiers()));
-          return TRUE;
+          return true;
         }
 
         case QEvent::MouseButtonRelease: {
           QMouseEvent *m = (QMouseEvent *) e;
-          if ((m->button() == Qt::LeftButton) && (p_rubberBandDrawing)) {
-            p_rubberBandDrawing = false;
-            if (p_rubberBandShape == Rectangle) {
-              p_rubberBandRect = QRect(p_rubberBandRect.topLeft(),m->pos());
-            }
-            else {
-              p_rubberBandLine = QLine(p_rubberBandLine.p1(),m->pos());
-            }
-          }
-
           emit mouseButtonRelease(m->pos(),
                                   (Qt::MouseButton)(m->button()+m->modifiers()));
-          return TRUE;
+          return true;
         }
 
         case QEvent::MouseButtonDblClick: {
           QMouseEvent *m = (QMouseEvent *) e;
           emit mouseDoubleClick(m->pos());
-          return TRUE;
+          return true;
         }
 
         default: {
-          return FALSE;
+          return false;
         }
       }
     }
@@ -1121,19 +1058,21 @@ namespace Qisis {
     p_gray.band = band;
     p_color = false;
     setCaption();
-    if (!p_bandsStretchList[band-1]->p_stretched){
-      autoStretch ();
-    }else {
+
+    if(!p_grayBuffer) p_grayBuffer = new ViewportBuffer(this, p_cube);
     
-      QString str = QString::fromStdString(p_gray.stretch.Text());
-      p_gray.stretch.ClearPairs();
-      p_gray.stretch.AddPair(p_bandsStretchList[band-1]->p_stretchMin,0.0);
-      p_gray.stretch.AddPair(p_bandsStretchList[band-1]->p_stretchMax,255.0);
-      stretchGray(QString::fromStdString(p_gray.stretch.Text()));
-      
-    }
-    
-    paintPixmap();
+    p_grayBuffer->setBand(band);
+
+    if(p_redBuffer) delete p_redBuffer;
+    p_redBuffer = NULL;
+
+    if(p_greenBuffer) delete p_greenBuffer;
+    p_greenBuffer = NULL;
+
+    if(p_blueBuffer) delete p_blueBuffer;
+    p_blueBuffer = NULL;
+
+    autoStretch ();
     viewport()->update();
   }
 
@@ -1152,7 +1091,20 @@ namespace Qisis {
     p_blue.band = bband;
     p_color = true;
     setCaption();
-    autoStretch ();
+
+    if(!p_redBuffer) p_redBuffer = new ViewportBuffer(this, p_cube);
+    p_redBuffer->setBand(rband);
+
+    if(!p_greenBuffer) p_greenBuffer = new ViewportBuffer(this, p_cube);
+    p_greenBuffer->setBand(gband);
+
+    if(!p_blueBuffer) p_blueBuffer = new ViewportBuffer(this, p_cube);
+    p_blueBuffer->setBand(bband);
+
+    if(p_grayBuffer) delete p_grayBuffer;
+    p_grayBuffer = NULL;
+
+    autoStretch();
     viewport()->update();
   }
 
@@ -1183,10 +1135,9 @@ namespace Qisis {
    * @param gstr 
    */
   void CubeViewport::stretchGray (const QString &gstr) {
-    stretchRGB(gstr,gstr,gstr);
- //   p_gray.stretch.Parse(gstr.toStdString());
- //   paintPixmap();
- //   viewport()->update();
+    p_gray.stretch.Parse(gstr.toStdString());
+    paintPixmap();
+    viewport()->update();
   }
 
 
@@ -1202,6 +1153,8 @@ namespace Qisis {
   void CubeViewport::stretchRGB(const Isis::Stretch &rstr,
                                 const Isis::Stretch &gstr,
                                 const Isis::Stretch &bstr) {
+
+
     p_red.stretch = rstr;
     p_green.stretch = gstr;
     p_blue.stretch = bstr;
@@ -1252,36 +1205,6 @@ namespace Qisis {
   }
 
   /**
-   *  Visualize the cube
-   *  
-   *  @internal
-   *    @history 2008-12-04 Jeannie Walldren - Added try/catch to
-   *             set p_cubeShown = false if this fails.
-   */
-  void CubeViewport::showCube() {
-    if (p_cubeShown) return;
-    try{
-      p_cubeShown = true;
-
-      updateScrollBars(horizontalScrollBar()->value(),
-                     verticalScrollBar()->value());
-
-      p_paintPixmap = true;
-      autoStretch();
-      setCaption();
-      
-      viewport()->update();
-      viewport()->setAttribute(Qt::WA_NoBackground);
-      return;
-    }
-    catch (Isis::iException &e){
-      // if autoStretch fails, we cannot show cube
-      p_cubeShown = false;
-      throw e;
-    }
-  }
-
-  /**
    *   Cube changed, repaint given area
    * 
    * @param[in] cubeRect (QRect rect)  Rectange containing portion of cube
@@ -1309,6 +1232,10 @@ namespace Qisis {
     if (ex > viewport()->width()) ex = viewport()->width();
     if (ey > viewport()->height()) ey = viewport()->height();
     QRect vpRect(sx,sy,ex-sx+1,ey-sy+1);
+    if(p_grayBuffer) p_grayBuffer->fillBuffer(vpRect);
+    if(p_redBuffer) p_redBuffer->fillBuffer(vpRect);
+    if(p_greenBuffer) p_greenBuffer->fillBuffer(vpRect);
+    if(p_blueBuffer) p_blueBuffer->fillBuffer(vpRect);
     paintPixmap(vpRect);
     viewport()->repaint();
   }
@@ -1419,9 +1346,11 @@ namespace Qisis {
       }
 
       stretch.ClearPairs();
-      if (hist.Percent(0.5) < (hist.Percent(99.5) - DBL_EPSILON)) {
-        stretch.AddPair(hist.Percent(0.5),0.0);
-        stretch.AddPair(hist.Percent(99.5),255.0);
+      double percentile1 = hist.Percent(0.5);
+      double percentile2 = hist.Percent(99.5);
+      if (fabs(percentile1 - percentile2) > DBL_EPSILON) {
+        stretch.AddPair(percentile1,0.0);
+        stretch.AddPair(percentile2,255.0);
       }
       else {
         stretch.AddPair(-DBL_MAX,0.0);

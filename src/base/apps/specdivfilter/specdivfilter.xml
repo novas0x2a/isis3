@@ -3,11 +3,11 @@
 <application name="specdivfilter" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
   <brief>
-    Apply spedivfilter to a cube
+    Apply a spectral division filter
   </brief>
 
   <description>
-    This program applies a specdivfilter to a cube. 
+    This program applies a spectral division filter to a cube.
   </description>
 
   <category>

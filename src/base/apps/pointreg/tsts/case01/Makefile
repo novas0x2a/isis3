@@ -1,5 +1,7 @@
 APPNAME = pointreg
 
+redPointregLog.txt.IGNORELINES = Processed
+
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
@@ -8,6 +10,5 @@ commands:
 	cnet=$(INPUT)/red.net \
 	template=$(INPUT)/autoRegTemplate.def \
 	to=$(OUTPUT)/redOutputCnet.pvl \
-	flatfile=$(OUTPUT)/redFlatFile.txt >& $(OUTPUT)/redPointregLog.txt \
-	> /dev/null;
+	flatfile=$(OUTPUT)/redFlatFile.txt > $(OUTPUT)/redPointregLog.txt;
 	$(RM) $(OUTPUT)/cub.lis;

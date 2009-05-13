@@ -2,8 +2,8 @@
 #define SpiceRotation_h
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2008/12/12 23:25:55 $
+ * $Revision: 1.12 $
+ * $Date: 2009/01/27 03:30:36 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -85,6 +85,7 @@ namespace Isis {
    *                        the class and made some parameters protected instead of private
    *                        so they are available to inheriting classes.
    *  @history 2008-12-12  Debbie A. Cook Added method to return frame code
+   *  @history 2009-01-26  Debbie A. Cook Added wrap of 3rd camera angle when crossing +-180
    */
   class SpiceRotation {
     public:

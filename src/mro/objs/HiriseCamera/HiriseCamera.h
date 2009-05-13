@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/08 20:37:16 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/03/09 03:51:18 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -44,6 +44,8 @@ namespace Isis {
      *  @history 2008-08-08 Steven Lambright Made the unit test work with a Sensor
      *           change. Also, now using the new LoadCache(...) method instead of
      *           CreateCache(...).
+     *  @history 2009-03-08 Debbie A. Cook Removed reference to obsolete LineScanCameraDetectorMap
+     *           method SetXAxisTimeDependent
      */
     class HiriseCamera : public Isis::Camera {
       public:

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/08/04 21:34:33 $
+ * $Revision: 1.9 $
+ * $Date: 2009/04/08 21:22:55 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -126,7 +126,7 @@ namespace Isis {
   *
   * @param data A vector of knowns.
   *
-  * @history 04-22-2008  Tracie Sucharski,  New method for sparse solutions. 
+  * @history 2008-04-22  Tracie Sucharski - New method for sparse solutions. 
   *                     
   */
 #if !defined(__sun__)
@@ -190,9 +190,13 @@ namespace Isis {
   * and Residual methods freely. 
   *  
   * @internal 
-  * @history  2008-04-16 Debbie Dook / Tracie Sucharski, Added SolveSparse.
+  * @history  2008-04-16 Debbie Dook / Tracie Sucharski, Added SolveSparse. 
+  * @history  2009-04-08 Tracie Sucharski - Added return value which will 
+  *                          pass on what is returned from SolveSparse which
+  *                          is a column number of a column that contained
+  *                          all zeros.
   */
-  void LeastSquares::Solve (Isis::LeastSquares::SolveMethod method) {
+  int LeastSquares::Solve (Isis::LeastSquares::SolveMethod method) {
 
 #if defined(__sun__)
     if (method == SPARSE) method = QRD;
@@ -206,9 +210,11 @@ namespace Isis {
     }
     else if (method == SPARSE) {
 #if !defined(__sun__)
-      SolveSparse ();
+      int column = SolveSparse ();
+      return column;
 #endif
     }
+    return 0;
   }
 
   /**
@@ -359,16 +365,18 @@ namespace Isis {
    * Residual methods freely. 
    *  
    * @internal 
-   * @history  2008-04-16  Debbie Cook / Tracie Sucharski, New method 
-   * @history  2008-04-23  Tracie Sucharski,  Fill sparse matrix as we go in 
-   *           AddKnown method rather than in the solve method, otherwise we run
-   *           out of memory very quickly.
+   * @history  2008-04-16 Debbie Cook / Tracie Sucharski, New method 
+   * @history  2008-04-23 Tracie Sucharski,  Fill sparse matrix as we go in 
+   *                          AddKnown method rather than in the solve method,
+   *                          otherwise we run out of memory very quickly.
+   * @history  2009-04-08 Tracie Sucharski - Added return value which is a
+   *                          column number of a column that contained all zeros.
    */
 #if !defined(__sun__)
-  void LeastSquares::SolveSparse () {
+  int LeastSquares::SolveSparse () {
 
     //??? Resize sparse to correct rows , accounting for held,ground,ignored
-//    gmm::resize(p_sparseA,p_sparseRows,p_sparseCols);
+    //gmm::resize(p_sparseA,p_sparseRows,p_sparseCols);
     // We are solving Ax=b 
 
     // Create the right-hand-side column matrix B now.  Using A and our B we
@@ -383,6 +391,16 @@ namespace Isis {
     //  Create square matrix
     gmm::row_matrix<gmm::rsvector<double> > Asquare(p_sparseCols,p_sparseCols);
     gmm::mult(gmm::transposed(p_sparseA),p_sparseA,Asquare);
+
+    //  Test for any columns with all 0's
+    //  Return column number so caller can determine the appropriate error.
+    int numNonZeros;
+    for (int c=0; c<p_sparseCols; c++) {
+      numNonZeros = gmm::nnz(gmm::sub_matrix(Asquare,
+                             gmm::sub_interval(0,p_sparseCols),
+                             gmm::sub_interval(c,1)));
+      if (numNonZeros == 0) return c + 1;
+    }
 
     gmm::dense_matrix<double> bAtrans(p_sparseCols,1);
 
@@ -408,6 +426,7 @@ namespace Isis {
     }
     // All done
     p_solved = true;
+    return 0;
   }
 #endif
 

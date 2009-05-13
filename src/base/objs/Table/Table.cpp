@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/01/30 22:12:23 $
+ * $Revision: 1.3 $
+ * $Date: 2009/02/18 16:35:18 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -55,6 +55,48 @@ namespace Isis {
   Isis::Blob(tableName,"Table") {
     p_assoc = Table::None;
     Read(file);
+  }
+
+  /**
+   * Copy constructor for table
+   * 
+   * @param other The table to copy from
+   */
+  Table::Table(const Table &other) : Blob(other) {
+    p_record = other.p_record;
+    p_records = other.p_records;
+    p_assoc = other.p_assoc;
+    p_swap = other.p_swap;
+
+    for(unsigned int i = 0; i < other.p_recbufs.size(); i++) {
+      char *data = new char[RecordSize()];
+
+      for(int j = 0; j < RecordSize(); j++) {
+        data[j] = other.p_recbufs[i][j];
+      }
+
+      p_recbufs.push_back(data);
+    }
+  };
+
+  Table &Table::operator=(const Isis::Table &other) {
+    *((Isis::Blob*)this) = *((Isis::Blob*)&other);
+    p_record = other.p_record;
+    p_records = other.p_records;
+    p_assoc = other.p_assoc;
+    p_swap = other.p_swap;
+
+    for(unsigned int i = 0; i < other.p_recbufs.size(); i++) {
+      char *data = new char[RecordSize()];
+
+      for(int j = 0; j < RecordSize(); j++) {
+        data[j] = other.p_recbufs[i][j];
+      }
+
+      p_recbufs.push_back(data);
+    }
+
+    return *this;
   }
 
  /**
@@ -114,6 +156,7 @@ namespace Isis {
   void Table::Delete(const int index) {
     vector<char *>::iterator it = p_recbufs.begin();
     for (int i=0; i<index; i++, it++);
+    delete [] p_recbufs[index];
     p_recbufs.erase(it);
   }
 

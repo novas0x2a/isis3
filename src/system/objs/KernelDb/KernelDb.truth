@@ -12,8 +12,8 @@ SpacecraftPointing:
 $base/ckTest
 
 Instrument: 
-$base/ikTest1
-$base/ikTest2
+$base/ikTest3
+$base/ikTest4
 
 SpacecraftClock: 
 $base/sclkTest

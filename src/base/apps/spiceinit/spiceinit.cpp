@@ -6,6 +6,7 @@
 #include "Filename.h"
 #include "PvlTranslationManager.h"
 #include "Camera.h"
+#include "CameraFactory.h"
 #include "iException.h"
 #include "KernelDb.h"
 #include "Table.h"
@@ -89,8 +90,8 @@ void IsisMain() {
   ckKernels.LoadSystemDb(mission);
   spkKernels.LoadSystemDb(mission);
 
-  Kernel lk, pck, targetSpk, ck, fk, ik, sclk, spk, iak, dem, exk;
-  std::priority_queue< Kernel > ck_only;
+  Kernel lk, pck, targetSpk, fk, ik, sclk, spk, iak, dem, exk;
+  std::priority_queue< Kernel > ck;
   lk        = baseKernels.LeapSecond(lab);
   pck       = baseKernels.TargetAttitudeShape(lab);
   targetSpk = baseKernels.TargetPosition(lab);
@@ -98,14 +99,14 @@ void IsisMain() {
   sclk      = baseKernels.SpacecraftClock(lab);
   iak       = baseKernels.InstrumentAddendum(lab);
   fk        = ckKernels.Frame(lab);
-  ck_only   = ckKernels.SpacecraftPointing(lab);
+  ck        = ckKernels.SpacecraftPointing(lab);
   spk       = spkKernels.SpacecraftPosition(lab);
 
   if (ui.GetBoolean("CKNADIR")) {
     // Only add nadir if no spacecraft pointing found
     std::vector<std::string> kernels;
     kernels.push_back("Nadir");
-    ck_only.push(Kernel((spiceInit::kernelTypes)0, kernels));
+    ck.push(Kernel((spiceInit::kernelTypes)0, kernels));
   }
 
   // Get user defined kernels and override ones already found
@@ -128,21 +129,17 @@ void IsisMain() {
   }
 
   bool kernelSuccess = false;
-  if (ck_only.size() == 0 ) {
+  if (ck.size() == 0 ) {
     throw iException::Message(iException::Camera, 
                               "No Camera Kernel found for the image ["+ui.GetFilename("FROM")
                               +"]", 
                               _FILEINFO_);
   }
-  while(ck_only.size() != 0 && !kernelSuccess) {
-    Kernel realCkKernel = ck_only.top();
-    ck_only.pop();
+  while(ck.size() != 0 && !kernelSuccess) {
+    Kernel realCkKernel = ck.top();
+    ck.pop();
 
     if (ui.WasEntered("CK"))   ui.GetAsString("CK", realCkKernel.kernels);
-
-    for(int i = 0; i < ck.size(); i++) {
-      realCkKernel.push_back(ck[i]);
-    }
 
     // Merge SpacecraftPointing and Frame into ck
     for (int i = 0; i < fk.size(); i++) {
@@ -262,6 +259,8 @@ bool TryKernels(Cube *icube, Process &p,
      currentKernels.AddKeyword(PvlKeyword("EndPadding", ui.GetDouble("ENDPAD"), "seconds"));
   }
 
+  currentKernels.AddKeyword(PvlKeyword("CameraVersion",CameraFactory::CameraVersion(lab)), Pvl::Replace);
+
   // Add the modified Kernels group to the input cube labels
   icube->PutGroup(currentKernels);
 
@@ -314,9 +313,23 @@ bool TryKernels(Cube *icube, Process &p,
       }
       icube->Write(sunTable);
 
+      //  Save original kernels in keyword before changing to Table
+      PvlKeyword origCk = currentKernels["InstrumentPointing"];
+      PvlKeyword origSpk = currentKernels["InstrumentPosition"];
+      PvlKeyword origTargPos = currentKernels["TargetPosition"];
+
       currentKernels["InstrumentPointing"] = "Table";
+      for (int i=0; i<origCk.Size(); i++) {
+        currentKernels["InstrumentPointing"].AddValue(origCk[i]);
+      }
       currentKernels["InstrumentPosition"] = "Table";
+      for (int i=0; i<origSpk.Size(); i++) {
+        currentKernels["InstrumentPosition"].AddValue(origSpk[i]);
+      }
       currentKernels["TargetPosition"] = "Table";
+      for (int i=0; i<origTargPos.Size(); i++) {
+        currentKernels["TargetPosition"].AddValue(origTargPos[i]);
+      }
       icube->PutGroup(currentKernels);
     }
     //modify Kernels group only

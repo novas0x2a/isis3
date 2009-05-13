@@ -55,7 +55,6 @@ int main () {
   ImagePolygon poly;
   try {
     poly.Create(cube);
-//    poly.Create(cube,pixInc);
   }
   catch (iException &e) {
     std::string msg = "Cannot create polygon for [" + cube.Filename() + "]";
@@ -64,21 +63,7 @@ int main () {
 
 
   //  write poly as WKT
-  std::cout<<poly.Polys()->toString()<<std::endl;
-
-  // Convert poly to samp/line
-  UniversalGroundMap *gMap = new UniversalGroundMap (cube);
-  geos::geom::MultiPolygon *slPoly = PolygonTools::LatLonToSampleLine (*poly.Polys(),gMap);
-  std::cout<<slPoly->toString()<<std::endl;
-
-  //  Convert back to lon/lat for comparison
-  //geos::MultiPolygon *llPoly = ImagePolygon::ToGround (slPoly,gMap);
-  //ImagePolygon::DumpWKT(llPoly);
-
-  //  Test binary read/write
-  //poly.WriteB ();
-  //poly.ReadB ();
-
+  std::cout<< poly.Polys()->toString()<<std::endl;
 
   //  Test sub-poly option
   try {
@@ -89,7 +74,7 @@ int main () {
     throw iException::Message(iException::Programmer,msg,_FILEINFO_);
   }
   //  write poly as WKT
-  std::cout<<poly.Polys()->toString()<<std::endl;
+  std::cout<< poly.Polys()->toString()<<std::endl;
 
 
   cube.Close();

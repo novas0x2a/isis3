@@ -161,6 +161,16 @@
     <change name="Jeannie Walldren" date="2009-01-12">
       Fixed documentation.
     </change>
+    <change name="Jeannie Walldren" date="2009-01-26">
+      Fixed bug that caused errors on other compilers.
+    </change>
+    <change name="Jeannie Walldren" date="2009-02-12">
+      Modified the "I/F" option to make 2 attempts to locate the the target 
+      before throwing an exception.  First, the Isis::Camera class is used to 
+      look for the target at the center point of the cube.  If this fails, the 
+      subspacecraft point is used to find the target.  Only if both fail will 
+      the application throw an error.
+    </change>
   </history>
 
   <liens>

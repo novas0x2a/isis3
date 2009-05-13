@@ -59,7 +59,7 @@ namespace gbl {
   Stretch stretch;
   int numberOfOverclocks;
   vector <double> bias;
-  vector <vector <double> > bitweightCorrected(1024,1024);
+  vector <vector <double> > bitweightCorrected;
   //dark subtraction variables
   vector <vector <double> > dark_DN;
   // flatfield variables
@@ -100,12 +100,18 @@ void IsisMain(){
   gbl::sumFactor  = 1.0;
   gbl::efficiencyFactor = 1.0;
   gbl::correctionFactor = 1.0;
-  // Set up our ProcessByLine and initialize more globals
+
+  // Set up our ProcessByLine
   ProcessByLine firstpass;
+  // initialize global input cube variable
   gbl::incube = firstpass.SetInputCube("FROM");
+  // resize 2dimensional vectors
   gbl::bitweightCorrected.resize(gbl::incube->Samples());
   gbl::dark_DN.resize(gbl::incube->Samples());
-
+  for(unsigned int i = 0; i < gbl::bitweightCorrected.size(); i++) {
+      gbl::bitweightCorrected[i].resize(gbl::incube->Lines());
+      gbl::dark_DN[i].resize(gbl::incube->Lines());
+    }
 
   // Add the radiometry group
   gbl::calgrp.SetName("Radiometry");
@@ -348,16 +354,13 @@ void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
  *   @history 2008-11-05 Jeannie Walldren - Original version
  *   @history 2008-12-22 Jeannie Walldren - Fixed bug in calls
  *            to resize() method.
+ *   @history 2009-01-26 Jeannie Walldren - Moved resizing of
+ *            2-dimensional vectors to main method
  */
 void gbl::CopyInput(Buffer &in){
   // find line index
   int lineIndex = in.Line()-1;
   for(int sampIndex = 0; sampIndex < in.size(); sampIndex++){
-    // for each sample, resize vector to number of lines in buffer 
-    if(lineIndex == 0) { // only do this once for each sample
-      gbl::bitweightCorrected[sampIndex].resize(gbl::incube->Lines());
-      gbl::dark_DN[sampIndex].resize(gbl::incube->Lines());
-    }
     // assign input value to image vector
     gbl::bitweightCorrected[sampIndex][lineIndex] = in[sampIndex];
   }
@@ -374,17 +377,14 @@ void gbl::CopyInput(Buffer &in){
  * @param in Input buffer for the first process in IsisMain()
  * @internal 
  *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-01-26 Jeannie Walldren - Moved resizing of
+ *            2-dimensional vectors to main method
  */
 void gbl::BitweightCorrect(Buffer &in){
   // find line index
   int lineIndex = in.Line()-1;
   // loop through samples of this line
   for(int sampIndex = 0; sampIndex < in.size(); sampIndex++){ 
-    // for each sample, resize vector to number of lines in buffer 
-    if(lineIndex == 0) { // only do this once for each sample
-      gbl::bitweightCorrected[sampIndex].resize(in.LineDimension());
-      gbl::dark_DN[sampIndex].resize(in.LineDimension());
-    }
     // map bitweight corrected image output values to buffer input values
     if(IsValidPixel(in[sampIndex])){
       gbl::bitweightCorrected[sampIndex][lineIndex] = gbl::stretch.Map(in[sampIndex]);
@@ -1129,6 +1129,14 @@ void gbl::DivideByAreaPixel(){
  * 
  * @internal 
  *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-02-12 Jeannie Walldren - Modified code to
+ *            make a second attempt to find the planet if the
+ *            Isis::Camera class fails to find it at the center
+ *            point of the cube. Previously, if the target was
+ *            not found, an exception was thrown. Now the
+ *            SubSpacecraftPoint() method from Isis::Camera
+ *            class is used to try to locate the target before
+ *            throwing the exception.
  */
 void gbl::FindEfficiencyFactor_IoverF(){ 
   // get distance from sun (AU):
@@ -1136,19 +1144,23 @@ void gbl::FindEfficiencyFactor_IoverF(){
   try{
     Camera *cam = gbl::incube->Camera();
     bool camSuccess = cam->SetImage(gbl::incube->Samples()/2,gbl::incube->Lines()/2);
-    if(!camSuccess) {
-      throw iException::Message(iException::Camera, "Unable to set image.", _FILEINFO_);
+    if(!camSuccess) {// the camera was unable to find the planet at the center of the image
+      double lat, lon;
+      // find values for lat/lon directly below spacecraft
+      cam->SubSpacecraftPoint(lat,lon);
+      // use these values to set the ground coordinates
+      cam->SetUniversalGround(lat,lon);
     }
     distFromSun = cam->SolarDistance();
   }
   catch(iException &e){ // unable to get solar distance, can't divide by efficiency, stop calibration
     throw e.Message(iException::Camera, 
-                    "Unable to calibrate image using I/F. Cannot create Camera object to calculate Solar Distance.",
+                    "Unable to calibrate image using I/F. Cannot calculate Solar Distance using Isis::Camera object.",
                     _FILEINFO_);
   }
   if(distFromSun <= 0){ // solar distance <= 0, can't divide by efficiency, stop calibration
     throw iException::Message(iException::Camera, 
-                              "Unable to calibrate image using I/F. Solar Distance is less than or equal to 0.",
+                              "Unable to calibrate image using I/F. Solar Distance calculated is less than or equal to 0.",
                               _FILEINFO_);
   }
   gbl::calgrp += PvlKeyword("DividedByEfficiency","Yes");

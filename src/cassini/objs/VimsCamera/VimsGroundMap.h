@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 21:46:55 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/04/06 15:23:27 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -45,6 +45,8 @@ namespace Isis {
      * @history 2008-02-05 Tracie Sucharski, Replaced unitVector files with 
      *                          Rick McCloskey's code to calculate look direction. 
      * @history 2008-06-18 Steven Lambright Fixed documentation 
+     * @history 2009-04-06 Steven Lambright Fixed problem that caused double 
+     *          deletion of sky map / ground map.
      *
      */
     class VimsGroundMap : public CameraGroundMap {
@@ -52,18 +54,18 @@ namespace Isis {
       VimsGroundMap(Camera *parent, Pvl &lab);
 
       //! Destructor
-      virtual ~VimsGroundMap() {};
+      virtual ~VimsGroundMap() { };
 
       virtual bool SetFocalPlane(const double ux, const double uy, 
                                  const double uz);
 
       virtual bool SetGround(const double lat, const double lon);
 
+      void Init(Pvl &lab);
+
     protected:
 
     private:
-      void Init(Pvl &lab);
-
       void LookDirection (double v[3]);
 
       SpiceDouble p_etStart;

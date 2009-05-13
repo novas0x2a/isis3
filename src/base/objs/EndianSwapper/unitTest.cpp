@@ -15,11 +15,15 @@ int main (int argc, char *argv[])
   float FloatValue;
   short int ShortIntValue;
   unsigned short int UShortIntValue;
+  int IntValue;
+  long long LongLongIntValue;
   
   DoubleValue = 0x12345678;
   FloatValue = 0x1234;
   ShortIntValue = 0x1234;
   UShortIntValue = 0x1234;
+  IntValue = 0x12345678;
+  LongLongIntValue = 0x12345600;
 
   // Do the conversions from lsb to host first if this is a little endian machine
   if (ISIS_LITTLE_ENDIAN) {
@@ -40,6 +44,10 @@ int main (int argc, char *argv[])
     cout << "   Short Int 0x1234 to HOST:  " << msb.ShortInt (&ShortIntValue) << endl;
     cout << "Size of Unsigned Short Int:  " << sizeof (unsigned short int);
     cout << "   Unsigned Short Int 0x1234 to HOST:  " << msb.UnsignedShortInt (&UShortIntValue) << endl;
+    cout << "Size of Int:  " << sizeof (int);
+    cout << "   Int 0x12345678 to HOST:  " << msb.Int (&IntValue) << endl;
+    cout << "Size of Long Long Int:  " << sizeof (long long int);
+    cout << "   Long Long Int 0x0000000012345600 to HOST:  " << msb.LongLongInt (&LongLongIntValue) << endl;
 
     // Test valid floats that when swapped become nan
     cout << "Testing nan:  " << endl;
@@ -80,6 +88,10 @@ int main (int argc, char *argv[])
     cout << "   Short Int 0x1234 to HOST:  " << lsb.ShortInt (&ShortIntValue) << endl;
     cout << "Size of Unsigned Short Int:  " << sizeof (unsigned short int);
     cout << "   Unsigned Short Int 0x1234 to HOST:  " << lsb.UnsignedShortInt (&UShortIntValue) << endl;
+    cout << "Size of Int:  " << sizeof (int);
+    cout << "   Int 0x12345678 to HOST:  " << lsb.Int (&IntValue) << endl;
+    cout << "Size of Long Long Int:  " << sizeof (long long int);
+    cout << "   Long Long Int 0x0000000012345600 to HOST:  " << lsb.LongLongInt (&LongLongIntValue) << endl;
 
     // Test valid floats that when swapped become nan
     cout << "Testing nan:  " << endl;

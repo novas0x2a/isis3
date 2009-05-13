@@ -23,7 +23,6 @@ void IsisMain() {
   Process p1;
   Cube *icube = p1.SetInputCube("FROM",OneBand);
   cam = icube->Camera();
-  cam->SetBand(icube->PhysicalBand(1));
 
   // We will be processing by brick
   ProcessByBrick p;

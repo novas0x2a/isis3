@@ -19,8 +19,6 @@ namespace Qisis {
       void setBandMarkersVisible(bool visible);
       void showHideLines();
       void fillTable();
-      void fillTableSpectral();
-      void fillTableSpatial();
       void setStdDev(std::vector<double> stdDevArray);
    
     private:

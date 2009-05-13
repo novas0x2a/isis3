@@ -20,6 +20,8 @@ namespace Galileo {
    *            in Isis3
    *   @history 2008-08-08 Steven Lambright Now using the new LoadCache(...)
    *            method instead of CreateCache(...).
+   *   @history 2009-05-04 Steven Koechle - Fixed to grab appropriate FocalLength
+   *            based on image time.
    */
   class SsiCamera : public Isis::Camera {
     public:

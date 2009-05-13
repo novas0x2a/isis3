@@ -6,7 +6,7 @@
 #include "PolynomialBivariate.h"
 #include "LeastSquares.h"
 #include "Filename.h"
-#include "Statistics.h"
+#include "Histogram.h"
 
 namespace Isis {
   /**
@@ -19,35 +19,38 @@ namespace Isis {
    * @see automaticRegistration.doc
    */
   AutoReg::AutoReg (Pvl &pvl) {
+    // Set default parameters
     p_algorithmName = "Unknown";
     p_idealFit = 0.0;
-    p_subpixelAccuracy = true;
-    p_minimumPatternZScore = 1;
+
     p_patternChip = new Chip(3,3);
     p_searchChip = new Chip(5,5);
+    p_fitChip = new Chip(5,5);
     SetPatternSampling(100.0);
     SetSearchSampling(100.0);
     SetPatternValidPercent(50.0);
-    std::vector<int> temp;
-    SetPatternReduction(temp,temp);
+    SetPatternZScoreMinimum(1.0);
     SetTolerance(Isis::Null);
-    EPSILON = 0.0001;
+    SetFitChipSkewnessTolerance(0.5);
+    SetSubPixelAccuracy(true);
+    SetSurfaceModelDistanceTolerance(1.0);
+    SetSurfaceModelWindowSize(3);
 
     // Clear statistics
     p_Total = 0;
     p_Success = 0;
-    p_PatternChipNotEnoughValidData.clear();
-    p_PatternZScoreNotMet.clear();
-    p_FitChipNoData.clear();
-    p_FitChipToleranceNotMet.clear();
+    p_PatternChipNotEnoughValidData = 0;
+    p_PatternZScoreNotMet = 0;
+    p_FitChipNoData = 0;
+    p_FitChipToleranceNotMet = 0;
+    p_FitChipSkewnessNotMet = 0;
     p_SurfaceModelNotEnoughValidData = 0;
     p_SurfaceModelSolutionInvalid = 0;
     p_SurfaceModelToleranceNotMet = 0;
     p_SurfaceModelDistanceInvalid = 0;
     p_ZScore1 = Isis::Null;
     p_ZScore2 = Isis::Null;
-    p_distanceTolerance = 1.0;
-    p_windowSize = 3;
+    p_skewness = Isis::Null;
 
     Parse(pvl);
   }
@@ -56,6 +59,7 @@ namespace Isis {
   AutoReg::~AutoReg() {
     if (p_patternChip != NULL) delete p_patternChip;
     if (p_searchChip != NULL) delete p_searchChip;
+    if (p_fitChip != NULL) delete p_fitChip;
   }
 
   /**
@@ -95,8 +99,13 @@ namespace Isis {
       p_algorithmName =  (std::string) algo["Name"];
       SetTolerance(algo["Tolerance"]);
 
-      if (algo.HasKeyword("SubpixelAccuracy"))
-        p_subpixelAccuracy = ((std::string)algo["SubpixelAccuracy"] == "True");
+      if (algo.HasKeyword("SubpixelAccuracy")) {
+        SetSubPixelAccuracy((std::string)algo["SubpixelAccuracy"] == "True");
+      }
+
+      if (algo.HasKeyword("SkewnessTolerance")) {
+        SetFitChipSkewnessTolerance((double)algo["SkewnessTolerance"]);
+      }
 
       // Setup the pattern chip
       PvlGroup &pchip = pvl.FindGroup("PatternChip",Pvl::Traverse);
@@ -109,29 +118,8 @@ namespace Isis {
       PatternChip()->SetValidRange(minimum,maximum);
 
       if (pchip.HasKeyword("MinimumZScore")) {
-        p_minimumPatternZScore = pchip["MinimumZScore"];
+        SetPatternZScoreMinimum((double)pchip["MinimumZScore"]);
       }
-
-      // Get the shrinking pattern dimensions
-      std::vector<int> samps;
-      for (int i=0; i<pchip["Samples"].Size(); i++) {
-        samps.push_back((int)pchip["Samples"][i]);
-      }
-
-      std::vector<int> lines;
-      for (int i=0; i<pchip["Lines"].Size(); i++) {
-        lines.push_back((int)pchip["Lines"][i]);
-      }
-      SetPatternReduction(samps,lines);
-
-      // and movement restrictions
-      std::vector<double> percents;
-      if (pchip.HasKeyword("FloatPercent")) {
-        for (int i=0; i<pchip["FloatPercent"].Size(); i++) {
-          percents.push_back((double)pchip["FloatPercent"][i]);
-        }
-      } else percents.push_back(1.0); // todo: replace with const var
-      SetMovementReductionPercent(percents);
 
       // Setup the search chip
       PvlGroup &schip = pvl.FindGroup("SearchChip",Pvl::Traverse);
@@ -162,21 +150,11 @@ namespace Isis {
         PvlGroup &smodel = pvl.FindGroup("SurfaceModel", Pvl::Traverse);
 
         if(smodel.HasKeyword("DistanceTolerance")) {
-          p_distanceTolerance = (double)smodel["DistanceTolerance"];
-  
-          if(p_distanceTolerance <= 0.0) {
-            std::string msg = "DistanceTolerance must be greater than 0";
-            throw iException::Message(iException::User,msg,_FILEINFO_);
-          }
+          SetSurfaceModelDistanceTolerance((double)smodel["DistanceTolerance"]);
         }
 
         if(smodel.HasKeyword("WindowSize")) {
-          p_windowSize = (int)smodel["WindowSize"];
-    
-          if(p_windowSize % 2 != 1 || p_windowSize < 3) {
-            std::string msg = "WindowSize must be an odd number greater than or equal to 3";
-            throw iException::Message(iException::User,msg,_FILEINFO_);
-          }
+          SetSurfaceModelWindowSize((int)smodel["WindowSize"]);
         }
       }
 
@@ -186,6 +164,19 @@ namespace Isis {
     }
 
     return;
+  }
+
+  /**
+   * If the sub-accuracy is enable the Register() method will
+   * attempt to match the pattern chip to the search chip at
+   * sub-pixel accuracy, otherwise it will be registered at whole
+   * pixel accuracy.
+   *
+   * @param on Set the state of registration accuracy.  The
+   *           default is sub-pixel accuracy is on
+   */
+  void AutoReg::SetSubPixelAccuracy(bool on) {
+    p_subpixelAccuracy = on;
   }
 
   /**
@@ -233,6 +224,25 @@ namespace Isis {
   }
 
   /**
+   * Set the minimum pattern zscore.  This option is used to
+   * ignore pattern chips which are bland (low standard
+   * deviation). If the minimum or maximum pixel value in the
+   * pattern chip does not meet the minimum zscore value (see a
+   * statisitcs book for definition of zscore) then invalid
+   * registration will occur.
+   *
+   * @param minimum The minimum zscore value for the pattern chip.
+   *                 Default is 1.0
+   */
+  void AutoReg::SetPatternZScoreMinimum (double minimum) {
+    if(minimum <= 0.0) {
+      std::string msg = "MinimumZScore must be greater than 0";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+    p_minimumPatternZScore = minimum;
+  }
+
+  /**
    * Set the search sampling rate.  This is used to reduce the number of
    * search sub-regions to consider.  The default is to check 100% of
    * the search area.  If reduced then the pattern will be sparsely checked
@@ -263,198 +273,271 @@ namespace Isis {
   }
 
   /**
+   * Set the surface model window size. The pixels in this window
+   * will be used to fit a surface model in order to compute
+   * sub-pixel accuracy.  In some cases the default (3x3) and
+   * produces erroneous sub-pixel accuracy values.
+   *
+   * @param size The size of the window must be three or greater
+   *             and odd.
+   */
+  void AutoReg::SetSurfaceModelWindowSize (int size) {
+    if(size % 2 != 1 || size < 3) {
+      std::string msg = "WindowSize must be an odd number greater than or equal to 3";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+    p_windowSize = size;
+  }
+
+  /**
+   * Set a distance the surface model solution is allow to move
+   * away from the best whole pixel fit in the fit chip.
+   *
+   * @param distance The distance allowed to move in pixels.  Must
+   *                 be greater than zero.
+   */
+  void AutoReg::SetSurfaceModelDistanceTolerance (double distance) {
+    if(distance <= 0.0) {
+      std::string msg = "DistanceTolerance must be greater than 0";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+    p_distanceTolerance = distance;
+  }
+
+  /**
+   * For a registration to be considered successful.  The skewness
+   * of the data in the fit chip is examinded.  Fit chips that do
+   * not meet the skewness requirements are considered false
+   * positives (have had a high goodness of fit) but often
+   * misregister.  Fit chip histograms that positively skewed are
+   * generally good solutions.  Normal distribution or negatively
+   * skewed distributions often produce false positive goodness of
+   * fit values.
+   *
+   * @param tolerance the skewness tolerance.  Numbers close to
+   *                  zero a normal distributions while positive
+   *                  numbers imply positive skewness.  The
+   *                  default is 0.5
+   */
+  void AutoReg::SetFitChipSkewnessTolerance (double tolerance) {
+    p_skewnessTolerance = tolerance;
+  }
+
+  /**
    * Walk the pattern chip through the search chip to find the best registration
    *
-   * @return  Returns the status of the registration.  The following conditions
-   *          can occur
-   *          0=Success,
-   *          1=Not enough valid data in pattern chip,
-   *          2=Fit chip did not have any valid data
-   *          3=Goodness of fit tolerance not satisfied,
-   *          4=Not enough points to fit a surface model for sub-pixel accuracy
-   *          5=Could not model surface for sub-pixel accuracy
-   *          6=Surface model moves registration more than one pixel
-   *          7=Pattern data max or min does not pass the z-score test
+   * @return  Returns the status of the registration. 
    *
-   * @todo implement search chip sampling, pattern chip sampling, and pattern
-   * chip reduction
+   * @todo implement search chip sampling, pattern chip sampling
    */
   AutoReg::RegisterStatus AutoReg::Register() {
-    // The search chip must be bigger than the pattern chip by two pixels in
+    // The search chip must be bigger than the pattern chip by N pixels in
     // both directions for a successful surface model
-    if (p_searchChip->Samples() < p_patternChip->Samples() + 2) {
+    int N = p_windowSize / 2 + 1;
+
+    if (p_searchChip->Samples() < p_patternChip->Samples() + N) {
       std::string msg = "Search chips samples [";
       msg += iString(p_searchChip->Samples()) + "] must be at ";
-      msg += "least two pixels wider than the pattern chip [";
-      msg += iString(p_patternChip->Samples()) + "]";
+      msg += "least [" +iString(N) + "] pixels wider than the pattern chip samples [";
+      msg += iString(p_patternChip->Samples()) + "] for successful surface modeling";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
 
-    if (p_searchChip->Lines() < p_patternChip->Lines() + 2) {
+    if (p_searchChip->Lines() < p_patternChip->Lines() + N) {
       std::string msg = "Search chips lines [";
       msg += iString(p_searchChip->Lines()) + "] must be at ";
-      msg += "least two pixels taller than the pattern chip [";
-      msg += iString(p_patternChip->Lines()) + "]";
+      msg += "least [" +iString(N) + "] pixels taller than the pattern chip lines [";
+      msg += iString(p_patternChip->Lines()) + "] for successful surface modeling";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
 
+    // Set computed parameters to NULL so we don't use values from a previous
+    // run
     p_ZScore1 = Isis::Null;
     p_ZScore2 = Isis::Null;
+    p_skewness = Isis::Null;
+    p_goodnessOfFit = Isis::Null;
 
     p_Total++;
 
-    int bestSamp = 0;
-    int bestLine = 0;
-    double bestFit = Isis::Null;
-    Chip fitChip(p_searchChip->Samples(),p_searchChip->Lines());
-    // For each Shrinking pattern
-    for (unsigned int sp=0; sp<p_reductionSamples.size(); sp++) {
-      // Prep for walking the search chip by computing the starting sample
-      // and line for the search.  Also compute the sample and linc
-      // increment for sparse walking
-      int ss,sl, es, el;
-      if (sp==0) {
-        ss = (p_patternChip->Samples() - 1) / 2 + 1;
-        sl = (p_patternChip->Lines() - 1) / 2 + 1;
-        es = p_searchChip->Samples()-ss+1;
-        el = p_searchChip->Lines()-sl+1;
-      } 
-      else {
-        ss = bestSamp - (int)(p_reductionPercents[sp-1]*p_reductionSamples[sp-1]/2);
-        sl = bestLine - (int)(p_reductionPercents[sp-1]*p_reductionLines[sp-1]/2);
-        es = bestSamp + (int)(p_reductionPercents[sp-1]*p_reductionSamples[sp-1]/2);
-        el = bestLine + (int)(p_reductionPercents[sp-1]*p_reductionLines[sp-1]/2);
-      }
+    // Prep for walking the search chip by computing the starting sample
+    // and line for the search.  Also compute the sample and linc
+    // increment for sparse walking
+    int ss = (p_patternChip->Samples() - 1) / 2 + 1;
+    int sl = (p_patternChip->Lines() - 1) / 2 + 1;
+    int es = p_searchChip->Samples()-ss+1;
+    int el = p_searchChip->Lines()-sl+1;
 
-      // Make sure we are going to register
-      // more than one point
-      if (ss==es && sl==el) break;
+    // Sanity check.  Should have been caught by the two previous tests
+    if (ss==es && sl==el) {
+      std::string msg = "Sanity check, this shouldn't happen!";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    }
 
-      // Ok create a fit chip whose size is the same as the search chip
-      // and then fill it with nulls
-      for (int line=1; line<=fitChip.Lines(); line++) {
-        for (int samp=1; samp<=fitChip.Samples(); samp++) {
-          fitChip(samp,line) = Isis::Null;
-        }
-      }
-
-      // TODO:  Enable this code
-      // Calculate the sampling info for the search chip
-      #if 0
-      double percent = sqrt(p_searchSamplingPercent / 100.0);
-      double numLines = (int)(percent*p_searchChip->Lines());
-      if (numLines < 1) numLines = 1;
-      double linc = p_searchChip->Lines()/numLines;
-      double numSamples = (int)(percent*p_searchChip->Samples());
-      if (numSamples < 1) numSamples = 1;
-      double sinc = p_searchChip->Samples()/numSamples;
-      if (linc < 1).0 linc = 1.0;
-      if (sinc < 1.0) sinc = 1.0;
-      #endif
-      int sinc = 1;
-      int linc = 1;
-
-      // Ok, now extract the shrinking pattern size subchip
-      Chip subpattern = p_patternChip->Extract(p_reductionSamples[sp],
-                                                   p_reductionLines[sp],
-                                                   (p_patternChip->Samples()+1)/2,
-                                                   (p_patternChip->Lines()+1)/2);
-
-      // See if the pattern chip has enough good data
-      if (!subpattern.IsValid(p_patternValidPercent)) {
-        p_PatternChipNotEnoughValidData[sp]++;
-        return PatternChipNotEnoughValidData;
-      }
-  
-        // See if the pattern passes the z-score test
-      Statistics stats;
-      for (int i=0; i<subpattern.Samples(); i++) {
-        double pixels[subpattern.Lines()];
-        for (int j=0; j<subpattern.Lines(); j++) {
-          pixels[j] = subpattern(i+1,j+1);
-        }
-        stats.AddData(pixels, subpattern.Lines());
-      }
-
-      p_ZScore1 = stats.ZScore(stats.Minimum());
-      p_ZScore2 = stats.ZScore(stats.Maximum());
-
-      // If it does not pass, return
-      if (p_ZScore2 < p_minimumPatternZScore ||
-          p_ZScore1 > -1*p_minimumPatternZScore) {
-        p_PatternZScoreNotMet[sp]++;
-        return PatternZScoreNotMet;
-      }
-  
-      // Walk the search chip and find the best fit
-      for (int line=sl; line<=el; line+=linc) {
-        for (int samp=ss; samp<=es; samp+=sinc) {
-          // Extract the sub search chip and make sure it has enough valid
-          // data
-          Chip subsearch = p_searchChip->Extract(p_reductionSamples[sp],
-                                                 p_reductionLines[sp],
-                                                 samp,line);
-          if (!subsearch.IsValid(p_patternValidPercent*p_patternSamplingPercent/100.0)) continue;
-  
-          // and try to match the two subchips
-          double fit = MatchAlgorithm(subpattern, subsearch);
-          if (fit != Isis::Null) {
-            fitChip(samp,line) = fit;
-            if ((bestFit == Isis::Null) || CompareFits(fit,bestFit)) {
-              bestFit = fit;
-              bestSamp = samp;
-              bestLine = line;
-            }
-          }
-        }
-      }
-  
-      // Check to see if we went through the fit chip and never got a fit at
-      // any location.
-      if (bestFit == Isis::Null) {
-        p_FitChipNoData[sp]++;
-        return FitChipNoData;
-      }
-  
-      // Now see if we satisified the tolerance
-      if (!CompareFits(bestFit,Tolerance())) {
-        p_goodnessOfFit = bestFit;
-        p_searchChip->SetChipPosition(bestSamp, bestLine);
-        p_cubeSample = p_searchChip->CubeSample();
-        p_cubeLine   = p_searchChip->CubeLine();
-        p_FitChipToleranceNotMet[sp]++;
-        return FitChipToleranceNotMet;
+    // Ok create a fit chip whose size is the same as the search chip
+    // and then fill it with nulls
+    p_fitChip->SetSize(p_searchChip->Samples(),p_searchChip->Lines());
+    for (int line=1; line<=p_fitChip->Lines(); line++) {
+      for (int samp=1; samp<=p_fitChip->Samples(); samp++) {
+        (*p_fitChip)(samp,line) = Isis::Null;
       }
     }
 
+    // TODO:  Enable this code
+    // Calculate the sampling info for the search chip
+    #if 0
+    double percent = sqrt(p_searchSamplingPercent / 100.0);
+    double numLines = (int)(percent*p_searchChip->Lines());
+    if (numLines < 1) numLines = 1;
+    double linc = p_searchChip->Lines()/numLines;
+    double numSamples = (int)(percent*p_searchChip->Samples());
+    if (numSamples < 1) numSamples = 1;
+    double sinc = p_searchChip->Samples()/numSamples;
+    if (linc < 1).0 linc = 1.0;
+    if (sinc < 1.0) sinc = 1.0;
+    #endif
+    int sinc = 1;
+    int linc = 1;
+
+
+    // See if the pattern chip has enough good data
+    if (!p_patternChip->IsValid(p_patternValidPercent)) {
+      p_PatternChipNotEnoughValidData++;
+      return PatternChipNotEnoughValidData;
+    }
+
+    // Get statistics to see if the pattern passes the z-score test
+    Statistics stats;
+    for (int i=0; i<p_patternChip->Samples(); i++) {
+      double pixels[p_patternChip->Lines()];
+      for (int j=0; j<p_patternChip->Lines(); j++) {
+        pixels[j] = (*p_patternChip)(i+1,j+1);
+      }
+      stats.AddData(pixels, p_patternChip->Lines());
+    }
+
+    // If it does not pass, return
+    p_ZScore1 = stats.ZScore(stats.Minimum());
+    p_ZScore2 = stats.ZScore(stats.Maximum());
+
+    if (p_ZScore2 < p_minimumPatternZScore ||
+        p_ZScore1 > -1*p_minimumPatternZScore) {
+      p_PatternZScoreNotMet++;
+      return PatternZScoreNotMet;
+    }
+
+    // Walk the search chip and find the best fit
+    int bestSamp = 0;
+    int bestLine = 0;
+    double bestFit = Isis::Null;
+    stats.Reset();
+
+    for (int line=sl; line<=el; line+=linc) {
+      for (int samp=ss; samp<=es; samp+=sinc) {
+        // Extract the sub search chip and make sure it has enough valid
+        // data
+        Chip subsearch = p_searchChip->Extract(p_patternChip->Samples(),
+                                               p_patternChip->Lines(),
+                                               samp,line);
+        if (!subsearch.IsValid(p_patternValidPercent*p_patternSamplingPercent/100.0)) continue;
+
+        // Try to match the two subchips
+        double fit = MatchAlgorithm(*p_patternChip, subsearch);
+
+        // If we had a fit save off information about that fit
+        if (fit != Isis::Null) {
+          (*p_fitChip)(samp,line) = fit;
+          stats.AddData(fit);
+          if ((bestFit == Isis::Null) || CompareFits(fit,bestFit)) {
+            bestFit = fit;
+            bestSamp = samp;
+            bestLine = line;
+          }
+        }
+      }
+    }
+
+    // Check to see if we went through the fit chip and never got a fit at
+    // any location.
+    if (bestFit == Isis::Null) {
+      p_FitChipNoData++;
+      return FitChipNoData;
+    }
+
+    // We had a location in the fit chip.  Save the values even if they
+    // may not meet tolerances.  This is also saves the value in the
+    // event the user does not want a surface model fit
+    p_goodnessOfFit = bestFit;
+    p_searchChip->SetChipPosition(bestSamp, bestLine);
+    p_cubeSample = p_searchChip->CubeSample();
+    p_cubeLine   = p_searchChip->CubeLine();
+
+    // Now see if we satisified the goodness of fit tolerance
+    if (!CompareFits(bestFit,Tolerance())) {
+      p_FitChipToleranceNotMet++;
+      return FitChipToleranceNotMet;
+    }
+
+    // Gather a histogram to apply the skewness test
+    Histogram hist(stats.Minimum(),stats.Maximum());
+    for (int i=0; i<p_fitChip->Samples(); i++) {
+      double pixels[p_fitChip->Lines()];
+      for (int j=0; j<p_fitChip->Lines(); j++) {
+        pixels[j] = (*p_fitChip)(i+1,j+1);
+      }
+      hist.AddData(pixels, p_fitChip->Lines());
+    }
+
+    // Determine if we should test for negative or positive skewness
+    bool skewFactor = 1.0;
+    if (CompareFits(stats.Minimum(),stats.Maximum())) skewFactor = -1.0;
+    p_skewness = hist.Skew()*skewFactor;
+
+    // See if the skewness meets the tolerance
+/* ##########This test should not happen ############
+      if ((p_skewness == Isis::Null) || (p_skewness < p_skewnessTolerance)) {
+      p_FitChipSkewnessNotMet++;
+      return FitChipSkewnessNotMet;
+    }
+*/
+    // Try to fit a model for sub-pixel accuracy if necessary
     if (p_subpixelAccuracy && !IsIdeal(bestFit)) {
-      // Ok try to fit a surface for sub-pixel accuracy using the window size
       std::vector<double> samps,lines,fits;
       for (int line=bestLine-p_windowSize/2; line<=bestLine+p_windowSize/2; line++) {
         if (line < 1) continue;
-        if (line > fitChip.Lines()) continue;
+        if (line > p_fitChip->Lines()) continue;
         for (int samp=bestSamp-p_windowSize/2; samp<=bestSamp+p_windowSize/2; samp++) {
           if (samp < 1) continue;
-          if (samp > fitChip.Samples()) continue;
-          if (fitChip(samp,line) == Isis::Null) continue;
+          if (samp > p_fitChip->Samples()) continue;
+          if ((*p_fitChip)(samp,line) == Isis::Null) continue;
           samps.push_back((double) samp);
           lines.push_back((double) line);
-          fits.push_back(fitChip(samp,line));
+          fits.push_back((*p_fitChip)(samp,line));
         }
       }
-      if (samps.size() < 7) { 
+
+      // Make sure we have enough data for a surface fit.  That is,
+      // we are not too close to the edge of the fit chip
+      if ((int)samps.size() < p_windowSize*p_windowSize * 2 / 3 + 1) {
         p_SurfaceModelNotEnoughValidData++;
         return SurfaceModelNotEnoughValidData;
       }
+
+      // Have enough data, try to mode the surface
       if (ModelSurface(samps,lines,fits)) {
         p_SurfaceModelSolutionInvalid++;
         return SurfaceModelSolutionInvalid;
       }
+
+      // See if the surface model solution moved too far from our whole pixel
+      // solution
       if (fabs(bestSamp - p_chipSample) > p_distanceTolerance ||
           fabs(bestLine - p_chipLine) > p_distanceTolerance) {
         p_SurfaceModelDistanceInvalid++;
         return SurfaceModelDistanceInvalid;
       }
+
+      // Does the surface model fit meet the user tolerance
       if (!CompareFits(p_goodnessOfFit, Tolerance())) {
         p_SurfaceModelToleranceNotMet++;
         return SurfaceModelToleranceNotMet;
@@ -462,14 +545,6 @@ namespace Isis {
 
       // Ok we have subpixel fits in chip space so convert to cube space
       p_searchChip->SetChipPosition(p_chipSample,p_chipLine);
-      p_cubeSample = p_searchChip->CubeSample();
-      p_cubeLine   = p_searchChip->CubeLine();
-    }
-    // If sub-pixel accuracy is not used or an ideal fit was found
-    // don't model a surface
-    else {
-      p_goodnessOfFit = bestFit;
-      p_searchChip->SetChipPosition(bestSamp, bestLine);
       p_cubeSample = p_searchChip->CubeSample();
       p_cubeLine   = p_searchChip->CubeLine();
     }
@@ -553,67 +628,20 @@ namespace Isis {
   // See if the fit is arbitrarily close
   // to the ideal value
   bool AutoReg::IsIdeal(double fit) {
-    return( std::abs(p_idealFit - fit) < EPSILON );
+    return( std::abs(p_idealFit - fit) < 0.00001 );
   }
+
 
   /**
-   * This method set up shrinking pattern chips.  After the Register algorithm
-   * traverses the search chip and finds a match, it will reduce the pattern
-   * chip and attempt to rematch in a local area to improve sub-pixel
-   * accuracy
+   * This returns the cumulative registration statistics.  That
+   * is, the Register() method accumulates statistics regard the
+   * errors each time is called.  Invoking this method returns a
+   * PVL summary of those statisitics
    *
-   * @param samples   a vector of decreasing pattern samples
-   * @param lines     a vector of decreasing pattern lines
-   */
-  void AutoReg::SetPatternReduction(std::vector<int> samples,
-                                    std::vector<int> lines) {
-    if (samples.size() != lines.size()) {
-      std::string msg = "Pattern reduction samples and lines must";
-      msg += " be the same size";
-      throw iException::Message(iException::User,msg,_FILEINFO_);
-    }
-
-    p_reductionSamples = samples;
-    p_reductionLines = lines;
-
-    int n = samples.size();
-
-    p_PatternChipNotEnoughValidData.clear();
-    p_PatternChipNotEnoughValidData.resize(n, 0);
-    p_PatternZScoreNotMet.clear();
-    p_PatternZScoreNotMet.resize(n, 0);
-    p_FitChipNoData.clear();
-    p_FitChipNoData.resize(n, 0);
-    p_FitChipToleranceNotMet.clear();
-    p_FitChipToleranceNotMet.resize(n, 0);
-  }
-
-  /**
-   * This method set up shrinking pattern chips.  After the Register algorithm
-   * traverses the search chip and finds a match, it will reduce the pattern
-   * chip and attempt to rematch in a local area to improve sub-pixel
-   * accuracy
+   * @author janderson (3/26/2009)
    *
-   * @param percents   a vector of decreasing percents
+   * @return Pvl
    */
-  void AutoReg::SetMovementReductionPercent(std::vector<double> percents) {
-    if (percents.size() !=1 && percents.size() != p_reductionSamples.size()-1) {
-      std::string msg = "The number of elements in the reduction movement ";
-      msg += "array must be one less than the number of sample/line points.";
-      throw iException::Message(iException::User,msg,_FILEINFO_);
-    }
-
-    // If percent reduction has a single value,
-    // duplicate it. Otherwise, copy directly from the pvl.
-    std::vector<double> p;
-    for (unsigned int i=0; i<p_reductionSamples.size()-1; i++) {
-      if (i<percents.size()) p.push_back(percents[i]/100.0);
-      else p.push_back(percents[0]/100.0);
-    }
-
-    p_reductionPercents = p;
-  }
-
   Pvl AutoReg::RegistrationStatistics() {
     Pvl pvl;
     PvlGroup stats("AutoRegStatistics");
@@ -622,23 +650,23 @@ namespace Isis {
     stats += Isis::PvlKeyword("Failure", p_Total - p_Success);
     pvl.AddGroup(stats);
 
-    for (int i=0; i< (int)p_PatternChipNotEnoughValidData.size(); i++) {
-      PvlGroup grp("PatternChip"+iString(i+1));
-      grp += PvlKeyword("PatternNotEnoughValidData", p_PatternChipNotEnoughValidData[i]);
-      grp += PvlKeyword("PatternZScoreNotMet", p_PatternZScoreNotMet[i]);
-      grp += PvlKeyword("FitChipNoData", p_FitChipNoData[i]);
-      grp += PvlKeyword("FitChipToleranceNotMet", p_FitChipToleranceNotMet[i]);
-      pvl.AddGroup(grp);
-    };
+    PvlGroup grp("PatternChipFailures");
+    grp += PvlKeyword("PatternNotEnoughValidData", p_PatternChipNotEnoughValidData);
+    grp += PvlKeyword("PatternZScoreNotMet", p_PatternZScoreNotMet);
+    pvl.AddGroup(grp);
 
-    PvlGroup model("SurfaceModel");
+    PvlGroup fit("FitChipFailures");
+    fit += PvlKeyword("FitChipNoData", p_FitChipNoData);
+    fit += PvlKeyword("FitChipToleranceNotMet", p_FitChipToleranceNotMet);
+    fit += PvlKeyword("FitChipSkewnessNotMet", p_FitChipSkewnessNotMet);
+    pvl.AddGroup(fit);
+
+    PvlGroup model("SurfaceModelFailures");
     model += PvlKeyword("SurfaceModelNotEnoughValidData", p_SurfaceModelNotEnoughValidData);
     model += PvlKeyword("SurfaceModelSolutionInvalid", p_SurfaceModelSolutionInvalid);
     model += PvlKeyword("SurfaceModelToleranceNotMet", p_SurfaceModelToleranceNotMet);
     model += PvlKeyword("SurfaceModelDistanceInvalid", p_SurfaceModelDistanceInvalid);
-
     pvl.AddGroup(model);
-
 
     return pvl;
   }

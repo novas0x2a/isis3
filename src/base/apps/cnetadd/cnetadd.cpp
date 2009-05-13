@@ -1,8 +1,9 @@
 #include "Isis.h"
 
-#include "Pvl.h"
+#include "UserInterface.h"
 #include "FileList.h"
 #include "Filename.h"
+#include "Pvl.h"
 #include "SerialNumber.h"
 #include "SerialNumberList.h"
 #include "CameraFactory.h"
@@ -10,14 +11,14 @@
 #include "ControlPoint.h"
 #include "ControlMeasure.h"
 #include "iException.h"
+#include "CubeManager.h"
 
 using namespace std;
 using namespace Isis;
 
-void SetImages (const std::string &imageListFile);
+void SetControlPointLatLon( const std::string &incubes, const std::string &cnet );
 
-std::map<std::string,Isis::Camera *> p_cameraMap;    //!< A map from serialnumber to camera
-ControlNet inNet;
+std::map< std::string, std::pair<double,double> > p_pointLatLon;
 
 void IsisMain() {
 
@@ -58,51 +59,60 @@ void IsisMain() {
     throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
   }
 
-  inNet = ControlNet(ui.GetFilename("NETWORK"));
-  SetImages(ui.GetFilename("FROMLIST"));
+  SetControlPointLatLon( ui.GetFilename("FROMLIST"), ui.GetFilename("CNET") );
   Filename outNet(ui.GetFilename("TO"));
+
+  ControlNet inNet = ControlNet(ui.GetFilename("CNET"));
+  inNet.SetUserName( Isis::Application::UserName() );
+  //inNet.SetCreatedDate( Isis::Application::DateTime() );    //This should be done in ControlNet's Write fn
+  inNet.SetModifiedDate( Isis::iTime::CurrentLocalTime() );
 
   Progress progress;
   progress.SetText("Adding Images");
   progress.SetMaximumSteps(list2.size());
+  progress.CheckStatus();
 
   // loop through all the images
-  for(unsigned int i =0; i < list2.size(); i++) {
+  for( unsigned int img =0; img < list2.size(); img ++ ) {
     Pvl cubepvl;
     bool imageAdded = false;
-    cubepvl.Read(list2[i]);
+    cubepvl.Read(list2[img]);
     Camera *cam = CameraFactory::Create(cubepvl);
+    
     //loop through all the control points
-    for(int j=0; j< inNet.Size();j++) {
-      ControlPoint &cp = inNet[j];
-      ControlMeasure &cm = cp[cp.ReferenceIndex()];
+    for( int cp = 0 ; cp < inNet.Size() ; cp ++ ) {
+      ControlPoint point( inNet[cp] );
+      ControlMeasure cmeasure( point[ inNet[cp].ReferenceIndex() ] );
+      
       // Get the lat/long coords from the existing reference measure
-      Camera *cmCam = p_cameraMap[cm.CubeSerialNumber()];
-      cmCam->SetImage(cm.Sample(), cm.Line());
-      cam->SetUniversalGround(cmCam->UniversalLatitude(),cmCam->UniversalLongitude());
-      // Make sure the samp & line are inside the image
-      if(cam->Sample() >= 0.5 && cam->Sample() <= cam->Samples()+0.5) {
-        if(cam->Line() >= 0.5 && cam->Line() <= cam->Lines()+0.5) {
+      if ( cam->SetUniversalGround( p_pointLatLon[point.Id()].first, p_pointLatLon[point.Id()].second ) ) {
+
+        // Make sure the samp & line are inside the image
+        if( cam->InCube() ) {
+
           ControlMeasure newCm;
-          newCm.SetCoordinate(cam->Sample(),cam->Line());
+          newCm.SetCoordinate(cam->Sample(),cam->Line(),ControlMeasure::Estimated);
           newCm.SetCubeSerialNumber(SerialNumber::Compose(cubepvl));
           newCm.SetDateTime();
           newCm.SetChooserName("Application cnetadd");
-          cp.Add(newCm);
+          inNet[cp].Add(newCm);
           
           imageAdded = true;
         }
-      }    
+      }
     }
-    if(!imageAdded) {
-      omitted.AddValue(Isis::Filename(list2[i]).Basename());
+
+    delete cam;
+    cam = NULL;
+
+    if(imageAdded) {
+      added.AddValue(Isis::Filename(list2[img]).Basename());
     }else{
-      added.AddValue(Isis::Filename(list2[i]).Basename());
+      omitted.AddValue(Isis::Filename(list2[img]).Basename());
     }
     progress.CheckStatus();
   }
 
-  progress.CheckStatus();
   results.AddKeyword(added);
   results.AddKeyword(omitted);
 
@@ -113,27 +123,44 @@ void IsisMain() {
   inNet.Write(outNet.Expanded());
 }
 
-  /**
-   * Creates the ControlNet's image cameras based on an input file
-   * 
-   * @param imageListFile The list of images
-   */
-  void SetImages (const std::string &imageListFile) {
-    SerialNumberList list(imageListFile);
-    // Open the camera for all the images in the serial number list
-    for (int i=0; i<list.Size(); i++) {
-      std::string serialNumber = list.SerialNumber(i);
-      std::string filename = list.Filename(i);
-      Pvl pvl(filename);
 
-      try {
-        Isis::Camera *cam = CameraFactory::Create(pvl);
-        p_cameraMap[serialNumber] = cam;
-      }
-      catch (Isis::iException &e) {
-        std::string msg = "Unable to create camera for cube file ";
-        msg += filename;
-        throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
-      }
+/**
+ * Calculates the lat/lon of the ControlNet.
+ * 
+ * @param incubes The filename of the list of cubes in the ControlNet
+ * @param cnet    The filename of the ControlNet
+ */
+void SetControlPointLatLon( const std::string &incubes, const std::string &cnet ) {
+  SerialNumberList snl( incubes );
+  ControlNet net( cnet );
+
+  CubeManager manager;
+  manager.SetNumOpenCubes( 50 ); //Should keep memory usage to around 1GB
+
+  Progress progress;
+  progress.SetText("Calculating Lat/Lon");
+  progress.SetMaximumSteps(net.Size());
+  progress.CheckStatus();
+
+  for( int cp = 0 ; cp < net.Size() ; cp ++ ) {
+    ControlPoint point( net[cp] );
+    ControlMeasure cm( point[ net[cp].ReferenceIndex() ] );
+    
+    Cube * cube = manager.OpenCube( snl.Filename( cm.CubeSerialNumber() ) );
+    try {
+      cube->Camera()->SetImage( cm.Sample(), cm.Line() );
+      p_pointLatLon[point.Id()].first = cube->Camera()->UniversalLatitude();
+      p_pointLatLon[point.Id()].second = cube->Camera()->UniversalLongitude();
     }
+    catch (Isis::iException &e) {
+      std::string msg = "Unable to create camera for cube file [";
+      msg += snl.Filename( cm.CubeSerialNumber() ) + "]";
+      throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
+    }
+    cube = NULL; //Do not delete, manager still has ownership
+
+    progress.CheckStatus();
   }
+
+  manager.CleanCubes();
+}

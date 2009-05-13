@@ -2,8 +2,8 @@
 #define Workspace_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/12/04 17:21:24 $
+ * $Revision: 1.7 $
+ * $Date: 2009/03/27 16:07:50 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -25,7 +25,9 @@
 
 #include <vector>
 #include <string>
-#include <qworkspace.h>
+
+#include <QMdiArea>
+#include <QMdiSubWindow>
 #include "Cube.h"
 
 namespace Qisis {
@@ -48,15 +50,19 @@ namespace Qisis {
  *          addCubeViewport(cubename).  Added exception catch to
  *          addCubeViewport(cube) to close the CubeViewport from
  *          the ViewportMainWindow if it cannot be shown.
+ * @history 2009-03-27 Noah Hilt, Steven Lambright - Changed parent class from 
+ *          QWorkspace to QMdiArea since QWorkspace is now an obsolete class.
+ *          Also changed how CubeViewports are created.
  */
 
   class CubeViewport;
-  class Workspace : public QWorkspace {
+
+  class Workspace : public QMdiArea {
     Q_OBJECT
 
     public:
       Workspace (QWidget *parent=0);
-      std::vector<CubeViewport *> *cubeViewportList() { return &p_cubeViewportList; };
+      std::vector<CubeViewport *> *cubeViewportList();
 
     signals:
       void cubeViewportAdded (Qisis::CubeViewport *);
@@ -69,13 +75,10 @@ namespace Qisis {
       void addBrowseView(QString cube);
 
     protected slots:
-      void activateViewport(QWidget *w);
+      void activateViewport(QMdiSubWindow *w);
 
     private:
-      std::vector<Qisis::CubeViewport *> p_cubeViewportList;
-      void populateList();
-      QWidget *p_lastWindow;
-
+      std::vector<CubeViewport *> p_cubeViewportList;
   };
 };
 

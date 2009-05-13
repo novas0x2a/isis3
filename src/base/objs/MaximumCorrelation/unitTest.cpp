@@ -41,6 +41,7 @@ int main () {
   AutoReg *ar = AutoRegFactory::Create(pvl);
 
   Cube c;
+  ar->SetFitChipSkewnessTolerance(-0.5);
   c.Open("$mgs/testData/ab102401.cub");
 
   ar->SearchChip()->TackCube(125.0,50.0);

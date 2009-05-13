@@ -85,6 +85,11 @@ int main () {
 
       Projection *proj = Isis::ProjectionFactory::Create(maplab);
 
+      /* 
+      This test doesn't make sense because there is no ground range on this                                                                               ;
+      projection.                                                                                                                                                    ;
+                                                                                                                                                                     ;
+                                                                                                                                                                     ;
       double x1,x2,y1,y2;
       proj->XYRange(x1,x2,y1,y2);
       if(fabs(x1) < 0.00000001) x1 = 0.0;
@@ -92,6 +97,7 @@ int main () {
       if(fabs(y1) < 0.00000001) y1 = 0.0;
       if(fabs(y2) < 0.00000001) y2 = 0.0;
       std::cout << "X: " << x1 << "-" << x2 << " Y: " << y1 << "-" << y2 << std::endl;
+      */
 
       vector<geos::geom::Point *> seedValues = ps->Seed(mp, proj);
       cout << setprecision(13);

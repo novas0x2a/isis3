@@ -472,8 +472,10 @@ namespace Qisis {
   void QtieTool::loadPoint () {
 
     //  Initialize pointEditor with measures
-    p_pointEditor->setLeftMeasure (&(*p_controlPoint)[Base],p_baseCube);
-    p_pointEditor->setRightMeasure (&(*p_controlPoint)[Match],p_matchCube);
+    p_pointEditor->setLeftMeasure (&(*p_controlPoint)[Base],p_baseCube,
+                                   p_controlPoint->Id());
+    p_pointEditor->setRightMeasure (&(*p_controlPoint)[Match],p_matchCube,
+                                   p_controlPoint->Id());
   }
 
 

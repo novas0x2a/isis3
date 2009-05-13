@@ -529,6 +529,18 @@ void calcRange(double &minLat, double &maxLat,
   }
   else if (ui.GetString("TARGOPT") == "USER") {
     userGrp += PvlKeyword("TargetName", ui.GetString("TARGETNAME"));
+    iString targetName = ui.GetString("TARGETNAME");
+    PvlGroup grp = Projection::TargetRadii(targetName);
+    double equatorialRad = grp["EquatorialRadius"];
+    double polarRad = grp["PolarRadius"];
+
+// if radii were entered in GUI then set radii to entered value
+    if (ui.WasEntered("EQRADIUS")) {
+      equatorialRad = ui.GetDouble("EQRADIUS");
+    }
+    if (ui.WasEntered("POLRADIUS")) {
+      polarRad = ui.GetDouble("POLRADIUS");
+    }
     if (ui.GetString("LATTYPE") == "PLANETOCENTRIC") {
       string latType = "Planetocentric";
       userGrp += PvlKeyword("LatitudeType", latType);
@@ -546,8 +558,8 @@ void calcRange(double &minLat, double &maxLat,
       userGrp += PvlKeyword("LongitudeDirection", lonD);
     }
     userGrp += PvlKeyword("LongitudeDomain", ui.GetString("LONDOM"));
-    userGrp += PvlKeyword("EquatorialRadius", ui.GetDouble("EQRADIUS"));
-    userGrp += PvlKeyword("PolarRadius", ui.GetDouble("POLRADIUS"));
+    userGrp += PvlKeyword("EquatorialRadius", equatorialRad);
+    userGrp += PvlKeyword("PolarRadius", polarRad);
     userMap.AddGroup(userGrp);
   }
 

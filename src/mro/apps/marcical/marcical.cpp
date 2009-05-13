@@ -7,10 +7,14 @@
 #include "Camera.h"
 #include "Constants.h"
 #include "Statistics.h"
+#include "TextFile.h"
+#include "Stretch.h"
 #include "iTime.h"
 
 using namespace Isis;
 using namespace std;
+
+Stretch stretch;
 
 void IsisMain () {
   UserInterface &ui = Application::GetUserInterface();
@@ -28,15 +32,23 @@ void IsisMain () {
   Filename inFilename = ui.GetFilename("FROM");
   try {
     if (icube.GetGroup("Instrument")["InstrumentID"][0] != "Marci") {
-      string msg = "This program is intended for use on MARCI images only. [";
-      msg += inFilename.Expanded() + "] does not appear to be a MARCI image.";
-      throw iException::Message(iException::User,msg,_FILEINFO_);
+      throw iException::Message(iException::User,"",_FILEINFO_);
+    }
+
+    if(!icube.GetGroup("Archive").HasKeyword("SampleBitModeId")) {
+      throw iException::Message(iException::User,"",_FILEINFO_);
     }
   }
   catch (iException &e) {
-      string msg = "This program is intended for use on MARCI images only. [";
-      msg += inFilename.Expanded() + "] does not appear to be a MARCI image.";
+    e.Clear();
+    string msg = "This program is intended for use on MARCI images only. [";
+    msg += inFilename.Expanded() + "] does not appear to be a MARCI image.";
     throw iException::Message(iException::User,msg, _FILEINFO_);
+  }
+
+  if(icube.GetGroup("Archive")["SampleBitModeId"][0] != "SQROOT") {
+    string msg = "Sample bit mode [" + icube.GetGroup("Archive")["SampleBitModeId"][0] + "] is not supported.";
+    throw iException::Message(iException::User,msg,_FILEINFO_);
   }
 
   // Read in calibration coefficients
@@ -62,6 +74,24 @@ void IsisMain () {
     decimation.push_back(0.25);
   }
 
+  // Get the LUT data
+  Filename temp("$mro/calibration/marcisqroot_???.lut");
+  temp.HighestVersion();
+  TextFile stretchPairs(temp.Expanded());
+
+  // Create the stretch pairs
+  stretch.ClearPairs();
+  for (int i=0; i<stretchPairs.LineCount(); i++) {
+    iString line;
+    stretchPairs.GetLine(line,true);
+    int temp1 = line.Token(" ");
+    int temp2 = line.Trim(" ");
+    stretch.AddPair(temp1,temp2);
+  }
+
+  stretchPairs.Close();
+
+  // This file stores radiance/spectral distance coefficients
   Pvl calibrationData(calFile.Expanded());
 
   // This will store the radiance coefficient and solar spectral distance coefficients 
@@ -191,7 +221,6 @@ void IsisMain () {
 
     int fcubeIndex = filter[ocubeMgr.Band()-1] - 1;
     flatcubes[fcubeIndex]->Read((*fcubeMgrs[fcubeIndex]));
-    cam->SetBand(icubeMgr.Band());
 
     for(int i = 0; i < ocubeMgr.size(); i++) {
       if(IsSpecial((*fcubeMgrs[fcubeIndex])[i]) || (*fcubeMgrs[fcubeIndex])[i] == 0.0) {
@@ -201,7 +230,7 @@ void IsisMain () {
         ocubeMgr[i] = icubeMgr[i];
       }
       else {
-        ocubeMgr[i] = icubeMgr[i] / (*fcubeMgrs[fcubeIndex])[i];
+        ocubeMgr[i] = stretch.Map(icubeMgr[i]) / (*fcubeMgrs[fcubeIndex])[i];
 
         ocubeMgr[i] = ocubeMgr[i] / exposure / (summing * decimation[fcubeIndex]) / calibrationCoeffs[fcubeIndex].first;
 
@@ -230,6 +259,7 @@ void IsisMain () {
 
     if(newFramelet && cam != NULL) {
       // center the cameras position on the new framelet to keep the solar distance accurate
+      cam->SetBand(icubeMgr.Band());
       cam->SetImage(icubeMgr.size() / 2.0 + 0.5, (icubeMgr.Line() - 0.5) + (16 / 2) / summing);
       solarDist = cam->SolarDistance();
     }

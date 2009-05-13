@@ -1,4 +1,5 @@
 Group = Cassini-Huygens/ISSNA
+  Version = 1
   Library = IssNACamera
   Routine = IssNACameraPlugin
 EndGroup

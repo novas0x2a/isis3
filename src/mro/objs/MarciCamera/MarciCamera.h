@@ -21,6 +21,8 @@ namespace Isis {
      *   @history 2008-11-25 Steven Lambright - The coloroffset now works properly;
      *            if an offset is supplied in marci2isis the cube will still project
      *            properly.
+     *   @history 2009-03-17 Steven Lambright - Fixed UV to work with the distortion
+     *            model correctly
      */
     class MarciCamera : public Isis::Camera {
       public:

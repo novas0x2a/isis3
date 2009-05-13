@@ -1,6 +1,8 @@
 #include "ControlPoint.h"
 #include "SpecialPixel.h"
+#include "CameraFocalPlaneMap.h"
 #include "CameraDistortionMap.h"
+#include "CameraDetectorMap.h"
 #include "iString.h"
 
 namespace Isis {
@@ -392,23 +394,76 @@ namespace Isis {
 
       // TODO:  Should we use crater diameter?
       Camera *cam = m.Camera();
-      if (cam->SetUniversalGround(lat,lon,rad)) {
-        double sampError = m.Sample() - cam->Sample();
-        double lineError = m.Line() - cam->Line();
-        m.SetError(sampError,lineError);
-
-        double x = cam->DistortionMap()->UndistortedFocalPlaneX();
-        double y = cam->DistortionMap()->UndistortedFocalPlaneY();
-        m.SetFocalPlaneComputed(x,y);
-        m.SetComputedEphemerisTime(cam->EphemerisTime());
+      if (cam->SetImage(m.Sample(),m.Line())) {
+        // Map the lat/lon/radius of the control point through the Spice of the
+        // measurement sample/line to get the computed sample/line.  This must be
+        // done manually because the camera will compute a new time for line scanners,
+        // instead of using the measured time.
+        // First compute the look vector in body-fixed coordinates
+        double pB[3];   
+        latrec_c(rad/1000., lon * Isis::PI / 180.0, lat * Isis::PI / 180.0, pB);
+        std::vector<double> lookB(3);
+        SpiceRotation *bodyRot = m.Camera()->BodyRotation();
+        std::vector<double> sB(3);
+        sB = bodyRot->ReferenceVector(m.Camera()->InstrumentPosition()->Coordinate());
+        for (int ic=0; ic<3; ic++)  lookB[ic]  =  pB[ic] - sB[ic];
+        // Rotate the look vector to camera coordinates
+        std::vector<double> lookC(3);
+        std::vector<double> lookJ(3);
+        lookJ = bodyRot->J2000Vector( lookB );
+        lookC = m.Camera()->InstrumentRotation()->ReferenceVector( lookJ );
+        // Scale to undistorted focal plane coordinates
+        double scale = m.Camera()->FocalLength() / lookC[2];
+        double cudx = lookC[0] * scale;
+        double cudy = lookC[1] * scale;
+        // Map to distorted focal plane coordinates
+        CameraDistortionMap *distmap = m.Camera()->DistortionMap();
+        distmap->SetUndistortedFocalPlane(cudx, cudy);
+        double cfpX = distmap->FocalPlaneX();
+        double cfpY = distmap->FocalPlaneY();
+        // Map to detector
+        CameraFocalPlaneMap *fpmap = m.Camera()->FocalPlaneMap();
+        if (fpmap->SetFocalPlane(cfpX, cfpY)) {
+          double cds = fpmap->DetectorSample();
+          double cdl = fpmap->DetectorLine();
+          // Map to parent sample/line
+          CameraDetectorMap *cdmap = m.Camera()->DetectorMap();
+          if (cdmap->SetDetector(cds, cdl)) {
+            double cps = cdmap->ParentSample();
+            double cpl = cdmap->ParentLine();
+            double sampError = m.Sample() - cps;
+            double lineError = m.Line() - cpl;
+            m.SetError(sampError,lineError);
+            if (cam->SetUniversalGround(lat,lon,rad) ) {
+              sampError = m.Sample() - cam->Sample();
+              lineError = m.Line() - cam->Line();
+            }
+            m.SetFocalPlaneComputed(cfpX,cfpY);
+            m.SetComputedEphemerisTime(cam->EphemerisTime());
+          }
+          else {
+            std::string msg = "Unable to set detector for ControlPoint [" +
+                          Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
+                          "]";
+            throw iException::Message(iException::User,msg,_FILEINFO_);
+//            m.SetError(999.0,999.0);
+          }
+        }
+        else {
+          std::string msg = "Unable to set focal plane for ControlPoint [" +
+                            Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
+                            "]";
+          throw iException::Message(iException::User,msg,_FILEINFO_);
+//          m.SetError(999.0,999.0);
+        }
       }
       else {
-        std::string msg = "Unable to map point to surface, ControlPoint [" +
+        std::string msg = "Unable to map measurement to surface, ControlPoint [" +
                           Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
                           "]";
         throw iException::Message(iException::User,msg,_FILEINFO_);
         // TODO: What should we do?
-        // m.SetError(999.0,999.0);
+//         m.SetError(999.0,999.0);
         // m.SetFocalPlaneComputed(?,?);
       }
     }

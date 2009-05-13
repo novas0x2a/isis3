@@ -25,6 +25,13 @@
     <change name="Elizabeth Miller" date="2005-11-14">
       Added appTest
     </change>
+    <change name="Jeff Anderson" date="2005-05-19">
+        64-bit Solaris port required replacing long with int and adding malloc.h
+    </change>
+    <change name="Jeannie Walldren" date="2009-03-23">
+      Modified code to allow string length of 1024 characters for input and 
+      output filenames.
+    </change>
   </history>
 
   <category>

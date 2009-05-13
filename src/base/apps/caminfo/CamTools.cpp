@@ -1,7 +1,7 @@
 /* @file                                                                  
- * $Revision: 1.7 $
- * $Date: 2009/01/06 22:22:28 $
- * $Id: CamTools.cpp,v 1.7 2009/01/06 22:22:28 skoechle Exp $
+ * $Revision: 1.9 $
+ * $Date: 2009/04/21 23:36:28 $
+ * $Id: CamTools.cpp,v 1.9 2009/04/21 23:36:28 skoechle Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -90,7 +90,8 @@ void BandGeometry::destruct() {
    _radius = 1.0;
 }
 
-void BandGeometry::collect(Camera &camera, Cube &cube) {
+void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry, 
+                           bool doPolygon) { 
   destruct();
 
   _nLines  = cube.Lines();
@@ -229,48 +230,49 @@ void BandGeometry::collect(Camera &camera, Cube &cube) {
       }
     }
 
-    // Now compute the the image polygon
-    ImagePolygon poly;
-    poly.Create(cube,0,1,1,0,0,band+1);
-    geos::geom::MultiPolygon *multiP = poly.Polys();
-    _polys.push_back(multiP->clone());
-    if (_combined == 0) {
-      _combined = multiP->clone();
-    }
-    else {
-      //  Construct composite (union) polygon
-      geos::geom::Geometry *old(_combined);
-      _combined = old->Union(multiP);
-      delete old;
-    }
-
-    Projection *sinu = ProjectionFactory::Create(camMap, true);
-    geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*multiP, sinu);
-    geos::geom::Point *center = sPoly->getCentroid();
-
-    sinu->SetCoordinate(center->getX(), center->getY());
-    g.centroidLongitude = sinu->UniversalLongitude();
-    g.centroidLatitude  = sinu->UniversalLatitude();
-    g.surfaceArea = sPoly->getArea() / (1000.0 * 1000.0);
-    delete center;
-    delete sPoly;
-    delete sinu;
-
-    if (camera.SetUniversalGround(g.centroidLatitude, g.centroidLongitude)) {
-      g.centroidLine = camera.Line();
-      g.centroidSample = camera.Sample();
-      g.centroidRadius = camera.LocalRadius();
+    if ( doPolygon ) {
+      // Now compute the the image polygon
+      ImagePolygon poly;
+      poly.Create(cube,1,1,0,0,band+1);
+      geos::geom::MultiPolygon *multiP = poly.Polys();
+      _polys.push_back(multiP->clone());
+      if (_combined == 0) {
+        _combined = multiP->clone();
+      }
+      else {
+        //  Construct composite (union) polygon
+        geos::geom::Geometry *old(_combined);
+        _combined = old->Union(multiP);
+        delete old;
+      }
+  
+      Projection *sinu = ProjectionFactory::Create(camMap, true);
+      geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*multiP, sinu);
+      geos::geom::Point *center = sPoly->getCentroid();
+  
+      sinu->SetCoordinate(center->getX(), center->getY());
+      g.centroidLongitude = sinu->UniversalLongitude();
+      g.centroidLatitude  = sinu->UniversalLatitude();
+      g.surfaceArea = sPoly->getArea() / (1000.0 * 1000.0);
+      delete center;
+      delete sPoly;
+      delete sinu;
+  
+      if (camera.SetUniversalGround(g.centroidLatitude, g.centroidLongitude)) {
+        g.centroidLine = camera.Line();
+        g.centroidSample = camera.Sample();
+        g.centroidRadius = camera.LocalRadius();
+      }
     }
 
     // Save off this band geometry property
     _gBandList.push_back(g);
-
   }
 
   //  Compute the remainder of the summary bands since some of the operations
   //  need the camera model
   _summary = getGeometrySummary();
-  if ( size() != 1 ) {     
+  if ( (size() != 1) && (doPolygon)) {     
     Projection *sinu = ProjectionFactory::Create(_mapping, true);
     geos::geom::MultiPolygon *multiP = makeMultiPolygon(_combined);
     geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*multiP, sinu); 
@@ -323,13 +325,6 @@ void BandGeometry::generateGeometryKeys(PvlObject &pband) {
 
   pband += ValidateKey("RightAscension",g.rightAscension);
   pband += ValidateKey("Declination",g.declination);
-
-  pband += ValidateKey("CentroidLatitude",g.centroidLatitude);
-  pband += ValidateKey("CentroidLongitude",g.centroidLongitude);
-  pband += ValidateKey("CentroidLine",g.centroidLine);
-  pband += ValidateKey("CentroidSample",g.centroidSample);
-  pband += ValidateKey("CentroidRadius",g.centroidRadius);
-  pband += ValidateKey("SurfaceArea",g.surfaceArea);
 
   pband += ValidateKey("UpperLeftLongitude",g.upperLeftLongitude);
   pband += ValidateKey("UpperLeftLatitude",g.upperLeftLatitude);
@@ -410,9 +405,13 @@ BandGeometry::GProperties BandGeometry::getGeometrySummary() const {
   }
 
   //  Get the centroid point of the union polygon
-  geos::geom::Point *center = _combined->getCentroid();
-  double plon(center->getX()), plat(center->getY());
-  delete center;
+  double plon(Null), plat(Null);
+  if ( _combined != 0 ) {
+    geos::geom::Point *center = _combined->getCentroid();
+    plon = center->getX();
+    plat = center->getY();
+    delete center;
+  }
 
   GProperties bestBand;
   double centerDistance(DBL_MAX);
@@ -426,6 +425,15 @@ BandGeometry::GProperties BandGeometry::getGeometrySummary() const {
   BandPropertiesListConstIter b;
   for ( b = _gBandList.begin() ; b != _gBandList.end() ; ++b ) {
     double thisDist;
+
+    // Ensure the center latitude/logitude is defined (typically occurs when
+    // no polygon data is available).  This scheme uses the first one defined.
+    if ( IsSpecial(plat) || IsSpecial(plon) ) {
+      plat = b->centerLatitude;
+      plon = b->centerLongitude;
+    }
+
+    // Now check all data
     bool isCloser = isDistShorter(centerDistance, plat, plon,
                                   b->centerLatitude,b->centerLongitude,
                                   radius, thisDist) ;
@@ -499,19 +507,26 @@ void BandGeometry::generatePolygonKeys(PvlObject &pband) {
     globalCoverage = _summary.surfaceArea / globalArea * 100.0;
     globalCoverage = SetRound(globalCoverage, 6);
   }
- 
-  pband += PvlKeyword("CentroidLatitude", _summary.centroidLatitude);
-  pband += PvlKeyword("CentroidLongitude", _summary.centroidLongitude);
-  pband += ValidateKey("Radius",radius,"meters");
+
+  pband += ValidateKey("CentroidLine",_summary.centroidLine);
+  pband += ValidateKey("CentroidSample",_summary.centroidSample);
+  pband += ValidateKey("CentroidLatitude",_summary.centroidLatitude);
+  pband += ValidateKey("CentroidLongitude",_summary.centroidLongitude);
+  pband += ValidateKey("CentroidRadius",_summary.centroidRadius, "meters");
   pband += ValidateKey("SurfaceArea",_summary.surfaceArea,"km^2");
   pband += ValidateKey("GlobalCoverage",globalCoverage,"percent");
-  if ( _combined->getGeometryTypeId() != geos::geom::GEOS_MULTIPOLYGON ) {
-    geos::geom::MultiPolygon *geom = makeMultiPolygon(_combined);
-    pband += PvlKeyword("GisFootprint", geom->toString());
-    delete geom;
+  if ( _combined != 0 ) {
+    if ( _combined->getGeometryTypeId() != geos::geom::GEOS_MULTIPOLYGON ) {
+      geos::geom::MultiPolygon *geom = makeMultiPolygon(_combined);
+      pband += PvlKeyword("GisFootprint", geom->toString());
+      delete geom;
+    }
+    else {
+      pband += PvlKeyword("GisFootprint", _combined->toString());
+    }
   }
   else {
-    pband += PvlKeyword("GisFootprint", _combined->toString());
+    pband += PvlKeyword("GisFootprint", Null);
   }
 
   return;

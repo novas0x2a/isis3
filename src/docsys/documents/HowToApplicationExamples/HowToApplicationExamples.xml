@@ -300,7 +300,7 @@
 
         <h5>What format should my images be?</h5>
         <p>
-          JPEG, PNG, or GIF. JPEG may be the easiest because Isis has a file exporter (<tt>isis2jpg</tt>).
+          JPEG, PNG, or GIF. JPEG may be the easiest because Isis has a file exporter (<tt>isis2std</tt>).
         </p>
 
         <ul>

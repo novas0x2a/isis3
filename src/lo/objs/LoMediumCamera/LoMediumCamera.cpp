@@ -44,11 +44,6 @@ namespace Isis {
       double time; 
       str2et_c(stime.c_str(),&time);
 
-      // Setup detector map
-      CameraDetectorMap *detectorMap = new CameraDetectorMap(this);
-      detectorMap->SetXAxisDirection (false);
-      detectorMap->SetYAxisDirection (false);
-
       // Setup focal plane map
       if (type == Fiducial) {
         LoCameraFiducialMap fid( inst, NaifIkCode());
@@ -64,6 +59,9 @@ namespace Isis {
         CameraFocalPlaneMap *focalMap = new CameraFocalPlaneMap(this,NaifIkCode());
         focalMap->SetDetectorOrigin(boresightSample,boresightLine);
       }
+
+      // Setup detector map
+      new CameraDetectorMap(this);
 
       // Setup distortion map
       LoMediumDistortionMap *distortionMap = new LoMediumDistortionMap(this);

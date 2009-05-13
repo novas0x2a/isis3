@@ -2,8 +2,8 @@
 #define ImageOverlapSet_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.14 $                                                             
- * $Date: 2009/01/28 16:29:15 $
+ * $Revision: 1.15 $                                                             
+ * $Date: 2009/03/13 00:29:33 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -72,6 +72,8 @@ namespace Isis {
    *  @history 2009-01-13 Steven Lambright - Deletes both overlaps if an
    *           intersection fails for an unknown reason.
    *  @history 2009-01-28 Steven Lambright - Fixed memory leaks
+   *  @history 2009-03-12 Christopher Austin - Added the MULTIPOLYGON to
+   *           HandleError() as the Keyword "Polygon"
    */
   class ImageOverlapSet {
     public:

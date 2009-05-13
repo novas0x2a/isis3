@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/08/15 17:06:27 $
+ * $Revision: 1.8 $
+ * $Date: 2009/03/20 22:30:23 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -75,20 +75,15 @@ namespace Isis {
         p_centerLatitude = this->ToPlanetographic(p_centerLatitude);
       }
 
-      // Test to make sure center latitudes and longitudes are valid
+      // Test to make sure center longitude is valid
       if (fabs(p_centerLongitude) > 360.0) {
         iString message = "Central Longitude [" + iString(p_centerLongitude);
         message += "] must be between -360 and 360";
         throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
       }
-      if (90.0-fabs(p_centerLatitude) < DBL_EPSILON) {
-        iString message = "Center Latitude [" + iString(p_centerLatitude);
-        message += "] is not valid, must be greater than -90 and less thatn 90";
-        throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
-      }
+
       // convert to radians, adjust for longitude direction
       p_centerLongitude *= Isis::PI / 180.0;
-      p_centerLatitude *= Isis::PI / 180.0;
       if (p_longitudeDirection == PositiveWest) p_centerLongitude *= -1.0;
 
       // Get the standard parallels & convert them to ographic
@@ -111,7 +106,7 @@ namespace Isis {
         throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
       }
       // Removed because this test only works for northern hemisphere
-      // Just reorder the prallels so p1 is at the larger radius of the two
+      // Just reorder the parallels so p1 is at the larger radius of the two
       //if (p_par1 > p_par2) {
       //  string message = "Standard Parallels must be ordered";
       //  throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
@@ -124,6 +119,28 @@ namespace Isis {
         p_par2 = p_par1;
         p_par1 = tmp;
       }
+
+      // Test to make sure center latitude is valid
+      // The pole opposite the apex can not be used as the clat (i.e., origin of
+      // the projection) it projects to infinity
+      // Given: p2 is closer to the apex than p1, and p2 must be on the same
+      // side of the equator as the apex (due to the reording of p1 and p2 above)
+      // Test for cone pointed south "v"
+      if ((p_par2 < 0.0) && (fabs(90.0-p_centerLatitude) < DBL_EPSILON)) {
+        iString message = "Center Latitude [" + iString(p_centerLatitude);
+        message += "] is not valid, it projects to infinity for standard parallels [";
+        message += iString(p_par1) + "," + iString(p_par2) + "]";
+        throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
+      }
+      // Test for cone pointed north "^"
+      else if ((p_par2 > 0.0) && (fabs(-90.0-p_centerLatitude) < DBL_EPSILON)) {
+        iString message = "Center Latitude [" + iString(p_centerLatitude);
+        message += "] is not valid, it projects to infinity for standard parallels [";
+        message += iString(p_par1) + "," + iString(p_par2) + "]";
+        throw Isis::iException::Message(Isis::iException::Projection,message,_FILEINFO_);
+      }
+      // convert clat to radians
+      p_centerLatitude *= Isis::PI / 180.0;
 
       // Convert standard parallels to radians
       p_par1 *= Isis::PI / 180.0;
@@ -291,7 +308,15 @@ namespace Isis {
   * @param maxY Maximum y projection coordinate which covers the latitude
   *             longitude range specified in the labels.
   *
-  * @return bool
+  * @return bool 
+  *  
+  * @history 2009-03-03  Tracie Sucharski, Undo the PositiveWest adjustment to 
+  *                         the center longitude because it is done twice, once
+  *                         in the constructor and again in SetGround.
+  *  
+  * @history 2009-03-20  Stuart Sides, Modified the validity check for center 
+  *                      latitude. It now only tests for the pole opposite the
+  *                      apex of the cone.
   */
   bool LambertConformal::XYRange(double &minX, double &maxX, double &minY, double &maxY){
 
@@ -312,6 +337,11 @@ namespace Isis {
     if ((p_par1 == p_par2) && (p_par1 < 0.0)) north_hemi = false;
 
     double cLonDeg = p_centerLongitude * 180.0 / Isis::PI;
+
+    //  This is needed because the SetGround class applies the PositiveWest
+    //  adjustment which was already done in the constructor.
+    if (p_longitudeDirection == PositiveWest) cLonDeg = cLonDeg * -1.0;
+
     double pole_north, min_lat_north, max_lat_north, londiff;
     // North Pole
     if (north_hemi) {

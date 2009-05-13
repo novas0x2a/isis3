@@ -2,8 +2,8 @@
 #define Statistics_h
 /**
  * @file
- * $Date: 2008/05/06 17:19:08 $
- * $Revision: 1.3 $
+ * $Date: 2009/05/04 20:04:47 $
+ * $Revision: 1.4 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -80,7 +80,40 @@ namespace Isis {
 
       void Reset ();
       void AddData (const double *data, const unsigned int count);
-      void AddData (const double data);
+     /**
+      * Add a double to the accumulators and counters. This method
+      * can be invoked multiple times (for example: once for each
+      * pixel in a cube) before obtaining statistics.
+      *
+      * @param data The data to be added to the data set used for statistical 
+      *    calculations.
+      *
+      */
+      inline void AddData (const double data) {
+        p_totalPixels++;
+        if (Isis::IsValidPixel(data) && InRange(data)) {
+          p_sum += data;
+          p_sumsum += data * data;
+          if (data < p_minimum) p_minimum = data;
+          if (data > p_maximum) p_maximum = data;
+          p_validPixels++;
+        } else if (Isis::IsNullPixel(data)) {
+          p_nullPixels++;
+        } else if (Isis::IsHisPixel(data)) {
+          p_hisPixels++;            
+        } else if (Isis::IsHrsPixel(data)) {
+          p_hrsPixels++;            
+        } else if (Isis::IsLisPixel(data)) {
+          p_lisPixels++;            
+        } else if (Isis::IsLrsPixel(data)) {
+          p_lrsPixels++;      
+        } else if(AboveRange(data)) {
+          p_overRangePixels++;
+        } else {
+          p_underRangePixels++;
+        }
+      }
+
       void RemoveData (const double *data, const unsigned int count);
       void RemoveData (const double data);
       void SetValidRange(const double minimum=Isis::ValidMinimum, const double maximum=Isis::ValidMaximum);

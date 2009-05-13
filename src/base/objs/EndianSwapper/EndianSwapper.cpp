@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/14 23:21:26 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/04/16 17:37:59 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -66,9 +66,7 @@ namespace Isis {
 /**                                                                       
  * Swaps a double precision value.                                                          
  *                                                                        
- * @param buf Input double precision value to swap.
- *                                                                        
- * @todo The return type is now double (documentation says void).                                     
+ * @param buf Input double precision value to swap.                                
  */                                                                       
   double EndianSwapper::Double (void *buf) {
     char *ptr = (char *)buf + (sizeof (double) -1) * p_needSwap;
@@ -84,9 +82,7 @@ namespace Isis {
 /**                                                                       
  * Swaps a floating point value.                                                         
  *                                                                        
- * @param buf Input floating point value to swap.                    
- *                                                                        
- * @todo The return type is now float (documentation says void).                                      
+ * @param buf Input floating point value to swap.                                 
  */                                                                       
   float EndianSwapper::Float (void *buf) {
     char *ptr = (char *)buf + (sizeof (float) -1) * p_needSwap;
@@ -103,22 +99,45 @@ namespace Isis {
  * Swaps a floating point value for Exporting.
  */
   int EndianSwapper::ExportFloat (void *buf) {
+    return Int(buf);
+  }
+
+/**                                                                       
+ * Swaps a 4 byte integer value.                                                
+ *                                                                        
+ * @param buf Input integer value to swap.   
+ */ 
+  int EndianSwapper::Int(void *buf) {
     char *ptr = (char *)buf + (sizeof (int) -1) * p_needSwap;
 
     for (unsigned int i=0; i<sizeof (int); i++) {
       p_swapper.p_char[i] = *ptr;
       ptr += p_swapDirection;
     }
+
     return p_swapper.p_int;
   }
-  
+
+/**                                                                       
+ * Swaps an 8 byte integer value.                                               
+ *                                                                        
+ * @param buf Input integer value to swap.   
+ */ 
+  long long int EndianSwapper::LongLongInt(void *buf) {
+    char *ptr = (char *)buf + (sizeof (long long int) -1) * p_needSwap;
+
+    for (unsigned int i=0; i<sizeof (long long int); i++) {
+      p_swapper.p_char[i] = *ptr;
+      ptr += p_swapDirection;
+    }
+
+    return p_swapper.p_longLongInt;
+  }
   
 /**                                                                       
  * Swaps a short integer value.                                                         
  *                                                                        
- * @param buf Input short integer value to swap.                    
- *                                                                        
- * @todo The return type is now short int (documentation says void).                                      
+ * @param buf Input short integer value to swap.                                
  */ 
   short int EndianSwapper::ShortInt (void *buf) {
     char *ptr = (char *)buf + (sizeof (short int) -1) * p_needSwap;
@@ -134,9 +153,7 @@ namespace Isis {
 /**                                                                       
  * Swaps an unsigned short integer value                                                         
  *                                                                        
- * @param buf Input unsigned short integer value to swap.                    
- *                                                                        
- * @todo The return type is now unsigned short int (documentation says void).                                      
+ * @param buf Input unsigned short integer value to swap.                                  
  */ 
   unsigned short int EndianSwapper::UnsignedShortInt (unsigned short int *buf) {
     char *ptr = (char *)buf + (sizeof (unsigned short int) -1) * p_needSwap;

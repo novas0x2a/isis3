@@ -111,12 +111,11 @@ namespace Qisis {
    */
   void WindowTool::addTo (Workspace *ws) {
     Tool::addTo(ws);
-    connect(p_cascadeWindows,SIGNAL(activated()),ws,SLOT(cascade()));
-    connect(p_tileWindows,SIGNAL(activated()),ws,SLOT(tile()));
-    connect(p_prevWindow,SIGNAL(activated()),ws,SLOT(activatePreviousWindow()));
-    connect(p_nextWindow,SIGNAL(activated()),ws,SLOT(activateNextWindow()));
-    connect(p_closeWindow,SIGNAL(activated()),ws,SLOT(closeActiveWindow()));
-    
+    connect(p_cascadeWindows,SIGNAL(activated()),ws,SLOT(cascadeSubWindows()));
+    connect(p_tileWindows,SIGNAL(activated()),ws,SLOT(tileSubWindows()));
+    connect(p_prevWindow,SIGNAL(activated()),ws,SLOT(activatePreviousSubWindow()));
+    connect(p_nextWindow,SIGNAL(activated()),ws,SLOT(activateNextSubWindow()));
+    connect(p_closeWindow,SIGNAL(activated()),ws,SLOT(closeActiveSubWindow()));
   }
 
 
@@ -244,7 +243,7 @@ namespace Qisis {
 
     for (int i=0; i<(int)tempList.size(); i++) {
       d = tempList[i];
-      d->close();
+      d->parentWidget()->close();
     }
   }
 
@@ -256,11 +255,11 @@ namespace Qisis {
    */
   void WindowTool::resizeWindows(){
     CubeViewport *d;
-    QSize size = cubeViewport()->size();
+    QSize size = cubeViewport()->parentWidget()->size();
 
     for (int i=0; i<(int)cubeViewportList()->size(); i++) {
       d = (*(cubeViewportList()))[i];
-      if(d->isLinked()) d->resize(size);
+      if(d->isLinked()) d->parentWidget()->resize(size);
     }
   }
 
@@ -271,6 +270,7 @@ namespace Qisis {
    */
   void WindowTool::updateTool() {
     if (cubeViewport() == NULL) {
+      p_linkWindow->setChecked(false);
       p_linkWindow->setEnabled(false);
       p_linkAllWindows->setEnabled(false);
       p_unlinkAllWindows->setEnabled(false);

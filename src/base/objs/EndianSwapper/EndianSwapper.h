@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/14 23:21:26 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/04/16 17:37:59 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -46,6 +46,9 @@ namespace Isis {
  *   endian.h to figure the system's endian type.
  *   @history 2008-08-14 Christopher Austin - Added ExportFloat() for exporting
  *   real data to the non-native endians. i.e. exporting to msb on a lsb system
+ *   @history 2009-04-16 Steven Lambright - Added Int and LongLongInt. Long was
+ *            not added because it is 4 bytes on 32-bit linux and 8 bytes on
+ *            64-bit linux.
  */                                                                       
   class EndianSwapper {
     private:
@@ -69,6 +72,8 @@ namespace Isis {
         float p_float;
       //! Union containing the output 4 byte integer value with swapped bytes.
         int p_int;
+      //! Union containing the output 8 byte integer value with swapped bytes.
+        long long int p_longLongInt;
       //! Union containing the output 2 byte integer value with swapped bytes.
         short int p_shortInt;
       /**
@@ -86,6 +91,8 @@ namespace Isis {
       double Double (void *buf);      
       float Float (void *buf);
       int ExportFloat (void *buf);
+      int Int (void *buf);
+      long long int LongLongInt (void *buf);
       short int ShortInt (void *buf);
       unsigned short int UnsignedShortInt (unsigned short int *buf);
       

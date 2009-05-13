@@ -9,10 +9,11 @@
 #include "Filename.h"
 #include "FileList.h"
 #include "SerialNumber.h"
-#include "Cube.h"
-#include "Constants.h"
 #include "CameraFactory.h"
 #include "ProjectionFactory.h"
+#include "PvlGroup.h"
+#include "PvlKeyword.h"
+#include "iString.h"
 
 using namespace std; 
 using namespace Isis;
@@ -63,7 +64,13 @@ void IsisMain() {
   }
 
   for(int i=0; i < innet.Size(); i++) {
+
     ControlPoint controlpt(innet[i]);
+
+    if( controlpt.Ignore()  &&  ui.GetBoolean("DUPLICATE") ) {
+      progress.CheckStatus();
+      continue;
+    }
 
     //Checks for lat/Lon production
     if( ui.GetBoolean("NOLATLON") ) {
@@ -102,7 +109,9 @@ void IsisMain() {
       vector<ControlMeasure> controlMeasures;
       for(int j=0; j < controlpt.Size(); j++) {
         iString currentsnum = controlpt[j].CubeSerialNumber();
-        controlMeasures.push_back(controlpt[j]);
+        if( !controlpt[j].Ignore() ) {
+          controlMeasures.push_back(controlpt[j]);
+        }
         //Compares previous ControlMeasure SerialNumbers with the current,
         //  while removing used cubes from inlist and innums
         for(int k=0; k < (int)controlMeasures.size(); k++) {
@@ -141,6 +150,7 @@ void IsisMain() {
     }
 
     progress.CheckStatus();
+
   }
 
 
@@ -162,10 +172,9 @@ void IsisMain() {
     for(set<string>::iterator island = islands[i].begin();
          island != islands[i].end(); island++) {
       if (((string)num2cube[*island]).compare("") != 0) {
-        if (hasList) {
-          out_stream << "\n";
-        }
         out_stream << Filename(num2cube[*island]).Name() << " " << *island;
+        out_stream << "\n";
+
         hasList = true;
       }
     }
@@ -179,18 +188,21 @@ void IsisMain() {
 
   //Output the results to screen and files accordingly
 
+  PvlGroup results("Results");
+
   stringstream ss (stringstream::in | stringstream::out);
 
+  results.AddKeyword( PvlKeyword("Islands",iString((BigInt)islands.size())) );
   ss << endl << "--------------------------------------------------------------------------------" << endl;
   if(islands.size() == 1) {
-    ss << "The cubes are fully connected by the Control Net." << endl;
+    ss << "The cubes are fully connected by the Control Network." << endl;
   }
   else if(islands.size() == 0) {
-    ss << "There are no control points in the provided Control Measure [";
+    ss << "There are no control points in the provided Control Network [";
     ss << Filename(ui.GetFilename("NETWORK")).Name() << "]" << endl;
   }
   else {
-    ss << "The cubes are NOT fully connected by the Control Net." << endl;
+    ss << "The cubes are NOT fully connected by the Control Network." << endl;
     ss << "There are " << islands.size() << " disjoint sets of cubes." << endl;
   }
   if(ui.GetBoolean("SINGLE")  &&  singleMeasureControlPoints.size() > 0) {
@@ -201,10 +213,8 @@ void IsisMain() {
 
     for(set<string>::iterator measure = singleMeasureControlPoints.begin();
          measure != singleMeasureControlPoints.end(); measure++) {
-      if (measure != singleMeasureControlPoints.begin()) {
-        out_stream << "\n";
-      }
       out_stream << *measure;
+      out_stream << "\n";
     }
 
     out_stream.close();
@@ -218,6 +228,8 @@ void IsisMain() {
   }
 
   if(ui.GetBoolean("DUPLICATE")  &&  serialNumDupe.size() > 0) {
+    results.AddKeyword( PvlKeyword("DuplicateMeasures",iString((BigInt)serialNumDupe.size())) );
+
     string name(Filename(prefix + "DuplicateMeasures.txt").Expanded());
     ofstream out_stream;
     out_stream.open(name.c_str(), std::ios::out);
@@ -225,10 +237,8 @@ void IsisMain() {
 
     for(set<string>::iterator dupes = serialNumDupe.begin();
          dupes != serialNumDupe.end(); dupes++) {
-      if (dupes != serialNumDupe.begin()) {
-        out_stream << "\n";
-      }
       out_stream << *dupes;
+      out_stream << "\n";
     }
 
     out_stream.close();
@@ -242,6 +252,8 @@ void IsisMain() {
   }
 
   if(ui.GetBoolean("NOLATLON")  &&  noLatLonCubes.size() > 0) {
+    results.AddKeyword( PvlKeyword("NoLatLonCubes",iString((BigInt)noLatLonCubes.size())) );
+
     string name(Filename(prefix + "NoLatLon.txt").Expanded());
     ofstream out_stream;
     out_stream.open(name.c_str(), std::ios::out);
@@ -249,12 +261,8 @@ void IsisMain() {
 
     for( set<string>::iterator latlon = noLatLonCubes.begin();
          latlon != noLatLonCubes.end(); latlon++ ) {
-
-      if (latlon != noLatLonCubes.begin()) {
-        out_stream << "\n";
-      }
-
       out_stream << *latlon;
+      out_stream << "\n";
 
       for( set<string>::iterator cpoint = noLatLonCPoints[*latlon].begin();
            cpoint != noLatLonCPoints[*latlon].end(); cpoint++ ) {
@@ -266,7 +274,7 @@ void IsisMain() {
 
     ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << noLatLonCubes.size();
-    ss << " serial numbers in the Control Net which are listed in the";
+    ss << " serial numbers in the Control Network which are listed in the";
     ss << " input list and cannot compute latitude and longitudes." << endl;
     ss << "The Control Point IDs in which the serial number cannot compute";
     ss << " the latitudes and longitudes in are listed after the serial";
@@ -277,18 +285,17 @@ void IsisMain() {
 
   // At this point, innums is the list of cubes NOT included in the
   // ControlNet, and innums are their those cube's serial numbers. #4 cont
-  if(ui.GetBoolean("NOMATCH") && innums.size() > 0) {
-    string name(Filename(prefix + "NoMatch.txt").Expanded());
+  if(ui.GetBoolean("NOCONTROL") && innums.size() > 0) {
+    results.AddKeyword( PvlKeyword("NoControl",iString((BigInt)innums.size())) );
+
+    string name(Filename(prefix + "NoControl.txt").Expanded());
     ofstream out_stream;
     out_stream.open(name.c_str(), std::ios::out);
     out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
     
     for(int i=0; i < (int)innums.size(); i++) {
-      if(i != 0) {
-        out_stream << "\n";
-      }
-
       out_stream << Filename(num2cube[innums[i]]).Name();
+      out_stream << "\n";
     }
     
     out_stream.close();
@@ -296,7 +303,7 @@ void IsisMain() {
     ss << "--------------------------------------------------------------------------------" << endl;
     ss << "There are " << innums.size();
     ss << " cubes in the input list [" << Filename(ui.GetFilename("FROMLIST")).Name();
-    ss << "] which do not exist in the Control Net [";
+    ss << "] which do not exist or are ignored in the Control Network [";
     ss << Filename(ui.GetFilename("NETWORK")).Name() << "]" << endl;
     ss << "These cubes are listed in [" + Filename(name).Name() + "]" << endl;
   }
@@ -305,18 +312,16 @@ void IsisMain() {
   // ControlMeasures in the ControlNet that do not have a correlating
   // cube in the input list. #6
   if(ui.GetBoolean("NOCUBE")  &&  nonlistednums.size() > 0) {
+    results.AddKeyword( PvlKeyword("NoCube",iString((BigInt)nonlistednums.size())) );
+
     string name(Filename(prefix + "NoCube.txt").Expanded());
     ofstream out_stream;
     out_stream.open(name.c_str(), std::ios::out);
     out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
 
     for(int i=0; i < (int)nonlistednums.size(); i++) {
-
-      if (i != 0) {
-        out_stream << "\n";
-      }
-
       out_stream << nonlistednums[i];
+      out_stream << "\n";
     }
 
     out_stream.close();
@@ -332,6 +337,8 @@ void IsisMain() {
 
   ss << "--------------------------------------------------------------------------------" << endl << endl;
   std::string log = ss.str();
+
+  Application::Log(results);
 
   if (ui.IsInteractive()) {
     Application::GuiLog(log);

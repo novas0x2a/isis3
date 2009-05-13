@@ -189,6 +189,7 @@ void IsisMain() {
           // The lat/lon could not be set in the UGM so output a bad line/samp
           else {
             newMsr.SetType(ControlMeasure::Unmeasured);
+            newMsr.SetIgnore(true);
           }
           newPnt.Add(newMsr);
         }

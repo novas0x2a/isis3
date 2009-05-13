@@ -118,7 +118,12 @@ namespace Isis {
 
     // Set up the filter
     QString filter = (iString)p_ui->ParamFilter(p_group,p_param);
-    filter += ";;Any(*)";
+    if(filter.isEmpty()) {
+      filter = "Any(*)";
+    } else {
+      filter += ";;Any(*)";
+    }
+
 
     // Get the filename
     QString s;

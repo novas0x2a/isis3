@@ -172,7 +172,6 @@ namespace Qisis {
        } else{
          p_table->setVerticalHeaderItem(insertAt,header);
        }
-
      }else{
 
        if(o == Qt::Horizontal) {
@@ -190,10 +189,6 @@ namespace Qisis {
    if (!menuText.isEmpty()) {
      QListWidgetItem *item = new QListWidgetItem();
      
-     for(int i = 0; i < (int)p_itemList.size(); i++) {
-       if(p_itemList[i]->text() == menuText) return;
-     }
-
      item->setText(menuText);
      if(toolTip.isEmpty()) {
        item->setToolTip(heading);
@@ -238,7 +233,7 @@ namespace Qisis {
 
       if (index != -1) {
 
-        for (int col=p_startColumn[index]; col<=p_endColumn[index]; col++) {
+        for (int col = p_startColumn[index]; col <= p_endColumn[index]; col++) {
 
           if (item->checkState() == Qt::Checked) {
             p_table->setColumnHidden(col,false);

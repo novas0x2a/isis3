@@ -60,6 +60,9 @@
       SAMPLERESOLUTION, DETECTORRESOLUTION, NORTHAZIMUTH, 
       SUNAZIMUTH, SPACECRAFTAZIMUTH, OFFNADIRANGLE
     </change>
+    <change name="Steven Lambright" date="2009-03-06">
+      Fixed a bug that occurred when processing band-dependant cubes
+    </change>
 </history>
 
   <category>

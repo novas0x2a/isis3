@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/07/11 19:32:11 $
+ * $Revision: 1.6 $
+ * $Date: 2009/02/18 16:21:50 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -71,9 +71,63 @@ namespace Isis {
     Read(file);
   }
 
+  /**
+   * This copies the blob object.
+   * 
+   * @param other 
+   */
+  Blob::Blob (const Blob& other) {
+    p_blobPvl = other.p_blobPvl;
+    p_blobName = other.p_blobName;
+    p_startByte = other.p_startByte;
+    p_nbytes = other.p_nbytes;
+    p_type = other.p_type;
+    p_detached = other.p_detached;
+    p_labelFile = other.p_labelFile;
+
+    p_buffer = NULL;
+
+    if(other.p_buffer) {
+      p_buffer = new char[p_nbytes];
+
+      for(int i = 0; i < p_nbytes; i++) {
+        p_buffer[i] = other.p_buffer[i];
+      }
+    }
+  }
+
   //! Destroys the Blob object.
   Blob::~Blob() {
     if (p_buffer != NULL) delete [] p_buffer;
+  }
+
+  /**
+   * This makes the two blob objects exactly the same (copies the blob)
+   * 
+   * @param other 
+   * 
+   * @return Blob& 
+   */
+  Blob &Blob::operator=(const Blob &other) {
+    p_blobPvl = other.p_blobPvl;
+    p_blobName = other.p_blobName;
+    p_startByte = other.p_startByte;
+    p_nbytes = other.p_nbytes;
+    p_type = other.p_type;
+    p_detached = other.p_detached;
+    p_labelFile = other.p_labelFile;
+
+    p_buffer = NULL;
+
+    if(other.p_buffer) {
+      p_buffer = new char[p_nbytes];
+
+      for(int i = 0; i < p_nbytes; i++) {
+        p_buffer[i] = other.p_buffer[i];
+      }
+    }
+
+    return *this;
   }
 
  /**

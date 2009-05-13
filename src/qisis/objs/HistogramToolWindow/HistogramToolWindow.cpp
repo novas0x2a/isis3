@@ -21,6 +21,13 @@ namespace Qisis {
     leftLabel->setFont(font);
     p_plot->setAxisTitle(QwtPlot::yLeft, *leftLabel);
 
+    p_dock = new QDockWidget("Histogram Info",this);
+    p_dock->setAllowedAreas(Qt::AllDockWidgetAreas);
+    p_dock->setFloating(false);
+    p_dock->setObjectName("DockWidget");
+    p_dock->setMinimumWidth(130);
+    p_mainWindow->addDockWidget(Qt::LeftDockWidgetArea, p_dock, Qt::Vertical);
+
     QwtText *rtLabel = new QwtText("Percentage",
                                    QwtText::PlainText);
     rtLabel->setColor(Qt::red);
@@ -59,6 +66,19 @@ namespace Qisis {
     hi->attach(p_plot);
     p_plot->replot();
     p_histItems.push_back(hi);
+  }
+
+
+  /**
+   * 
+   * 
+   */
+  void HistogramToolWindow::addViewMenu(){
+    QMenu *viewMenu = new QMenu("&View");
+    QAction *viewInfo = new QAction("View Info", this);
+    connect(viewInfo, SIGNAL(activated()), p_dock, SLOT(show()));
+    viewMenu->addAction(viewInfo);
+    p_mainWindow->menuBar()->addMenu(viewMenu);
   }
 
   /** 

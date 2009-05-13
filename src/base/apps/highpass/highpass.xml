@@ -3,7 +3,7 @@
 <application name="highpass" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
   <brief>
-    Apply a high pass filter to a cube
+    Apply a spatial high pass filter to a cube
   </brief>
 
   <description>

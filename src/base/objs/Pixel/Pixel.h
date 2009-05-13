@@ -1,9 +1,9 @@
-#if !defined(Pixel_h)
-  #define Pixel_h
+#ifndef Pixel_h
+#define Pixel_h
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:08 $
+ * $Revision: 1.2 $
+ * $Date: 2009/02/03 23:14:47 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -45,6 +45,8 @@ namespace Isis {
    *                                         into the Pixel class for easy
    *                                         refactoring later and added
    *                                         several conversion methods
+   *  @history 2009-02-03 Travis Addair - Modified documentation
+   *           for clarity
    */
   class Pixel {
   public:
@@ -63,7 +65,7 @@ namespace Isis {
     static std::string ToString(double d);
 
     /**
-     * Returns if the input pixel is special. Not special implies it is valid to
+     * Returns true if the input pixel is special. Not special implies it is valid to
      * use in computations.
      *
      * @param d Pixel value to test
@@ -75,9 +77,9 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is special. Not special implies it is valid to
+     * Returns true if the input pixel is special. Not special implies it is valid to
      * use in computations. This method applies to a 4-byte floating point rather
-     * than an 8-byte double
+     * than an 8-byte double.
      *
      * @param f Pixel value to test
      *
@@ -88,7 +90,8 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is valid
+     * Returns true if the input pixel is valid.  Valid implies the 
+     * pixel is neither hrs, lrs, his, lis, nor null. 
      *
      * @param d Pixel value to test
      *
@@ -99,7 +102,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is null
+     * Returns true if the input pixel is null
      *
      * @param d Pixel value to test
      *
@@ -110,7 +113,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is one of the high saturation types
+     * Returns true if the input pixel is one of the high saturation types
      *
      * @param d Pixel value to test
      *
@@ -121,7 +124,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is one of the low saturation types
+     * Returns true if the input pixel is one of the low saturation types
      *
      * @param d Pixel value to test
      *
@@ -132,7 +135,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is high representation saturation
+     * Returns true if the input pixel is high representation saturation
      *
      * @param d Pixel value to test
      *
@@ -143,7 +146,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is high instrument saturation
+     * Returns true if the input pixel is high instrument saturation
      *
      * @param d Pixel value to test
      *
@@ -154,7 +157,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is low instrument saturation
+     * Returns true if the input pixel is low instrument saturation
      *
      * @param d Pixel value to test
      *
@@ -165,7 +168,7 @@ namespace Isis {
     }
 
     /**
-     * Returns if the input pixel is low representation saturation
+     * Returns true if the input pixel is low representation saturation
      *
      * @param d Pixel value to test
      *

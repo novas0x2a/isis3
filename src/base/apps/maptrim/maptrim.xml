@@ -37,6 +37,9 @@
     <change name="Sean Crosby" date="2007-03-16">
       Added cropping and crop+trim ability; modified apptest
     </change>
+    <change name="Christopher Austin" date="2009-01-27">
+      Fixed parameter names
+    </change>
   </history>
 
   <oldName>
@@ -115,7 +118,7 @@
     </group>  
 
     <group name="Trim Parameters">
-      <parameter name="SLAT">
+      <parameter name="MINLAT">
         <type>double</type>
         <internalDefault>
           Minimum latitude in labels
@@ -126,11 +129,11 @@
           this latitude will be set to Null.
         </description>
         <lessThan>
-          <item>ELAT</item>
+          <item>MAXLAT</item>
         </lessThan>  
       </parameter>
 
-      <parameter name="ELAT">
+      <parameter name="MAXLAT">
         <type>double</type>
         <internalDefault>
           Maximum latitude in labels
@@ -142,7 +145,7 @@
         </description>
       </parameter>
 
-      <parameter name="SLON">
+      <parameter name="MINLON">
         <type>double</type>
         <internalDefault>
           Minimum longitude in labels
@@ -153,11 +156,11 @@
           this longitude will be set to Null.
         </description>
         <lessThan>
-          <item>ELON</item>
+          <item>MAXLON</item>
         </lessThan>  
       </parameter>
       
-      <parameter name="ELON">
+      <parameter name="MAXLON">
         <type>double</type>
         <internalDefault>
           Maximum longitude in labels

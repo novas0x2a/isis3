@@ -27,7 +27,7 @@ void IsisMain ()
 {
   const string caminfo_program = "caminfo";
   const string caminfo_version = "2.2";
-  const string caminfo_revision = "$Revision: 1.16 $";
+  const string caminfo_revision = "$Revision: 1.17 $";
   string caminfo_runtime = iTime::CurrentGMT();
 
   Process p;
@@ -172,7 +172,7 @@ void IsisMain ()
   bool doGeometry = ui.GetBoolean("GEOMETRY");
   bool doPolygon = ui.GetBoolean("POLYGON");
   if (doGeometry || doPolygon) {
-    bandGeom.collect(*cam, *icube);
+    bandGeom.collect(*cam, *icube, doGeometry, doPolygon);
 
     // Check if the user requires valid image center geometry
     if (ui.GetBoolean("VCAMERA") && (!bandGeom.hasCenterGeometry())) {

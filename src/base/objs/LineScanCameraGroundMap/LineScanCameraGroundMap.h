@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2007/12/21 23:31:50 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/03/02 15:52:09 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -39,20 +39,19 @@ namespace Isis {
    * 
    * @internal
    * 
-   * @history 2005-02-08 Jeff Anderson
-   * Original version
-   *
-   * @history 2005-08-24 Jeff Anderson
-   * Fixed bug when algorithm was checking for the backside of the
-   * planet and convergence failed (checkHidden)
-   * 
-   * @history 2005-11-16 Jeff Anderson
-   * Fixed bug when a image covers more than 180 degrees in an orbit
-   * which would cause two focal plane roots to be inside the start/end
-   * time range. 
-   * 
-   * @history 2007-12-21 Debbie A. Cook
-   * Added overloaded method SetGround that includes a radius argument
+   *   @history 2005-02-08 Jeff Anderson - Original version
+   *   @history 2005-08-24 Jeff Anderson - Fixed bug when algorithm was checking
+   *          for the backside of the planet and convergence failed (checkHidden)
+   *   @history 2005-11-16 Jeff Anderson - Fixed bug when a image covers more
+   *          than 180 degrees in an orbit which would cause two focal plane roots
+   *          to be inside the start/end time range.
+   *   @history 2007-12-21 Debbie A. Cook - Added overloaded method SetGround that
+   *          includes a radius argument
+   *   @history 2009-03-02 Steven Lambright - Added an additional method of
+   *            finding the point in SetGround(...) if the original algorithm
+   *            fails. The spacecraft position at the beginning and end of the
+   *            image are now being used to estimate the correct line if the
+   *            bounding check fails the first time through.
    * 
    */
   class LineScanCameraGroundMap : public CameraGroundMap {
@@ -68,6 +67,17 @@ namespace Isis {
 
       virtual bool SetGround(const double lat, const double lon);
       virtual bool SetGround(const double lat, const double lon, const double radius);
+
+    protected:
+      enum FindFocalPlaneStatus {
+        Success,
+        BoundingProblem,
+        Failure
+      };
+
+      FindFocalPlaneStatus FindFocalPlane(const int &approxLine, 
+                           const double &lat, const double &lon, const double &radius); 
+      double FindSpacecraftDistance(int line, const double lat, const double lon);
   };
 };
 #endif

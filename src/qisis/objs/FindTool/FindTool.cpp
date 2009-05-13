@@ -423,6 +423,7 @@ namespace Qisis {
    */
   void FindTool::findPoint (QPoint p) {
     CubeViewport *d = cubeViewport();
+    p_dialog->setCursor(Qt::WaitCursor);
 
     if (d == NULL) return;
 
@@ -452,6 +453,7 @@ namespace Qisis {
         }
         else {
           //p_dialog->hide();
+          p_dialog->setCursor(Qt::ArrowCursor);
           return;
         }
       }
@@ -463,8 +465,10 @@ namespace Qisis {
     d->viewportToCube(p.x(),p.y(),sample,line);
 
     // If we are outside of the cube, do nothing
-    if ((sample < 0.5) || (line < 0.5) || 
-        (sample > d->cubeSamples()+0.5) || (line > d->cubeLines()+0.5)) {
+    if(!d->universalGroundMap()->SetImage(sample, line)){
+      QMessageBox::warning(p_dialog, "Error",
+                "Specified Line Sample position is not in active viewport",
+                QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
      return;
     }
 
@@ -479,47 +483,60 @@ namespace Qisis {
       p_point.setY(y);
       d->viewport()->repaint();
 
-      if (d->isLinked()) {
-        // Get the lat/lon and scale values from the universalGroundMap
-        double lat = d->universalGroundMap()->UniversalLatitude();
-        double lon = d->universalGroundMap()->UniversalLongitude();
-        double fixedScale = d->universalGroundMap()->Resolution() * d->scale(); 
-
+      if (p_tabWidget->tabText(p_tabWidget->currentIndex()) == "Image") {
         for (int i=0; i<(int)cubeViewportList()->size(); i++) {
           d = (*(cubeViewportList()))[i];
           if (d == cubeViewport()) continue;
-          if (d->isLinked()) {
-
-            // Make sure the lat/lon exists in the image & set it to the center
-          if (d->universalGroundMap()->SetUniversalGround(lat,lon) &&
-              d->universalGroundMap()->Sample() > 0 && d->universalGroundMap()->Sample() <= d->cubeSamples() &&
-              d->universalGroundMap()->Line() > 0 && d->universalGroundMap()->Line() <= d->cubeLines()) {
-
-              sample = d->universalGroundMap()->Sample();
-              line = d->universalGroundMap()->Line();
-              double scale = d->scale();
-
-              // If sync scale is checked, recalculate the scale
-              if (p_syncScale->isChecked()) {
-                 scale = fixedScale / d->universalGroundMap()->Resolution();
-              }
-              d->setScale(scale,sample,line);
-              d->cubeToViewport(sample, line, x, y);
-              p_point.setX(x);
-              p_point.setY(y);
-              d->viewport()->repaint();
-            }
-            else {
-              QApplication::beep();
-            }
-          }
+          d->setScale(d->scale(),sample,line);
+          x = 0;
+          y = 0;
+          d->cubeToViewport(sample, line, x, y);
+          p_point.setX(x);
+          p_point.setY(y);
+          d->viewport()->repaint();
         }
-      }
-      p_paint = false;
+      }else {
+        if (d->isLinked()) {
+          // Get the lat/lon and scale values from the universalGroundMap
+          double lat = d->universalGroundMap()->UniversalLatitude();
+          double lon = d->universalGroundMap()->UniversalLongitude();
+          double fixedScale = d->universalGroundMap()->Resolution() * d->scale(); 
+  
+          for (int i=0; i<(int)cubeViewportList()->size(); i++) {
+            d = (*(cubeViewportList()))[i];
+            if (d == cubeViewport()) continue;
+            if (d->isLinked()) {
+  
+              // Make sure the lat/lon exists in the image & set it to the center
+            if (d->universalGroundMap()->SetUniversalGround(lat,lon) &&
+                d->universalGroundMap()->Sample() > 0 && d->universalGroundMap()->Sample() <= d->cubeSamples() &&
+                d->universalGroundMap()->Line() > 0 && d->universalGroundMap()->Line() <= d->cubeLines()) {
+  
+                sample = d->universalGroundMap()->Sample();
+                line = d->universalGroundMap()->Line();
+                double scale = d->scale();
+  
+                // If sync scale is checked, recalculate the scale
+                if (p_syncScale->isChecked()) {
+                  scale = fixedScale / d->universalGroundMap()->Resolution();
+                }
+                d->setScale(scale,sample,line);
+                d->cubeToViewport(sample, line, x, y);
+                p_point.setX(x);
+                p_point.setY(y);
+                d->viewport()->repaint();
+              }
+              else {
+                QApplication::beep();
+              }
+            } // end if d->isLinked
+          } //end for loop
+        }
+        p_paint = false;
+      } 
     }
-    else {
-      QApplication::beep();
-    }
+
+    p_dialog->setCursor(Qt::ArrowCursor);
   }
 
   /** 

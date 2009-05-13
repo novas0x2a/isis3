@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2008/08/08 22:02:36 $
+ * $Revision: 1.3 $
+ * $Date: 2009/03/07 18:02:33 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -41,6 +41,7 @@ namespace Isis {
    *
    * @internal
    *   @history 2008-08-08 Steven Lambright Original version
+   *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute CameraDetectorMap methods
    *
    */
   class VariableLineScanCameraDetectorMap : public LineScanCameraDetectorMap {
@@ -63,15 +64,6 @@ namespace Isis {
       virtual bool SetParent(const double sample, const double line);
 
       virtual bool SetDetector(const double sample, const double line);
-
-      /**
-       * Set the time dependent axis, if never called y is the time dependent
-       * axis
-       */
-      void SetXAxisTimeDependent(bool on) {
-        p_xAxisTimeDependent = on;
-        p_yAxisTimeDependent = !on;
-      };
 
     private:
       std::vector< LineRateChange > &p_lineRates;

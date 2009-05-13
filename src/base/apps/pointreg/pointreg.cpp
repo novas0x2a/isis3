@@ -9,6 +9,7 @@
 #include "ControlNet.h"
 #include "ControlMeasure.h"
 #include "SerialNumberList.h"
+#include "CubeManager.h"
 #include "iTime.h"
 
 using namespace std;
@@ -45,6 +46,9 @@ void IsisMain() {
   progress.CheckStatus();
 
   int ignored=0, unmeasured=0, registered=0, unregistered=0, validated=0;
+
+  CubeManager cubeMgr;
+  cubeMgr.SetNumOpenCubes(50);
 
   // Register the points and create a new
   // ControlNet containing the refined measurements
@@ -108,8 +112,7 @@ void IsisMain() {
       if (inPoint.Ignore()) { outPoint.SetIgnore(false); }
       
       ControlMeasure &patternCM = inPoint[inPoint.ReferenceIndex()];
-      Cube patternCube;
-      patternCube.Open(files.Filename(patternCM.CubeSerialNumber()));
+      Cube &patternCube = *cubeMgr.OpenCube(files.Filename(patternCM.CubeSerialNumber()));
       
       ar->PatternChip()->TackCube(patternCM.Sample(), patternCM.Line());
       ar->PatternChip()->Load(patternCube);
@@ -150,8 +153,7 @@ void IsisMain() {
       
         ControlMeasure searchCM = inPoint[j];
       
-        Cube searchCube;
-        searchCube.Open(files.Filename(searchCM.CubeSerialNumber()));
+        Cube &searchCube = *cubeMgr.OpenCube(files.Filename(searchCM.CubeSerialNumber()));
       
         ar->SearchChip()->TackCube(searchCM.Sample(), searchCM.Line());
       
@@ -201,8 +203,6 @@ void IsisMain() {
           searchCM.SetIgnore(true);
           outPoint.Add(searchCM);
         }
-      
-        searchCube.Close();
       }
 
       // Jeff Anderson put in this test (Dec 2, 2008) to allow for control 
@@ -228,7 +228,6 @@ void IsisMain() {
         ignored++;                                   
         if (ui.GetBoolean("OUTPUTIGNORED")) outNet.Add(outPoint);
       }
-      patternCube.Close();
     }
     progress.CheckStatus();
   }

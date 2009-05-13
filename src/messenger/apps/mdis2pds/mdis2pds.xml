@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: mdis2pds.xml,v 1.9 2008/09/19 18:29:39 kbecker Exp $ -->
+<!-- $Id: mdis2pds.xml,v 1.10 2009/05/11 18:39:42 slambright Exp $ -->
 
 <application name="mdis2pds" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
@@ -47,7 +47,6 @@
   </history>
 
   <category>
-    <categoryItem>Import and Export</categoryItem>
     <missionItem>Messenger</missionItem>
   </category>
 

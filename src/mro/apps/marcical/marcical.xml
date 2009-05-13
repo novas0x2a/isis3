@@ -26,8 +26,15 @@ K.D. Supulver, and P.C. Thomas
   </category>
 
   <history>
-    <change name="Steven Lambright" date="2000-01-21">
+    <change name="Steven Lambright" date="2009-01-21">
       Original version
+    </change>
+    <change name="Steven Lambright" date="2009-03-03">
+      Added lookup table
+    </change>
+    <change name="Steven Lambright" date="2009-04-09">
+      Fixed a problem where segmentation faults would occur if run 
+      with the option "IOF=false"
     </change>
   </history>
 

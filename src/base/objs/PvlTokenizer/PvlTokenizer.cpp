@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2007/04/18 14:37:22 $
+ * $Revision: 1.7 $
+ * $Date: 2009/03/17 17:01:50 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -56,14 +56,14 @@ namespace Isis {
   * @throws Isis::iException::Parse
   */
   void PvlTokenizer::Load (std::istream &stream, const std::string &terminator) {
-  
     Isis::iString upTerminator(terminator);
     upTerminator.UpCase();
     string s;
     int c;
+    bool newlineFound = false;
   
     TOP:
-      SkipWhiteSpace (stream);
+      newlineFound = SkipWhiteSpace (stream);
       c = stream.peek ();
       ValidateCharacter (c);
       if (c == EOF) return;
@@ -72,7 +72,17 @@ namespace Isis {
         s = ReadComment (stream);
         Isis::PvlToken t("_COMMENT_");
         t.AddValue (s);
-        tokens.push_back (t);
+
+        if(newlineFound || tokens.size() == 0 || tokens[tokens.size()-1].ValueSize() == 0) {
+          // applies to next pvl item
+          tokens.push_back (t);
+        }
+        else {
+          // applies to previous pvl item
+          tokens.push_back(tokens[tokens.size()-1]);
+          tokens[tokens.size()-2] = t;
+        }
+        
         goto TOP;
       }
   
@@ -85,7 +95,17 @@ namespace Isis {
           s = ReadComment (stream);
           Isis::PvlToken t("_COMMENT_");
           t.AddValue (s);
-          tokens.push_back (t);
+
+          if(newlineFound || tokens.size() == 0 || tokens[tokens.size()-1].ValueSize() == 0) {
+            // applies to next pvl item
+            tokens.push_back (t);
+          }
+          else {
+            // applies to previous pvl item
+            tokens.push_back(tokens[tokens.size()-1]);
+            tokens[tokens.size()-2] = t;
+          }
+
           goto TOP;
         }
       }
@@ -244,18 +264,23 @@ namespace Isis {
   * 
   * @param stream Input stream to read from
   */
-  void PvlTokenizer::SkipWhiteSpace (std::istream &stream) {
+  bool PvlTokenizer::SkipWhiteSpace (std::istream &stream) {
+    bool foundNewline = false;
     int c;
   
     c = stream.peek ();
     ValidateCharacter (c);
     while ((isspace (c)) || (c == '\0')) {
+      if(c == '\n') {
+        foundNewline = true;
+      }
+
       c = stream.get ();
       c = stream.peek ();
       ValidateCharacter (c);
     }
   
-    return;
+    return foundNewline;
   }
 
 

@@ -69,6 +69,11 @@ namespace Qisis {
    *                          method to ask user whether the reference measure
    *                          should be replaced with the measure in the left
    *                          viewport. Added documentation.
+   *   @history 2009-03-09 Jeannie Walldren - Modified createPoint() method
+   *                          to clear the error stack after
+   *                          displaying a QMessageBox to the user
+   *   @history 2009-03-17 Tracie Sucharski - Added the ability to save the
+   *                          registration chips to the Options menu.
    */
   class QnetTool : public Qisis::Tool {
     Q_OBJECT
@@ -123,6 +128,7 @@ namespace Qisis {
 
       void setTemplateFile();
       void viewTemplateFile();
+      void saveChips();
       //void setInterestOp();
 
     private:

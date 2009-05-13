@@ -1,4 +1,5 @@
 Group = MarsGlobalSurveyor/MOC-NA
+  Version = 1
   Library = MocNarrowAngleCamera
   Routine = MocNarrowAngleCameraPlugin
 EndGroup

@@ -158,6 +158,13 @@
       dumping out both labels to verify that the keyword is not being
       duplicated.
     </change>
+    <change name="Tracie Sucharski" date="2009-03-12">
+      If spice is put into a Table, append the kernel name to the Kernel group
+      keyword to keep track of original spice kernels.
+    </change>
+    <change name="Steven Koechle" date="2009-05-12">
+      Added CameraVersion into the Kernel labels
+    </change>
   </history>
 
   <oldName>

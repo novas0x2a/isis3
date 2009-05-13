@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:10 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/04/06 15:23:27 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -43,6 +43,8 @@ namespace Isis {
      * 
      * @history 2006-04-05 Tracie Sucharski
      * Original version
+     * @history 2009-04-06 Steven Lambright Fixed problem that caused double 
+     *          deletion of sky map / ground map.
      *
      */
     class VimsSkyMap : public CameraSkyMap {
@@ -57,11 +59,11 @@ namespace Isis {
 
       virtual bool SetSky(const double ra, const double dec);
 
+      void Init(Pvl &lab);
+
     protected:
 
     private:
-      void Init(Pvl &lab);
-
       SpiceDouble p_etStart;
 
       double p_exposureDuration;

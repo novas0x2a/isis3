@@ -1,6 +1,6 @@
 /*	Exception
 
-PIRL CVS ID: $Id: Exceptions.cpp,v 1.1.1.1 2006/10/31 23:18:15 isis3mgr Exp $
+PIRL CVS ID: $Id: Exceptions.cpp,v 1.2 2009/02/23 16:36:10 slambright Exp $
 
 Copyright (C) 2003  Arizona Board of Regents on behalf of the Planetary
 Image Research Laboratory, Lunar and Planetary Laboratory at the
@@ -22,7 +22,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 */
 
 #include <sstream>
-
+#include <cstring>
 #include "Exceptions.hh"
 
 #if defined (DEBUG)
@@ -52,7 +52,7 @@ Constants
 */
 const char* const
 	Exception::ID = 
-		"UA::HiRISE::Exception ($Revision: 1.1.1.1 $ $Date: 2006/10/31 23:18:15 $)";
+		"UA::HiRISE::Exception ($Revision: 1.2 $ $Date: 2009/02/23 16:36:10 $)";
 
 /*==============================================================================
 Constructor

@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2008/06/18 19:55:16 $
- * $Revision: 1.7 $
+ * $Date: 2009/05/11 16:33:58 $
+ * $Revision: 1.10 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -58,6 +58,8 @@ namespace Qisis {
   *  @history 2007-11-19  Stacy Alley - Added code for the new ViewportMainWindow 
   *                       class which is used to keep track of the size and 
   *                       location of the qisis windows.
+  *  @history 2009-03-27  Noah Hilt, Steven Lambright - Removed old rubber band
+  *           and changed cubeViewportList to call the Workspace viewport list.
   */
 
   class Tool : public QObject {
@@ -205,7 +207,7 @@ namespace Qisis {
        * 
        */
       virtual void setRubberBand() { 
-        if (p_cvp != NULL) p_cvp->enableRubberBand(false);
+        //if (p_cvp != NULL) p_cvp->enableRubberBand(false);
       };
 
 
@@ -238,15 +240,7 @@ namespace Qisis {
        * 
        * @return CubeViewportList*
        */
-      inline CubeViewportList *cubeViewportList() const { return p_cvpList; };
-
-
-      /**
-       * Use this method to set the cubeviewport list
-       * 
-       * @param list
-       */
-      void setCubeViewportList (CubeViewportList *list) { p_cvpList = list; };
+      inline CubeViewportList *cubeViewportList() const { return p_workspace->cubeViewportList(); };
 
 
       /** 
@@ -297,15 +291,15 @@ namespace Qisis {
       //! Anytime a tool is created, you may use the rubber band tool.
       virtual void enableRubberBandTool();
 
-
       Qisis::CubeViewport *p_cvp; //!< current cubeviewport
+      Workspace *p_workspace;
+
     private:
       void addViewportConnections();
       void removeViewportConnections();
       void enableToolBar ();
       void disableToolBar();
 
-      CubeViewportList *p_cvpList; //!< List of all cubeviewports
 
       bool p_active; //!< Is the tool acitve?
       QWidget *p_toolBarWidget; //!< The tool bar on which this tool resides.

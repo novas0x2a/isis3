@@ -2,8 +2,8 @@
 #define StripPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/11/25 16:54:29 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/02/02 14:53:58 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -53,6 +53,8 @@ namespace Isis {
    *   @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
    *   @history 2008-11-12 Steven Lambright - Fixed documentation
    *   @history 2008-11-25 Steven Lambright - Added error checking
+   *   @history 2009-02-01 Steven Lambright - Fixed problem with calculating
+   *            starting position in the top left corner of the polygon 
    */                                                                       
   class StripPolygonSeeder : public PolygonSeeder {
     public:

@@ -2,8 +2,8 @@
 #define Spice_h
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2008/11/28 21:03:20 $
+ * $Revision: 1.13 $
+ * $Date: 2009/03/23 19:14:22 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   intellectual property information,user agreements, and related information.
@@ -44,16 +44,15 @@ namespace Isis {
  *       TargetName = Mars
  *     EndGroup
  *     Group = Kernels
- *       NaifFrameCode = -94030
- *       LeapSecond = naif0007.tls
- *       SpacecraftClock = MGS_SCLKSCET.00045.tsc
- *       TargetPosition = de405.bsp
+ *       NaifFrameCode       = -94030
+ *       LeapSecond          = naif0007.tls
  *       TargetAttitudeShape = pck00006.tpc
- *       Instrument = moc13.ti
- *       InstrumentAddendum = mocAddendum.ti
- *       SpacecraftPosition = mgs_ab1.bsp
- *       SpacecraftPointing = mgs_sc_ab1.bc
- *       Frame = ""
+ *       TargetPosition      = de405.bsp
+ *       InstrumentPointing  = (mgs_sc_ab1.bc,
+ *       Instrument          = moc13.ti
+ *       SpacecraftClock     = MGS_SCLKSCET.00045.tsc
+ *       InstrumentPosition  = mgs_ab1.bsp
+ *       InstrumentAddendum  = mocAddendum.ti
  *     EndGroup
  *   @endcode
  * This group is typically found in the image labels after it has been run
@@ -136,6 +135,11 @@ namespace Isis {
  *  @history 2008-06-23 Steven Lambright - Added NaifStatus error checking
  *  @history 2008-06-25 Debbie A. Cook - Added method InstrumentVelocity to support miniRF
  *  @history 2008-11-28 Debbie A. Cook - Added method HasKernels()
+ *  @history 2009-03-18 Tracie Sucharski - Cleaned up some unnecessary,obsolete code.  Make sure the
+ *                                    table is used if the kernel names follow the "Table" keyword value, due to change
+ *                                    made to spiceinit to retain kernel names if the spice is written to blob.
+ *                                    
+ *                                    
  */
   class Spice {
     public:

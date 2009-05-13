@@ -1,6 +1,7 @@
-INCS = CubeViewport.h
-CPPS = CubeViewport.cpp
-SRCS = $(CPPS) $(CPPS:%=moc_%)
+INCS = CubeViewport.h ViewportBuffer.h
+CPPS = CubeViewport.cpp ViewportBuffer.cpp
+SRCS = $(CPPS) moc_CubeViewport.cpp 
+#SRCS = $(CPPS) $(CPPS:%=moc_CubeViewport.cpp)
 OBJS = $(SRCS:%.cpp=%.o)
 
 include $(ISISROOT)/make/isismake.objs

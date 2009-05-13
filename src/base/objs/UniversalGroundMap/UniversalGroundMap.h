@@ -2,8 +2,8 @@
 #define UniversalGroundMap_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/18 21:04:26 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/04/24 22:14:23 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -42,7 +42,8 @@ namespace Isis {
  *                                         CameraFactory
  *  @history 2007-02-06 Tracie Sucharski Added SetBand method.
  *  @history 2007-02-06 Steven Lambright Fixed documentation
- * 
+ *  @history 2009-04-24 Steven Koechle Added a check to SetUniversalGround that
+ *           makes sure the result is on the cube before returning true.
  */                                                                       
   class Camera;
   class Projection;

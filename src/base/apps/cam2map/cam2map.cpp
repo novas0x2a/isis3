@@ -96,24 +96,24 @@ void IsisMain() {
   }
 
   // If the user decided to enter a ground range then override
-  if (ui.WasEntered("SLON") && !ui.GetBoolean("MATCHMAP")) {
+  if (ui.WasEntered("MINLON") && !ui.GetBoolean("MATCHMAP")) {
     userGrp.AddKeyword(PvlKeyword("MinimumLongitude",
-                                      ui.GetDouble("SLON")),Pvl::Replace);
+                                      ui.GetDouble("MINLON")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("ELON") && !ui.GetBoolean("MATCHMAP")) {
+  if (ui.WasEntered("MAXLON") && !ui.GetBoolean("MATCHMAP")) {
     userGrp.AddKeyword(PvlKeyword("MaximumLongitude",
-                                      ui.GetDouble("ELON")),Pvl::Replace);
+                                      ui.GetDouble("MAXLON")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("SLAT") && !ui.GetBoolean("MATCHMAP")) {
+  if (ui.WasEntered("MINLAT") && !ui.GetBoolean("MATCHMAP")) {
     userGrp.AddKeyword(PvlKeyword("MinimumLatitude",
-                                      ui.GetDouble("SLAT")),Pvl::Replace);
+                                      ui.GetDouble("MINLAT")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("ELAT") && !ui.GetBoolean("MATCHMAP")) {
+  if (ui.WasEntered("MAXLAT") && !ui.GetBoolean("MATCHMAP")) {
     userGrp.AddKeyword(PvlKeyword("MaximumLatitude",
-                                      ui.GetDouble("ELAT")),Pvl::Replace);
+                                      ui.GetDouble("MAXLAT")),Pvl::Replace);
   }
 
   // If they want the res. from the mapfile, delete it from the camera so
@@ -185,16 +185,16 @@ void IsisMain() {
         // Make the target info match the new longitude domain
         double minlat,maxlat,minlon,maxlon;
         incam->GroundRange(minlat,maxlat,minlon,maxlon,userMap);
-        if( !ui.WasEntered("SLAT") ) {
+        if( !ui.WasEntered("MINLAT") ) {
           userGrp.AddKeyword(PvlKeyword("MinimumLatitude",minlat),Pvl::Replace);
         }
-        if( !ui.WasEntered("ELAT") ) {
+        if( !ui.WasEntered("MAXLAT") ) {
           userGrp.AddKeyword(PvlKeyword("MaximumLatitude",maxlat),Pvl::Replace);
         }
-        if( !ui.WasEntered("SLON") ) {
+        if( !ui.WasEntered("MINLON") ) {
           userGrp.AddKeyword(PvlKeyword("MinimumLongitude",minlon),Pvl::Replace);
         }
-        if( !ui.WasEntered("ELON") ) {
+        if( !ui.WasEntered("MAXLON") ) {
           userGrp.AddKeyword(PvlKeyword("MaximumLongitude",maxlon),Pvl::Replace);
         }
       }
@@ -434,24 +434,24 @@ void LoadMapRange() {
 
   // Set ground range keywords that are found in mapfile
   int count = 0;
-  ui.Clear("SLAT");
-  ui.Clear("ELAT");
-  ui.Clear("SLON");
-  ui.Clear("ELON");
+  ui.Clear("MINLAT");
+  ui.Clear("MAXLAT");
+  ui.Clear("MINLON");
+  ui.Clear("MAXLON");
   if (userGrp.HasKeyword("MinimumLatitude")) {
-    ui.PutDouble("SLAT",userGrp["MinimumLatitude"]);
+    ui.PutDouble("MINLAT",userGrp["MinimumLatitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MaximumLatitude")) {
-    ui.PutDouble("ELAT",userGrp["MaximumLatitude"]);
+    ui.PutDouble("MAXLAT",userGrp["MaximumLatitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MinimumLongitude")) {
-    ui.PutDouble("SLON",userGrp["MinimumLongitude"]);
+    ui.PutDouble("MINLON",userGrp["MinimumLongitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MaximumLongitude")) {
-    ui.PutDouble("ELON",userGrp["MaximumLongitude"]);
+    ui.PutDouble("MAXLON",userGrp["MaximumLongitude"]);
     count++;
   }
 
@@ -485,14 +485,14 @@ void LoadCameraRange () {
   cam->GroundRange(minlat,maxlat,minlon,maxlon,userMap);
 
   // Set ground range parameters in UI
-  ui.Clear("SLAT");
-  ui.PutDouble("SLAT",minlat);
-  ui.Clear("ELAT");
-  ui.PutDouble("ELAT",maxlat);
-  ui.Clear("SLON");
-  ui.PutDouble("SLON",minlon);
-  ui.Clear("ELON");
-  ui.PutDouble("ELON",maxlon);
+  ui.Clear("MINLAT");
+  ui.PutDouble("MINLAT",minlat);
+  ui.Clear("MAXLAT");
+  ui.PutDouble("MAXLAT",maxlat);
+  ui.Clear("MINLON");
+  ui.PutDouble("MINLON",minlon);
+  ui.Clear("MAXLON");
+  ui.PutDouble("MAXLON",maxlon);
 
   // Set default ground range param to camera
   ui.Clear("DEFAULTRANGE");

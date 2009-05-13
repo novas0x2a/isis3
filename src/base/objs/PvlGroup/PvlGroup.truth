@@ -24,9 +24,10 @@ Group = POODLE
   -VEGGIE = Null
   BOVINE  = (COW, CAMEL)
   TREE    = (MAPLE, ELM, PINE)
-  FLOWER  = "DAISY & TULIP "
 
   # This is a comment
+  FLOWER  = "DAISY & TULIP "
+
   /* This is another comment
   BIG     = ("  NOT  ", "REALLY LARGE")
 End_Group

@@ -183,6 +183,16 @@ void IsisMain() {
 
     plot->setScale(QwtPlot::yLeft,0,maxYValue);
     plot->setScale(QwtPlot::xBottom,hist.Minimum(),hist.Maximum());
+
+    QLabel *label = new QLabel("  Average = " + QString::number(hist.Average()) + '\n' +
+    "\n  Minimum = " + QString::number(hist.Minimum()) + '\n' +
+    "\n  Maximum = " + QString::number(hist.Maximum()) + '\n' +
+    "\n  Stand. Dev.= " + QString::number(hist.StandardDeviation()) + '\n' +
+    "\n  Variance = " + QString::number(hist.Variance()) + '\n' +
+    "\n  Median = " + QString::number(hist.Median()) + '\n' +
+    "\n  Mode = " + QString::number(hist.Mode()) +'\n' +
+    "\n  Skew = " + QString::number(hist.Skew()), plot);
+    plot->getDockWidget()->setWidget(label);
  
     plot->showWindow();
   }

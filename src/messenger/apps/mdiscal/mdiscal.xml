@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: mdiscal.xml,v 1.13 2008/11/25 16:32:57 kbecker Exp $ -->
+<!-- $Id: mdiscal.xml,v 1.14 2009/05/11 18:59:07 slambright Exp $ -->
 
 <application name="mdiscal" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
@@ -371,7 +371,6 @@ in the SOLAR directory.
   </description>
 
   <category>
-    <categoryItem>Radiometric and Photometric Correction</categoryItem>
     <missionItem>Messenger</missionItem>
   </category>
 

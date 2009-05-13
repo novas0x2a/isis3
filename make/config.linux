@@ -4,6 +4,7 @@
 #---------------------------------------------------------------------------
 HOST_ARCH ?= $(shell uname -s)
 HOST_MACH  = $(shell uname -m)
+NODE_NAME  = $(shell uname -n)
 
 #  This allows us to continue building on Suse 9 systems.  It makes some
 #  assumptions.  See the file $ISISROOT/make/config.linux-Suse9.
@@ -13,7 +14,12 @@ endif
 
 ifeq ($(HOST_ARCH),Linux)
   ifeq ($(HOST_MACH),x86_64)
-    include $(ISISROOT)/make/config.linux-x86_64
+    REDHAT = $(wildcard /etc/redhat-release)
+    ifeq ($(REDHAT),/etc/redhat-release)
+     include $(ISISROOT)/make/config.linux-RedHat
+    else
+      include $(ISISROOT)/make/config.linux-x86_64
+    endif
   else
     ifneq ($(VERSION),9)
       include $(ISISROOT)/make/config.linux-x86_32

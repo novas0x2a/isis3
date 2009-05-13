@@ -7,6 +7,7 @@
 #include "OverlapStatistics.h"
 #include "LineManager.h"
 #include "MultivariateStatistics.h"
+#include "iString.h"
 
 #include "CubeAttribute.h"
 #include "tnt_array2d.h"
@@ -30,6 +31,36 @@ void IsisMain() {
                  "] does not contain any data";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
+
+  // Make sure number of bands and projection parameters match for all cubes
+  for (unsigned int i=0; i<imageList.size(); i++) {
+    Cube cube1;
+    cube1.Open(imageList[i]);
+
+    for (unsigned int j=(i+1); j<imageList.size(); j++) {
+      Cube cube2;
+      cube2.Open(imageList[j]);      
+
+      // Make sure number of bands match
+      if (cube1.Bands() != cube2.Bands()) {
+        string msg = "Number of bands do not match between cubes [" +
+                     imageList[i] + "] and [" + imageList[j] + "]";
+        throw iException::Message(iException::User,msg,_FILEINFO_);
+      }
+
+      //Create projection from each cube
+      Projection *proj1 = cube1.Projection();
+      Projection *proj2 = cube2.Projection();
+    
+      // Test to make sure projection parameters match
+      if (*proj1 != *proj2) {
+        string msg = "Mapping groups do not match between cubes [" +
+                     imageList[i] + "] and [" + imageList[j] + "]";
+        throw iException::Message(iException::User,msg,_FILEINFO_);
+      }      
+    }
+  }
+  
 
   // Read hold list if one was entered
   std::vector<int> hold;
@@ -77,29 +108,36 @@ void IsisMain() {
   // bands, and calculating statistics for each cube to use later
   avg.resize(imageList.size());
   PvlGroup a("ImageAverages");
-  for (int i=0; i<(int)imageList.size(); i++){
+  iString max_cube ((int)imageList.size());
+  for (int i=0; i<(int)imageList.size(); i++){    
     Process p;
     const CubeAttributeInput att;
     const std::string inp = imageList[i];
     Cube *icube = p.SetInputCube(inp, att);
     avg[i].resize(icube->Bands());
-    for (int b=1; b<=icube->Bands(); b++) {
-      avg[i][b-1] = icube->Statistics(1,
-                     "Calculating Statistics for " + imageList[i])->Average();
-      a += PvlKeyword(imageList[i], avg[i][b-1]);
+    iString cur_cube (i+1);    
+    if (icube->Bands() == 1) {
+      avg[i][0] = icube->Statistics(1,
+                       "Calculating Statistics for Band 1 in Cube " + cur_cube + 
+                                    " of " + max_cube)->Average();
+      a += PvlKeyword(imageList[i], avg[i][0]);
     }
-    if (i > 0) {
-      if (icube->Bands() != (int)avg[i-1].size()) {
-        std::string msg = "The number of bands must be the same for all input";
-        msg += " images";
-        throw iException::Message(iException::User,msg,_FILEINFO_);
+    else {
+      iString max_band (icube->Bands());
+      for (int b=1; b<=icube->Bands(); b++) {
+        iString cur_band (b);        
+        avg[i][b-1] = icube->Statistics(b,
+                       "Calculating Statistics for Band " + cur_band + " of " + 
+                                        max_band + " in Cube " + cur_cube + " of " +
+                                         max_cube)->Average();
+        a += PvlKeyword(imageList[i], avg[i][b-1]);
       }
-    }
+    }    
     p.EndProcess();
   }
   equ.AddGroup(a);
 
-  // We will loop through each input cube and get statistics needed for .
+  // We will loop through each input cube and get statistics needed for
   // equalizing
   std::vector<OverlapStatistics> overlapList;
   std::vector<int> oIndex1;
@@ -112,9 +150,14 @@ void IsisMain() {
     for (unsigned int j=(i+1); j<imageList.size(); j++) {
       Cube cube2;
       cube2.Open(imageList[j]);
+      iString max_cube ((int)imageList.size());
+      iString cube1_st ((int)(i+1));
+      iString cube2_st ((int)(j+1));
+      string progress_msg = "Gathering Overlap Statisitcs for Cube " + cube1_st + 
+                              " vs " + cube2_st + " of " + max_cube;
 
       // Get overlap statistics for cubes
-      OverlapStatistics oStats(cube1,cube2);
+      OverlapStatistics oStats(cube1, cube2, progress_msg);
 
       // Only push the stats onto the oList vector if there is an overlap in at
       // least one of the bands
@@ -339,7 +382,9 @@ void IsisMain() {
     for (int img=0; img<(int)imageList.size(); img++) {
       imageNum = img;
       ProcessByLine p;
-      p.Progress()->SetText("Equalizing Image " + imageList[img]);
+      iString max_cube ((int)imageList.size());
+      iString cur_cube (img+1);
+      p.Progress()->SetText("Equalizing Cube " + cur_cube + " of " + max_cube);
       CubeAttributeInput att;
       const std::string inp = imageList[img];
       Cube *icube = p.SetInputCube(inp, att);

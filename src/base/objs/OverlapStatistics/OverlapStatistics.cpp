@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/06/18 18:44:55 $
+ * $Revision: 1.8 $
+ * $Date: 2009/03/12 22:57:26 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -28,6 +28,7 @@
 #include "ProjectionFactory.h"
 #include "iException.h"
 #include "Brick.h"
+#include "Progress.h"
 #include <cfloat>
 #include <iomanip>
 
@@ -44,7 +45,7 @@ namespace Isis {
   * @throws Isis::iException::User - All images must have the same number of
   *                                  bands
   */
-  OverlapStatistics::OverlapStatistics(Isis::Cube &x, Isis::Cube &y) {
+  OverlapStatistics::OverlapStatistics(Isis::Cube &x, Isis::Cube &y, string progress_msg) {
     // Extract filenames and band number from cubes
     p_xFile = x.Filename();
     p_yFile = y.Filename();
@@ -122,16 +123,24 @@ namespace Isis {
       }
 #endif
 
+      // Print percent processed
+      Progress progress;
+      progress.SetText(progress_msg);
+      int maxSteps = p_bands * p_lineRange;
+      progress.SetMaximumSteps(maxSteps);
+      progress.CheckStatus();
+
       for (int band=1; band<=p_bands; band++) {
         Brick b1(p_sampRange,1,band,x.PixelType());
         Brick b2(p_sampRange,1,band,y.PixelType());
 
-        for (int i=0; i<p_lineRange; i++) {
+        for (int i=0; i<p_lineRange; i++) {          
           b1.SetBasePosition(p_minSampX,(i+p_minLineX),band);
           b2.SetBasePosition(p_minSampY,(i+p_minLineY),band);
           x.Read(b1);
           y.Read(b2);
           p_stats[band-1].AddData(b1.DoubleBuffer(), b2.DoubleBuffer(), p_sampRange);
+          progress.CheckStatus();
         }
       }
     }

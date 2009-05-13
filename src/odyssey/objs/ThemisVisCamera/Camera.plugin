@@ -1,4 +1,5 @@
 Group = Mars_Odyssey/Themis_Vis
+  Version = 1
   Library = ThemisVisCamera
   Routine = ThemisVisCameraPlugin
 EndGroup

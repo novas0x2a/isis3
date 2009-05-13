@@ -94,11 +94,12 @@ QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtWebKit
 QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtXml
 QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtXmlPatterns
 QTLIBDIR = -L$(QTDIR)/lib
-QTLIB    = -lQtNetwork -lQtSql -lQtGui -lQtCore
+#QTLIB    =  -lQtNetwork -lQtSql -lQtGui -lQtCore
 
 ISISCPPFLAGS += $(QTDARWINFLAGS)
 QTFRAMEWORKS = -framework Carbon -framework AppKit
-QTLIB        = -lQtNetwork -lQtSql -lQtGui -lQtCore $(QTFRAMEWORKS)
+QTLIB        = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore \
+		$(QTFRAMEWORKS)
 
 QTOPENGL     = -framework OpenGL -framework AGL
 
@@ -183,6 +184,8 @@ endif
 #---------------------------------------------------------------------------
 
 #  Libraries
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtXmlPatterns.*dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtXml.*dylib"
 THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtNetwork.*dylib"
 THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtSql.*dylib"
 THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtGui.*dylib"

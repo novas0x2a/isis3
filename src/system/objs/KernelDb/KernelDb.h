@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/04/16 23:16:20 $
+ * $Revision: 1.6 $
+ * $Date: 2009/05/12 20:11:20 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -71,6 +71,7 @@ class Kernel;
   * @history 2007-10-25 Steven Koechle - Corrected Smithed Enum
   * fixed search methods.
   * @history 2007-07-09 Steven Lambright - Added Kernel class and multiple-ck return
+  * @history 2009-05-12 Steven Lambright - Added Camera Version Checking
   */
 class KernelDb {
 

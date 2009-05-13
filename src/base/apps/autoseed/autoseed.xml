@@ -36,10 +36,22 @@
     <change name="Christopher Austin" date="2008-12-22">
       Removed beta status, fixed a bug, and added test.
     </change>
+    <change name="Christopher Austin" date="2009-01-26">
+      Replaced the cerr output with the ERRORS option.
+    </change>
+    <change name="Christopher Austin" date="2009-02-09">
+      Added the seed definition parameters to the results group of the
+      print.prt file
+    </change>
+    <change name="Christopher Austin" date="2009-03-16">
+      Fixed the progress objects.
+    </change>
   </history>
 
   <groups>
+
     <group name="Files">
+
       <parameter name="FROMLIST">
         <type>filename</type>
         <fileMode>input</fileMode>
@@ -110,9 +122,23 @@
           This file will contain the autoseeded control network
         </description>
       </parameter>
+
+      <parameter name="ERRORS">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <internalDefault>No Error Output</internalDefault>
+        <brief>
+          Errors generated while seeding the overlaps
+        </brief>
+        <description>
+          This file will contain the errors that occurred while seeding the overlaps.
+        </description>
+      </parameter>
+
     </group>
 
     <group name="Control">
+
       <parameter name="NETWORKID">
         <type>string</type>
         <brief>
@@ -150,6 +176,9 @@
             A string describing purpose of this control network.
         </description>
       </parameter>
+
     </group>
+
   </groups>
+
 </application>

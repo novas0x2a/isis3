@@ -2,12 +2,22 @@
 
 <application name="blobdump" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
-      Program to output a selested blob out to a file
+      Program to output a selected blob out to a file
   </brief>
 
   <description>
-      This program takes a cube with a blob in it, and strings to identify which blob, and reads
-      that blob out to a file specified by the user.
+      <p>
+          This program takes a cube with a blob in it, and strings to identify which 
+          blob, and reads that blob out to a file specified by the user.
+      </p>
+
+       <p>
+          Helper button has been provided in the GUI mode for the NAME and TYPE 
+          parameters.  The helper button will sequentially fill in the name and
+          type of each blob when pressed, clear the field to blank after the 
+          last blob has been reached, and then wrap back to the 
+          beginning.
+      </p>
   </description>
 
   <category>
@@ -21,6 +31,11 @@
 
       <change name="Steven Lambright" date="2007-07-27">
           Changed category from Utility to Import and Export
+      </change>
+      
+      <change name="Travis Addair" date="2009-03-03">
+          Added helper button to sequentially place one blob into the NAME and 
+          TYPE parameters each time it is pressed
       </change>
   </history>
 
@@ -61,6 +76,19 @@
                   does not refer to which subclass of blob created it. In the cube's labels, this
                   will be the information to the right of the equals sign after the keyword "Name"
               </description>
+              <helpers>
+                <helper name="H1">
+                  <function>helperButtonGetBlobList</function>
+                  <brief>Retrieve Blob names</brief>
+                  <description>
+                     This button will, each time it is pressed, generate the 
+                     name and type of a blob in the input cube and put it in 
+                     the appropriate field in the GUI, clear to blank after the
+                     last blob is hit, and then wrap back to the beginning.  
+                  </description>
+                  <icon>$ISIS3DATA/base/icons/exec.png</icon>
+               </helper>
+            </helpers>
           </parameter>
 
           <parameter name="TYPE">

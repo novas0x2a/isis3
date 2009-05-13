@@ -536,11 +536,12 @@ namespace Qisis {
       d = tempList.at(i);
       //Set the current viewport to the one being closed
       setCubeViewport(d);
+
       //If the user cancels the close operation, delete any viewports
       //that WERE closed and set the viewportlist to the temp list and return
-      if(!d->close()) {
-        tempList.erase(tempList.begin(), tempList.begin() + i);
-        cubeViewportList()->assign(tempList.begin(), tempList.end());
+      if(!d->parentWidget()->close()) {
+        //tempList.erase(tempList.begin(), tempList.begin() + i);
+        //cubeViewportList()->assign(tempList.begin(), tempList.end());
         return false;
       }
     }

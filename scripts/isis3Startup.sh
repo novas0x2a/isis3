@@ -23,12 +23,16 @@ else
 fi
 export ISIS3DATA
 
-if [ -d $ISISROOT/../testData ]; then
-  ISIS3TESTDATA=$ISISROOT/../testData
-else
+# Do not export when used by outside groups
+if [ -d /usgs/cpkgs/isis3/testData ]; then
   ISIS3TESTDATA=/usgs/cpkgs/isis3/testData
+  export ISIS3TESTDATA
+else
+  if [ -d $ISISROOT/../testData ]; then
+    ISIS3TESTDATA=$ISISROOT/../testData
+    export ISIS3TESTDATA
+  fi
 fi
-export ISIS3TESTDATA
 
 if [ "$PATH" ]; then
   PATH="${PATH}:${ISISROOT}/bin"

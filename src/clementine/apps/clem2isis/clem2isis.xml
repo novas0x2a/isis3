@@ -68,6 +68,10 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Tracie Sucharski" date="2009-02-17">
+      Added BandBin keywords Center and Width to clementine.trn and
+      alter the output values only if the filter is not the F filter.
+    </change>
   </history>
   
 

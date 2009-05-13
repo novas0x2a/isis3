@@ -107,7 +107,7 @@
           The first ControlNet to be merged.
         </description>
         <filter>
-          *.ctl *.pvl
+          *.ctl *.pvl *.net
         </filter>
       </parameter>
 
@@ -121,7 +121,7 @@
           The second ControlNet to be merged.
         </description>
         <filter>
-          *.ctl *.pvl
+          *.ctl *.pvl *.net
         </filter>
       </parameter>
 
@@ -140,7 +140,7 @@
           ControlNets.
         </description>
         <filter>
-          *.ctl *.pvl
+          *.ctl *.pvl *.net
         </filter>
       </parameter>
 

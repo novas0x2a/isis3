@@ -19,7 +19,10 @@
 #       AUG 25 2008 - Kris Becker - Changed all references of DYLD_LIBRARY_PATH
 #                       to DYLD_FALLBACK_LIBRARY_PATH.  See 
 #                       http://www.osxfaq.com/man/1/dyld.ws.
-#_VER   $Id: isis3Startup.csh,v 1.3 2008/09/19 20:48:59 skoechle Exp $
+#       MAR 12 2009 - Christopher Austin - Changed the way ISIS3TESTDATE is set
+#                       to prevent its setting for outside groups and default
+#                       to "/usgs/cpkgs/isis3/testData"
+#_VER   $Id: isis3Startup.csh,v 1.4 2009/03/13 00:18:35 caustin Exp $
 #_END
 ################################################################################
 # Check parameters
@@ -50,10 +53,12 @@ else
 endif
 
 # Initialize the ISIS3TESTDATA environment variable
-if (-d $ISISROOT/../testData) then
-  setenv ISIS3TESTDATA $ISISROOT/../testData
-else
+if (-d /usgs/cpkgs/isis3/testData) then
   setenv ISIS3TESTDATA /usgs/cpkgs/isis3/testData
+else
+  if (-d $ISISROOT/../testData) then
+    setenv ISIS3TESTDATA $ISISROOT/../testData
+  endif
 endif
 
 # Insert ISISROOT/bin in the PATH environment variable if it's not already there

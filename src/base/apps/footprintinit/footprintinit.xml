@@ -1,11 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <application name="footprintinit" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
-    This program uses a text-based list of cubes to create polygons and stores those polygons in blobs inside the cube.
+    This program stores a polygon representing the Lat/Lon footprint of the 
+    image.
   </brief>
 
   <description>
-    This program creates a latitude/longitude geometric polygon that determines the footprint of the image. This footprint is used in other programs such as autoseed.
+    This program creates a latitude/longitude geometric polygon that determines the footprint of the image. 
+    This footprint is used in other programs such as autoseed.
   </description>
 
   <category>
@@ -44,6 +46,10 @@
         Deletes old footprint (generated off cubes serial number) if its found. 
         New name for blob is just Footprint.
     </change>
+    <change name="Steven Koechle" date="2009-04-17">
+        PIXINC parameter was removed, ImagePolygon now uses a new method of 
+        finding footprints
+    </change>
   </history>
 
   <groups>
@@ -60,21 +66,6 @@
         <filter>
           *.cub
         </filter>
-      </parameter>
-    </group>
-
-    <group name="Options">
-      <parameter name="PIXINCREMENT">
-        <type>integer</type>
-        <default>
-            <item>100</item>
-        </default>
-        <brief>
-          Pixel increment for polygon creation
-        </brief>
-        <description>
-          The pixel increment used to create polygons.
-        </description>
       </parameter>
     </group>
   </groups>

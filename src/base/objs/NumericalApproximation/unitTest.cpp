@@ -39,6 +39,9 @@ inline double integral(double a, double b) { return (b*b*b*b/4 + b*b*b/3 + b*b/2
 
 
 int main (int argc, char *argv[]) {
+  // include isis preferences so that line numbers will not be printed with errors
+  Isis::Preference::Preferences(true);
+
   cout << endl << "Unit test for NumericalApproximation" << endl;
   //------------------------------------------------------------
   cout << "Using the function f(x) = x^3 + x^2 + x" << endl << endl;

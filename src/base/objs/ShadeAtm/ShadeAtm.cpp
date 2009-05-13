@@ -24,8 +24,6 @@ namespace Isis {
    * @param phase Phase angle 
    * @param incidence Incidence angle 
    * @param emission Emission angle 
-   * @param demincidence 
-   * @param dememission 
    * @param dn 
    * @param albedo 
    * @param mult 
@@ -37,8 +35,7 @@ namespace Isis {
    * 
    */
   void ShadeAtm::NormModelAlgorithm (double phase, double incidence,
-      double emission, double demincidence, double dememission, double dn,
-      double &albedo, double &mult, double &base)
+      double emission, double dn, double &albedo, double &mult, double &base)
   {
     double rho;
     double psurfref;
@@ -65,7 +62,7 @@ namespace Isis {
 
     rho = p_normAlbedo / psurfref;
 
-    psurf = GetPhotoModel()->CalcSurfAlbedo(phase, demincidence, dememission);
+    psurf = GetPhotoModel()->CalcSurfAlbedo(phase, incidence, emission);
 
     ahInterp = (GetAtmosModel()->AtmosAhSpline()).Evaluate(incidence,NumericalApproximation::Extrapolate);
 

@@ -73,7 +73,8 @@
     <p>
       The following table shows all currently supported operators sorted 
       by precedence (0 = highest precedence).  All examples are valid 
-      equations that assume one or two files (F1, F2) are loaded.
+      equations that assume one or two files (F1, F2) are loaded. All angles
+      are in radians, not degrees.
     </p>  
     
     <table border = "1">
@@ -319,6 +320,9 @@
     </change>
     <change name="Steven Lambright" date="2008-12-17">
       Renamed parameter FILELIST to FROMLIST
+    </change>
+    <change name="Steven Lambright" date="2009-04-17">
+      Updated documentation to reflect the units of the trig functions.
     </change>
   </history>
 

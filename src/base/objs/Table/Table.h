@@ -2,8 +2,8 @@
 #define Table_h
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:10 $
+ * $Revision: 1.2 $
+ * $Date: 2009/02/18 16:35:19 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -51,6 +51,8 @@ namespace Isis {
  * @history 2006-09-19 Jeff Anderson - Fixed bug in ReadInit
  *          method which needed to cleanup pointers to records
  *          if a re-read occurred.
+ * @history 2009-02-18 Steven Lambright - Added copy constructor and 
+ *          assignment operator. 
  */
   class Table : public Isis::Blob {
     public:
@@ -58,6 +60,8 @@ namespace Isis {
       Table(const std::string &tableName);
       Table(const std::string &tableName, Isis::TableRecord &rec);
       Table(const std::string &tableName, const std::string &file);
+      Table(const Table &other);
+
       ~Table();
 
       // Read a record
@@ -65,6 +69,8 @@ namespace Isis {
 
       // Add a record
       void operator+=(Isis::TableRecord &rec);
+
+      Table &operator=(const Isis::Table &other);
 
       // Update a record
       void Update(const Isis::TableRecord &rec, const int index);

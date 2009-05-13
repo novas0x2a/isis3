@@ -1,27 +1,27 @@
 #if !defined(AutoReg_h)
 #define AutoReg_h
-/**                                                                       
- * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/11/18 17:13:25 $                                                                 
- *                                                                        
- *   Unless noted otherwise, the portions of Isis written by the USGS are 
- *   public domain. See individual third-party library and package descriptions 
- *   for intellectual property information, user agreements, and related  
- *   information.                                                         
- *                                                                        
- *   Although Isis has been used by the USGS, no warranty, expressed or   
- *   implied, is made by the USGS as to the accuracy and functioning of such 
- *   software and related material nor shall the fact of distribution     
+/**
+ * @file
+ * $Revision: 1.7 $
+ * $Date: 2009/03/30 19:34:41 $
+ *
+ *   Unless noted otherwise, the portions of Isis written by the USGS are
+ *   public domain. See individual third-party library and package descriptions
+ *   for intellectual property information, user agreements, and related
+ *   information.
+ *
+ *   Although Isis has been used by the USGS, no warranty, expressed or
+ *   implied, is made by the USGS as to the accuracy and functioning of such
+ *   software and related material nor shall the fact of distribution
  *   constitute any such warranty, and no responsibility is assumed by the
- *   USGS in connection therewith.                                        
- *                                                                        
- *   For additional information, launch                                   
- *   $ISISROOT/doc//documents/Disclaimers/Disclaimers.html                
+ *   USGS in connection therewith.
+ *
+ *   For additional information, launch
+ *   $ISISROOT/doc//documents/Disclaimers/Disclaimers.html
  *   in a browser or see the Privacy &amp; Disclaimers page on the Isis website,
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
- *   http://www.usgs.gov/privacy.html.                                    
- */                                                                       
+ *   http://www.usgs.gov/privacy.html.
+ */
 
 #include <string>
 #include <vector>
@@ -29,13 +29,13 @@
 namespace Isis {
   /**
    * @brief Auto Registration class
-   * 
+   *
    * Create AutoReg object.  Because this is a pure virtual class you can
-   * not create an AutoReg class directly.  Instead, see the AutoRegFactory 
+   * not create an AutoReg class directly.  Instead, see the AutoRegFactory
    * class.
-   * 
+   *
    * @ingroup PatternMatching
-   * 
+   *
    * @see AutoRegFactory MaximumCorrelation MinimumDifference
    *
    * @internal
@@ -43,7 +43,7 @@ namespace Isis {
    *                                     accuracy, new CompareFit method, an arbitrarily
    *                                     chosen EPSILON value, a minimum standard deviation
    *                                     cutoff for the pattern chip, and created a unitTest
-   * 
+   *
    *   @history 2006-02-13 Jacob Danton Added shrinking pattern and sampling option for the pattern chip.
    *   @history 2006-05-15 Jeff Anderson Moved ZScoreMinimum from Algorith group
    *                                     to the PatternChip group
@@ -52,14 +52,24 @@ namespace Isis {
    *            (private member function)
    *   @history 2008-06-23 Steven Lambright Fixed naming and some documentation
    *            fixes, added ZScores
-   *   @history 2008-08-13 Noah Hilt Added two new optional arguments to AutoReg: WindowSize and 
-        DistanceTolerance. These two arguments affect how AutoReg gathers and 
+   *   @history 2008-08-13 Noah Hilt Added two new optional arguments to AutoReg: WindowSize and
+        DistanceTolerance. These two arguments affect how AutoReg gathers and
    *    compares data for surface modeling and accuracy and should be contained
    *    inside the group "SurfaceModel" in the Pvl. Also changed the Pvl returned
    *    by RegistrationStatistics so that group names do not contain spaces and
    *    the Pvl only contains groups.
    *    @history 2008-11-18 Steven Koechle - Changed all keywords *NotEnoughData
    *             to *NotEnoughValidData
+   *    @history 2009-03-17  Tracie Sucharski - Added method to return fit chip
+   *    @history 2009-03-26  Jeff Anderson - Removed pattern chip
+   *             reduction as it was broken, added skewness check
+   *             for the fit chip, cleaned up the
+   *             RegistrationStatistics method and added setters
+   *             methods where appropriate
+   *    @history 2009-03-30 Jeff Anderson - Modified code to reset
+   *             parameters (goodness of fit and skewness) for
+   *             successive calls to Register method.  Also check
+   *             to see if skewness is null.
    */
   class Chip;
   class Pvl;
@@ -78,7 +88,8 @@ namespace Isis {
         SurfaceModelSolutionInvalid, //!< Could not model surface for sub-pixel accuracy
         SurfaceModelDistanceInvalid, //!< Surface model moves registration more than one pixel
         PatternZScoreNotMet, //!< Pattern data max or min does not pass the z-score test
-        SurfaceModelToleranceNotMet //!< Goodness of fit tolerance (with subpixel accuracy) not satisfied
+        SurfaceModelToleranceNotMet, //!< Goodness of fit tolerance (with subpixel accuracy) not satisfied
+        FitChipSkewnessNotMet //!< The skewness of the fit chip histogram was not met
       };
 
       //! Return pointer to pattern chip
@@ -87,12 +98,18 @@ namespace Isis {
       //! Return pointer to search chip
       inline Chip *SearchChip() { return p_searchChip; };
 
+      //! Return pointer to search chip
+      inline Chip *FitChip() { return p_fitChip; };
+
+      void SetSubPixelAccuracy(bool on);
       void SetPatternValidPercent(const double percent);
       void SetPatternSampling (const double percent);
       void SetSearchSampling (const double percent);
       void SetTolerance(double tolerance);
-      void SetPatternReduction(std::vector<int> samples, std::vector<int> lines);
-      void SetMovementReductionPercent(std::vector<double> percents);
+      void SetSurfaceModelWindowSize (int size);
+      void SetSurfaceModelDistanceTolerance (double distance);
+      void SetFitChipSkewnessTolerance (double tolerance);
+      void SetPatternZScoreMinimum(double minimum);
 
       //! Return pattern valid percent
       double PatternValidPercent() const { return p_patternValidPercent; };
@@ -123,14 +140,21 @@ namespace Isis {
       inline double CubeLine() const { return p_cubeLine; };
 
       /**
-       * Get the ZScores
-       * 
+       * Return the ZScores of the pattern chip
+       *
        * @param score1 First Z Score
        * @param score2 Second Z Score
        */
-      void ZScores(double &score1, double &score2) const { 
-        score1=p_ZScore1; 
-        score2=p_ZScore2; 
+      void ZScores(double &score1, double &score2) const {
+        score1=p_ZScore1;
+        score2=p_ZScore2;
+      }
+
+      /**
+       * Return the skewness of the fit chip
+       */
+      double Skewness () const {
+        return p_skewness;
       }
 
       Pvl RegistrationStatistics();
@@ -150,33 +174,35 @@ namespace Isis {
 
       Chip *p_patternChip;
       Chip *p_searchChip;
+      Chip *p_fitChip;
 
       bool p_subpixelAccuracy;
 
       int p_Total;
       int p_Success;
-      std::vector<int> p_PatternChipNotEnoughValidData;
-      std::vector<int> p_PatternZScoreNotMet;
-      std::vector<int> p_FitChipNoData;
-      std::vector<int> p_FitChipToleranceNotMet;
+      int p_PatternChipNotEnoughValidData;
+      int p_PatternZScoreNotMet;
+      int p_FitChipNoData;
+      int p_FitChipToleranceNotMet;
+      int p_FitChipSkewnessNotMet;
       int p_SurfaceModelNotEnoughValidData;
       int p_SurfaceModelSolutionInvalid;
       int p_SurfaceModelToleranceNotMet;
       int p_SurfaceModelDistanceInvalid;
+
       double p_ZScore1;
       double p_ZScore2;
+      double p_skewness;
 
       double p_minimumPatternZScore;
       double p_patternValidPercent;
       double p_searchSamplingPercent;
-      std::vector<int> p_reductionSamples, p_reductionLines;
-      std::vector<double> p_reductionPercents;
 
       double p_chipSample, p_chipLine;
       double p_cubeSample, p_cubeLine;
       double p_goodnessOfFit;
       double p_tolerance;
-      double EPSILON;
+      double p_skewnessTolerance;
 
       std::string p_algorithmName;
 

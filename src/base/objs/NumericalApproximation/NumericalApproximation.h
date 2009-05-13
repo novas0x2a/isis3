@@ -649,6 +649,10 @@ namespace Isis {
    *            NumericalApproximation::ExtrapType in
    *            Constructors, AddData(), Evaluate(),
    *            ValueToExtrapolate(), EvaluateCubicNeighborhood(),
+   *   @history 2009-01-26 Jeannie Walldren - Fixed error
+   *            documentation.
+   *   @history 2009-02-12 Jeannie Walldren - Fixed documentation
+   *            to include weblinks.
    *  
    */                                                                       
 

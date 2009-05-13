@@ -2,8 +2,8 @@
 #define PvlTokenizer_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2007/04/13 23:15:22 $
+ * $Revision: 1.4 $
+ * $Date: 2009/03/13 16:22:03 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -70,7 +70,9 @@ namespace Isis {
   *                                   and implementation examples                                               
   *  @history 2007-04-13 Stuart Sides - Fixed bug where quoted strings broken
   *                                     over more than two lines were not being
-  *                                     read correctly.
+  *                                     read correctly.                                          
+  *  @history 2009-03-13 Steven Lambright - Inline comments now correctly
+  *           correlate to the keywords before them on the same line.
   */                                                                       
   class PvlTokenizer {
   
@@ -81,7 +83,7 @@ namespace Isis {
   
       std::string ReadComment (std::istream &stream);
       std::string ReadToken (std::istream &stream);
-      void SkipWhiteSpace (std::istream &stream);
+      bool SkipWhiteSpace (std::istream &stream);
       std::string ReadToSingleQuote (std::istream &stream);
       std::string ReadToDoubleQuote (std::istream &stream);
       std::string ReadToParen (std::istream &stream);

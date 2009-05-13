@@ -1,4 +1,4 @@
-SRCS = $(filter-out moc_QnetNavTool.cpp moc_QnetTool.cpp moc_QnetFileTool.cpp moc_QnetFilter.cpp moc_QnetPointMeasureFilter.cpp moc_QnetPointImagesFilter.cpp moc_QnetPointTypeFilter.cpp moc_QnetPointRangeFilter.cpp moc_QnetPointErrorFilter.cpp moc_QnetPointDistanceFilter.cpp moc_QnetPointIdFilter.cpp moc_QnetCubePointsFilter.cpp moc_QnetCubeDistanceFilter.cpp moc_QnetCubeNameFilter.cpp moc_QnetPointGoodnessFilter.cpp moc_QnetNewPointDialog.cpp moc_QnetNewMeasureDialog.cpp moc_QnetDeletePointDialog.cpp moc_QnetHoldPointDialog.cpp, $(wildcard *.cpp)) moc_QnetNavTool.cpp moc_QnetTool.cpp moc_QnetFileTool.cpp moc_QnetFilter.cpp moc_QnetPointErrorFilter.cpp moc_QnetCubePointsFilter.cpp moc_QnetPointTypeFilter.cpp moc_QnetPointRangeFilter.cpp moc_QnetPointDistanceFilter.cpp moc_QnetPointIdFilter.cpp moc_QnetCubeDistanceFilter.cpp moc_QnetCubeNameFilter.cpp moc_QnetPointGoodnessFilter.cpp moc_QnetPointMeasureFilter.cpp moc_QnetPointImagesFilter.cpp moc_QnetNewPointDialog.cpp moc_QnetNewMeasureDialog.cpp moc_QnetDeletePointDialog.cpp moc_QnetHoldPointDialog.cpp
+SRCS = $(filter-out moc_QnetNavTool.cpp moc_QnetTool.cpp moc_QnetFileTool.cpp moc_QnetFilter.cpp moc_QnetPointMeasureFilter.cpp moc_QnetPointImagesFilter.cpp moc_QnetPointTypeFilter.cpp moc_QnetPointRangeFilter.cpp moc_QnetPointErrorFilter.cpp moc_QnetPointDistanceFilter.cpp moc_QnetPointIdFilter.cpp moc_QnetCubePointsFilter.cpp moc_QnetCubeDistanceFilter.cpp moc_QnetCubeNameFilter.cpp moc_QnetPointGoodnessFilter.cpp moc_QnetPointCubeNameFilter.cpp moc_QnetNewPointDialog.cpp moc_QnetNewMeasureDialog.cpp moc_QnetDeletePointDialog.cpp moc_QnetHoldPointDialog.cpp, $(wildcard *.cpp)) moc_QnetNavTool.cpp moc_QnetTool.cpp moc_QnetFileTool.cpp moc_QnetFilter.cpp moc_QnetPointErrorFilter.cpp moc_QnetCubePointsFilter.cpp moc_QnetPointTypeFilter.cpp moc_QnetPointRangeFilter.cpp moc_QnetPointDistanceFilter.cpp moc_QnetPointIdFilter.cpp moc_QnetCubeDistanceFilter.cpp moc_QnetCubeNameFilter.cpp moc_QnetPointGoodnessFilter.cpp moc_QnetPointCubeNameFilter.cpp moc_QnetPointMeasureFilter.cpp moc_QnetPointImagesFilter.cpp moc_QnetNewPointDialog.cpp moc_QnetNewMeasureDialog.cpp moc_QnetDeletePointDialog.cpp moc_QnetHoldPointDialog.cpp
 OBJS = $(SRCS:%.cpp=%.o)
 BINS = $(shell basename `pwd`)
 
@@ -50,6 +50,9 @@ moc_QnetPointErrorFilter.cpp: QnetPointErrorFilter.h
 
 moc_QnetPointGoodnessFilter.cpp: QnetPointGoodnessFilter.h
 	$(MOC) $(MOCDEFINES) -o moc_QnetPointGoodnessFilter.cpp QnetPointGoodnessFilter.h
+
+moc_QnetPointCubeNameFilter.cpp: QnetPointCubeNameFilter.h
+	$(MOC) $(MOCDEFINES) -o moc_QnetPointCubeNameFilter.cpp QnetPointCubeNameFilter.h
 
 moc_QnetTool.cpp: QnetTool.h
 	$(MOC) $(MOCDEFINES) -o moc_QnetTool.cpp QnetTool.h

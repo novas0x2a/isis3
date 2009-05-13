@@ -2,8 +2,8 @@
 #define AlbedoAtm_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/11/07 23:06:49 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/05/11 21:53:32 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -40,6 +40,9 @@ namespace Isis {
  *  @history 2008-11-05 Jeannie Walldren - Modified references
  *          to NumericalMethods class.
  *  @history 2008-11-07 Jeannie Walldren - Fixed documentation.
+ *  @history 2009-05-11 Janet Barrett - Fixed so that the NormModelAlgorithm
+ *          supporting DEM input is the empty function. DEM input is not yet
+ *          supported.
  *  
  */
   class AlbedoAtm : public NormModel {
@@ -50,10 +53,10 @@ namespace Isis {
 
     protected:
       virtual void NormModelAlgorithm (double pha, double inc, double ema,
-          double dn, double &albedo, double &mult, double &base) {};
+          double dn, double &albedo, double &mult, double &base);
       virtual void NormModelAlgorithm (double pha, double inc, double ema, 
           double deminc, double demema, double dn, double &albedo,
-	        double &mult, double &base);
+	        double &mult, double &base) {};
 
     private:
       //! Set parameters needed for albedo normalization

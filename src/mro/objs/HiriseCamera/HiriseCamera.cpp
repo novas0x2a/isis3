@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/08/08 20:37:16 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/03/09 03:51:18 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -96,7 +96,6 @@ namespace Isis {
         new LineScanCameraDetectorMap(this,et,lineRate);
       detectorMap->SetDetectorSampleSumming(binMode);
       detectorMap->SetDetectorLineSumming(binMode);
-      detectorMap->SetXAxisTimeDependent(true);
       if (chan == 0) {
         detectorMap->SetStartingDetectorSample(1025.0);
       }

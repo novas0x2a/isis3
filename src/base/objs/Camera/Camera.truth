@@ -5,6 +5,12 @@ RightAscension: 347.016, Declination: -51.2677
 Camera* from: $ISIS3DATA/mgs/testData/ab102401.lev2.cub
 
 SetImage (sample, line): 1
+
+NorthAzimuth: 269.544
+SunAzimuth: 168.17
+SpacecraftAzimuth: 184.591
+OffNadirAngle: 44.4224
+
 SetUniversalGround(lat, lon): 1
 SetRightAscensionDeclination(ra, dec): 1
 HasProjection: 1
@@ -16,10 +22,10 @@ Sample: 408.127
 Line: 962.452
 GroundRange: 0
 IntersectsLongitudeDomain: 0
-PixelResolution: -1
-LineResolution: -4
-SampleResolution: -4
-DetectorResolution: -1
+PixelResolution: 628.045
+LineResolution: 628.045
+SampleResolution: 628.045
+DetectorResolution: 157.011
 LowestImageResolution: 2047.19
 HighestImageResolution: 429.526
 Calling BasicMapping (pvl)...
@@ -92,6 +98,7 @@ Object = IsisCube
     InstrumentPointing  = $mgs/kernels/ck/mgs_sc_ab1.bc
     InstrumentPosition  = $mgs/kernels/spk/mgs_ab1.bsp
     ShapeModel          = $base/dems/molaMarsPlanetaryRadius0002.cub
+    CameraVersion       = 1
   End_Group
 
   Group = Radiometry
@@ -180,13 +187,9 @@ Lines: 1404
 Bands: 1
 ParentLines: 768
 ParentSamples: 640
-RaDecRange: 1
-RaDecResolution: 0.0216226
+**PROGRAMMER ERROR** Camera::RaDecRange can not calculate a right ascension, declination range for projected images which are not projected to sky
+**PROGRAMMER ERROR** Camera::RaDecResolution can not calculate a right ascension, declination resolution for projected images which are not projected to sky
 Calling Distortion, FocalPlane, Detector, Ground, and Sky Map functions... Done.
-NorthAzimuth: -1
-SunAzimuth: -1
-SpacecraftAzimuth: -1
-OffNadirAngle: 66.4518
 Calling IgnoreProjection (false)...
 
 Testing SetUniversalGround(lat,lon,radius)...

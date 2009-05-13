@@ -159,9 +159,7 @@ int *got_height;
         }
         else {
           bitStuff.output = lastsync;
-          // FIXED 2008/10/29, "%x" was improper, %#x needed to be the specifier for a void pointer to be printed
-          // as a hex number. - Steven Lambright, pointed out by "novas0x2a" (Support Forum Member)
-          fprintf(stderr, "restart at %#x\n", lastsync);
+          //fprintf(stderr, "restart at %#x\n", lastsync);
         }
       }
       else {

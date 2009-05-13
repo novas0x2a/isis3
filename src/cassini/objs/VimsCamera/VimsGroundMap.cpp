@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.11 $                                                             
- * $Date: 2008/08/14 17:49:49 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2009/04/06 15:23:26 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -40,8 +40,7 @@ namespace Isis {
   namespace Cassini {
     VimsGroundMap::VimsGroundMap(Camera *parent, Pvl &lab) :
     CameraGroundMap (parent) {
-
-      Init(lab);
+     // Init(lab);
     }
 
     /**

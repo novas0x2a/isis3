@@ -72,12 +72,6 @@ Object = Caminfo
     CenterLatitude         = -35.99699070995
     CenterLongitude        = 183.5425629901
     CenterRadius           = 2440000.0
-    CentroidLatitude       = -29.640948990517
-    CentroidLongitude      = 169.87095531121
-    CentroidLine           = 444.50993729582
-    CentroidSample         = 451.51727680485
-    CentroidRadius         = 2440000.0
-    SurfaceArea            = 8306887.6685914
     UpperLeftLongitude     = 130.629425434
     UpperLeftLatitude      = 2.2131023206612
     LowerLeftLongitude     = NULL
@@ -115,10 +109,12 @@ Object = Caminfo
   End_Object
 
   Object = Polygon
-    CentroidLatitude  = -29.640948990517
-    CentroidLongitude = 169.87095531121
-    Radius            = 2440000.0 
-    SurfaceArea       = 8306887.6685914
+    CentroidLine           = 444.50993729582
+    CentroidSample         = 451.51727680485
+    CentroidLatitude       = -29.640948990517
+    CentroidLongitude      = 169.87095531121
+    CentroidRadius         = 2440000.0
+    SurfaceArea            = 8306887.6685914
     GlobalCoverage    = 11.103217 
     GisFootprint      = "MULTIPOLYGON (((130.6294254340024850 
                         2.2131023206611959, 132.6105055692809458 
@@ -308,6 +304,18 @@ End
          models return valid states when coordinates are outside of image 
          boundaries).
      </change>
+     <change name="Kris Becker" date="2009-02-26"> 
+         Modified to actually exclude the unconditional computation of the image 
+         polygon to assist in some geometry values.  It is no longer computed if 
+         the user does not select the POLYGON option.  The implications of this 
+         are that some of the keywords in the output Geometry group are no 
+         longer ever relevant.  These keywords were all moved to the Polygon 
+         group.  These keywords are:   CentroidLine, CentroidSample, 
+         CentroidLatitude, CentroidLongitude, CentroidRadius and SurfaceArea.  
+         User will no longer see these values if the POLYFON option is not 
+         selected.  Also the Radius keyword in the Polygon group has been 
+         removed as it is redundant with CentroidRadius.
+     </change>
   </history>
 
   <category>
@@ -357,7 +365,7 @@ End
         </brief>
         <description>
           Get geometry information from the camera at the center of the image.  
-          These data are contained in the Geomtry Object.  The keyword/values 
+          These data are contained in the Geometry Object.  The keyword/values 
           contained there are:
           <p>
  BandsUsed<br/>
@@ -373,12 +381,6 @@ CenterLongitude<br/>
 CenterRadius<br/>
 RightAscension<br/>
 Declination<br/>
-CentroidLatitude<br/>
-CentroidLongitude<br/>
-CentroidLine<br/>
-CentroidSample<br/>
-CentroidRadius<br/>
-SurfaceArea<br/>
 UpperLeftLongitude<br/>
 UpperLeftLatitude<br/>
 LowerLeftLongitude<br/>
@@ -537,9 +539,11 @@ TotalPixels
           within the Polygon object.   The keyword/values contained therein 
           are:
             <p>
+CentroidLine<br/>
+CentroidSample<br/>
 CentroidLatitude<br/>
 CentroidLongitude<br/>
-Radius<br/>
+CentroidRadius<br/>
 SurfaceArea<br/>
 GlobalCoverage<br/>
 GisFootprint<br/>

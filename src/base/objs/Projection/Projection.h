@@ -2,8 +2,8 @@
 #define Projection_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/06/19 23:36:11 $
+ * $Revision: 1.9 $
+ * $Date: 2009/01/29 21:21:53 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -101,6 +101,10 @@ namespace Isis {
    *  @history 2008-05-09 Steven Lambright - Added Name, Version, IsEquatorialCylindrical methods
    *  @history 2008-06-12 Christopher Austin - Elaborated error messages.
    *  @history 2008-06-19 Steven Lambright - Fixed memory leak
+   *  @history 2009-01-29 Stacy Alley - added a overloaded STATIC
+   *           method for convenience.  TargetRadii, which takes
+   *           a Pvl, the cube label, and a PvlGroup, a mapping
+   *           group.
    *
    */
   class Projection {
@@ -408,6 +412,7 @@ namespace Isis {
       static double ToPlanetocentric(double lat,
                                      double eRadius, double pRadius);
       static PvlGroup TargetRadii (std::string target);
+      static PvlGroup TargetRadii (Pvl &cubeLab, PvlGroup &mapGroup);
 
     protected:
       Isis::WorldMapper *p_mapper;  /**<This points to a mapper passed into the

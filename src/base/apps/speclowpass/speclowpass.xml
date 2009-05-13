@@ -3,11 +3,11 @@
 <application name="speclowpass" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
   <brief>
-    Apply speclowpass or blurring filter to a cube
+    Apply spectral low pass filter to a cube
   </brief>
 
   <description>
-    This program applies a speclowpass or blurring filter to a cube. An NxM 
+    This program applies a spectral low pass filter or blurring filter to a cube. An NxM 
     boxcar is moved through the cube and average of the boxcar at each position 
     is computed. This average, which effectively blurs the data, is written to 
     the output cube.  In general, the larger the boxcar the more the output cube

@@ -55,6 +55,8 @@ namespace Qisis {
     action->setShortcut(Qt::Key_H);
     QObject::connect(action,SIGNAL(activated()),this,SLOT(showPlotWindow()));
 
+    p_histToolWindow->addViewMenu();
+
     QString text  =
       "<b>Function:</b>  Plot histogram in active viewport \
       <p><b>Shortcut:</b> H</p> ";
@@ -498,6 +500,17 @@ namespace Qisis {
     p_histToolWindow->p_curveCopied = true;
     p_histToolWindow->showWindow();
     updateTool();
+
+     
+    QLabel *label = new QLabel("  Average = " + QString::number(hist.Average()) + '\n' +
+    "\n  Minimum = " + QString::number(hist.Minimum()) + '\n' +
+    "\n  Maximum = " + QString::number(hist.Maximum()) + '\n' +
+    "\n  Stand. Dev.= " + QString::number(hist.StandardDeviation()) + '\n' +
+    "\n  Variance = " + QString::number(hist.Variance()) + '\n' +
+    "\n  Median = " + QString::number(hist.Median()) + '\n' +
+    "\n  Mode = " + QString::number(hist.Mode()) +'\n' +
+    "\n  Skew = " + QString::number(hist.Skew()), p_histToolWindow);
+    p_histToolWindow->getDockWidget()->setWidget(label);
   }
 
 

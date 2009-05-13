@@ -24,11 +24,11 @@ void IsisMain() {
   proj = ProjectionFactory::CreateFromCube(pvl);
  
   // Determine ground range to crop and/or trim
-  if (ui.WasEntered ("SLAT")) {
-    slat = ui.GetDouble ("SLAT");
-    elat = ui.GetDouble ("ELAT");
-    slon = ui.GetDouble ("SLON");
-    elon = ui.GetDouble ("ELON");
+  if (ui.WasEntered ("MINLAT")) {
+    slat = ui.GetDouble ("MINLAT");
+    elat = ui.GetDouble ("MAXLAT");
+    slon = ui.GetDouble ("MINLON");
+    elon = ui.GetDouble ("MAXLON");
   }
   else if (proj->HasGroundRange()) {
     slat = proj->MinimumLatitude();

@@ -5,9 +5,11 @@ include $(ISISROOT)/make/isismake.tsts
 commands:
 	$(LS) $(INPUT)/*.cub > $(OUTPUT)/list.lis;
 	$(APPNAME) from=$(OUTPUT)/list.lis \
-	to=$(OUTPUT)/csv.txt OVERLAPLIST=$(INPUT)/overlaps.lis \
-	tabletype=csv > /dev/null;
+	OVERLAPLIST=$(INPUT)/overlaps.lis \
+	| grep -v "Processed" | grep -v "Working" \
+	> $(OUTPUT)/csv.pvl;
 	$(APPNAME) from=$(OUTPUT)/list.lis \
-	to=$(OUTPUT)/tab.txt OVERLAPLIST=$(INPUT)/overlaps.lis \
-	> /dev/null;
+	OVERLAPLIST=$(INPUT)/overlaps.lis \
+	| grep -v "Processed" | grep -v "Working" \
+	> $(OUTPUT)/tab.pvl;
 	$(RM) $(OUTPUT)/list.lis;

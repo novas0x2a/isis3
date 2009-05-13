@@ -2,8 +2,8 @@
 #define OverlapStatistics_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/06/18 18:44:55 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/03/12 22:57:26 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -54,12 +54,14 @@ namespace Isis {
  *  @history 2007-08-27 Steven Koechle - removed space from standard deviation
  *                         keyword
  *  @history 2008-06-18 Steven Koechle - Fixed Documentation Errors
+ *  @history 2009-03-12 Travis Addair - Added tracking for
+ *           percent processed
  *  
  */ 
 
   class OverlapStatistics {
     public:
-      OverlapStatistics(Isis::Cube &x, Isis::Cube &y);
+      OverlapStatistics(Isis::Cube &x, Isis::Cube &y, std::string progress_msg = "Gathering Overlap Statistics");
 
      /**
       * Checks the specified band for an overlap

@@ -183,9 +183,7 @@ BITTREE *p;
     if(top) printf("dumping root ");
     if(p->zero) dumpTree(p->zero, 0);
     if(p->one) dumpTree(p->one, 0);
-    // FIXED 2008/10/29, "%x" was improper, %#x needed to be the specifier for a void pointer to be printed
-    // as a hex number. - Steven Lambright, pointed out by "novas0x2a" (Support Forum Member)
-    printf("%#x(%#x,%#x)", p, p->zero, p->one);
+    //printf("%#x(%#x,%#x)", p, p->zero, p->one);
     if(top) putchar('\n');
 }
 

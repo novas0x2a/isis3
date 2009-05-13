@@ -2,8 +2,8 @@
 #define ShadeAtm_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/11/05 23:37:34 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/05/11 21:56:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -38,6 +38,10 @@ namespace Isis {
    *  @history 2007-08-15 Steven Lambright - Refactored code
    *  @history 2008-11-05 Jeannie Walldren - Modified references
    *           to NumericalMethods class.
+   *  @history 2009-05-11 Janet Barrett - Fixed so that the NormModelAlgorithm
+   *           supporting DEM input is the empty function. DEM input is not yet
+   *           supported.
+
    */
   class ShadeAtm : public NormModel {
     public:
@@ -46,10 +50,10 @@ namespace Isis {
 
     protected:
       virtual void NormModelAlgorithm (double pha, double inc, double ema,
-          double dn, double &albedo, double &mult, double &base) {};
+          double dn, double &albedo, double &mult, double &base);
       virtual void NormModelAlgorithm (double pha, double inc, double ema, 
           double deminc, double demema, double dn, double &albedo,
-	        double &mult, double &base);
+	        double &mult, double &base) {};
 
     private:
       void SetNormIncref(const double incref);

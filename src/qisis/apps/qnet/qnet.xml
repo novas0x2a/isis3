@@ -78,7 +78,7 @@
       <strong>"Show All"</strong> to reset the displayed list to all points in 
       the network 
     </pre>  
-    There are 8 filters for the points list which display the following:
+    There are 9 filters for the points list which display the following:
     <pre>
       <strong>Error:</strong> points with bundle adjustment errors within the 
       user specified range 
@@ -86,10 +86,10 @@
       <strong>Point ID:</strong> points whose Point Id contains the user 
       specified string 
       
-      <strong>Images:</strong> points that are contained in (at least or no more 
-      than) the user specified number of images 
+      <strong>Number of Measures:</strong> points that are contained in (at 
+      least or no more than) the user specified number of images 
       
-      <strong>Type:</strong> points that are of the user specified type 
+      <strong>Point Type:</strong> points that are of the user specified type 
       
       <strong>Range:</strong> points that lie within the user specified 
       latitudinal and longitudinal ranges 
@@ -97,11 +97,14 @@
       <strong>Distance:</strong> points that are within the user specified 
       distance of some other point in the control network 
       
-      <strong>Measure:</strong> points that contain at least one measure of 
-      selected type(s)  
+      <strong>Measure Type(s):</strong> points that contain at least one measure 
+      of selected type(s)  
       
       <strong>Goodness of Fit:</strong> points that contain at least one measure 
       whose Goodness of Fit is within the user specified range 
+
+      <strong>Cube Name(s):</strong> points that contain at a measure whose 
+      serial number matches that of the user chosen cube filename
     </pre>
     <strong>Cubes -</strong> With this selected, the user may click any of the 
     following buttons:
@@ -121,8 +124,8 @@
       <strong>Cube Name:</strong> cubes whose file name contains the user 
       specified string 
       
-      <strong>Points:</strong> cubes containing (at least or no more than) the 
-      user specified number of points 
+      <strong>Number of Points:</strong> cubes containing (at least or no more 
+      than) the user specified number of points 
       
       <strong>Distance:</strong> cubes that contain at least one pair of points 
       that are within the user specified distance from each other 
@@ -279,6 +282,10 @@
       filter on existing filtered list until user selects the "Show All" button,
       which will bring up all points in the control net or images in the serial
       number list.
+    </change>
+    <change name="Jeannie Walldren" date="2009-01-26">
+      Added "Cube Name" filter to "Points" tab of Control Network Navigator 
+      window.
     </change>
   </history>
 </application>

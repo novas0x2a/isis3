@@ -1,4 +1,5 @@
 Group = Clementine_1/Nir
+  Version = 1
   Library = NirCamera
   Routine = NirCameraPlugin
 EndGroup

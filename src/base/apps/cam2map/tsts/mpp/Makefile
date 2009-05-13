@@ -13,6 +13,6 @@ commands:
 	$(APPNAME) from= $(INPUT)/ab102401.cub \
 	  to=$(OUTPUT)/cam2mapCheckRange.cub \
 	  defaultrange=camera \
-	  SLAT=15.0 ELAT=20.0 SLON=225.0 ELON=230.0 \
+	  MINLAT=15.0 MAXLAT=20.0 MINLON=225.0 MAXLON=230.0 \
 	  pixres=mpp \
 	  resolution=1000 > /dev/null;

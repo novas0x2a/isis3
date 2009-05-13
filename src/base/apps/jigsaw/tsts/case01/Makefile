@@ -10,7 +10,7 @@ commands:
 	onet=$(OUTPUT)/case01OutNet.pvl \
 	observations=yes \
 	method=qrd \
-	tol=1.68 \
+	tol=1.1940491 \
 	solvedegree=3 \
 	camsolve=all \
 	twist=no | grep -v "100% Processed" > $(OUTPUT)/case01OutLog.pvl;

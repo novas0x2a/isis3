@@ -51,6 +51,12 @@ int main (int argc, char *argv[]) {
     QObject::connect(ftool,SIGNAL(serialNumberListUpdated()),
                      ntool,SLOT(resetList()));
 
+    // The navTool cube name filter needs to know when the file tool 
+    // has changed the serialNumberList in order to refresh the list
+    // Jeannie Walldren 2009-01-26
+    QObject::connect(ftool,SIGNAL(serialNumberListUpdated()),
+                     ntool,SLOT(resetCubeList()));
+
     Qisis::Tool *btool = new Qisis::BandTool(Qisis::Qnet::g_vpMainWindow);
     btool->addTo(Qisis::Qnet::g_vpMainWindow);
 

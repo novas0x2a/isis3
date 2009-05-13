@@ -55,8 +55,6 @@ namespace Isis {
    * @param phase Value of phase angle.
    * @param incidence  Value of incidence angle.
    * @param emission Value of emission angle.
-   * @param demincidence
-   * @param dememission
    * @param dn
    * @param albedo
    * @param mult 
@@ -67,8 +65,7 @@ namespace Isis {
    *          PI since this is in Isis namespace.
    */
   void AlbedoAtm::NormModelAlgorithm (double phase, double incidence, 
-      double emission, double demincidence, double dememission, double dn,
-      double &albedo, double &mult, double &base)
+      double emission, double dn, double &albedo, double &mult, double &base)
   {
     double psurf;
     double ahInterp;
@@ -86,8 +83,8 @@ namespace Isis {
     double fourthterm;
     double fifthterm;
 
-    psurf = GetPhotoModel()->CalcSurfAlbedo(phase,demincidence,
-        dememission);
+    psurf = GetPhotoModel()->CalcSurfAlbedo(phase,incidence,
+        emission);
 
     ahInterp = (GetAtmosModel()->AtmosAhSpline()).Evaluate(incidence, NumericalApproximation::Extrapolate);
 

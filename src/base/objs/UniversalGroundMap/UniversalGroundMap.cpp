@@ -82,7 +82,11 @@ namespace Isis {
   */
   bool UniversalGroundMap::SetUniversalGround (double lat, double lon) {
     if (p_camera != NULL) {
-      return p_camera->SetUniversalGround(lat,lon);
+      if(p_camera->SetUniversalGround(lat,lon)){
+        return p_camera->InCube();
+      } else {
+        return false;
+      }
     }
     else {
       return p_projection->SetUniversalGround(lat,lon);

@@ -137,6 +137,35 @@ int main (int argc, char *argv[]) {
     cout << tmp3 << endl;
     cout << endl;
 
+    cout << "Test invalid combinations of mapping parameters ..." << endl;
+
+    mapGroup.DeleteKeyword("CenterLatitude");
+    mapGroup += Isis::PvlKeyword("CenterLatitude", -90.0);
+    try {
+      Isis::LambertConformal p(lab);
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+    }
+    cout << endl;
+
+    mapGroup.DeleteKeyword("CenterLatitude");
+    mapGroup += Isis::PvlKeyword("CenterLatitude", 90.0);
+    mapGroup.DeleteKeyword("FirstStandardParallel");
+    mapGroup += Isis::PvlKeyword("FirstStandardParallel",-60);
+
+    try {
+      Isis::LambertConformal p(lab);
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+    }
+    cout << endl;
+
+
+
+
+
     cout << "Unit test was obtained from:" << endl << endl;
     cout << "  Map Projections - A Working Manual" << endl;
     cout << "  USGS Professional Paper 1395 by John P. Snyder" << endl;

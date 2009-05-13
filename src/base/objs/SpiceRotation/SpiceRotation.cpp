@@ -548,6 +548,7 @@ namespace Isis {
       t2 = t2/p_timeScale;
       std::vector<double> angles2 = Angles ( p_axis3, p_axis2, p_axis1 );
       angles2[0] = WrapAngle ( angles1[0], angles2[0]);
+      angles2[2] = WrapAngle ( angles1[2], angles2[2]);
       double slope[3];
       double intercept[3];
 
@@ -567,6 +568,7 @@ namespace Isis {
     else {
     // Load the known values to compute the fit equation
       double start1=0.;  // value of 1st angle1 in cache
+      double start3=0.;  // value of 1st angle1 in cache
 
       //      std::cout<<"Actual CI angles"<<std::endl;
       //      std::cout<<std::setprecision(24);
@@ -579,12 +581,14 @@ namespace Isis {
         SetEphemerisTime( t );
         std::vector<double> angles = Angles ( p_axis3, p_axis2, p_axis1);
 
-// Fix 180/-180 crossovers on angle 1 before doing fit.
+// Fix 180/-180 crossovers on angles 1 and 3 before doing fit.
         if (pos == 0) {
           start1 = angles[0];
+          start3 = angles[2];
         }
         else {
           angles[0] = WrapAngle ( start1, angles[0]);
+          angles[2] = WrapAngle ( start3, angles[2]);
         }
 
         fitAng1->AddKnown ( time, angles[0] );

@@ -121,6 +121,10 @@ void IsisMain() {
   
   //mask lines go after reverse lines
   maskLines += reverseReadoutLines;
+
+ // Actual starting line, number Ramp lines
+  int rampStart = maskLines;
+  int rampLines = tdi/binning_mode;   
   
   Table calimg("HiRISE Calibration Image");
   icube->Read(calimg);
@@ -186,6 +190,9 @@ void IsisMain() {
   Table calfix("HiRISE Calibration Ancillary");
   icube->Read(calfix);
   Statistics calDarkStats, calBufStats;
+  int rampLine0 = rampStart + 1;
+  int rampLineN = (rampStart + rampLines -1) - 1;
+  rampLineN = calfix.Records() - 1;
   for (int rec=0; rec<calfix.Records(); rec++) {
     vector<int> dark = calfix[rec]["DarkPixels"];
     vector<int> buf = calfix[rec]["BufferPixels"];
@@ -204,7 +211,7 @@ void IsisMain() {
       else if (dark[i] == HIGH_REPR_SAT2) d = HIGH_REPR_SAT8;
       else d = dark[i];
       calDarkStats.AddData(&d,1);
-      if (rec >= 42 && rec < 40 +tdi -1){
+      if ((rec > rampLine0) && (rec < rampLineN)){
         rampDarkStats.AddData(&d, 1);
       }
     }

@@ -7,6 +7,8 @@ namespace Isis {
   //!Creates an empty ControlNet object
   ControlNet::ControlNet () {
     p_numMeasures = 0;
+    p_numValidMeasures = 0;
+    p_numIgnoredMeasures = 0;
   }
 
 
@@ -18,6 +20,8 @@ namespace Isis {
   */
   ControlNet::ControlNet(const std::string &ptfile, Progress *progress) {
     p_numMeasures = 0;
+    p_numValidMeasures = 0;
+    p_numIgnoredMeasures = 0;
     ReadControl(ptfile, progress);
   }
 
@@ -91,6 +95,9 @@ namespace Isis {
   * @throws Isis::iException::User - "Invalid Control Point" 
   * @throws Isis::iException::User - "Invalid Format" 
   *  
+  * @internal 
+  * @history 2009-04-07 Tracie Sucharski - Keep track of ignored measures. 
+  *  
   */
   void ControlNet::ReadControl(const std::string &ptfile, Progress *progress) {
     Pvl p(ptfile);
@@ -129,6 +136,14 @@ namespace Isis {
             ControlPoint cp;
             cp.Load(cn.Object(i));
             p_numMeasures += cp.Size();
+            if (cp.Ignore()) {
+              p_numIgnoredMeasures += cp.Size();
+            }
+            else {
+              for (int m=0; m<cp.Size(); m++) {
+                if (cp[m].Ignore()) p_numIgnoredMeasures++;
+              }
+            }
             Add(cp);
           }
         }
@@ -176,6 +191,14 @@ namespace Isis {
 
     net += PvlKeyword("TargetName", p_targetName);
     net += PvlKeyword("UserName", p_userName);
+    std::string mod = iString(p_modified).UpCase();
+    if( mod == "NULL"  ||  mod == "" ) {
+      SetModifiedDate( Isis::iTime::CurrentLocalTime() );
+    }
+    std::string cre = iString(p_created).UpCase();
+    if( cre == "NULL"  ||  cre == "" ) {
+      SetCreatedDate( p_modified );
+    }
     net += PvlKeyword("Created", p_created);
     net += PvlKeyword("LastModified", p_modified);
     net += PvlKeyword("Description", p_description);
@@ -382,6 +405,7 @@ namespace Isis {
     // Loop through all measures and set the camera
     for (int p=0; p<Size(); p++) {
       for (int m=0; m<p_points[p].Size(); m++) {
+        if (p_points[p][m].Ignore()) continue;
         std::string serialNumber = p_points[p][m].CubeSerialNumber();
         if (list.HasSerialNumber(serialNumber)) {
           p_points[p][m].SetCamera(p_cameraMap[serialNumber]);

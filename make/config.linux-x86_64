@@ -76,7 +76,7 @@ QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtWebKit
 QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtXml
 QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtXmlPatterns
 QTLIBDIR = -L$(ISIS3LOCAL)/lib
-QTLIB    = -lQtNetwork -lQtSql -lQtGui -lQtCore
+QTLIB    = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore
 
 #---------------------------------------------------------------------------
 # Set up for Qwt
@@ -152,6 +152,8 @@ SUPERLULIB    = -lsuperlu_3.0 -lblas -lgfortran
 #---------------------------------------------------------------------------
 
 #  Libraries
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtXmlPatterns.so*"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtXml.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtNetwork.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtSql.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtGui.so*"

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2008/10/15 22:43:36 $
- * $Revision: 1.7 $
+ * $Date: 2009/02/12 16:58:52 $
+ * $Revision: 1.8 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -481,7 +481,6 @@ namespace Qisis {
               double scale = xscale < yscale ? xscale : yscale;
               if (RubberBandTool::mouseButton() & Qt::RightButton) scale = 1.0 / scale;
               scale *= d->scale();
-              scale = ((int)(scale * 100.0)) / 100.0;
               d->setScale(scale,x,y);
             }
           }

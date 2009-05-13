@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/07/11 22:16:01 $
+ * $Revision: 1.9 $
+ * $Date: 2009/01/29 21:21:53 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -1135,6 +1135,42 @@ namespace Isis {
     mapping += PvlKeyword ("PolarRadius", radii[2]*1000.0, "meters");
 
     return mapping;
+  }
+
+
+  /**
+   * Convenience method 
+   * See method above for more details. 
+   * 
+   * 
+   * @param cubeLab 
+   * @param mapGroup 
+   * 
+   * @return PvlGroup 
+   */
+  PvlGroup Projection::TargetRadii(Pvl &cubeLab, PvlGroup &mapGroup){
+    //Check to see if the mapGroup already has the target radii.
+    //If BOTH radii are already in the mapGroup then just return back the mapGroup.
+    if(mapGroup.HasKeyword("EquatorialRadius") && mapGroup.HasKeyword("PolarRadius")) {
+      return mapGroup;
+    }
+    //If the mapping group only has one or the other of the radii keywords, then
+    //we are going to replace both, so delete which ever one it does have.
+    if(mapGroup.HasKeyword("EquatorialRadius") && !mapGroup.HasKeyword("PolarRadius")) {
+      mapGroup.DeleteKeyword("EquatorialRadius");
+    }
+    if(!mapGroup.HasKeyword("EquatorialRadius") && mapGroup.HasKeyword("PolarRadius")) {
+      mapGroup.DeleteKeyword("PolarRadius");
+    }
+
+    PvlGroup inst = cubeLab.FindGroup("Instrument", Pvl::Traverse);
+    string target = inst["TargetName"];
+    PvlGroup radii = Projection::TargetRadii(target);
+    //Now INSERT the EquatorialRadius and PolorRadius into the mapGroup pvl.
+    mapGroup += PvlKeyword ("EquatorialRadius",  radii.FindKeyword("EquatorialRadius")[0], "meters");
+    mapGroup += PvlKeyword ("PolarRadius", radii.FindKeyword("PolarRadius")[0], "meters");
+
+    return mapGroup;
   }
 
   /**

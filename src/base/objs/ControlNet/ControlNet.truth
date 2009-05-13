@@ -17,8 +17,8 @@ Object = ControlNetwork
   NetworkType  = ImageToGround
   TargetName   = Mars
   UserName     = jdoe
-  Created      = Null
-  LastModified = Null
+  Created      = 2009-02-05T14:20:15
+  LastModified = 2009-02-05T14:20:55
   Description  = "UnitTest of ControlNetwork"
 
   Object = ControlPoint

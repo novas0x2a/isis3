@@ -41,7 +41,7 @@ test:
 	if [ "$(OBJECTS)" != "" ]; \
 	then \
 	for i in $(OBJECTS); do \
-	  printf %-53s "    Testing [$$i] ("`date +%T`")"; \
+	  printf %-60s "    Testing [$$i] ("`date +%T`")"; \
 	  cd $$i; $(MAKE) test; cd ..; \
 	done \
 	fi

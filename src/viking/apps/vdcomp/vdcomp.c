@@ -1,7 +1,11 @@
 /**
 * Modified by Jeff Anderson, May 19, 2005
 * 64-bit Solaris port required replacing long with int and 
-* adding malloc.h
+* adding malloc.h 
+*  
+* Modified by Jeannie Walldren, March 23, 2009 
+* Allow string length of 1024 characters for input and output 
+* filenames, inname[] and outname[]
 */
 
 /********************************************************************/
@@ -147,7 +151,7 @@ void               free_tree();
 
 int                infile;
 FILE               *outfile;
-char               inname[80],outname[80];
+char               inname[1025],outname[1025];
 int                output_format;
 int                record_bytes, max_lines;
 int                line_samples, fits_pad;

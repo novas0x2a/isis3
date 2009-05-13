@@ -2,8 +2,8 @@
 #define CamTools_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $
- * $Date: 2008/12/30 00:04:32 $
+ * $Revision: 1.4 $
+ * $Date: 2009/02/26 18:22:27 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -37,7 +37,18 @@
 
 namespace Isis {
 
-//  Generally useful tools
+/**
+ * @brief Checks value of key, produces appropriate value
+ *  
+ * This function checks the value of the keyword for specialness 
+ * and will create the appropriate keyword if it is special. 
+ * 
+ * @param keyname Name of keyword to create
+ * @param value   Keyword value
+ * @param unit    Optional unit qualifer with value
+ * 
+ * @return PvlKeyword Returns newly created keyword/value 
+ */
 inline PvlKeyword ValidateKey(const std::string keyname, 
                                      const double &value, 
                                      const std::string &unit = "") { 
@@ -48,6 +59,18 @@ inline PvlKeyword ValidateKey(const std::string keyname,
     return (PvlKeyword(keyname,value,unit));
   }
 }
+
+/**
+ * @brief Checks proper value of a NULLed keyword
+ *  
+ * If the keyword is a NULL keyword, ensure it has proper value. 
+ * 
+ * @param keyname Name of keyword to create
+ * @param key     Keyword/value set
+ * @param unit    Optional unit qualifer with value
+ * 
+ * @return PvlKeyword Returns newly created keyword/value 
+ */
 
 inline PvlKeyword ValidateKey(const std::string keyname, PvlKeyword &key,
                               const std::string &unit = "") { 
@@ -60,13 +83,14 @@ inline PvlKeyword ValidateKey(const std::string keyname, PvlKeyword &key,
 }
 
 
+/** Returns degree to radian conversion factor */
 inline double DegToRad(const double ang) { return (ang * rpd_c()); }
+/** Returns radians to degrees conversion factor */
 inline double RadToDeg(const double ang) { return (ang * dpr_c()); }
 
-
-//  A very useful, typesafe way to delete pointers in STL containers.
-//  Courtesy Scott Meyers, "Effective STL", Item 7, pg 37-40
-struct DeleteObject {
+/**  A very useful, typesafe way to delete pointers in STL container
+ *   Courtesy Scott Meyers, "Effective STL", Item 7, pg 37-40 */
+struct DeleteObject {  
   template <typename T> 
     void operator()(const T* ptr) const {
       delete ptr;
@@ -76,8 +100,23 @@ struct DeleteObject {
   /**
    * @brief Collect Band geometry 
    *  
+   * This produces the geometry and polygon information from an image cube.  It 
+   * has some special processing that accounts for band independant geometrical 
+   * image cubes.  It processes each band and creates unique geometry and 
+   * ploygon values consider this situation.  The resulting polygon is a union 
+   * of all bands, which is a (usually) slightly better footprint of the acutal 
+   * footprint for the product. 
+   *  
+   * The other major advantage to this class is the corner latitude/longitude 
+   * points are based upon the extents of each independant band data as the 
+   * furthest point from the center of the polygon location (if requested by the 
+   * user). 
+   *  
    * @ingroup Utility
-   * @author 2008-09-10 Kris Becker
+   * @author 2008-09-10 Kris Becker 
+   * @history 2009-02-26 Kris Becker - Removed unconditional computation of 
+   *          polygon even when the user did not request it.  Reorganized some
+   *          keywords to their relevant group locations.
    */
 class BandGeometry {
 
@@ -91,7 +130,7 @@ class BandGeometry {
     bool isPointValid(const double &sample, const double &line, const Camera *camera = 0) const; 
     bool isBandIndependent() const { return (_isBandIndependent); }
     bool hasCenterGeometry() const;
-    void collect(Camera &camera, Cube &cube);
+    void collect(Camera &camera, Cube &cube, bool doGeometry, bool doPolygon);
     void generateGeometryKeys(PvlObject &pband);
     void generatePolygonKeys(PvlObject &pband);
 

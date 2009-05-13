@@ -20,10 +20,20 @@
     <change name="Steven Koechle" date="2008-11-24">
       Original version
     </change>
+    <change name="Christopher Austin" date="2008-01-29">
+      Fixed major memory leak and added memory control.  Changed param NETWORK
+      to CNET, increased developer documentation, added a Progress Object
+      during lat/lon calculation.
+    </change>
+    <change name="Christopher Austin" date="2008-02-23">
+      Fixed an error with not catching the failed ground range setting.
+    </change>
   </history>
 
   <groups>
+
     <group name="Files">
+
         <parameter name="FROMLIST">
           <type>filename</type>
           <fileMode>input</fileMode>
@@ -40,7 +50,7 @@
           </filter>
         </parameter>
 
-        <parameter name="NETWORK">
+        <parameter name="CNET">
           <type>filename</type>
           <fileMode>input</fileMode>
           <brief>
@@ -94,9 +104,12 @@
           <description>
             This optional log file contains information about which files were 
             added to the control net and which ones were not.
-            </description>
-            <internalDefault>NONE</internalDefault>
+          </description>
+          <internalDefault>NONE</internalDefault>
         </parameter>
+
     </group>
+
  </groups>
+
 </application>

@@ -2,8 +2,8 @@
 #define ControlNet_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2009/01/06 15:05:31 $
+ * $Revision: 1.7 $
+ * $Date: 2009/04/08 21:21:34 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -52,6 +52,11 @@ namespace Isis {
    *   @history 2009-01-06 Jeannie Walldren - Fixed typo in
    *            SetImages() exception output. Added
    *            documentation.
+   *   @history 2009-02-05 Christopher Austin - when the created date or the
+   *            modified date are not set, they default to the time in which
+   *            Write() is called.
+   *   @history 2009-04-07 Tracie Sucharski - Added NumValidMeasures and
+   *                           NumIgnoredMeasures methods.
    *                              
    */
   class ControlNet {
@@ -116,6 +121,12 @@ namespace Isis {
       //! Return the total number of measures for all control points in the network
       int NumMeasures() const { return p_numMeasures; };
 
+      //! Return the number of valid (non-ignored) measures
+      int NumValidMeasures() const { return p_numMeasures - p_numIgnoredMeasures; };
+
+      //! Return the number of ignored measures
+      int NumIgnoredMeasures() const { return p_numIgnoredMeasures; };
+
       void Add (const ControlPoint &point);
       void Delete (int index);
       void Delete (const std::string &id);
@@ -158,6 +169,8 @@ namespace Isis {
       std::string p_userName;              //!< The user who created the network
       NetworkType p_type;                  //!< The type of network being used
       int p_numMeasures;                   //!< Total number of measures in the network
+      int p_numValidMeasures;              //!< Number of valid (non-ignored) measures
+      int p_numIgnoredMeasures;            //!< Number of ignored measures
       std::map<std::string,Isis::Camera *> p_cameraMap;    //!< A map from serialnumber to camera
       std::vector<Isis::Camera *> p_cameraList;            //!< Vector of image number to camera
 

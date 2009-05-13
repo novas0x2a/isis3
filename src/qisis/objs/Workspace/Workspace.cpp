@@ -8,18 +8,46 @@
 
 
 namespace Qisis {
-  
-  Workspace::Workspace (QWidget *parent) :
-           QWorkspace (parent) {
-    connect(this,SIGNAL(windowActivated(QWidget *)),
-            this,SLOT(activateViewport(QWidget *)));
-    p_lastWindow = NULL;
+
+  /**
+   * Workspace constructor
+   * 
+   * @param parent 
+   */
+  Workspace::Workspace (QWidget *parent) : QMdiArea (parent) {
+    connect(this,SIGNAL(subWindowActivated(QMdiSubWindow *)),
+            this,SLOT(activateViewport(QMdiSubWindow *)));
+    setActivationOrder(ActivationHistoryOrder);
   };
 
-  void Workspace::activateViewport (QWidget *w) {
+  /**
+   * This gets called when a window is activated or the workspace loses focus.
+   * 
+   * @param w 
+   */
+  void Workspace::activateViewport (QMdiSubWindow *w) {
+    if(w) {
+      emit cubeViewportActivated((Qisis::CubeViewport *) w->widget());
+    }
+    //Check if there is no current window (on close)
+    else if(!currentSubWindow()) {
+      emit cubeViewportActivated((Qisis::CubeViewport *)NULL);
+    }
+  }
+
+  /**
+   * Repopulates the list of CubeViewports and returns a pointer to this list.
+   * Ownership is not given to the caller.
+   * 
+   * @return std::vector<CubeViewport*>* 
+   */
+  std::vector<CubeViewport *> *Workspace::cubeViewportList() {
     p_cubeViewportList.clear();
-    populateList();
-    emit cubeViewportActivated((Qisis::CubeViewport *) w);
+    for(int i = 0; i < subWindowList().size(); i++) {
+      p_cubeViewportList.push_back((CubeViewport *)subWindowList()[i]->widget());
+    }
+
+    return &p_cubeViewportList;
   }
 
   /**
@@ -69,7 +97,7 @@ namespace Qisis {
       }
     }
     catch (...) {
-      // delete cube; ***Removed this line since this is being taken care of in addCubeViewport(cube) using cvp->close()
+      //delete cube; ***Removed this line since this is being taken care of in addCubeViewport(cube) using cvp->close()
       QMessageBox::information( this, "Error","Unable to open cube " + cubename);
     }
   }
@@ -93,14 +121,18 @@ namespace Qisis {
    *          successful.
    */
   CubeViewport* Workspace::addCubeViewport(Isis::Cube *cube) {
-    Qisis::CubeViewport *cvp = new Qisis::CubeViewport(cube,this);
-    addWindow(cvp);
-    cvp->show();
-    //  Initially, Load entire image
-    double scale = cvp->fitScale();
-    cvp->setScale(scale, cvp->cubeSamples()/2.0, cvp->cubeLines()/2.0);
-    try{
-      cvp->showCube();
+    Qisis::CubeViewport *cvp = NULL;
+
+    QMdiSubWindow *window = new QMdiSubWindow;
+    window->setOption(QMdiSubWindow::RubberBandResize, true);
+    window->setOption(QMdiSubWindow::RubberBandMove, true);
+
+    try {
+      cvp = new Qisis::CubeViewport(cube, this);
+      window->setWidget(cvp);
+      window->setAttribute(Qt::WA_DeleteOnClose);
+      addSubWindow(window);
+      cvp->show();
     }
     catch (Isis::iException &e){
       // close CubeViewport window
@@ -111,50 +143,17 @@ namespace Qisis {
                                       + cube->Filename(), 
                                       _FILEINFO_);
     }
-    populateList();
+
     emit cubeViewportAdded (cvp);
     return cvp;
   }
 
-  void Workspace::populateList() {
-    p_cubeViewportList.clear();
-    QWidgetList list = windowList(CreationOrder);
-    QWidgetList::const_iterator it = list.begin();
-    while (it != list.end()) {
-      if ((*it)->isVisible()) {
-        p_cubeViewportList.push_back((CubeViewport *) *it);
-      }
-      ++it;
-    }
-  }
-
-
   void Workspace::addBrowseView(QString cubename) {
-    int x_pos = -10000;
-    int y_pos = -10000;
     /* Close the last browse window if necessary.  */
-    if (p_lastWindow != NULL) {
-      populateList();
-      for (unsigned int i=0; i<p_cubeViewportList.size(); i++) {
-        if (p_lastWindow == p_cubeViewportList[i]) {
-          x_pos = p_lastWindow->parentWidget()->x();
-          y_pos = p_lastWindow->parentWidget()->y();
-          setActiveWindow(p_lastWindow);
-          closeActiveWindow();
-          break;
-        }
-      }
-      p_lastWindow = NULL;
+    if (subWindowList().size() > 0) {
+      removeSubWindow(subWindowList()[0]);
     }
 
-    unsigned int listSize = p_cubeViewportList.size();
     addCubeViewport(cubename);
-    if (listSize != p_cubeViewportList.size()) {
-      p_lastWindow = p_cubeViewportList[p_cubeViewportList.size()-1];
-      //p_lastWindow->move(x_pos, y_pos);
-      
-    }
-
   }
-
 }

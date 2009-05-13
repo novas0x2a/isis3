@@ -30,14 +30,14 @@ namespace Isis {
       double time; 
       str2et_c(stime.c_str(),&time);
 
-      // Setup detector map
-      CameraDetectorMap *detectorMap = new CameraDetectorMap(this);
-      detectorMap->SetXAxisDirection (false);
-      detectorMap->SetYAxisDirection (false);
-
       // Setup focal plane map
 
       LoCameraFiducialMap fid( inst, NaifIkCode());
+
+      // Setup detector map
+      new CameraDetectorMap(this);
+
+      // Setup focalplane map
       CameraFocalPlaneMap *focalMap = new CameraFocalPlaneMap(this,NaifIkCode());
       // Try (0.,0.)
       focalMap->SetDetectorOrigin(0.0,0.0);

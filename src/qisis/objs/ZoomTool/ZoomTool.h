@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2008/10/01 19:12:46 $
- * $Revision: 1.5 $
+ * $Date: 2009/02/12 16:58:52 $
+ * $Revision: 1.6 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -43,6 +43,8 @@ namespace Qisis {
    *   @history 2008-05-23 Noah Hilt - Added RubberBandTool
    *            functionality and changed the mouseButtonReleased
    *            Method.
+   *   @history 2009-02-12 Steven Lambright - Fixed zooming in/out
+   *            with rectangle rubber band
    */
   class ZoomTool : public Qisis::Tool {
     Q_OBJECT

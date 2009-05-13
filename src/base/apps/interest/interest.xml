@@ -13,7 +13,7 @@
   </description>
 
   <category>
-    <categoryItem>Geometry</categoryItem>
+    <categoryItem>Control Networks</categoryItem>
   </category>
 
   <history>
@@ -31,6 +31,9 @@
     </change>
     <change name="Steven Koechle" date="2009-01-20">
       Fixed Memory Leaks, Changed Deletion of cubes to use an iterator
+    </change>
+    <change name="Steven Koechle" date="2009-04-24">
+      If a control measure fails SetUniversalGround it is now ignored.
     </change>
 </history>
 

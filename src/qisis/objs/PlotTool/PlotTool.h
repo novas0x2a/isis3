@@ -28,6 +28,8 @@ namespace Qisis {
    * @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0 
    * @history 2008-09-05 Stacy Alley allowed spectral plotting of 
    *          a single point.
+   * @history 2009-01-29 Steven Lambright - Added RotatedRectangle to the spatial 
+   *          plot
    */
   class PlotTool : public Qisis::Tool {
     Q_OBJECT
@@ -84,7 +86,7 @@ namespace Qisis {
        */
       enum PlotType {
         SpectralPlot, //!< Spectral plot
-        SpatialPlot//!< Spatial plot
+        SpatialPlot //!< Spatial plot
       };
 
       PlotType p_currentPlotType; //!< current plot type
@@ -114,7 +116,8 @@ namespace Qisis {
       
       QList <QColor> p_colors;//!< List of colors
       QList<PlotWindow *> p_plotWindows;//!< List of all plot windows
-      RubberBandComboBox *p_rubberBand;//!< Rubber band combo box
+      RubberBandComboBox *p_spectralRubberBand;//!< Spectral plot rubber band combo box
+      RubberBandComboBox *p_spacialRubberBand;//!< Spacial plot rubber band combo box
 
       geos::geom::Polygon *p_poly;//!< For plotting/drawing polygons
       const geos::geom::Envelope *p_envelope;//!< Bounding box of polygon

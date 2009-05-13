@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2008/05/06 17:19:08 $
- * $Revision: 1.4 $
+ * $Date: 2009/05/04 20:04:47 $
+ * $Revision: 1.5 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -65,44 +65,12 @@ namespace Isis {
    */
   void Statistics::AddData (const double *data, const unsigned int count) {
     for (unsigned int i=0; i<count; i++) {
-      p_totalPixels++;
-
-      if (Isis::IsValidPixel(data[i]) && InRange(data[i])) {
-        p_sum += data[i];
-        p_sumsum += data[i] * data[i];
-        if (data[i] < p_minimum) p_minimum = data[i];
-        if (data[i] > p_maximum) p_maximum = data[i];
-        p_validPixels++;
-      } else if (Isis::IsNullPixel(data[i])) {
-        p_nullPixels++;
-      } else if (Isis::IsHisPixel(data[i])) {
-        p_hisPixels++;
-      } else if (Isis::IsHrsPixel(data[i])) {
-        p_hrsPixels++;
-      } else if (Isis::IsLisPixel(data[i])) {
-        p_lisPixels++;
-      } else if (Isis::IsLrsPixel(data[i])) {
-        p_lrsPixels++;      
-      } else if(AboveRange(data[i])) {
-        p_overRangePixels++;
-      } else {
-        p_underRangePixels++;
-      }
+      double value = data[i];
+      //Calls the inline AddData method  --see .h file.
+      AddData(value);
     }
   }
 
-  /**
-   * Add a double to the accumulators and counters. This method
-   * can be invoked multiple times (for example: once for each
-   * pixel in a cube) before obtaining statistics.
-   *
-   * @param data The data to be added to the data set used for statistical 
-   *    calculations.
-   *
-   */
-  void Statistics::AddData (const double data) {
-    AddData(&data,1);
-  }
 
   /**
    * Remove an array of doubles from the accumulators and counters.

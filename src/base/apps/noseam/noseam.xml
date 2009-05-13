@@ -4,7 +4,7 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
-  <brief>Creates a mosaic with little to no seams, using a list of map projected
+  <brief>Creates a mosaic with little to no seams using a list of map projected
       cubes</brief>
 
   <description>
@@ -15,7 +15,7 @@
   </description>
 
   <category>
-    <categoryItem>Map Projection</categoryItem>
+    <categoryItem>Mosaicking</categoryItem>
   </category>
 
   <history>

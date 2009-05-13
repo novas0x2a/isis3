@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/12/15 18:43:14 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/02/03 15:09:05 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -96,10 +96,10 @@ namespace Isis {
     double centerY = centroid->getY();
     delete centroid;
 
-    int xSteps = (int)((xyBoundBox->getMaxX()-xyBoundBox->getMinX())/p_Xspacing + 1.5);
-    int ySteps = (int)((xyBoundBox->getMaxY()-xyBoundBox->getMinY())/p_Yspacing + 1.5);
-    double dRealMinX = centerX - (xSteps/2) * p_Xspacing;
-    double dRealMinY = centerY - (ySteps/2) * p_Yspacing;
+    int xStepsToCentroid = (int)((centerX-xyBoundBox->getMinX())/p_Xspacing + 0.5);
+    int yStepsToCentroid = (int)((centerY-xyBoundBox->getMinY())/p_Yspacing + 0.5);
+    double dRealMinX = centerX - (xStepsToCentroid * p_Xspacing);
+    double dRealMinY = centerY - (yStepsToCentroid * p_Yspacing);
     double dDeltaXToReal = p_Xspacing * 1.0/6.0;
     double dDeltaYToReal = p_Yspacing * 1.0/6.0;
 

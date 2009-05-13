@@ -40,7 +40,13 @@ int main() {
   cout << "RightAscension: " << ra << ", Declination: " << dec << endl;
   cout << "Camera* from: " << inputFile << endl << endl;
 
-  cout << "SetImage (sample, line): " << c->SetImage(sample, line) << endl;
+  cout << "SetImage (sample, line): " << c->SetImage(sample, line) << endl << endl;
+
+  cout << "NorthAzimuth: " << c->NorthAzimuth() << endl;
+  cout << "SunAzimuth: " << c->SunAzimuth() << endl;
+  cout << "SpacecraftAzimuth: " << c->SpacecraftAzimuth() << endl;
+  cout << "OffNadirAngle: " << c->OffNadirAngle() << endl << endl;
+
   cout << "SetUniversalGround(lat, lon): " 
        << c->SetUniversalGround(lat, lon) << endl;
   cout << "SetRightAscensionDeclination(ra, dec): " 
@@ -52,6 +58,7 @@ int main() {
   cam.SetBand(7);
   cout << "Sample: " << c->Sample() << endl;
   cout << "Line: " << c->Line() << endl;
+
   try {
     cout << "GroundRange: " 
          << c->GroundRange(lat, lat, lon, lon, pvl) << endl;
@@ -80,8 +87,24 @@ int main() {
   cout << "Bands: " << c->Bands() << endl;
   cout << "ParentLines: " << c->ParentLines() << endl;
   cout << "ParentSamples: " << c->ParentSamples() << endl;
-  cout << "RaDecRange: " << c->RaDecRange(ra, ra, dec, dec) << endl;
-  cout << "RaDecResolution: " << c->RaDecResolution() << endl;
+
+
+  try {
+    cout << c->RaDecRange(ra, ra, dec, dec) << endl; 
+  }
+  catch(iException &e) {
+    e.Report(false);
+    e.Clear();
+  }
+
+  try {
+    cout << c->RaDecResolution() << endl; 
+  }
+  catch(iException &e) {
+    e.Report(false);
+    e.Clear();
+  }
+
   cout << "Calling Distortion, FocalPlane, ";
   cout << "Detector, Ground, and Sky Map functions... "; 
   c->DistortionMap();
@@ -91,10 +114,6 @@ int main() {
   c->SkyMap();
   cout << "Done." << endl;
   
-  cout << "NorthAzimuth: " << c->NorthAzimuth() << endl;
-  cout << "SunAzimuth: " << c->SunAzimuth() << endl;
-  cout << "SpacecraftAzimuth: " << c->SpacecraftAzimuth() << endl;
-  cout << "OffNadirAngle: " << c->OffNadirAngle() << endl;
   cout << "Calling IgnoreProjection (false)..." << endl;
   c->IgnoreProjection(false);
 

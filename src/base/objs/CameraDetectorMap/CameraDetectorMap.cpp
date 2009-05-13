@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:06 $
+ * $Revision: 1.2 $
+ * $Date: 2009/04/08 02:32:55 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -37,11 +37,6 @@ namespace Isis {
     if (parent != 0) {
       p_camera->SetDetectorMap(this);
     }
-
-    p_xAxisDirection = 1.0;
-    p_yAxisDirection = 1.0;
-    p_xAxisTimeDependent = false;
-    p_yAxisTimeDependent = false;
   }
 
   /** Compute parent position from a detector coordinate

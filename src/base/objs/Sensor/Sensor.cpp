@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/08/07 17:23:38 $
+ * $Revision: 1.11 $
+ * $Date: 2009/02/12 03:03:24 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -181,7 +181,8 @@ namespace Isis {
         double dist = (pB[0] - p_pB[0]) * (pB[0] - p_pB[0]) +
                (pB[1] - p_pB[1]) * (pB[1] - p_pB[1]) +
                (pB[2] - p_pB[2]) * (pB[2] - p_pB[2]);
-        if (dist < 0.000000000001) done = true;
+        if (dist < 0.000001) done = true;
+        //        if (dist < 0.000000000001) done = true;
        it++;
 
       }

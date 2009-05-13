@@ -2,7 +2,7 @@
 
 <application name="equalizer" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
-      Tonematches cubes prior to mosaicking
+      Tone matches cubes prior to mosaicking
   </brief>
 
   <description>
@@ -53,7 +53,7 @@
   </description>
 
   <category>
-    <categoryItem>Radiometric and Photometric Correction</categoryItem>
+    <categoryItem>Mosaicking</categoryItem>
   </category>
 
 <oldName>
@@ -89,6 +89,11 @@
     <change name="Tracie Sucharski" date="2008-06-12">
       Modified call LeastSquares Solve due to change to LeastSquares
       Solve method.
+    </change>
+    <change name="Travis Addair" date="2009-03-12">
+      Added user feedback during statistic gathering, modified existing progress
+      information, and moved error checking on number of bands and projection 
+      parameters to be done prior to statistic gathering    
     </change>
   </history>
 

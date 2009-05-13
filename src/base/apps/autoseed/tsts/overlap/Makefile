@@ -16,7 +16,7 @@ commands:
 	$(APPNAME) fromlist=$(OUTPUT)/list.lis \
 	seeddef=$(INPUT)/smallgrid.pvl \
 	overlaplist=$(INPUT)/listoverlaps.def \
-	cnet=$(OUTPUT)/sub.net.pvl\
+	cnet=$(OUTPUT)/sub.net.pvl \
 	to=$(OUTPUT)/new.net.pvl \
 	networkid=NewNetwork \
 	pointid="new????" \

@@ -7,6 +7,14 @@
 
 
 using namespace std;
+/**
+ * UnitTest for Spice class.
+ * 
+ * @internal 
+ * @history 2009-03-23  Tracie Sucharski - Removed old keywords 
+ *          SpacecraftPosition and SpacecraftPointing with the corrected
+ *          InstrumentPosition and InstrumentPointing. 
+ */
 class MySpice : public Isis::Spice {
   public:
     MySpice (Isis::Pvl &lab) : Isis::Spice (lab) {
@@ -68,8 +76,8 @@ cout << "Unit test for Isis::Spice" << endl;
   kern += Isis::PvlKeyword("TargetAttitudeShape",dir+"pck00006.tpc");
   kern += Isis::PvlKeyword("Instrument",dir+"mocSpiceUnitTest.ti");
   kern += Isis::PvlKeyword("InstrumentAddendum",dir+"mocAddendum.ti");
-  kern += Isis::PvlKeyword("SpacecraftPosition",dir+"moc.bsp");
-  kern += Isis::PvlKeyword("SpacecraftPointing",dir+"moc.bc");
+  kern += Isis::PvlKeyword("InstrumentPosition",dir+"moc.bsp");
+  kern += Isis::PvlKeyword("InstrumentPointing",dir+"moc.bc");
   kern += Isis::PvlKeyword("Frame","");
 
   // Time Setup

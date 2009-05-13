@@ -15,6 +15,8 @@ namespace Isis {
      *          MocLabels IsWideAngleRed() with MocLabels
      *          WideAngleRed().
      *   @history 2008-11-07 Jeannie Walldren - Fixed documentation 
+     *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute
+     *          CameraDetectorMap methods
      */ 
     class MocWideAngleCamera : public Isis::Camera {
       public:

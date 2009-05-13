@@ -34,7 +34,6 @@ namespace Isis {
         new LineScanCameraDetectorMap(this,etStart,lineRate);
       detectorMap->SetDetectorSampleSumming(csum);
       detectorMap->SetStartingDetectorSample(ss);
-      detectorMap->SetXAxisTimeDependent(true);
 
       // Setup focal plane map
       CameraFocalPlaneMap *focalMap =new CameraFocalPlaneMap(this,NaifIkCode());

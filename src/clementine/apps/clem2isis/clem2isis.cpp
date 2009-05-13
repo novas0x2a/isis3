@@ -88,7 +88,16 @@ void WriteLine (Buffer &b){
   }
 }
 
-//Function to propagate the labels.
+/**
+ *  Function to propagate the labels.
+ *  
+ *  @internal
+ *  @history  2009-02-17  Tracie Sucharski - Added BandBin keywords Center and
+ *            Width to the translation table, Clementine.trn.  Do not alter this
+ *            keywords for filter F,simply translate.
+ *  
+ */
+
 void TranslateLabels (Filename in, Cube *ocube) {
   // Get the directory where the Clementine translation tables are.
   PvlGroup &dataDir = Preference::Preferences().FindGroup("DataDirectory");
@@ -120,15 +129,17 @@ void TranslateLabels (Filename in, Cube *ocube) {
 
   ocube->PutGroup(inst);
 
-  //Band Bin group
   PvlGroup bBin = outputLabel->FindGroup ("BandBin", Pvl::Traverse);
-  double center = pdsLab["CenterFilterWavelength"];
-  center /= 1000.0;
-  bBin += PvlKeyword("Center", center,
-                      "micrometers");
+  std::string filter = pdsLab["FilterName"];
+  if (filter != "F") {
+    //Band Bin group
+    double center = pdsLab["CenterFilterWavelength"];
+    center /= 1000.0;
+    bBin.FindKeyword("Center").SetValue(center,"micrometers");
+  }
   double width = pdsLab["Bandwidth"];
   width /= 1000.0;
-  bBin += PvlKeyword("Width", width , "micrometers");
+  bBin.FindKeyword("Width").SetValue(width,"micrometers");
   ocube->PutGroup(bBin);
 
   //Kernel group

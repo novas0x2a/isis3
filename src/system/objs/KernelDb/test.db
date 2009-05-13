@@ -44,6 +44,21 @@ Object = Instrument
     Match = ("TestGroup","TestKeyword","TestValue")
     File  = ("base", "ikTest1")
     File  = ("base", "ikTest2")
+    CameraVersion = "2"
+  EndGroup
+
+  Group = Selection
+    Match = ("TestGroup","TestKeyword","TestValue")
+    File  = ("base", "ikTest3")
+    File  = ("base", "ikTest4")
+    CameraVersion = "1"
+  EndGroup
+
+  Group = Selection
+    Match = ("TestGroup","TestKeyword","TestValue")
+    File  = ("base", "ikTest5")
+    File  = ("base", "ikTest6")
+    CameraVersion = "3"
   EndGroup
 EndObject
 

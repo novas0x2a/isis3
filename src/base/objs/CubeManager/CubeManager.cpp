@@ -6,6 +6,22 @@ namespace Isis {
   CubeManager CubeManager::p_instance;
 
   /**
+   * This initializes a CubeManager object
+   * 
+   */
+  CubeManager::CubeManager() {
+    p_minimumCubes = 0;
+  }
+
+  /**
+   * This is the CubeManager destructor. This method calls CleanCubes().
+   * 
+   */
+  CubeManager::~CubeManager() {
+    CleanCubes();
+  }
+
+  /**
    * This method opens a cube. If the cube is already opened, this method will 
    * return the cube from memory. The CubeManager class retains ownership of this 
    * cube pointer, so do not close the cube, destroy the pointer, or otherwise 
@@ -26,6 +42,18 @@ namespace Isis {
       p_cubes.insert(fileName, new Cube());
       searchResult = p_cubes.find(fileName);
       (*searchResult)->Open(fileName.toStdString());
+    }
+
+    // Keep track of the newly opened cube in our queue
+    p_opened.removeAll(fileName);
+    p_opened.enqueue(fileName);
+
+    // cleanup if necessary
+    if(p_minimumCubes != 0) {
+      while(p_opened.size() > (int)(p_minimumCubes)) {
+        QString needsCleaned = p_opened.dequeue();
+        CleanCubes(needsCleaned.toStdString());
+      }
     }
 
     return (*searchResult);
@@ -65,13 +93,5 @@ namespace Isis {
     }
 
     p_cubes.clear();
-  }
-
-  /**
-   * This is the CubeManager destructor. This method calls CleanCubes().
-   * 
-   */
-  CubeManager::~CubeManager() {
-    CleanCubes();
   }
 }

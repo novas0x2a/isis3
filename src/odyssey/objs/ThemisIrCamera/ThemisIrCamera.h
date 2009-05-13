@@ -20,6 +20,11 @@ namespace Isis {
      *   @history 2007-07-13 Jeff Anderson Added support for spatial summing
      *   @history 2008-08-08 Steven Lambright Now using the new LoadCache(...)
      *            method instead of CreateCache(...).
+     *   @history 2009-05-12 Jeff Anderson Reworked code for changes from
+     *            Kiefer-Torson model to Duxbury model.  The majors changes
+     *            where the removal of a ~1% error in focal lenght and the
+     *            improving the spectral band registration to better than
+     *            1/20th of a pixel
      */
     class ThemisIrCamera : public Isis::Camera {
       public:

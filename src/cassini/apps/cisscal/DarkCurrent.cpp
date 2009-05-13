@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/11/06 00:00:37 $
+ * $Revision: 1.2 $
+ * $Date: 2009/01/26 20:26:01 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -45,6 +45,8 @@ namespace Isis {
   * @param cissLab <B>CissLabels</B> object from Cassini ISS cube 
   * @throws Isis::iException::Pvl If the input image has an 
   *                   invalid InstrumentDataRate or SummingMode.
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version 
   */
   DarkCurrent::DarkCurrent(Isis::CissLabels &cissLab){
     p_compType = cissLab.CompressionType();
@@ -118,18 +120,22 @@ namespace Isis {
   * subtracted from each pixel and returns those values in an 
   * array of the equal dimension to the image. 
   *  
-  * @returns <b>vector<vector<double>></b> Final array of dark 
-  *         current DNs to be subtracted
+  * @returns <b>vector \<vector \<double\> \></b> Final array of 
+  *         dark current DNs to be subtracted
   * @throws Isis::iException::Pvl If the input image has an 
   *             unknown ReadoutCycleIndex or DelayedReadoutFlag.
   * @throws Isis::iException::Pvl If the input image has an 
   *             invalid GainModeId.
   * @throws Isis::iException::Math If MakeDarkArray() returns a
   *             vector of zeros.
-  * @see MakeDarkArray()
+  * @see MakeDarkArray() 
+  *  
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version
+  *   @history 2009-01-26 Jeannie Walldren - Changed declarations
+  *            of 2 dimensional vectors
   */
   vector <vector <double> > DarkCurrent::ComputeDarkDN(){//get dark_DN
-    vector <vector <double> > dark_e(p_samples, p_lines), dark_DN(p_samples, p_lines);
     if(p_readoutIndex == -999){
       throw iException::Message(iException::Pvl, 
                                 "Readout cycle index is unknown.", 
@@ -140,9 +146,15 @@ namespace Isis {
                                 "Delayed readout flag is unknown.", 
                                 _FILEINFO_);
     }
-    int notzero = 0;
-       // create new file
+    vector <vector <double> > dark_e(p_samples), dark_DN(p_samples);
+    for(unsigned int i = 0; i < dark_e.size(); i++) {
+      dark_e[i].resize(p_lines);
+      dark_DN[i].resize(p_lines);
+    }
+
+    // create new file
     dark_e = DarkCurrent::MakeDarkArray();
+    int notzero = 0;
     for(unsigned int i = 0; i < dark_e.size(); i++){
       for(unsigned int j = 0; j < dark_e[0].size(); j++){
         if(dark_e[i][j] != 0.0){
@@ -225,6 +237,8 @@ namespace Isis {
   *             invalid number of lines.
   * @throws Isis::iException::Pvl If the input image has an 
   *             invalid ReadoutCycleIndex.
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version 
   */
   double DarkCurrent::ComputeLineTime(int lline){ //returns the time for this line, takes the line number
     double linetime;
@@ -490,6 +504,8 @@ namespace Isis {
   * @see DarkParameterFile() 
   * @see BiasDistortionTable() 
   *  
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version 
   */
   void DarkCurrent::FindDarkFiles(){
   // Get the directory where the CISS darkcurrent directory is
@@ -523,7 +539,9 @@ namespace Isis {
   * the image. 
   *  
   * @see ComputeLineTime() 
-  * 
+  *  
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version 
   */
   void DarkCurrent::ComputeTimeArrays(){
     int numberNegTime = 0;
@@ -574,9 +592,9 @@ namespace Isis {
   * 5 values, and corrects for the average bias distortion at the 
   * beginning of each line. 
   * 
-  * @returns <b>vector<vector<double>></b> Secondary dark array 
-  *         removed of artifacts and corrected for average bias
-  *         distortion.
+  * @returns <b>vector \<vector \<double\> \></b> Secondary dark 
+  *         array removed of artifacts and corrected for average
+  *         bias distortion.
   *  @throws Isis::iException::Io If the dark parameter file or
   *              bias distortion table is not found.
   *  @throws Isis::iException::Io If p_startTime equals p_endTime
@@ -584,9 +602,13 @@ namespace Isis {
   *  @see FindDarkFiles()
   *  @see ComputeTimeArrays()
   *  @see MakeManyLineDark()
+  *  
+  *  @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version
+  *   @history 2009-01-26 Jeannie Walldren - Changed declarations
+  *            of 2 dimensional vectors
   */
-  vector < vector <double> > DarkCurrent::MakeDarkArray(){//return dark_e
-    vector < vector <double> > dark_e(p_samples, p_lines);
+  vector <vector <double> > DarkCurrent::MakeDarkArray(){//return dark_e
     FindDarkFiles();    
     if ( !p_dparamfile.Exists()) {
       throw iException::Message(iException::Io,
@@ -626,11 +648,18 @@ namespace Isis {
         }
       }
       // add functionality for summed images:
+      vector <vector <double> > dark_e(p_samples), di1(p_samples);
+      for(unsigned int i = 0; i < dark_e.size(); i++) {
+        dark_e[i].resize(p_lines);
+        di1[i].resize(p_lines);
+      }
+
       dark_e = MakeManyLineDark(*darkCoefficients);
-    // Median-ed dark images have some spikes below the fitted curve.
-    // These are probably artifacts and the next section removes them.
-      vector <vector <double> > di1(p_samples, p_lines);
+
+      // Median-ed dark images have some spikes below the fitted curve.
+      // These are probably artifacts and the next section removes them.
       vector <double> neighborhood(5);
+      
       //replace each value of di1 with the median of neighborhood of 5 values
       for(int i = 0; i < p_lines; i++ ){
         for(int j = 0; j < p_samples; j++) {
@@ -657,7 +686,7 @@ namespace Isis {
           }
         }
       }
-    // correct for the average bias distortion at the beginning of each line:
+      // correct for the average bias distortion at the beginning of each line:
       if( p_narrow ) {   
         CisscalFile *biasDist = new CisscalFile(p_bdpath.Expanded());
         vector<double> samp, bias_distortion;
@@ -699,16 +728,25 @@ namespace Isis {
   * @param darkBrick Containing the coefficients found in the dark
   *                  parameters file for each pixel.
   *  
-  * @returns <b>vector<vector<double>></b> Preliminary dark array 
-  *         using the darkBrick values
+  * @returns <b>vector \<vector \<double\> \></b> Preliminary dark
+  *         array using the darkBrick values
+  *  
+  * @internal 
+  *   @history 2008-11-05 Jeannie Walldren - Original Version 
+  *   @history 2009-01-26 Jeannie Walldren - Changed declarations
+  *            of 2 dimensional vectors 
   */
   vector <vector <double> > DarkCurrent::MakeManyLineDark(Brick &darkBrick){//returns dark_e
     int num_params = 8;
-    vector <vector <double> > dark(p_samples,p_lines);
-    vector <vector <double> > v1(num_params,num_params);
+    vector <vector <double> > dark(p_samples), v1(num_params);
     vector <double> temp(p_samples),tgrid(num_params);
     vector <double> c(2), timespan(2);
+
+    for(unsigned int i = 0; i < dark.size(); i++) {
+      dark[i].resize(p_lines);
+    }
     for (int i = 0; i < num_params; i++) {
+      v1[i].resize(num_params);
       switch(i){
         case 0:tgrid[i] = 0.0;    break;
         case 1:tgrid[i] = 10.0;   break;

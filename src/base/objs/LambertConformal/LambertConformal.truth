@@ -98,6 +98,13 @@ Group = Mapping
 End_Group
 End
 
+Test invalid combinations of mapping parameters ...
+**I/O ERROR** Invalid label group [Mapping]
+**PROJECTION ERROR** Center Latitude [-90.0] is not valid, it projects to infinity for standard parallels [33.0,45.0]
+
+**I/O ERROR** Invalid label group [Mapping]
+**PROJECTION ERROR** Center Latitude [90.0] is not valid, it projects to infinity for standard parallels [45.0,-60.0]
+
 Unit test was obtained from:
 
   Map Projections - A Working Manual

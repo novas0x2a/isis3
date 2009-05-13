@@ -96,6 +96,13 @@
     <change name="Noah Hilt" date="2008-08-01">
       Original Version
     </change>
+    <change name="Christopher Austin" date="2009-01-27">
+      Fixed parameter names
+    </change>
+    <change name="Noah Hilt" date="2009-03-2">
+      The min/max longitude/latitude are now converted from the input domain to 
+      the map file's domain if necessary.
+    </change>
   </history>
 
   <groups>
@@ -278,10 +285,10 @@
           <item>EQURADIUS</item>
           <item>POLRADIUS</item>
           <item>DEFAULTRANGE</item>
-          <item>SLAT</item>
-          <item>ELAT</item>
-          <item>SLON</item>
-          <item>ELON</item>
+          <item>MINLAT</item>
+          <item>MAXLAT</item>
+          <item>MINLON</item>
+          <item>MAXLON</item>
           <item>TOLERANCE</item>
           <item>ITERATIONS</item>
           <item>INTERP</item>
@@ -445,7 +452,7 @@
         <default><item>COMPUTE</item></default>
         <description>
           This parameter is used to specify how the default latitude/longitude ground range for the output map projected image
-          is obtained.  The ground range can be obtained from the camera or map file.  Note the user can overide the default using the SLAT, ELAT, SLON, ELON parameters.
+          is obtained.  The ground range can be obtained from the camera or map file.  Note the user can overide the default using the MINLAT, MAXLAT, MINLON, MAXLON parameters.
           The purpose of the ground range is to define the coverage of the map projected image.  Essentially, the ground range and
           pixel resolution are used to compute the size (samples and line) of the output image.
         </description>
@@ -483,7 +490,7 @@
         </list>
       </parameter>
 
-      <parameter name="SLAT">
+      <parameter name="MINLAT">
         <type>double</type>
         <brief>Starting latitude</brief>
         <internalDefault>Use default range</internalDefault>
@@ -496,7 +503,7 @@
         <maximum inclusive="yes">90.0</maximum>
       </parameter>
 
-      <parameter name="ELAT">
+      <parameter name="MAXLAT">
         <type>double</type>
         <brief>Ending latitude</brief>
         <internalDefault>Use default range</internalDefault>
@@ -506,10 +513,10 @@
         </description>
         <minimum inclusive="yes">-90.0</minimum>
         <maximum inclusive="yes">90.0</maximum>
-        <greaterThan><item>SLAT</item></greaterThan>
+        <greaterThan><item>MINLAT</item></greaterThan>
       </parameter>
 
-      <parameter name="SLON">
+      <parameter name="MINLON">
         <type>double</type>
         <brief>Starting longitude</brief>
         <internalDefault>Use default range</internalDefault>
@@ -519,7 +526,7 @@
         </description>
       </parameter>
 
-      <parameter name="ELON">
+      <parameter name="MAXLON">
         <type>double</type>
         <brief>Ending longitude</brief>
         <internalDefault>Use default range</internalDefault>
@@ -527,7 +534,7 @@
           The maximum longitude of the ground range.   If this is entered by the user it will override the default camera or map value.
            By default, positive east longitudes in the range of 0 to 360 are assumed unless the MAP file specifies otherwise.
         </description>
-        <greaterThan><item>SLON</item></greaterThan>
+        <greaterThan><item>MINLON</item></greaterThan>
       </parameter>
     </group>
 

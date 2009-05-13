@@ -6,8 +6,8 @@ REPTILE is SNAKE LIZARD
 -VEGGIE is 
 BOVINE is COW CAMEL 
 TREE is MAPLE ELM PINE 
-FLOWER is DAISY & TULIP  
 _COMMENT_ is # This is a comment 
+FLOWER is DAISY & TULIP  
 _COMMENT_ is /* This is another comment 
 BIG is   NOT   REALLY LARGE 
 SEQUENCE is (a,b,c) (d,e,f) 

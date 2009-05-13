@@ -1,6 +1,6 @@
 /*	HiRISE Instrument
 
-PIRL CVS ID: $Id: Instrument.cpp,v 1.1.1.1 2006/10/31 23:18:15 isis3mgr Exp $
+PIRL CVS ID: $Id: Instrument.cpp,v 1.2 2009/02/23 16:36:10 slambright Exp $
 
 Copyright (C) 2003-2006  Arizona Board of Regents on behalf of the
 Planetary Image Research Laboratory, Lunar and Planetary Laboratory at
@@ -22,7 +22,7 @@ Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA.
 #include	"Instrument.hh"
 
 #include	<cmath>
-
+#include	<iostream>
 #include	<iomanip>
 using std::endl;
 
@@ -41,7 +41,7 @@ namespace HiRISE
 	Constants:
 */
 const char* const
-	Instrument::ID = "UA::HiRISE::Instrument ($Revision: 1.1.1.1 $ $Date: 2006/10/31 23:18:15 $)";
+	Instrument::ID = "UA::HiRISE::Instrument ($Revision: 1.2 $ $Date: 2009/02/23 16:36:10 $)";
 
 const unsigned int
 	Instrument::CCDS							= 14;

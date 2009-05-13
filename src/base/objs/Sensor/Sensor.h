@@ -2,8 +2,8 @@
 #define Sensor_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/08/07 00:09:58 $
+ * $Revision: 1.9 $
+ * $Date: 2009/02/12 03:03:24 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -110,7 +110,9 @@ namespace Isis {
  *                                       method HasElevationModel
  *  @history 2008-08-06 Stuart Sides   - Modified SetLookDirection to better
  *           handle oblique views. In the past it would oscillate and run out
- *           out iterations. 
+ *           out iterations.
+ *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance from 1e-6 to 1e-12 for dist**2 (mm) 
+ *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance back to 1e-6 (mm) 
  *  
  */
   class Sensor : public Isis::Spice {

@@ -107,9 +107,18 @@ namespace Isis {
       // Setup focal plane map
       new CameraFocalPlaneMap(this, -74400);
 
-      // The line detector origin is in the middle of the orange framelet
-      FocalPlaneMap()->SetDetectorOrigin(512.5, 760.0 + 8.5);
-
+      if((int)NaifIkCode() == -74410) {
+        // The line detector origin is in the middle of the orange framelet
+        FocalPlaneMap()->SetDetectorOrigin(512.5, 760.0 + 8.5);
+      }
+      else if((int)NaifIkCode() == -74420) {
+        FocalPlaneMap()->SetDetectorOrigin(512.5, 288.5);
+      }
+      else {
+        string msg = "Unrecognized NaifIkCode [" + iString((int)NaifIkCode()) + "]";
+        throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+      }
+    
       // Setup distortion map
       new MarciDistortionMap(this, NaifIkCode());
 

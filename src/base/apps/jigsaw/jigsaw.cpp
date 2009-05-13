@@ -92,10 +92,22 @@ void IsisMain() {
           c.Label()->DeleteObject("Polygon");
         }
 
+        //check for CameraStatistics Table, if exists, delete
+        for (int iobj=0; iobj<c.Label()->Objects(); iobj++) {
+          PvlObject obj = c.Label()->Object(iobj);
+          if (obj.Name() != "Table") continue;
+          if (obj["Name"][0] != iString("CameraStatistics")) continue;
+          c.Label()->DeleteObject(iobj);
+          break;
+        }
+
+        //  Get Kernel group and add or replace LastModifiedInstrumentPointing
+        //  keyword.
         Table cmatrix = b->Cmatrix(i);
-        cmatrix.Label().AddComment("Jigged");
+        std::string jigComment = "Jigged = "+ Isis::iTime::CurrentLocalTime();
+        cmatrix.Label().AddComment(jigComment);
         Table spvector = b->SpVector(i);
-        spvector.Label().AddComment("Jigged");
+        spvector.Label().AddComment(jigComment);
         c.Write(cmatrix);
         c.Write(spvector);
         c.Close();

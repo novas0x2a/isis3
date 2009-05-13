@@ -2,8 +2,8 @@
 #define LambertConformal_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/08/15 17:06:27 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/03/20 22:30:23 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -49,6 +49,8 @@ namespace Isis {
  *   @history 2008-08-15 Stuart Sides - Modified to allow standard parallels to
  *            be in any order. Modified to not accept center latitudes too close
  *            to either pole.
+ *   @history 2009-03-20 Stuart Sides - Modified to not accept center latitudes
+ *                       near the pole opposite the apex of the cone
  */                                                                       
   class LambertConformal : public Isis::Projection {
     public:

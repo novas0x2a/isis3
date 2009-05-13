@@ -53,6 +53,8 @@ namespace Qisis {
   *   @history 2008-12-30 Jeannie Walldren - Modified
   *            savePoint() method to update user (chooser) name
   *            and date when point is saved
+  *   @history 2009-03-17  Tracie Sucharski - Add slot to set a boolean to
+  *            indicate whether the registration chips should be saved.
   */
 
   class ControlPointEdit : public QWidget {
@@ -70,9 +72,10 @@ namespace Qisis {
 
     public slots:
       void setLeftMeasure (Isis::ControlMeasure *leftMeasure,
-                           Isis::Cube *leftCube);
+                           Isis::Cube *leftCube,std::string pointId);
       void setRightMeasure (Isis::ControlMeasure *rightMeasure,
-                            Isis::Cube *rightCube);
+                            Isis::Cube *rightCube,std::string pointId);
+      void saveChips ();
 
     protected slots:
 
@@ -131,6 +134,7 @@ namespace Qisis {
       QLabel *p_oldPosition;
       QLabel *p_goodFit;
       bool   p_autoRegShown;
+      bool   p_autoRegAttempted;
 
 
       ChipViewport *p_leftView;
@@ -146,6 +150,7 @@ namespace Qisis {
       Isis::UniversalGroundMap *p_rightGroundMap;
 
       Isis::AutoReg *p_autoRegFact;
+      std::string p_pointId;
 
       int p_rotation;
       bool p_geomIt;

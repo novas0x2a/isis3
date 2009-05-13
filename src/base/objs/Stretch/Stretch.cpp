@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/11/13 15:21:02 $
+ * $Revision: 1.7 $
+ * $Date: 2009/04/29 17:00:34 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -390,6 +390,18 @@ namespace Isis {
     grp->AddKeyword(inputs);
     grp->AddKeyword(outputs);
     pvl.AddGroup(*grp);
+  }
+
+  /**
+   * Copies the stretch pairs from another Stretch object, but maintains special 
+   * pixel values 
+   * 
+   * @param other - The Stretch to copy pairs from
+   */
+  void Stretch::CopyPairs(const Stretch &other) {
+    this->p_pairs = other.p_pairs;
+    this->p_input = other.p_input;
+    this->p_output = other.p_output;
   }
 
 } // end namespace isis

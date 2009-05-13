@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.9 $                                                             
- * $Date: 2008/12/15 18:43:06 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2009/02/03 15:08:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -105,15 +105,16 @@ namespace Isis {
     double centerY = centroid->getY();
     delete centroid;
 
-    int xSteps = (int)((xyBoundBox->getMaxX()-xyBoundBox->getMinX())/p_Xspacing + 1.5);
-    int ySteps = (int)((xyBoundBox->getMaxY()-xyBoundBox->getMinY())/p_Yspacing + 1.5);
-    double dRealMinX = centerX - (xSteps/2) * p_Xspacing;
-    double dRealMinY = centerY - (ySteps/2) * p_Yspacing;
+    int xStepsLeft = (int)((centerX-xyBoundBox->getMinX())/p_Xspacing + 0.5);
+    int yStepsLeft = (int)((centerY-xyBoundBox->getMinY())/p_Yspacing + 0.5);
+    double dRealMinX = centerX - (xStepsLeft * p_Xspacing);
+    double dRealMinY = centerY - (yStepsLeft * p_Yspacing);
 
     for (double y=dRealMinY; y <= xyBoundBox->getMaxY(); y += p_Yspacing) {
       for (double x=dRealMinX; x <= xyBoundBox->getMaxX(); x +=p_Xspacing) {
         geos::geom::Coordinate c(x,y);
         geos::geom::Point *p = Isis::globalFactory.createPoint(c);
+
         if (p->within(xymp)) {
           // Convert the x/y point to a lon/lat point
           if (proj->SetCoordinate(x,y)) {
@@ -210,8 +211,10 @@ namespace Isis {
      */
     int precision = (int)pow(0.5/MinimumThickness(), 0.5)*2;
     bool bGridCleared = true;
-    double dRealMinX = centerX - (xSteps/2) * p_Xspacing;
-    double dRealMinY = centerY - (ySteps/2) * p_Yspacing;
+    int xStepsToCentroid = (int)((centerX-xyBoundBox->getMinX())/p_Xspacing + 0.5);
+    int yStepsToCentroid = (int)((centerY-xyBoundBox->getMinY())/p_Yspacing + 0.5);
+    double dRealMinX = centerX - (xStepsToCentroid * p_Xspacing);
+    double dRealMinY = centerY - (yStepsToCentroid * p_Yspacing);
 
     do {
       // gridCleared is true if we did nothing, if we performed any actions on the grid

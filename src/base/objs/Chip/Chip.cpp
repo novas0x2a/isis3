@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2009/01/20 06:40:56 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/04/23 23:35:53 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -87,37 +87,6 @@ namespace Isis {
     p_affine.Identity();
     p_tackSample = ((samples - 1) / 2) + 1;
     p_tackLine = ((lines - 1) / 2) + 1;
-  }
-
-
-  /**
-   * Loads a Chip with a value.  For example, 
-   * @code
-   * Chip c(10,5);
-   * c(1,1) = 1.1;
-   * c(10,5) = 1.2;
-   * @endcode
-   * 
-   * @param sample    Sample position to load (1-based)
-   * @param line      Line position to load (1-based)
-   */
-  double &Chip::operator()(int sample,int line) {
-    return p_buf[line-1][sample-1];
-  }
-
-
-  /**
-   * Get a value from a Chip.  For example, 
-   * @code
-   * Chip c(10,5);
-   * cout << c[3,3] << endl;
-   * @endcode
-   * 
-   * @param sample    Sample position to get (1-based)
-   * @param line      Line position to get (1-based)
-   */
-  const double &Chip::operator()(int sample,int line) const {
-    return p_buf[line-1][sample-1];
   }
 
 
@@ -401,12 +370,12 @@ namespace Isis {
    * 
    * @return bool - Returns true if the pixel is valid, and false if it is not
    */
-  bool Chip::IsValid(int sample, int line) {
+ /* bool Chip::IsValid(int sample, int line) {
     double value = (*this)(sample,line);
     if (value < p_validMinimum) return false;
     if (value > p_validMaximum) return false;
     return true;
-  }
+  }*/
 
 
   /**
@@ -474,6 +443,44 @@ namespace Isis {
     chipped.p_tackLine = chipped.TackLine() + TackLine() - line;
 
     return chipped;
+  }
+
+  /**
+   * 
+   * 
+   * 
+   * @param samples 
+   * @param lines 
+   * @param samp 
+   * @param line 
+   * @param output 
+   */
+  void Chip::Extract (int samp, int line, Chip &output){
+    int samples = output.Samples(); 
+    int lines = output.Lines();
+
+    for (int oline=1; oline<=lines; oline++) {
+      for (int osamp=1; osamp<=samples; osamp++) {
+        int thisSamp = samp + (osamp - output.TackSample());
+        int thisLine = line + (oline - output.TackLine());
+        if ((thisSamp < 1) || (thisLine < 1) || 
+            (thisSamp > Samples()) || thisLine > Lines()) {
+          output(osamp,oline) = Isis::Null;
+        }
+        else {
+          output(osamp,oline) = (*this)(thisSamp,thisLine);
+        }
+      }
+    }
+
+    output.p_cube = p_cube;
+    output.p_affine = p_affine;
+    output.p_validMinimum = p_validMinimum;
+    output.p_validMaximum = p_validMaximum;
+    output.p_tackSample = output.TackSample() + TackSample() - samp;
+    output.p_tackLine = output.TackLine() + TackLine() - line;
+
+    return;
   }
 
 

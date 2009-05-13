@@ -282,35 +282,84 @@ void IsisMain() {
 
     //If the default range is to be computed, use the input lat/long cubes to determine the range
     if(ui.GetString("DEFAULTRANGE") == "COMPUTE") {
+      //NOTE - When computing the min/max longitude this application does not account for the 
+      //longitude seam if it exists. Since the min/max are calculated from the statistics of
+      //the input longitude cube and then converted to the mapping group's domain they may be
+      //invalid for cubes containing the longitude seam. 
+    
       Statistics *latStats = latCube->Statistics();
       Statistics *lonStats = lonCube->Statistics();
-      mapGrp.AddKeyword(PvlKeyword("MinimumLatitude",latStats->Minimum()),Pvl::Replace);
-      mapGrp.AddKeyword(PvlKeyword("MaximumLatitude",latStats->Maximum()),Pvl::Replace);
-      mapGrp.AddKeyword(PvlKeyword("MinimumLongitude",lonStats->Minimum()),Pvl::Replace);
-      mapGrp.AddKeyword(PvlKeyword("MaximumLongitude",lonStats->Maximum()),Pvl::Replace);
+
+      double minLat = latStats->Minimum();
+      double maxLat = latStats->Maximum();
+
+      bool isOcentric = ((std::string)mapGrp.FindKeyword("LatitudeType")) == "Planetocentric";
+ 
+      if(isOcentric) {
+        if(ui.GetString("LATTYPE") != "PLANETOCENTRIC") {
+          minLat = Projection::ToPlanetocentric(minLat, (double)equRadius, (double)polRadius);
+          maxLat = Projection::ToPlanetocentric(maxLat, (double)equRadius, (double)polRadius);
+        }
+      }
+      else {
+        if(ui.GetString("LATTYPE") == "PLANETOCENTRIC") {
+          minLat = Projection::ToPlanetographic(minLat, (double)equRadius, (double)polRadius);
+          maxLat = Projection::ToPlanetographic(maxLat, (double)equRadius, (double)polRadius);
+        }
+      }
+
+      int lonDomain = (int)mapGrp.FindKeyword("LongitudeDomain");
+      double minLon = lonDomain == 360 ? Projection::To360Domain(lonStats->Minimum()) : Projection::To180Domain(lonStats->Minimum());
+      double maxLon = lonDomain == 360 ? Projection::To360Domain(lonStats->Maximum()) : Projection::To180Domain(lonStats->Maximum());
+
+      bool isPosEast = ((std::string)mapGrp.FindKeyword("LongitudeDirection")) == "PositiveEast";
+      
+      if(isPosEast) {
+        if(ui.GetString("LONDIR") != "POSITIVEEAST") {
+          minLon = Projection::ToPositiveEast(minLon, lonDomain);
+          maxLon = Projection::ToPositiveEast(maxLon, lonDomain);
+        }
+      }
+      else {
+        if(ui.GetString("LONDIR") == "POSITIVEEAST") {
+          minLon = Projection::ToPositiveWest(minLon, lonDomain);
+          maxLon = Projection::ToPositiveWest(maxLon, lonDomain);
+        }
+      }
+
+      if(minLon > maxLon) {
+        double temp = minLon;
+        minLon = maxLon;
+        maxLon = temp;
+      }
+
+      mapGrp.AddKeyword(PvlKeyword("MinimumLatitude", minLat),Pvl::Replace);
+      mapGrp.AddKeyword(PvlKeyword("MaximumLatitude", maxLat),Pvl::Replace);
+      mapGrp.AddKeyword(PvlKeyword("MinimumLongitude", minLon),Pvl::Replace);
+      mapGrp.AddKeyword(PvlKeyword("MaximumLongitude", maxLon),Pvl::Replace);
     }
 
     //If the user decided to enter a ground range then override
-    if (ui.WasEntered("SLON")) {
-      mapGrp.AddKeyword(PvlKeyword("MinimumLongitude",
-                                        ui.GetDouble("SLON")),Pvl::Replace);
-    }
-  
-    if (ui.WasEntered("ELON")) {
-      mapGrp.AddKeyword(PvlKeyword("MaximumLongitude",
-                                        ui.GetDouble("ELON")),Pvl::Replace);
-    }
-  
-    if (ui.WasEntered("SLAT")) {
+    if (ui.WasEntered("MINLAT")) {
       mapGrp.AddKeyword(PvlKeyword("MinimumLatitude",
-                                        ui.GetDouble("SLAT")),Pvl::Replace);
+                                        ui.GetDouble("MINLAT")),Pvl::Replace);
     }
   
-    if (ui.WasEntered("ELAT")) {
+    if (ui.WasEntered("MAXLAT")) {
       mapGrp.AddKeyword(PvlKeyword("MaximumLatitude",
-                                        ui.GetDouble("ELAT")),Pvl::Replace);
+                                        ui.GetDouble("MAXLAT")),Pvl::Replace);
     }
 
+    if (ui.WasEntered("MINLON")) {
+      mapGrp.AddKeyword(PvlKeyword("MinimumLongitude",
+                                        ui.GetDouble("MINLON")),Pvl::Replace);
+    }
+  
+    if (ui.WasEntered("MAXLON")) {
+      mapGrp.AddKeyword(PvlKeyword("MaximumLongitude",
+                                        ui.GetDouble("MAXLON")),Pvl::Replace);
+    }
+  
     //If the pixel resolution is to be computed, compute the pixels/degree from the input
     if (ui.GetString("PIXRES") == "COMPUTE") {
       latBrick.SetBasePosition(1,1,1);
@@ -732,20 +781,126 @@ void ComputeInputRange () {
   Cube *latCub = p.SetInputCube("LATCUB");
   Cube *lonCub = p.SetInputCube("LONCUB");
 
+  UserInterface &ui = Application::GetUserInterface();
+  Pvl userMap;
+  userMap.Read(ui.GetFilename("MAP"));
+  PvlGroup &userGrp = userMap.FindGroup("Mapping",Pvl::Traverse);
+
   Statistics *latStats = latCub->Statistics();
   Statistics *lonStats = lonCub->Statistics();
 
+  double minLat = latStats->Minimum();
+  double maxLat = latStats->Maximum();
 
-  UserInterface &ui = Application::GetUserInterface();
+  int lonDomain = userGrp.HasKeyword("LongitudeDomain") ? (int)userGrp.FindKeyword("LongitudeDomain") : 360;
+  double minLon = lonDomain == 360 ? Projection::To360Domain(lonStats->Minimum()) : Projection::To180Domain(lonStats->Minimum());
+  double maxLon = lonDomain == 360 ? Projection::To360Domain(lonStats->Maximum()) : Projection::To180Domain(lonStats->Maximum());
+
+  if(userGrp.HasKeyword("LatitudeType")) {
+    bool isOcentric = ((std::string)userGrp.FindKeyword("LatitudeType")) == "Planetocentric";
+
+    double equRadius;
+    double polRadius;
+
+    //If the user entered the equatorial and polar radii
+    if(ui.WasEntered("EQURADIUS") && ui.WasEntered("POLRADIUS")) {
+      equRadius = ui.GetDouble("EQURADIUS");
+      polRadius = ui.GetDouble("POLRADIUS");
+    }
+    //Else read them from the pck
+    else {
+      Filename pckFile("$base/kernels/pck/pck?????.tpc");
+      pckFile.HighestVersion();
+
+      string pckFilename = pckFile.Expanded();
+
+      furnsh_c(pckFilename.c_str());
+
+      string target;
+
+      //If user entered target 
+      if(ui.WasEntered("TARGET")) {
+        target = ui.GetString("TARGET");
+      }
+      //Else read the target name from the input cube
+      else {
+        Pvl fromFile;
+        fromFile.Read(ui.GetFilename("FROM"));
+        target = (string)fromFile.FindKeyword("TargetName", Pvl::Traverse);
+      }
+
+      SpiceInt code;
+      SpiceBoolean found;
+
+      bodn2c_c (target.c_str(), &code, &found);
+
+      if (!found) {
+        string msg = "Could not convert Target [" + target +
+                     "] to NAIF code";
+        throw Isis::iException::Message(Isis::iException::Io,msg,_FILEINFO_);
+      }
+
+      SpiceInt n;
+      SpiceDouble radii[3];
+
+      bodvar_c(code,"RADII",&n,radii);
+
+      equRadius = radii[0] * 1000;
+      polRadius = radii[2] * 1000;
+    }
+
+    if(isOcentric) {
+      if(ui.GetString("LATTYPE") != "PLANETOCENTRIC") {
+        minLat = Projection::ToPlanetocentric(minLat, (double)equRadius, (double)polRadius);
+        maxLat = Projection::ToPlanetocentric(maxLat, (double)equRadius, (double)polRadius);
+      }
+    }
+    else {
+      if(ui.GetString("LATTYPE") == "PLANETOCENTRIC") {
+        minLat = Projection::ToPlanetographic(minLat, (double)equRadius, (double)polRadius);
+        maxLat = Projection::ToPlanetographic(maxLat, (double)equRadius, (double)polRadius);
+      }
+    }
+  }
+
+  if(userGrp.HasKeyword("LongitudeDirection")) {
+    bool isPosEast = ((std::string)userGrp.FindKeyword("LongitudeDirection")) == "PositiveEast";
+
+    if(isPosEast) {
+      if(ui.GetString("LONDIR") != "POSITIVEEAST") {
+        minLon = Projection::ToPositiveEast(minLon, lonDomain);
+        maxLon = Projection::ToPositiveEast(maxLon, lonDomain);
+
+        if(minLon > maxLon) {
+          double temp = minLon;
+          minLon = maxLon;
+          maxLon = temp;
+        }
+      }
+    }
+    else {
+      if(ui.GetString("LONDIR") == "POSITIVEEAST") {
+        minLon = Projection::ToPositiveWest(minLon, lonDomain);
+        maxLon = Projection::ToPositiveWest(maxLon, lonDomain);
+
+        if(minLon > maxLon) {
+          double temp = minLon;
+          minLon = maxLon;
+          maxLon = temp;
+        }
+      }
+    }
+  }
+
   // Set ground range parameters in UI
-  ui.Clear("SLAT");
-  ui.PutDouble("SLAT",latStats->Minimum());
-  ui.Clear("ELAT");
-  ui.PutDouble("ELAT",latStats->Maximum());
-  ui.Clear("SLON");
-  ui.PutDouble("SLON",lonStats->Minimum());
-  ui.Clear("ELON");
-  ui.PutDouble("ELON",lonStats->Maximum());
+  ui.Clear("MINLAT");
+  ui.PutDouble("MINLAT", minLat);
+  ui.Clear("MAXLAT");
+  ui.PutDouble("MAXLAT", maxLat);
+  ui.Clear("MINLON");
+  ui.PutDouble("MINLON", minLon);
+  ui.Clear("MAXLON");
+  ui.PutDouble("MAXLON", maxLon);
 
   p.EndProcess();
 
@@ -765,24 +920,24 @@ void LoadMapRange() {
 
   // Set ground range keywords that are found in mapfile
   int count = 0;
-  ui.Clear("SLAT");
-  ui.Clear("ELAT");
-  ui.Clear("SLON");
-  ui.Clear("ELON");
+  ui.Clear("MINLAT");
+  ui.Clear("MAXLAT");
+  ui.Clear("MINLON");
+  ui.Clear("MAXLON");
   if (userGrp.HasKeyword("MinimumLatitude")) {
-    ui.PutDouble("SLAT",userGrp["MinimumLatitude"]);
+    ui.PutDouble("MINLAT",userGrp["MinimumLatitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MaximumLatitude")) {
-    ui.PutDouble("ELAT",userGrp["MaximumLatitude"]);
+    ui.PutDouble("MAXLAT",userGrp["MaximumLatitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MinimumLongitude")) {
-    ui.PutDouble("SLON",userGrp["MinimumLongitude"]);
+    ui.PutDouble("MINLON",userGrp["MinimumLongitude"]);
     count++;
   }
   if (userGrp.HasKeyword("MaximumLongitude")) {
-    ui.PutDouble("ELON",userGrp["MaximumLongitude"]);
+    ui.PutDouble("MAXLON",userGrp["MaximumLongitude"]);
     count++;
   }
 

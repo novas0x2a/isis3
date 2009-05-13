@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2008/12/23 17:24:48 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2009/02/02 14:50:57 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -60,10 +60,6 @@ namespace Isis {
    * @return std::vector<geos::Point*> A vector of points which have been
    * seeded into the polygon. The caller assumes responsibility for deleteing
    *  these.
-   * 
-   *  @internal
-   *   @history 2007-05-09 Tracie Sucharski,  Changed a single spacing value
-   *                            to a separate value for x and y.
    */
   std::vector<geos::geom::Point*> LimitPolygonSeeder::Seed(const geos::geom::MultiPolygon *lonLatPoly,
                                                            Projection *proj) {

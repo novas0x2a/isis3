@@ -12,8 +12,7 @@ namespace Qisis {
    */
   MainWindow::MainWindow(QString title, QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, flags) {
     this->setWindowTitle(title);
-    if(parent != 0){
-      parent->installEventFilter(this);
+    if(parent){
       p_appName = parent->windowTitle().toStdString();
     }
     

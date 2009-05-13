@@ -22,8 +22,8 @@ namespace Isis {
    * @param itype NumericalApproximation::InterpType enum value to
    *              be assigned to this object (Default:
    *              @a CubicNatural)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType(), called by Init() method)
+   * @throws Isis::iException::Programmer "Unable to construct 
+   *             NumericalApproximation object"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class. Original name DataInterp().
@@ -38,8 +38,8 @@ namespace Isis {
       p_dataValidated = false;
     }
     catch (iException e) { // catch exception from Init()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation Constructor - Caught the following error: ",
+      throw iException::Message(e.Type(),
+                      "NumericalApproximation() - Unable to construct NumericalApproximation object",
                       _FILEINFO_);
     }
   }
@@ -65,9 +65,8 @@ namespace Isis {
    * @param itype NumericalApproximation::InterpType enum 
    *              value to be assigned to this object (Default:
    *              @a CubicNatural)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType(), AddData() or ValidateDataSet()
-   *             method)
+   * @throws Isis::iException::Programmer "Unable to construct 
+   *             NumericalApproximation object" 
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class. Original name DataInterp().
@@ -86,9 +85,9 @@ namespace Isis {
       ValidateDataSet();
     }
     catch (iException e){ // catch exception from Init(), AddData(), ValidateDataSet()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation Constructor - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "NumericalApproximation() - Unable to construct object using the given arrays, size and interpolation type",
+                                _FILEINFO_);
     }
   }
 
@@ -114,9 +113,8 @@ namespace Isis {
    * @param itype NumericalApproximation::InterpType enum 
    *              value to be assigned to this object (Default:
    *              @a CubicNatural)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType(), AddData() or ValidateDataSet()
-   *             method)
+   * @throws Isis::iException::Programmer "Unable to construct
+   *             NumericalApproximation object"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    *   @history 2008-12-18 Jeannie Walldren - Added address
@@ -131,9 +129,9 @@ namespace Isis {
       ValidateDataSet();
     }
     catch (iException e){ // catch exception from Init(), AddData(), ValidateDataSet()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation Constructor - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "NumericalApproximation() - Unable to construct an object using the given vectors and interpolation type",
+                                _FILEINFO_);
     }
   }
   
@@ -150,8 +148,8 @@ namespace Isis {
    * 
    * @param oldObject NumericalApproximation object to gleen data 
    *          from for creation of this object
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Init() method)   
+   * @throws Isis::iException::Programmer "Unable to construct
+   *             NumericalApproximation object"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version 
    *            created in DataInterp class. Original name
@@ -178,9 +176,9 @@ namespace Isis {
       p_polyNevError = oldObject.p_polyNevError;
     }
     catch (iException e){ // catch exception from Init()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation Constructor - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "NumericalApproximation() - Unable to copy the given object",
+                                _FILEINFO_);
     }
   }
 
@@ -195,8 +193,8 @@ namespace Isis {
    * 
    * @param oldObject NumericalApproximation object to copy data 
    *          from for initialization
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType() method) 
+   * @throws Isis::iException::Programmer "Unable to copy 
+   *             NumericalApproximation object"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -221,9 +219,9 @@ namespace Isis {
       return (*this);
     }
     catch (iException e){ // catch exception from SetInterpType()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation =operator - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "operator=() - Unable to copy the given object",
+                                _FILEINFO_);
     }
 
   }
@@ -253,8 +251,8 @@ namespace Isis {
    * 
    * @return @b std::string Name of the interpolation function
    *         used/to be used.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslFunctor() method)
+   * @throws Isis::iException::Programmer "Unable to retrieve 
+   *                           numerical approximation name",
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -280,9 +278,9 @@ namespace Isis {
       else return name;
     }
     catch (iException e){ // catch exception from GslFunctor()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Name() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Name() - GSL interpolation type not found",
+                                _FILEINFO_);
     }
   }
   
@@ -297,8 +295,8 @@ namespace Isis {
    * 
    * @return @b int Minimum number of data points required for the
    *         interpolation function
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslFunctor() method)  
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             minimum points."
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -320,9 +318,9 @@ namespace Isis {
       return (GslFunctor(p_itype)->min_size);
     }
     catch (iException e){ // catch exception from GslFunctor()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::MinPoints() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "MinPoints() - GSL interpolation not found",
+                                _FILEINFO_);
     }
   }
   
@@ -342,8 +340,8 @@ namespace Isis {
    *  
    * @throws Isis::iException::Programmer "Invalid argument. 
    *             Unknown interpolation type"
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslFunctor() method)  
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             minimum points"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -360,9 +358,9 @@ namespace Isis {
         return (nam.GslFunctor(itype)->min_size);
       }
       catch (iException e){ // catch exception from GslFunctor()
-        throw e.Message(e.Type(),
-                        "NumericalApproximation::MinPoints() - Caught the following error: ",
-                        _FILEINFO_);
+        throw iException::Message(e.Type(),
+                                  "MinPoints() - GSL interpolation type not found",
+                                  _FILEINFO_);
       }
     }
     else if (itype == NumericalApproximation::CubicNeighborhood) {
@@ -375,8 +373,8 @@ namespace Isis {
       return 3;
     }
     throw iException::Message(iException::Programmer,
-                              "NumericalApproximation::MinPoints() - Invalid argument. Unknown interpolation type: " 
-                              + NumericalApproximation::InterpType(itype), 
+                              "MinPoints() - Invalid argument. Unknown interpolation type: " 
+                              + iString(NumericalApproximation::InterpType(itype)), 
                               _FILEINFO_);
   }
   
@@ -480,9 +478,8 @@ namespace Isis {
     int m = y.size();
     if (n != m) {
       ReportException(iException::Programmer,"AddData()",
-                  "Invalid arguments. The number of x-values, " + iString(n) 
-                  + ", does not equal the number of y-values, " + iString(m),
-                  _FILEINFO_);
+                      "Invalid arguments. The sizes of the input vectors do not match",
+                      _FILEINFO_);
     }
     for (int i = 0; i < n; i++) {
       p_x.push_back(x[i]);
@@ -519,8 +516,9 @@ namespace Isis {
   void NumericalApproximation::SetCubicClampedEndptDeriv(double yp1, double ypn) throw (iException &){
     if (p_itype != NumericalApproximation::CubicClamped) {
       ReportException(iException::Programmer, "SetCubicClampedEndptDeriv()",
-                  " Method only valid for cspline-clamped, may not be used for " 
-                  + Name() + " interpolation.", _FILEINFO_);
+                      "This method is only valid for cspline-clamped interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
     }
     p_clampedDerivFirstPt = yp1;
     p_clampedDerivLastPt = ypn;
@@ -540,8 +538,9 @@ namespace Isis {
    *        for each @a p_x value in the data set.
    * @throws Isis::iException::Programmer "Method only used for 
    *             cspline-clamped interpolation type"
-   * @throws Isis::iException::Programmer "Caught an error" (From 
-   *             ComputeCubicClamped())
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *             second derivatives of the data set for a clamped
+   *             cubic spline."
    * @see ComputeCubicClamped() 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version 
@@ -553,13 +552,14 @@ namespace Isis {
       if (!p_clampedComputed) ComputeCubicClamped();
       if (p_itype != NumericalApproximation::CubicClamped)
         ReportException(iException::Programmer, "CubicClampedSecondDerivatives()",
-                    "Method only used for cspline-clamped interpolation type",
-                    _FILEINFO_);
+                        "This method is only valid for cspline-clamped interpolation type may not be used for " 
+                        + Name() + " interpolation", 
+                        _FILEINFO_);
       return p_clampedSecondDerivs;
     }
     catch (iException e) { // catch exception from ComputeCubicClamped()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::CubicClampedSecondDerivatives() - Caught the following error: ",
+      throw iException::Message(e.Type(),
+                      "CubicClampedSecondDerivatives() - Unable to compute clamped cubic spline interpolation",
                       _FILEINFO_);
     }
   }
@@ -572,8 +572,8 @@ namespace Isis {
    * @a p_x of the data set. 
    * 
    * @return @b double Minimum domain value 
-   * @throws Isis::iException::Programmer "Caught an error" (From 
-   *             ComputeGsl() or ValidateDataSet())
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *             domain maximum for the data set."
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -595,9 +595,9 @@ namespace Isis {
       }
     }
     catch(iException e) { // catch exception from ComputeGsl() or ValidateDataSet()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::DomainMinimum() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "DomainMinimum() - Unable to calculate the domain minimum for the data set",
+                                _FILEINFO_);
     }
   }
 
@@ -609,8 +609,8 @@ namespace Isis {
    * @a p_x of the data set. 
    * 
    * @return @b double Maximum domain value 
-   * @throws Isis::iException::Programmer "Caught an error" (From 
-   *             ComputeGsl() or ValidateDataSet() 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *             domain minimum for the data set."
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -631,9 +631,9 @@ namespace Isis {
       }
     }
     catch(iException e) { // catch exception from ComputeGsl() or ValidateDataSet()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::DomainMaximum() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "DomainMaximum() - Unable to calculate the domain maximum for the data set",
+                                _FILEINFO_);
     }
   }
 
@@ -662,11 +662,8 @@ namespace Isis {
    *              @a ThrowError)
    * @return @b double Range value interpolated or extrapolated
    *         for the given domain value
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             InsideDomain(), ValueToExtrapolate(),
-   *             EvaluateCubicNeighborhood(),
-   *             ComputeCubicClamped(), ComputeGsl(), or
-   *             GslIntegrityCheck() method)
+   * @throws Isis::iException::Programmer "Unable to evaluate the
+   *             function at the point a"
    * @internal
    *   @history 2006-06-14 Kris Becker - Original version created in
    *            DataInterp class.
@@ -704,9 +701,10 @@ namespace Isis {
       return (result);
     }
     catch (iException e){ // catch exception from EvaluateCubicNeighborhood(), EvaluateCubicClamped(), EvaluatePolynomialNeville(), GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Evaluate() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Evaluate() - Unable to evaluate the function at the point a = " 
+                                + iString(a),
+                                _FILEINFO_);
     }
   }
   
@@ -738,11 +736,8 @@ namespace Isis {
    * @return @b vector @b \<double\> Set of interpolated range
    *         values corresponding to the elements of the vector of
    *         domain values given
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             InsideDomain(), ValueToExtrapolate(),
-   *             EvaluateCubicNeighborhood(),
-   *             ComputeCubicClamped(), ComputeGsl(), or
-   *             GslIntegrityCheck() method)
+   * @throws Isis::iException::Programmer "Unable to evaluate the
+   *             function at the vector of points, a."
    * @internal
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    *   @history 2008-12-18 Jeannie Walldren - Added address
@@ -779,9 +774,9 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from EvaluateCubicNeighborhood(), EvaluateCubicClamped(), EvaluatePolynomialNeville(), GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Evaluate() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Evaluate() - Unable to evaluate the function at the given vector of points",
+                                _FILEINFO_);
     }
   }
 
@@ -809,13 +804,14 @@ namespace Isis {
   vector <double> NumericalApproximation::PolynomialNevilleErrorEstimate() throw (iException &){
     if (p_itype != NumericalApproximation::PolynomialNeville) {
       ReportException(iException::Programmer, "PolynomialNevilleErrorEstimate()",
-                  " Method only valid for polynomial-Neville's, may not be used for " 
-                  + Name() + " interpolation.", _FILEINFO_);
+                      "This method is only valid for polynomial-Neville's, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
     }
     if (p_polyNevError.empty()) {
       ReportException(iException::Programmer, "PolynomialNevilleErrorEstimate()",
-                  "Error not calculated.  This method only valid after Evaluate() has been called.",
-                  _FILEINFO_);
+                      "Error not calculated. This method only valid after Evaluate() has been called",
+                      _FILEINFO_);
     }
     return p_polyNevError;
   }
@@ -842,8 +838,12 @@ namespace Isis {
    * @throws Isis::iException::Programmer "Cannot use this method 
    *             for interpolation type" (If the interpolation
    *             type is not GSL)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             ComputeGsl() or GslIntegrityCheck() method)
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             first derivative at a using the GSL
+   *             interpolation"
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             first derivative at a. GSL integrity check
+   *             failed"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class. Original name firstDerivative().
@@ -856,22 +856,24 @@ namespace Isis {
       if (!GslComputed()) ComputeGsl();
     }
     catch (iException e){ // catch exception from ComputeGsl()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslFirstDerivative() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslFirstDerivative() - Unable to compute the first derivative at a = "
+                                + iString(a) + " using the GSL interpolation",
+                                _FILEINFO_);
     }
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"GslFirstDerivative()",
                   "Invalid argument. Value entered, a = " 
                   + iString(a) + ", is outside of domain = [" 
                   + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
+                  + iString(DomainMaximum()) + "]",
                   _FILEINFO_);
     }
     if (!GslInterpType(p_itype)) {
       ReportException(iException::Programmer,"GslFirstDerivative()",
-                  "Method only valid for GSL interpolation types, may not be used for " 
-                  + Name() + " interpolation.", _FILEINFO_);
+                      "Method only valid for GSL interpolation types, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
     }
     try{
       double value;
@@ -879,9 +881,10 @@ namespace Isis {
       return (value);
     }
     catch (iException e){ // catch exception from GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslFirstDerivative() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslFirstDerivative() - Unable to compute the first derivative at a = "
+                                + iString(a) + ". GSL integrity check failed",
+                                _FILEINFO_);
     }
   }
 
@@ -922,28 +925,28 @@ namespace Isis {
    * @throws Isis::iException::Programmer "Invalid argument. There 
    *             is no n-point backward difference formula in
    *             use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             backward first difference for given (a,n,h)"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::BackwardFirstDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"BackwardFirstDifference()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a - (n-1)*h)) {
       ReportException(iException::Programmer, "BackwardFirstDifference()",
-                  "Formula steps outside of domain. For " 
-                  + iString((int) n) + "-point backward difference, a-(n-1)h = "
-                  + iString(a-(n-1)*h) + " is smaller than domain min = " 
-                  + iString(DomainMinimum()) 
-                  + ".  Try forward difference or use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For " 
+                      + iString((int) n) + "-point backward difference, a-(n-1)h = "
+                      + iString(a-(n-1)*h) + " is smaller than domain min = " 
+                      + iString(DomainMinimum()) 
+                      + ".  Try forward difference or use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -955,16 +958,17 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::BackwardFirstDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "BackwardFirstDifference() - Unable to calculate backward first difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 2: return (-f[0] + f[1])/h;                //2pt backward
       case 3: return ( 3*f[2] - 4*f[1] + f[0])/(2*h); //3pt backward    
       default: throw iException::Message(iException::Programmer, 
                                          "BackwardFirstDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point backward difference formula in use.",
+                                         + iString((int) n) + "-point backward difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1006,28 +1010,28 @@ namespace Isis {
    *             max.
    * @throws Isis::iException::Programmer "Invalid argument. There 
    *             is no n-point forward difference formula in use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             forward first difference for (a,n,h)"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::ForwardFirstDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"ForwardFirstDifference()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a + (n-1)*h)) {
       ReportException(iException::Programmer,"ForwardFirstDifference()",
-                  "Formula steps outside of domain. For " 
-                  + iString((int) n) + "-point forward difference, a+(n-1)h = " 
-                  + iString(a+(n-1)*h) + " is greater than domain max = " 
-                  + iString(DomainMaximum())
-                  + ".  Try backward difference or use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For " 
+                      + iString((int) n) + "-point forward difference, a+(n-1)h = " 
+                      + iString(a+(n-1)*h) + " is greater than domain max = " 
+                      + iString(DomainMaximum())
+                      + ".  Try backward difference or use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -1039,16 +1043,17 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::ForwardFirstDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "ForwardFirstDifference() - Unable to calculate forward first difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 2: return (-f[0] + f[1])/h;                //2pt forward
       case 3: return (-3*f[0] + 4*f[1] - f[2])/(2*h); //3pt forward      
       default: throw iException::Message(iException::Programmer,
-                                         "NumericalApproximation::ForwardFirstDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point forward difference formula in use.",
+                                         "ForwardFirstDifference() - Invalid argument. There is no " 
+                                         + iString((int) n) + "-point forward difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1091,29 +1096,29 @@ namespace Isis {
    *             max or a-(n-1)h is less than domain min.
    * @throws Isis::iException::Programmer "Invalid argument. There
    *             is no n-point center difference formula in use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             center first difference for (a,n,h)"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::CenterFirstDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"CenterFirstDifference()",
-                  "Invalid argument. Value entered, a = "
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = "
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a + (n-1)*h) || !InsideDomain(a - (n-1)*h)) {
       ReportException(iException::Programmer,"CenterFirstDifference()",
-                  "Formula steps outside of domain. For " 
-                  + iString((int) n) + "-point center difference, a-(n-1)h = " 
-                  + iString(a-(n-1)*h) + " or a+(n-1)h = " 
-                  + iString(a+(n-1)*h) + " is out of domain = [" 
-                  + iString(DomainMinimum()) + ", " + iString(DomainMaximum()) 
-                  + "].  Use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For " 
+                      + iString((int) n) + "-point center difference, a-(n-1)h = " 
+                      + iString(a-(n-1)*h) + " or a+(n-1)h = " 
+                      + iString(a+(n-1)*h) + " is out of domain = [" 
+                      + iString(DomainMinimum()) + ", " + iString(DomainMaximum()) 
+                      + "].  Use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -1125,16 +1130,17 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::CenterFirstDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "CenterFirstDifference() - Unable to calculate center first difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 3: return (-f[0] + f[2])/(2*h);                  //3pt center
       case 5: return (f[0] - 8*f[1] + 8*f[3] - f[4])/(12*h);//5pt center
       default: throw iException::Message(iException::Programmer,
-                                         "NumericalApproximation::CenterFirstDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point center difference formula in use.",
+                                         "CenterFirstDifference() - Invalid argument. There is no " 
+                                         + iString((int) n) + "-point center difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1162,8 +1168,11 @@ namespace Isis {
    * @throws Isis::iException::Programmer "Cannot use this method 
    *             for interpolation type" (If the interpolation
    *             type is not GSL)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslIntegrityCheck() method) 
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             second derivative at a using GSL interpolation"
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             second derivative at a. GSL integrity check
+   *             failed"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created
    *            in DataInterp class. Original name
@@ -1177,21 +1186,23 @@ namespace Isis {
       if (!GslComputed()) ComputeGsl();
     }
     catch (iException e){ // catch exception from ComputeGsl()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslSecondDerivative() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslSecondDerivative() - Unable to compute the second derivative at a = "
+                                + iString(a) + " using the GSL interpolation",
+                                _FILEINFO_);
     }
     if(!InsideDomain(a)) 
       ReportException(iException::Programmer,"GslSecondDerivative()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     if (!GslInterpType(p_itype)) 
       ReportException(iException::Programmer,"GslSecondDerivative()",
-                     "Method only valid for GSL interpolation types, may not be used for " 
-                     + Name() + " interpolation.", _FILEINFO_);
+                      "Method only valid for GSL interpolation types, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
     try{
       // we need to compute, if not already done
       if(!GslComputed()) ComputeGsl();
@@ -1200,9 +1211,10 @@ namespace Isis {
       return (value);
     }
     catch (iException e){ // catch exception from GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslSecondDerivative() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslSecondDerivative() - Unable to compute the second derivative at a = "
+                                + iString(a) + ". GSL integrity check failed",
+                                _FILEINFO_);
     }
 
   }
@@ -1239,28 +1251,27 @@ namespace Isis {
    * @throws Isis::iException::Programmer "Invalid argument. There 
    *             is no n-point backward difference formula in
    *             use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method) 
+   * @throws Isis::iException::Programmer 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::BackwardSecondDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"BackwardSecondDifference()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a - (n-1)*h)) {
       ReportException(iException::Programmer,"BackwardSecondDifference()",
-                  "Formula steps outside of domain. For "
-                  + iString((int) n) + "-point backward difference, a-(n-1)h = " 
-                  + iString(a-(n-1)*h) + " is smaller than domain min = " 
-                  + iString(DomainMinimum())
-                  + ".  Try forward difference or use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For "
+                      + iString((int) n) + "-point backward difference, a-(n-1)h = " 
+                      + iString(a-(n-1)*h) + " is smaller than domain min = " 
+                      + iString(DomainMinimum())
+                      + ".  Try forward difference or use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -1272,15 +1283,16 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::BackwardSecondDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "BackwardSecondDifference() - Unable to calculate backward second difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 3:  return (f[0] - 2*f[1] + f[2])/(h*h);                         //3pt backward
       default: throw iException::Message(iException::Programmer,
-                                         "NumericalApproximation::BackwardSecondDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point backward second difference formula in use.",
+                                         "BackwardSecondDifference() - Invalid argument. There is no " 
+                                         + iString((int) n) + "-point backward second difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1317,28 +1329,28 @@ namespace Isis {
    *             max.
    * @throws Isis::iException::Programmer "Invalid argument. There 
    *             is no n-point forward difference formula in use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method)  
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             forward second difference for (a,n,h)"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::ForwardSecondDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"ForwardSecondDifference()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a + (n-1)*h)) {
       ReportException(iException::Programmer,"ForwardSecondDifference()",
-                  "Formula steps outside of domain. For " 
-                  + iString((int) n) + "-point forward difference, a+(n-1)h = " 
-                  + iString(a+(n-1)*h) + " is greater than domain max = " 
-                  + iString(DomainMaximum())
-                  + ".  Try backward difference or use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For " 
+                      + iString((int) n) + "-point forward difference, a+(n-1)h = " 
+                      + iString(a+(n-1)*h) + " is greater than domain max = " 
+                      + iString(DomainMaximum())
+                      + ".  Try backward difference or use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -1350,15 +1362,16 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::ForwardSecondDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "ForwardSecondDifference() - Unable to calculate forward second difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 3:  return (f[0] - 2*f[1] + f[2])/(h*h);                         //3pt forward
       default: throw iException::Message(iException::Programmer,
-                                         "NumericalApproximation::ForwardSecondDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point forward second difference formula in use.",
+                                         "ForwardSecondDifference() - Invalid argument. There is no " 
+                                         + iString((int) n) + "-point forward second difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1401,29 +1414,29 @@ namespace Isis {
    *             max or a-(n-1)h is less than domain min.
    * @throws Isis::iException::Programmer "Invalid argument. There 
    *             is no n-point center difference formula in use."
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method)  
+   * @throws Isis::iException::Programmer "Unable to calculate 
+   *             center second difference for (a,n,h)"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   double NumericalApproximation::CenterSecondDifference(const double a, const unsigned int n, const double h) throw (iException &) {
     if(!InsideDomain(a)) {
       ReportException(iException::Programmer,"CenterSecondDifference()",
-                  "Invalid argument. Value entered, a = " 
-                  + iString(a) + ", is outside of domain = ["
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].",
-                  _FILEINFO_);
+                      "Invalid argument. Value entered, a = " 
+                      + iString(a) + ", is outside of domain = ["
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]",
+                      _FILEINFO_);
     }
     if(!InsideDomain(a + (n-1)*h) || !InsideDomain(a - (n-1)*h)) {
       ReportException(iException::Programmer,"CenterSecondDifference()",
-                  "Formula steps outside of domain. For " 
-                  + iString((int) n) + "-point center difference, a-(n-1)h = " 
-                  + iString(a-(n-1)*h) + " or a+(n-1)h = " 
-                  + iString(a+(n-1)*h) + " is out of domain = [" 
-                  + iString(DomainMinimum()) + ", " + iString(DomainMaximum())
-                  + "].  Use smaller value for h or n.",
-                  _FILEINFO_);
+                      "Formula steps outside of domain. For " 
+                      + iString((int) n) + "-point center difference, a-(n-1)h = " 
+                      + iString(a-(n-1)*h) + " or a+(n-1)h = " 
+                      + iString(a+(n-1)*h) + " is out of domain = [" 
+                      + iString(DomainMinimum()) + ", " + iString(DomainMaximum())
+                      + "].  Use smaller value for h or n",
+                      _FILEINFO_);
     }
     if (!p_dataValidated) ValidateDataSet();
     vector <double> f;
@@ -1435,16 +1448,17 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::CenterSecondDifference() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "CenterSecondDifference() - Unable to calculate center second difference for (a, n, h) = ("
+                                + iString(a) + ", " + iString((int) n) + ", " + iString(h) + ")",
+                                _FILEINFO_);
     }
     switch (n){
       case 3: return (f[0] - 2*f[1] + f[2])/(h*h);                         //3pt center
       case 5: return (-f[0] + 16*f[1] - 30*f[2] + 16*f[3] - f[4])/(12*h*h);//5pt center
       default: throw iException::Message(iException::Programmer,
-                                         "NumericalApproximation::CenterSecondDifference() - Invalid argument. There is no " 
-                                         + iString((int) n) + "-point center second difference formula in use.",
+                                         "CenterSecondDifference() - Invalid argument. There is no " 
+                                         + iString((int) n) + "-point center second difference formula in use",
                                          _FILEINFO_);
     }
   }
@@ -1473,8 +1487,12 @@ namespace Isis {
    * @throws Isis::iException::Programmer "Cannot use this method 
    *             for interpolation type" (If the interpolation
    *             type is not GSL)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslIntegrityCheck() method)  
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             integral on the interval (a,b) using GSL
+   *             interpolation"
+   * @throws Isis::iException::Programmer "Unable to compute the 
+   *             integral on the interval (a,b). GSL integrity
+   *             check failed."
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1483,40 +1501,44 @@ namespace Isis {
       if (!GslComputed()) ComputeGsl();
     }
     catch (iException e){ // catch exception from ComputeGsl()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslIntegral() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslIntegral() - Unable to compute the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using the GSL interpolation",
+                                _FILEINFO_);
     }
     if (a > b) {
       ReportException(iException::Programmer,"GslIntegral()",
-                  "Invalid interval entered: [a,b] = [" 
-                  + iString(a) + ", " + iString(b) + "].", 
-                  _FILEINFO_);
+                      "Invalid interval entered: [a,b] = [" 
+                      + iString(a) + ", " + iString(b) + "]", 
+                      _FILEINFO_);
     }
     if (!InsideDomain(a) || !InsideDomain(b)) {
       ReportException(iException::Programmer,"GslIntegral()",
-                  "Invalid arguments. Interval entered [" 
-                  + iString(a) + ", " + iString(b) 
-                  + "] is not contained within domain [" 
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].", 
-                  _FILEINFO_);
+                      "Invalid arguments. Interval entered [" 
+                      + iString(a) + ", " + iString(b) 
+                      + "] is not contained within domain [" 
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]", 
+                      _FILEINFO_);
     }
     if (!GslInterpType(p_itype)) {
       ReportException(iException::Programmer,"GslIntegral()",
-                  "Method only valid for GSL interpolation types, may not be used for " 
-                  + Name() + " interpolation.", _FILEINFO_);
+                     "Method only valid for GSL interpolation types, may not be used for " 
+                     + Name() + " interpolation", 
+                      _FILEINFO_);
     }
     try{
       double value;
-      GslIntegrityCheck(gsl_spline_eval_integ_e(p_interp, a, b, p_acc, &value), 
-                     _FILEINFO_);
+      GslIntegrityCheck(gsl_spline_eval_integ_e(p_interp, a, b, p_acc, &value), _FILEINFO_);
       return (value);
     }
     catch (iException e){ // catch exception from GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::GslIntegral() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "GslIntegral() - Unable to compute the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + "). GSL integrity check failed",
+                                _FILEINFO_);
     }
   }
 
@@ -1537,8 +1559,9 @@ namespace Isis {
    * @param b Upper bound of interval.
    * @return @b double Approximate integral of data set function
    *         from a to b.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             EvaluateForIntegration() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using the trapezoidal rule"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1559,9 +1582,11 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from EvaluateForIntegration()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::TrapezoidalRule() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "TrapezoidalRule() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using the trapeziodal rule",
+                                _FILEINFO_);
     }
   }
 
@@ -1585,8 +1610,9 @@ namespace Isis {
    * @param b Upper bound of interval.
    * @return @b double Approximate integral of data set function
    *         from a to b.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             EvaluateForIntegration() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using Simpson's 3 point rule"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1606,9 +1632,11 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from EvaluateForIntegration()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Simpsons3PointRule() - Caught the following error: ",
-                      _FILEINFO_); 
+      throw iException::Message(e.Type(),
+                                "Simpsons3PointRule() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using Simpson's 3 point rule",
+                                _FILEINFO_); 
     }
   }
 
@@ -1633,8 +1661,9 @@ namespace Isis {
    * @param b Upper bound of interval.
    * @return @b double Approximate integral of data set function
    *         from a to b.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             EvaluateForIntegration() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using Simpson's 4 point rule"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1654,9 +1683,11 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from EvaluateForIntegration()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Simpsons4PointRule() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Simpsons4PointRule() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using Simpson's 4 point rule",
+                                _FILEINFO_); 
     }
   }
 
@@ -1684,8 +1715,9 @@ namespace Isis {
    * @param b Upper bound of interval.
    * @return @b double Approximate integral of data set function
    *         from a to b.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             EvaluateForIntegration() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using Boole's rule"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1705,9 +1737,11 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from EvaluateForIntegration()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::BoolesRule() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "BoolesRule() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using Boole's rule",
+                                _FILEINFO_);
     }
   }
 
@@ -1742,8 +1776,10 @@ namespace Isis {
    * @param n  Number of partitions to use when integrating
    * @return  @b double Integral (refined) approximation of the 
    *          function on the interval (a, b)
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method) 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using the extended trapezoidal
+   *                            rule"
    * @see RombergsMethod()
    * @internal 
    *   @history 1999-08-11 K Teal Thompson - Original version in 
@@ -1793,9 +1829,11 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::RefineExtendedTrap() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "RefineExtendedTrap() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using the extended trapeziodal rule",
+                                _FILEINFO_);
     }
   }
 
@@ -1818,10 +1856,10 @@ namespace Isis {
    * @return  @b double Integral approximation of the function on
    *          the interval (a, b)
    * @throws Isis::iException::Programmer "Failed to converge." 
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             RefineExtendedTrap(), Constructor, Evaluate(), or
-   *             PolynomialNevilleErrorEstimate() method)
-   * @see mathworld.wolfram.com/RombergIntegration.html 
+   * @throws Isis::iException::Programmer "Unable to calculate the 
+   *                            integral on the interval (a,b)
+   *                            using Romberg's method"
+   * @see http://mathworld.wolfram.com/RombergIntegration.html 
    * @see RefineExtendedTrap()
    * @internal 
    *   @history 1999-08-11 K Teal Thompson - Original version in 
@@ -1875,13 +1913,15 @@ namespace Isis {
       }
     }
     catch (iException e){ // catch error from RefineExtendedTrap, Constructor, Evaluate, PolynomialNevilleErrorEstimate
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::RombergsMethod() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "RombergsMethod() - Unable to calculate the integral on the interval (a,b) = ("
+                                + iString(a) + ", " + iString(b) 
+                                + ") using Romberg's method",
+                                _FILEINFO_);
     }
     throw iException::Message(iException::Programmer, 
-                              "NumericalApproximation::RombergsMethod() - Failed to converge in " 
-                              + iString(maxits) + " iterations.", 
+                              "RombergsMethod() - Unable to calculate the integral using RombergsMethod() - Failed to converge in " 
+                              + iString(maxits) + " iterations", 
                               _FILEINFO_);
   }
 
@@ -1926,8 +1966,8 @@ namespace Isis {
    * computing again. 
    * @param itype NumericalApproximation::InterpType enum value to be assigned to this 
    *              object
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType() method) 
+   * @throws Isis::iException::Programmer "Unable to reset 
+   *             interpolation type"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
@@ -1938,9 +1978,9 @@ namespace Isis {
       return;
     }
     catch (iException e){ // catch exception from SetInterpType()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Reset() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Reset() - Unable to reset interpolation type",
+                                _FILEINFO_);
     }
   }
 
@@ -1958,8 +1998,8 @@ namespace Isis {
    *              object
    * @throws Isis::iException::Programmer "Invalid argument. 
    *             Unknown interpolation type"
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             GslFunctor() method)  
+   * @throws Isis::iException::Programmer "Unable to set 
+   *             interpolation type"
    * @see Reset() 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
@@ -1971,15 +2011,15 @@ namespace Isis {
         GslFunctor(itype);
       }
       catch (iException e){ // catch exception from GslFunctor()
-        throw e.Message(e.Type(),
-                        "NumericalApproximation::SetInterpType() - Caught the following error: ",
+        throw iException::Message(e.Type(),
+                        "SetInterpType() - Unable to set interpolation type",
                         _FILEINFO_);
       }
     } else if (itype > 8) { // there are currently 9 interpolation types
       ReportException(iException::Programmer,"SetInterpType()",
-                  "Invalid argument. Unknown interpolation type: " 
-                  + iString(NumericalApproximation::InterpType(itype)), 
-                  _FILEINFO_);
+                      "Invalid argument. Unknown interpolation type: " 
+                      + iString(NumericalApproximation::InterpType(itype)), 
+                      _FILEINFO_);
     }
     // p_x, p_y are kept and p_itype is replaced
     p_itype = itype;
@@ -2009,8 +2049,8 @@ namespace Isis {
    * oriented environment that utilizes the GSL in disjoint classes. 
    * @param itype NumericalApproximation::InterpType enum value to
    *              be assigned to this object
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             SetInterpType() method)  
+   * @throws Isis::iException::Programmer "Unable to initialize 
+   *             NumericalApproximation object"
    * @internal 
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class. Original name initInterp().
@@ -2030,9 +2070,9 @@ namespace Isis {
       SetInterpType(itype);
     }
     catch (iException e){ // catch exception from SetInterpType()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::Init() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "Init() - Unable to initialize NumericalApproximation object",
+                                _FILEINFO_);
     }
     // Turn all GSL error handling off...repeatedly, every time this routine is
     // called.
@@ -2135,9 +2175,9 @@ namespace Isis {
     FunctorConstIter fItr = p_interpFunctors.find(itype);
     if (fItr == p_interpFunctors.end()) {
       ReportException(iException::Programmer,"GslFunctor()",
-                  "Invalid argument. Unable to find GSL interpolator with id = " 
-                  + iString(NumericalApproximation::InterpType(itype)),
-                  _FILEINFO_);
+                      "Invalid argument. Unable to find GSL interpolator with id = " 
+                      + iString(NumericalApproximation::InterpType(itype)),
+                      _FILEINFO_);
     }
     return (fItr->second);
   }
@@ -2165,9 +2205,9 @@ namespace Isis {
                                   throw (iException &) {
     if (gsl_status != GSL_SUCCESS) {
       if (gsl_status != GSL_EDOM) {
-        ReportException(iException::Programmer,"GslIntegrityCheck()",
-                    "GslIntegrityCheck(): GSL error occured: " + string(gsl_strerror(gsl_status)),
-                    src,line);
+        ReportException(iException::Programmer,"GslIntegrityCheck(int,char,int)",
+                        "GslIntegrityCheck(): GSL error occured: " 
+                        + string(gsl_strerror(gsl_status)), src,line);
       }
     }
     return;
@@ -2204,39 +2244,39 @@ namespace Isis {
   void NumericalApproximation::ValidateDataSet() throw (iException &) {
     if ((int) Size() < MinPoints()) {
       ReportException(iException::Programmer,"ValidateDataSet()",
-                  Name() + " interpolation requires a minimum of " 
-                  + iString(MinPoints()) + " data points - currently have " 
-                  + iString((int) Size()) + ".",
-                  _FILEINFO_);
+                      Name() + " interpolation requires a minimum of " 
+                      + iString(MinPoints()) + " data points - currently have " 
+                      + iString((int) Size()),
+                      _FILEINFO_);
     }
     for (unsigned int i = 1; i < Size(); i++) {
       // Check for uniqueness -- this applies to all interpolation types
       if (p_x[i-1] == p_x[i]) {
         ReportException(iException::Programmer, "ValidateDataSet()", 
-                    "Invalid data set, x-values must be unique: \n\t\tp_x["
-                    + iString((int) i-1) + "] = " + iString(p_x[i-1]) 
-                    + " = p_x[" + iString((int) i) + "]", 
-                    _FILEINFO_);
+                        "Invalid data set, x-values must be unique: \n\t\tp_x["
+                        + iString((int) i-1) + "] = " + iString(p_x[i-1]) 
+                        + " = p_x[" + iString((int) i) + "]", 
+                        _FILEINFO_);
       }
       if (p_x[i-1] > p_x[i]) {
         // Verify that data set is in ascending order -- 
         // this does not apply to PolynomialNeville, which appears to get the same results with unsorted data
         if (p_itype != NumericalApproximation::PolynomialNeville) {
           ReportException(iException::Programmer, "ValidateDataSet()", 
-                      "Invalid data set, x-values must be in ascending order for " 
-                      + Name() + " interpolation: \n\t\tx["
-                      + iString((int) i-1) + "] = " + iString(p_x[i-1]) + " > x[" 
-                      + iString((int) i) + "] = " + iString(p_x[i]), 
-                      _FILEINFO_);
+                          "Invalid data set, x-values must be in ascending order for " 
+                          + Name() + " interpolation: \n\t\tx["
+                          + iString((int) i-1) + "] = " + iString(p_x[i-1]) + " > x[" 
+                          + iString((int) i) + "] = " + iString(p_x[i]), 
+                          _FILEINFO_);
         }
       }
     }
     if (p_itype == NumericalApproximation::CubicNatPeriodic) {
       if (p_y[0] != p_y[Size()-1]) {
         ReportException(iException::Programmer, "ValidateDataSet()",
-                    "First and last points of the data set must have the same y-value for "
-                    + Name() + "interpolation to prevent discontinuity at the boundary.",
-                    _FILEINFO_);
+                        "First and last points of the data set must have the same y-value for "
+                        + Name() + "interpolation to prevent discontinuity at the boundary",
+                        _FILEINFO_);
       }
     }
     p_dataValidated = true;
@@ -2252,8 +2292,8 @@ namespace Isis {
    * @param a Value to be verified as valid domain value.
    * @return @b bool  True if passed parameter is within the 
    *         domain.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             DomainMinimum() or DomainMaximum())  
+   * @throws Isis::iException::Programmer "Unable to compute 
+   *             domain boundaries"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */ 
@@ -2263,9 +2303,9 @@ namespace Isis {
       if (a > DomainMaximum()) return false;
     }
     catch (iException e){ // catch exception from DomainMinimum(), DomainMaximum()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::InsideDomain() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "InsideDomain() - Unable to compute domain boundaries",
+                                _FILEINFO_);
     }
     return true;
   }
@@ -2290,8 +2330,9 @@ namespace Isis {
     if (GslInterpType(p_itype)) return ((p_interp) && (p_acc)); 
     else 
       throw iException::Message(iException::Programmer,
-                                "NumericalApproximation::GslComputed() - Method only valid for GSL interpolation types, may not be used for " 
-                                + Name() + " interpolation.", _FILEINFO_);
+                                "GslComputed() - Method only valid for GSL interpolation types, may not be used for " 
+                                + Name() + " interpolation", 
+                                _FILEINFO_);
   }
 
   /**
@@ -2306,8 +2347,8 @@ namespace Isis {
    * points do not need to be interpolated on each evaluation of a
    * point unless the data set changes.
    *
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             ValidateDataSet(), or GslIntegrityCheck() method)
+   * @throws Isis::iException::Programmer "Unable to compute GSL
+   *                            interpolation"
    * @internal
    *   @history 2006-06-14 Kris Becker - Original version created in 
    *            DataInterp class.
@@ -2324,9 +2365,9 @@ namespace Isis {
       return;
     }
     catch (iException e){ // catch exception from ValidateDataSet(), GslIntegrityCheck()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::ComputeGsl() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "ComputeGsl() - Unable to compute GSL interpolation",
+                                _FILEINFO_);
     }
   }
 
@@ -2354,8 +2395,8 @@ namespace Isis {
    * @throws Issis::iException::Programmer "Must use 
    *              SetCubicClampedEndptDeriv() before computing
    *              cubic spline with clamped boundary"
-   * @throws Issis::iException::Programmer "Caught an error" (From 
-   *              ValidateDataSet())
+   * @throws Issis::iException::Programmer "Unable to compute 
+   *              cubic clamped interpolation"
    * @see SetCubicClampedEndptDeriv() 
    * @see EvaluateCubicClamped() 
    * @internal 
@@ -2374,16 +2415,15 @@ namespace Isis {
     if(!p_dataValidated){
       try{ ValidateDataSet();}    
       catch (iException e) { // catch exception from ValidateDataSet()
-        throw e.Message(e.Type(),
-                        "NumericalApproximation::ComputeCubicClamped() - Caught the following error: ",
-                        _FILEINFO_);
+        throw iException::Message(e.Type(),
+                                  "ComputeCubicClamped() - Unable to compute cubic clamped interpolation",
+                                  _FILEINFO_);
       }
     }
     if(!p_clampedEndptsSet) {
-      string msg = "Must set endpoint derivative values after adding data";
-        msg += " in order to compute cubic spline with clamped boundary conditions.";
-      ReportException(iException::Programmer, "ComputeCubicClamped()",msg,
-                  _FILEINFO_);
+      ReportException(iException::Programmer, "ComputeCubicClamped()",
+                      "Must set endpoint derivative values after adding data in order to compute cubic spline with clamped boundary conditions",
+                      _FILEINFO_);
     }
     int n = Size();
     p_clampedSecondDerivs.resize(n);
@@ -2465,7 +2505,7 @@ namespace Isis {
                       "Invalid argument. Value entered, a = " 
                       + iString(a) + ", is outside of domain = [" 
                       + iString(DomainMinimum()) + ", " 
-                      + iString(DomainMaximum()) + "].",
+                      + iString(DomainMaximum()) + "]",
                       _FILEINFO_);
     }
     if (etype == NumericalApproximation::NearestEndpoint) {
@@ -2476,7 +2516,7 @@ namespace Isis {
       if (GslInterpType(p_itype) || p_itype == NumericalApproximation::CubicNeighborhood) {
         ReportException(iException::Programmer,"Evaluate()",
                         "Invalid argument. Cannot extrapolate for type " 
-                        + Name() + ", must choose to throw error or return nearest neighbor.",
+                        + Name() + ", must choose to throw error or return nearest neighbor",
                         _FILEINFO_);
       }
       return a;
@@ -2511,8 +2551,8 @@ namespace Isis {
    * @param a     Domain value from which to interpolate a
    *              corresponding range value.
    * @return @b double Result of interpolated value of f(a).
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Constructor, ComputeGsl() or Evaluate() method)
+   * @throws Isis::iException::Programmer "Unable to evaluate 
+   *             cubic neighborhood interpolation at a"
    * @see Evaluate() 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
@@ -2543,9 +2583,10 @@ namespace Isis {
       return spline.Evaluate(a,NumericalApproximation::NearestEndpoint);
     }
     catch (iException e){ // catch exception from Constructor, ComputeGsl(), Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::EvaluateCubicNeighborhood() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "EvaluateCubicNeighborhood() - Unable to evaluate cubic neighborhood interpolation at a = "
+                                + iString(a),
+                                _FILEINFO_);
     }
   }
 
@@ -2585,8 +2626,9 @@ namespace Isis {
    *              @a ThrowError)  
    * @return @b vector @b \<double\> Result of interpolated value 
    *         of f at each value of a.
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Constructor, ComputeGsl() or Evaluate() method)  
+   * @throws Isis::iException::Programmer "Unable to evaluate 
+   *             cubic neighborhood interpolation at the values in
+   *             the vector, a"
    * @see Evaluate() 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
@@ -2640,9 +2682,9 @@ namespace Isis {
       return result;
     }
     catch (iException e){ // catch exception from Constructor, ComputeGsl(), Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::EvaluateCubicNeighborhood() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "EvaluateCubicNeighborhood() - Unable to evaluate the function at the given vector of points using cubic neighborhood interpolation",
+                                _FILEINFO_);
     }
   }
 
@@ -2736,7 +2778,7 @@ namespace Isis {
    *          corresponding range value
    * @return @b double  Value returned from interpolation or 
    *         extrapolation
-   * @see mathworld.wolfram.com/NevillesAlgorithm.html 
+   * @see http://mathworld.wolfram.com/NevillesAlgorithm.html 
    * @see Evaluate() 
    * @see PolynomialNevilleErrorEstimate() 
    * @internal 
@@ -2808,26 +2850,26 @@ namespace Isis {
    *        interval entered"
    * @throws Isis::iException::Programmer "Invalid arguments. 
    *        Interval entered is not contained within domain"
-   * @throws Isis::iException::Programmer "Caught an error" (from 
-   *             Evaluate() method)    
+   * @throws Isis::iException::Programmer "Unable to evaluate the
+   *             data set for integration"
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
    */
   vector <double> NumericalApproximation::EvaluateForIntegration(const double a, const double b, const unsigned int n) throw (iException &) {
     if (a > b) {
       ReportException(iException::Programmer,"EvaluatedForIntegration()",
-                  "Invalid interval entered: [a,b] = [" 
-                  + iString(a) + ", " + iString(b) + "].", 
-                  _FILEINFO_);
+                      "Invalid interval entered: [a,b] = [" 
+                      + iString(a) + ", " + iString(b) + "]", 
+                      _FILEINFO_);
     }
     if (!InsideDomain(a) || !InsideDomain(b)) {
       ReportException(iException::Programmer,"EvaluateForIntegration()",
-                  "Invalid arguments. Interval entered [" 
-                  + iString(a) + ", " + iString(b) 
-                  + "] is not contained within domain [" 
-                  + iString(DomainMinimum()) + ", " 
-                  + iString(DomainMaximum()) + "].", 
-                  _FILEINFO_);
+                      "Invalid arguments. Interval entered [" 
+                      + iString(a) + ", " + iString(b) 
+                      + "] is not contained within domain [" 
+                      + iString(DomainMinimum()) + ", " 
+                      + iString(DomainMaximum()) + "]", 
+                      _FILEINFO_);
     }
     vector <double> f;
     //need total number of segments to be divisible by n-1 
@@ -2852,9 +2894,9 @@ namespace Isis {
       return f;
     }
     catch (iException e){ // catch exception from Evaluate()
-      throw e.Message(e.Type(),
-                      "NumericalApproximation::EvaluateForIntegration() - Caught the following error: ",
-                      _FILEINFO_);
+      throw iException::Message(e.Type(),
+                                "EvaluateForIntegration() - Unable to evaluate the data set for integration",
+                                _FILEINFO_);
     }
   }// for integration using composite of spline (creates evenly spaced points)
 
@@ -2881,7 +2923,7 @@ namespace Isis {
   void NumericalApproximation::ReportException(iException::errType type, const string &methodName, const string &message,
                                char *filesrc, int lineno) 
                                const throw (iException &) {
-    string msg = "NumericalApproximation::" + methodName + " - " + message;
+    string msg = methodName + " - " + message;
     throw iException::Message(type,msg.c_str(),filesrc,lineno);
     return;
   }

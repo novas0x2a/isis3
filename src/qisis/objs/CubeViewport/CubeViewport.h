@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2008/12/24 17:36:00 $
- * $Revision: 1.15 $
+ * $Date: 2009/05/11 16:41:07 $
+ * $Revision: 1.19 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -30,6 +30,8 @@
 #include <QPixmap>
 #include <QPoint>
 #include <QLine>
+
+#include "ViewportBuffer.h"
 
 #include "Cube.h"
 #include "Stretch.h"
@@ -66,6 +68,12 @@ namespace Qisis {
  *           difference on 32 bit Linux system. Added try/catch
  *           in showCube() to set p_cubeShown = false if this
  *           fails.
+ *  @history 2009-03-09  Steven Lambright - Changed the way we do floating point
+ *           math in autoStretch to work better in order to allow more cubes to
+ *           open.
+ *  @history 2009-03-27 Noah Hilt/Steven Lambright - Removed old rubber band
+ *           methods and variables. Added new ViewportBuffer to read and store
+ *           visible dn values in the viewport.
  */
 
   class Tool;
@@ -91,9 +99,6 @@ namespace Qisis {
 
       //! Is the viewport linked with other viewports
       bool isLinked() const { return p_linked; };
-
-      //! Is the rubberband being drawn
-      bool isRubberBandDrawing() const { return p_rubberBandDrawing; };
 
       //! Is the viewport shown in 3-band color
       bool isColor() const { return p_color; };
@@ -169,19 +174,6 @@ namespace Qisis {
       void setCursorPosition(int x, int y);
       void setCaption();
 
-
-      /**
-       * RubberBandShape
-       */
-      enum RubberBandShape {
-        Rectangle, //!< 0
-        Line//!< 1
-      };
-
-      void enableRubberBand(bool enable, RubberBandShape shape=Rectangle);
-      QRect rubberBandRect();
-      QLine rubberBandLine();
-
       /**
        * Returns the pixmap
        * 
@@ -206,7 +198,6 @@ namespace Qisis {
       void scaleChanged(); //!< Emitted when zoom factor changed just before the repaint event
       void saveChanges(); //!< Emitted when changes should be saved
       void discardChanges(); //!< Emitted when changes should be discarded
-
 
     public slots:
       void setStretchInfo(int band, bool stretchFlag, double min, double max);
@@ -234,7 +225,7 @@ namespace Qisis {
                        const Isis::Stretch &gstr,
                        const Isis::Stretch &bstr);
       void cubeChanged(bool changed);
-      void showCube ();
+      void show();
 
       void scrollBy(int dx, int dy);
 
@@ -249,12 +240,19 @@ namespace Qisis {
       void keyPressEvent(QKeyEvent *e);
 
     private:
+      void doResize();
       void updateScrollBars(int x, int y);
       void computeStretch(Isis::Brick *brick, int band,
                           int ssamp, int esamp,
                           int sline, int eline, int linerate,
                           Isis::Stretch &stretch);
 
+      ViewportBuffer *p_grayBuffer;
+      ViewportBuffer *p_redBuffer;
+      ViewportBuffer *p_greenBuffer;
+      ViewportBuffer *p_blueBuffer;
+
+      bool p_wasResized;
 
       Isis::Cube *p_cube;//!< The cube associated with the viewport.
       Isis::Camera *p_camera;//!< The camera from the cube.
@@ -304,12 +302,6 @@ namespace Qisis {
 
       void paintPixmap();
       void paintPixmap(QRect rect);
-
-      bool p_rubberBandDrawing;  //!< Is rubber band being drawn?
-      bool p_rubberBandEnabled;  //!< Can rubber band be drawn?
-      RubberBandShape p_rubberBandShape;//!< The shape of the rubberband.
-      QRect p_rubberBandRect;//!< The rectangle of the rubberband.
-      QLine p_rubberBandLine;//!< The line of the rubberband.
 
       QString p_whatsThisText;//!< The text for What's this.
       QString p_cubeWhatsThisText;//!< The text for the cube's What's this.

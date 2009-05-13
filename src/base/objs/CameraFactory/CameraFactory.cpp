@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2007/01/30 22:12:22 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/05/12 20:07:31 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -57,6 +57,22 @@ namespace Isis {
       name.UpCase();
       iString group = spacecraft + "/" + name;
       group.Remove(" ");
+
+      PvlGroup &kerns = lab.FindGroup("Kernels",Isis::Pvl::Traverse);
+      // Default version 1 for backwards compatibility (spiceinit'd cubes before camera model versioning)
+      if(!kerns.HasKeyword("CameraVersion")) {
+        kerns.AddKeyword(PvlKeyword("CameraVersion", "1"));
+      }
+
+      int cameraOriginalVersion = (int)kerns["CameraVersion"];
+      int cameraNewestVersion = CameraVersion(lab);
+
+      if(cameraOriginalVersion != cameraNewestVersion) {
+        string msg = "The camera model used to create a camera for this cube is out of date, " \
+                     "please re-run spiceinit on the file or process with an old Isis version " \
+                     "that has the correct camera model.";
+        throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
+      }
   
       // See if we have a camera model plugin
       void *ptr;
@@ -80,6 +96,56 @@ namespace Isis {
     catch (Isis::iException &e) {
       string message = "Unable to initialize camera model from group [Instrument]";
       throw Isis::iException::Message(Isis::iException::Camera,message,_FILEINFO_);
+    }
+  }
+
+  /**
+   * This looks up the current camera model version from the cube labels.
+   * 
+   * @param lab Input Cube Labels
+   * 
+   * @return int Latest Camera Version
+   */
+  int CameraFactory::CameraVersion(Pvl &lab) {
+    // Try to load a plugin file in the current working directory and then
+    // load the system file
+    Pvl cameraPluginGrp;
+    Filename localFile("Camera.plugin");
+    if (localFile.Exists()) cameraPluginGrp.Read(localFile.Expanded());
+    Filename systemFile("$ISISROOT/lib/Camera.plugin");
+    if (systemFile.Exists()) cameraPluginGrp.Read(systemFile.Expanded());
+  
+    try {
+      // First get the spacecraft and instrument and combine them
+      PvlGroup &inst = lab.FindGroup("Instrument", Isis::Pvl::Traverse);
+      iString spacecraft = (string) inst["SpacecraftName"];
+      iString name = (string) inst["InstrumentId"];
+      spacecraft.UpCase();
+      name.UpCase();
+      iString group = spacecraft + "/" + name;
+      group.Remove(" ");
+
+      PvlGroup plugin;
+      try {
+        plugin = cameraPluginGrp.FindGroup(group);
+      }
+      catch (iException &e) {
+        string msg = "Unsupported camera model, unable to find plugin for ";
+        msg += "SpacecraftName [" + spacecraft + "] with InstrumentId [";
+        msg += name + "]";
+        throw Isis::iException::Message(Isis::iException::Camera,msg,_FILEINFO_);
+      }
+      
+      if(!plugin.HasKeyword("Version")) {
+        string msg = "Camera model identified by [" + group + "] does not have a version number";
+        throw Isis::iException::Message(Isis::iException::Camera,msg,_FILEINFO_);
+      }
+
+      return (int)plugin["Version"];
+    }
+    catch (Isis::iException &e) {
+      string msg = "Unable to locate latest camera model version number from group [Instrument]";
+      throw Isis::iException::Message(Isis::iException::Camera,msg,_FILEINFO_);
     }
   }
 } // end namespace isis

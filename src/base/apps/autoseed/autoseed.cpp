@@ -1,6 +1,7 @@
 #include "Isis.h"
 
 #include <map>
+#include <sstream>
 
 #include "geos/util/GEOSException.h"
 
@@ -65,9 +66,6 @@ void IsisMain() {
   // Set up an automatic id generator for the point ids
   ID pointId = ID(ui.GetString("POINTID"));
 
-  // Create a progress object for the overlap generation stage
-  Progress progress;
-
   // Find all the overlaps between the images in the FROMLIST
   // The overlap polygon coordinates are in Lon/Lat order
   ImageOverlapSet overlaps;
@@ -85,21 +83,25 @@ void IsisMain() {
                  (serialNumbers.SerialNumber(sn), new UniversalGroundMap(lab)));
   }
 
-  progress.SetText("Seeding Points");
-  progress.SetMaximumSteps(overlaps.Size());
-  progress.CheckStatus();
-
-  Pvl errors;
+  stringstream errors (stringstream::in | stringstream::out);
+  int errorNum = 0;
 
   // Process each overlap area
   //   Seed measurments into it
   //   Store the measurments in the control network
 
-  vector< geos::geom::Point *> points;
-  if ( ui.WasEntered("CNET") ) {
+  bool previousControlNet = ui.WasEntered("CNET");
 
-    // Set up lon/lat to reduce needed cameras
+  vector< geos::geom::Point *> points;
+  if ( previousControlNet ) {
+
     ControlNet precnet( ui.GetFilename("CNET") );
+
+    Progress progress;
+    progress.SetText("Calculating Provided Control Net");
+    progress.SetMaximumSteps(precnet.Size());
+    progress.CheckStatus();
+    
     for ( int i = 0 ; i < precnet.Size(); i ++ ) {
       ControlPoint cp = precnet[i];
       ControlMeasure cm = cp[0];
@@ -117,9 +119,16 @@ void IsisMain() {
 
       delete cam;
       cam = NULL;
+
+      progress.CheckStatus();
     }
 
   }
+
+  Progress progress;
+  progress.SetText("Seeding Points");
+  progress.SetMaximumSteps(overlaps.Size());
+  progress.CheckStatus();
 
   for (int ov=0; ov<overlaps.Size(); ++ov) {
     if (overlaps[ov]->Size() == 1) {
@@ -129,7 +138,7 @@ void IsisMain() {
     }
 
     // Checks if this overlap was already seeded
-    if ( ui.WasEntered("CNET") ) {
+    if ( previousControlNet ) {
 
       // Grabs the Multipolygon's Envelope for Lat/Lon comparison
       const geos::geom::MultiPolygon *lonLatPoly = overlaps[ov]->Polygon();
@@ -155,14 +164,26 @@ void IsisMain() {
       seed = seeder->Seed(mp, proj);
     }
     catch (iException &e) {
-      PvlGroup error = e.PvlErrors().Group(0);
 
-      PvlKeyword serNums("PolySerialNumbers");
-      for (int serNum = 0; serNum < overlaps[ov]->Size(); serNum++) {
-        serNums += (*overlaps[ov])[serNum];
+      if ( ui.WasEntered("ERRORS") ) {
+
+        if ( errorNum > 0 ) {
+          errors << endl;
+        }
+        errorNum ++;
+
+        errors << e.PvlErrors().Group(0).FindKeyword("Message")[0];
+        for (int serNum = 0; serNum < overlaps[ov]->Size(); serNum++) {
+          if ( serNum == 0 ) {
+            errors << ": ";
+          }
+          else {
+            errors << ", ";
+          }
+          errors << (*overlaps[ov])[serNum];
+        }
       }
-      error += serNums;
-      errors += error;
+
       e.Clear();
       continue;
     }
@@ -230,9 +251,21 @@ void IsisMain() {
   // Write the control network out
   cnet.Write(ui.GetFilename("TO"));
 
-  if ( errors.Groups() != 0 ) {
-    std::cerr << errors << std::endl;
+  //Log the ERRORS file
+  if( ui.WasEntered("ERRORS") ) {
+    string errorname = ui.GetFilename("ERRORS");
+    std::ofstream errorsfile;
+    errorsfile.open( errorname.c_str() );
+    errorsfile << errors.str();
+    errorsfile.close();
   }
 
+  PvlGroup algorithm("Results");
+  algorithm += seedDef.FindKeyword("Name",Pvl::Traverse);
+  algorithm += seedDef.FindKeyword("MinimumThickness",Pvl::Traverse);
+  algorithm += seedDef.FindKeyword("MinimumArea",Pvl::Traverse);
+  algorithm += seedDef.FindKeyword("XSpacing",Pvl::Traverse);
+  algorithm += seedDef.FindKeyword("YSpacing",Pvl::Traverse);
+  Application::Log( algorithm );
 }
 

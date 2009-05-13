@@ -33,6 +33,12 @@
     <change name="Christopher Austin" date="2008-07-03">
       Cleaned the Bundle Adjust memory leak and fixed the app tests.
     </change>
+    <change name="Tracie Sucharski" date="2009-04-08">
+      Added date to the Jigged comment in the spice tables.
+    </change>
+    <change name="Tracie Sucharski" date="2009-04-22">
+      If updating pointing, delete the CameraStatistics table from labels.
+    </change>
   </history>
 
   <groups>

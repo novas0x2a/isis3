@@ -48,8 +48,6 @@ namespace Isis {
       detectorMap->SetDetectorSampleSumming(csum);
       detectorMap->SetDetectorLineSumming(dsum);
       detectorMap->SetStartingDetectorSample(ss);
-      detectorMap->SetXAxisTimeDependent(true);
-      detectorMap->SetXAxisDirection(false);
 
       // Setup focal plane map
       CameraFocalPlaneMap *focalMap =

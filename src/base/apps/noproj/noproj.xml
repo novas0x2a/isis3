@@ -30,18 +30,21 @@
      <change name="Debbie A. Cook" date="2007-06-12">
          Corrected order of SetInputCube calls to set the MATCH cube first if is entered so that the labels on the cube to match are propagated from it and not the from cube
      </change>
-     <change name="Debbie A. Cook" date="2007-08-31">
+        <change name="Debbie A. Cook" date="2007-08-31">
          Turned off propagation of the polygon blobs because the file name contains "/" from
          the serial number and unix does not allow "/".  Also added a remove of the match file
          OriginalInstrument group written by cam2cam before writing the input OriginalInstrument.
          hijitreg reads the input CcdId from this group.
-     </change>
-    <change name="Steven Lambright" date="2008-05-13">
-      Removed references to CubeInfo 
-    </change> 
-    <change name="Debbie A. Cook" date="2009-01-26">
+        </change>
+        <change name="Steven Lambright" date="2008-05-13"> 
+            Removed references to CubeInfo
+        </change>
+        <change name="Debbie A. Cook" date="2009-01-26">
          Completed applying summing mode to ideal camera by applying it to the sample/line translations.
-    </change>
+        </change>
+        <change name="Debbie A. Cook" date="2009-03-25">
+          Fixed setting of et to correspond to first line of parent (Alpha cube)
+        </change>
   </history>
 
   <category>

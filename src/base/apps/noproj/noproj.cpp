@@ -10,6 +10,7 @@
 #include "Application.h"
 #include "CameraFocalPlaneMap.h"
 #include "PvlObject.h"
+#include "AlphaCube.h"
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -142,8 +143,11 @@ void IsisMain(){
     }
   }
 
-  // Get the start time for line 1
-  incam->SetImage(.5,.5);
+  // Get the start time for parent line 1
+  AlphaCube alpha(*(icube->Label()));
+  double sample = alpha.BetaSample(.5);
+  double line = alpha.BetaLine(.5);
+  incam->SetImage(sample,line);
   double et = incam->EphemerisTime();
 
   // Get the output file name and set its attributes
@@ -286,7 +290,7 @@ void IsisMain(){
   dims["Samples"] = detectorSamples;
   dims["Bands"] = numberBands;
   label.Write("match.lbl");
-
+  
 // And run cam2cam to apply the transformation
   string parameters;
   parameters += " FROM= " + ui.GetFilename("FROM");

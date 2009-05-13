@@ -49,11 +49,11 @@ Object = IsisCube
     LeapSecond          = $base/kernels/lsk/naif0008.tls
     TargetAttitudeShape = $base/kernels/pck/pck00008.tpc
     TargetPosition      = $base/kernels/spk/de405.bsp
-    SpacecraftPointing  = $viking2/kernels/ck/vo2_sedr_ck2.bc
+    InstrumentPointing  = $viking2/kernels/ck/vo2_sedr_ck2.bc
     Instrument          = Null
     SpacecraftClock     = ($viking2/kernels/sclk/vo2_fict.tsc, 
                            $viking2/kernels/sclk/vo2_fsc.tsc)
-    SpacecraftPosition  = $viking2/kernels/spk/vo2_rcon.bsp
+    InstrumentPosition  = $viking2/kernels/spk/vo2_rcon.bsp
     Frame               = $viking2/kernels/fk/vo2_v10.tf
     InstrumentAddendum  = $viking2/kernels/iak/vikingAddendum002.ti
     ElevationModel      = Null

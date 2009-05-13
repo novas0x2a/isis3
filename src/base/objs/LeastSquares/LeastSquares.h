@@ -2,8 +2,8 @@
 #define LeastSquares_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/08/04 21:34:33 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/04/08 21:22:55 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -73,6 +73,9 @@ namespace Isis {
  *                            for Solaris.  We could not get SuperLu to build
  *                            under Solaris due to a confilict with Complex
  *                            definitions.
+ *   @history  2009-04-06 Tracie Sucharski, Added return value to SolveSparse,
+ *                            which indicates a column containing all zeroes
+ *                            which causes superlu to bomb.
  *  
  */                                                                       
   class LeastSquares {
@@ -93,7 +96,7 @@ namespace Isis {
                          SPARSE   //!<  Sparse
                        };
 
-      void Solve (Isis::LeastSquares::SolveMethod method = SVD);
+      int Solve (Isis::LeastSquares::SolveMethod method = SVD);
       double Evaluate (const std::vector<double> &input); 
       std::vector<double> Residuals () const;
       double Residual (int i) const;
@@ -123,7 +126,7 @@ namespace Isis {
         void SolveQRD ();
 
 #if !defined(__sun__)
-        void SolveSparse ();
+        int SolveSparse ();
         void FillSparseA (const std::vector<double> &data);
         gmm::row_matrix<gmm::rsvector<double> > p_sparseA;
 #endif

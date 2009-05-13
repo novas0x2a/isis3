@@ -2,8 +2,8 @@
 #define Polygontools_h
 /**
  * @file
- * $Revision: 1.16 $
- * $Date: 2009/01/28 16:30:55 $
+ * $Revision: 1.21 $
+ * $Date: 2009/04/22 19:46:32 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -40,6 +40,17 @@ namespace Isis {
  *  
  * @internal 
  *   @history 2008-08-18 Steven Lambright Updated to work with geos3.0.0
+ *   @history 2009-02-05 Steven Lambright The FixGeometry methods will no longer
+ *            produce geometries containing empty elements (though they might
+ *            still return a completely empty geos figure). For example, a
+ *            multipolygon will not have "EMPTY" polygons inside of it even
+ *            though the multipolygon itself may be just EMPTY. This fixes
+ *            issues with the geos BinaryOp(...) call.
+ *   @history 2009-02-13 Steven Lambright Despike(geos::geom::MultiPolygon *) is
+ *            now much more accepting of invalid polygons inside of the
+ *            MultiPolygon. Often times perfectly good polygons are mixed with
+ *            tiny, scattered, invalid polygons and this should now just throw
+ *            those out and keep what it can.
  * 
  */
 
@@ -98,6 +109,14 @@ namespace Isis {
  *            and made the Difference and Intersect operators work in a more
  *            generic way by calling the new method Operate(...).
  *   @history 2009-01-28 Steven Lambright - Fixed memory leaks
+ *   @history 2009-02-02 Stacy Alley - updated the To180 method
+ *            to handle 360 multi polys that cross the -180/180
+ *            boundry.  We need to return >1 polygon for these
+ *            type of cases.
+ *   @history 2009-01-28 Steven Lambright - Fixed bug in Operate(...) method
+ *            when reducing precision
+ *   @history 2009-04-22 Steven Koechle - Made the ReducePrecision methods on
+ *            Geometries public
  */                                                                       
 
   class PolygonTools {
@@ -138,6 +157,12 @@ namespace Isis {
       static geos::geom::MultiPolygon* MakeMultiPolygon (const geos::geom::Geometry *geom);
       
       static std::string GetGeometryName(const geos::geom::Geometry *geom);
+
+      static geos::geom::Geometry     *ReducePrecision(const geos::geom::Geometry *geom, unsigned int precision);
+      static geos::geom::MultiPolygon *ReducePrecision(const geos::geom::MultiPolygon *poly, unsigned int precision);
+      static geos::geom::Polygon      *ReducePrecision(const geos::geom::Polygon *poly, unsigned int precision);
+      static geos::geom::LinearRing   *ReducePrecision(const geos::geom::LinearRing *ring, unsigned int precision);
+      static geos::geom::Coordinate   *ReducePrecision(const geos::geom::Coordinate *coord, unsigned int precision);
   private:
       geos::geom::MultiPolygon *p_polygons;
 
@@ -151,11 +176,6 @@ namespace Isis {
       static geos::geom::Polygon      *FixGeometry(const geos::geom::Polygon *poly);
       static geos::geom::LinearRing   *FixGeometry(const geos::geom::LinearRing *ring);
 
-      static geos::geom::Geometry     *ReducePrecision(const geos::geom::Geometry *geom, unsigned int precision);
-      static geos::geom::MultiPolygon *ReducePrecision(const geos::geom::MultiPolygon *poly, unsigned int precision);
-      static geos::geom::Polygon      *ReducePrecision(const geos::geom::Polygon *poly, unsigned int precision);
-      static geos::geom::LinearRing   *ReducePrecision(const geos::geom::LinearRing *ring, unsigned int precision);
-      static geos::geom::Coordinate   *ReducePrecision(const geos::geom::Coordinate *coord, unsigned int precision);
       static double ReducePrecision(double num, unsigned int precision);
 
       static geos::geom::Geometry *Operate(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom2, unsigned int opcode);

@@ -2,8 +2,8 @@
 #define DARKCURRENT_H
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/11/06 00:00:38 $
+ * $Revision: 1.2 $
+ * $Date: 2009/01/26 20:26:02 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -42,6 +42,8 @@ namespace Isis {
  * @author 2008-11-05 Jeannie Walldren 
  * @internal 
  *  @history 2008-11-05 Jeannie Walldren - Original Version
+  * @history 2009-01-26 Jeannie Walldren - Changed declarations
+  *            of 2 dimensional vectors
  */                                                                       
   class DarkCurrent {
     public:

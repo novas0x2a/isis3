@@ -230,7 +230,7 @@ namespace Qisis {
       for (int i=0; i<(int)cvpList->size(); i++) {
         std::string sn = Isis::SerialNumber::Compose(*((*cvpList)[i]->cube()));
         if (sn == serialNumber.toStdString()) {
-          g_vpMainWindow->workspace()->setActiveWindow((*cvpList)[i]);
+          g_vpMainWindow->workspace()->setActiveSubWindow((QMdiSubWindow *)(*cvpList)[i]->parentWidget());
           found = true;
           break;
         }

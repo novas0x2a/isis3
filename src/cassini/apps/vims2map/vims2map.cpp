@@ -141,24 +141,24 @@ void IsisMain() {
   }
 
   // If the user decided to enter a ground range then override
-  if (ui.WasEntered("SLON")) {
+  if (ui.WasEntered("MINLON")) {
     userGrp.AddKeyword(PvlKeyword("MinimumLongitude",
-                                      ui.GetDouble("SLON")),Pvl::Replace);
+                                      ui.GetDouble("MINLON")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("ELON")) {
+  if (ui.WasEntered("MAXLON")) {
     userGrp.AddKeyword(PvlKeyword("MaximumLongitude",
-                                      ui.GetDouble("ELON")),Pvl::Replace);
+                                      ui.GetDouble("MAXLON")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("SLAT")) {
+  if (ui.WasEntered("MINLAT")) {
     userGrp.AddKeyword(PvlKeyword("MinimumLatitude",
-                                      ui.GetDouble("SLAT")),Pvl::Replace);
+                                      ui.GetDouble("MINLAT")),Pvl::Replace);
   }
 
-  if (ui.WasEntered("ELAT")) {
+  if (ui.WasEntered("MAXLAT")) {
     userGrp.AddKeyword(PvlKeyword("MaximumLatitude",
-                                      ui.GetDouble("ELAT")),Pvl::Replace);
+                                      ui.GetDouble("MAXLAT")),Pvl::Replace);
   }
 
   // If they want the res. from the mapfile, delete it from the camera so

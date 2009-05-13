@@ -43,6 +43,7 @@ namespace Isis {
      *   @history 2008-08-08 Steven Lambright Made the unit test work with a Sensor
      *            change. Also, now using the new LoadCache(...) method instead of
      *            CreateCache(...).
+     *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute CameraDetectorMap methods
      */
    class LoMediumCamera : public Isis::Camera {
       public:

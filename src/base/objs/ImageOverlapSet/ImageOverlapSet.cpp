@@ -595,6 +595,7 @@ namespace Isis {
     if(overlap1 >= 0 && (unsigned)overlap1 < p_lonLatOverlaps.size()) {
       PvlKeyword serialNumbers("PolySerialNumbers");
       PvlKeyword filename("Filenames");
+      PvlKeyword polygon("Polygon");
 
       for (int i=0; i< p_lonLatOverlaps.at(overlap1)->Size(); i++) {
         serialNumbers += (*p_lonLatOverlaps.at(overlap1))[i];
@@ -603,17 +604,21 @@ namespace Isis {
           filename += snlist->Filename((*p_lonLatOverlaps.at(overlap1))[i]);
         }
       }
+      polygon += p_lonLatOverlaps.at(overlap1)->Polygon()->toString();
 
       err += serialNumbers;
  
       if(filename.Size() != 0) {
         err += filename;
       }
+
+      err += polygon;
     }
 
     if(overlap2 >= 0 && (unsigned)overlap1 < p_lonLatOverlaps.size() && (unsigned)overlap2 < p_lonLatOverlaps.size()) {
       PvlKeyword serialNumbers("PolySerialNumbers");
       PvlKeyword filename("Filenames");
+      PvlKeyword polygon("Polygon");
 
       for (int i=0; i<p_lonLatOverlaps.at(overlap2)->Size(); i++) {
         serialNumbers += (*p_lonLatOverlaps.at(overlap2))[i];
@@ -622,12 +627,15 @@ namespace Isis {
           filename += snlist->Filename((*p_lonLatOverlaps.at(overlap2))[i]);
         }
       }
+      polygon += p_lonLatOverlaps.at(overlap2)->Polygon()->toString();
 
       err += serialNumbers;
 
       if(filename.Size() != 0) {
         err += filename;
       }
+
+      err += polygon;
     }
 
     err += PvlKeyword("Error", e.what());

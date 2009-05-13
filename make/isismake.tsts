@@ -455,7 +455,7 @@ force: ;
 	  $(PRINTF) "$(BLANKS)  " >> casefailed.txt; \
 	  $$msg >> casefailed.txt; \
 	else \
-	  difffile="$(TRUTH)/$@.DIFF"; \
+	  difffile="$(INPUT)/$@.DIFF"; \
 	  if [ ! -f $$difffile ]; \
 	  then \
 	    difffile=''; \

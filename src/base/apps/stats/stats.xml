@@ -165,6 +165,17 @@
           </option>
         </list>
       </parameter>
+      <parameter name="APPEND">
+        <type>boolean</type>
+        <brief>
+          Append Output to File
+        </brief>
+        <description>
+          If this option is selected, the output from the application will be appended to the file. 
+          If it is not selected, any information in the TO file will be overwritten.
+        </description>
+        <default><item>TRUE</item></default>
+      </parameter>
 
     </group>
 

@@ -58,17 +58,31 @@ void IsisMain() {
   // Write the results to the output file if the user specified one
   if (ui.WasEntered("TO")) {
     string outFile = Filename(ui.GetFilename("TO")).Expanded();
+    bool exists = Filename(outFile).Exists();
+    bool append = ui.GetBoolean("APPEND");
     ofstream os;
     bool writeHeader = false;
     //write the results in the requested format.
     if (ui.GetString("FORMAT") == "PVL") {
       Pvl temp;
       temp.AddGroup(results);
-      temp.Write(outFile);
+      if (append) {
+        temp.Append(outFile);
+      }
+      else {
+        temp.Write(outFile);
+      }
     } else {
       //if the format was not PVL, write out a flat file.
-      os.open(outFile.c_str(),ios::out);
+      if (append) {
+        os.open(outFile.c_str(),ios::app);
+        if (!exists) {
+          writeHeader = true;
+        }
+      }else {
+        os.open(outFile.c_str(),ios::out);
         writeHeader = true;
+      } 
     } 
     if(writeHeader) {
       for(int i = 0; i < results.Keywords(); i++) {

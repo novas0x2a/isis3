@@ -7,7 +7,14 @@
 #include "Preference.h"
 
 using namespace std;
-
+/**
+ * UnitTest for Spice class.
+ *
+ * @internal
+ * @history 2009-03-24  Tracie Sucharski - Replace obsolete keywords 
+ *          SpacecraftPosition and SpacecraftPointing with InstrumentPosition
+ *          and InstrumentPointing.
+ */
 int main (int argc, char *argv[]) {
 
   Isis::Preference::Preferences(true);
@@ -34,8 +41,8 @@ int main (int argc, char *argv[]) {
   kern += Isis::PvlKeyword("Instrument",dir+"mocSensorUnitTest.ti");
 //  kern += Isis::PvlKeyword("InstrumentAddendum",dir+"mocAddendum.ti");
   kern += Isis::PvlKeyword("InstrumentAddendum","");
-  kern += Isis::PvlKeyword("SpacecraftPosition",dir+"moc.bsp");
-  kern += Isis::PvlKeyword("SpacecraftPointing",dir+"moc.bc");
+  kern += Isis::PvlKeyword("InstrumentPosition",dir+"moc.bsp");
+  kern += Isis::PvlKeyword("InstrumentPointing",dir+"moc.bc");
   kern += Isis::PvlKeyword("Frame","");
   lab.AddGroup(kern);
 

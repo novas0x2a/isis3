@@ -6,9 +6,18 @@
   </brief>
 
   <description>
-      This program takes a cube with one or more table blobs in it, and,
-      through input provided by the user, outputs a selected table to an ASCII
-      file, with formatting determined by user input.
+      <p>
+          This program takes a cube with one or more table blobs in it, and, through
+          input provided by the user, outputs a selected table to an ASCII file,
+          with formatting determined by user input.
+      </p>
+
+      <p>
+          Helper button has been provided in the GUI mode for the NAME 
+          parameter.  The helper button will sequentially fill in the name of 
+          each table when pressed, clear the field to blank after the last table
+          has been reached, and then wrap back to the beginning.
+      </p>
   </description>
 
   <category>
@@ -31,6 +40,10 @@
       </change>
       <change name="Christopher Austin" date="2008-06-19">
           Fixed string representation and display.
+      </change>
+      <change name="Travis Addair" date="2009-03-03">
+          Changed helper button to only place one table name into the 
+          NAME parameter each time it is pressed
       </change>
   </history>
 
@@ -81,9 +94,10 @@
                   <function>helperButtonGetTableList</function>
                   <brief>Retrieve Table names</brief>
                   <description>
-                     This button will generate a list of names of the tables in
-                     the input cube and put them in the appropriate field in
-                     the GUI.
+                     This button will, each time it is pressed, generate the 
+                     name of a table in the input cube and put it in the 
+                     appropriate field in the GUI, clearing the field to blank 
+                     and wrapping back to the top after the last table is hit.  
                   </description>
                   <icon>$ISIS3DATA/base/icons/exec.png</icon>
                </helper>

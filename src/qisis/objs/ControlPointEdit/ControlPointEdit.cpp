@@ -4,6 +4,8 @@
 #include <QMessageBox>
 #include <QString>
 
+#include "System.h"
+#include "Application.h"
 #include "AutoRegFactory.h"
 #include "Filename.h"
 #include "Pvl.h"
@@ -356,6 +358,7 @@ namespace Qisis {
     autoRegLayout->addWidget(p_goodFit);
     p_autoRegExtension->setLayout(autoRegLayout);
     p_autoRegShown = false;
+    p_autoRegAttempted = false;
     gridLayout->addWidget(p_autoRegExtension,row++,1);
 
 
@@ -445,7 +448,7 @@ namespace Qisis {
    *                           universalGroundMap.
    */
   void ControlPointEdit::setLeftMeasure(Isis::ControlMeasure *leftMeasure,
-                                 Isis::Cube *leftCube) {
+                                 Isis::Cube *leftCube,std::string pointId) {
 
     //  Make sure registration is turned off
     if (p_autoRegShown) {
@@ -456,6 +459,7 @@ namespace Qisis {
     }
 
     p_leftMeasure = leftMeasure;
+    p_pointId = pointId;
 
     //  get new ground map
     if (p_leftGroundMap != 0) delete p_leftGroundMap;
@@ -488,7 +492,7 @@ namespace Qisis {
    *  
    */
   void ControlPointEdit::setRightMeasure(Isis::ControlMeasure *rightMeasure,
-                                  Isis::Cube *rightCube) {
+                                  Isis::Cube *rightCube,std::string pointId) {
 
     //  Make sure registration is turned off
     if (p_autoRegShown) {
@@ -497,8 +501,10 @@ namespace Qisis {
       p_autoRegExtension->hide();
       p_autoReg->setText("Register");
     }
+    p_autoRegAttempted = false;
 
     p_rightMeasure = rightMeasure;
+    p_pointId = pointId;
 
     //  get new ground map
     if (p_rightGroundMap != 0) delete p_rightGroundMap;
@@ -608,6 +614,8 @@ namespace Qisis {
    * @internal 
    *   @history 2008-15-2008  Jeannie Walldren - Throw and catch
    *            error before creating QMessageBox
+   *   @history 2009-03-23  Tracie Sucharski - Added private p_autoRegAttempted
+   *                             for the SaveChips method.
    */
   
   void ControlPointEdit::registerPoint() {
@@ -623,6 +631,7 @@ namespace Qisis {
       return;
       
     }
+    p_autoRegAttempted = true;
 
     p_autoRegFact->PatternChip()->TackCube(
                  p_leftMeasure->Sample(),p_leftMeasure->Line());
@@ -639,9 +648,11 @@ namespace Qisis {
       catch (Isis::iException &e){
         QString msg = e.Errors().c_str();
         QMessageBox::information((QWidget *)parent(),"Error",msg);
+        e.Clear();
         return;
       }
     }
+
 
     //  Load chip with new registered point
     emit updateRightView(p_autoRegFact->CubeSample(),p_autoRegFact->CubeLine());
@@ -966,6 +977,41 @@ namespace Qisis {
     }
   }
 
+
+  /**
+   * Slot to save registration chips to files and fire off qview.
+   *  
+   * @author 2009-03-18  Tracie Sucharski 
+   * @internal 
+   * @history 2009-03-23 Tracie Sucharski - Use p_autoRegAttempted to see 
+   *                        if chips exist. 
+   */
+  void ControlPointEdit::saveChips () {
+
+//    if (!p_autoRegShown) {
+    if (!p_autoRegAttempted) {
+      QString message = "Point must be Registered before chips can be saved.";
+      QMessageBox::warning((QWidget *)parent(),"Warning",message);
+      return;
+    }
+
+    //  Save chips - pattern, search and fit
+    std::string baseFile = p_pointId + "_" +
+                           Isis::iString((int)(p_leftMeasure->Sample())) + "_" +
+                           Isis::iString((int)(p_leftMeasure->Line())) + "_" +
+                           Isis::iString((int)(p_rightMeasure->Sample())) + "_" +
+                           Isis::iString((int)(p_rightMeasure->Line())) + "_";
+    std::string fname = baseFile + "Search.cub";
+    std::string command = "$ISISROOT/bin/qview " + fname;
+    p_autoRegFact->SearchChip()->Write(fname);
+    fname = baseFile + "Pattern.cub";
+    command += " " + fname;
+    p_autoRegFact->PatternChip()->Write(fname);
+    fname = baseFile + "Fit.cub";
+    command += " " + fname + "&";
+    p_autoRegFact->FitChip()->Write(fname);
+    Isis::System(command);
+  }
 
 #if 0
   void ControlPointEdit::setInterestOp() {

@@ -3,6 +3,7 @@
 #include "BasisFunction.h"
 #include "LeastSquares.h"
 #include "CameraDetectorMap.h"
+#include "CameraDistortionMap.h"
 #include "ControlPoint.h"
 #include "SpicePosition.h"
 #include <iomanip>
@@ -317,14 +318,6 @@ namespace Isis {
   void BundleAdjust::SetSolveCmatrix(CmatrixSolveType type) {
     p_cmatrixSolveType = type;
 
-    // Make sure the degree of the polynomial the user selected for
-    // the camera angles fit is sufficient for the selected CAMSOLVE
-    if (type > p_solveCamDegree+1 ) {
-      std::string msg = "Selected SolveCameraDegree " + iString(p_solveCamDegree)
-        + " is not sufficient for the CAMSOLVE";
-        throw iException::Message(iException::User,msg,_FILEINFO_);
-    }
-
     switch (type) {
     case BundleAdjust::AnglesOnly:
       p_numberCameraCoefSolved = 1;
@@ -341,6 +334,14 @@ namespace Isis {
     default:
       p_numberCameraCoefSolved = 0;
       break;
+    }
+
+    // Make sure the degree of the polynomial the user selected for
+    // the camera angles fit is sufficient for the selected CAMSOLVE
+    if (p_numberCameraCoefSolved > p_solveCamDegree+1 ) {
+      std::string msg = "Selected SolveCameraDegree " + iString(p_solveCamDegree)
+        + " is not sufficient for the CAMSOLVE";
+        throw iException::Message(iException::User,msg,_FILEINFO_);
     }
     ComputeNumberPartials();
   }
@@ -497,7 +498,7 @@ namespace Isis {
       LeastSquares *lsq;
       if (p_solutionMethod == "SPARSE") {
         lsq = new LeastSquares(basis,Isis::LeastSquares::SPARSE,
-                               p_cnet->NumMeasures()*2,BasisColumns());
+                               p_cnet->NumValidMeasures()*2,BasisColumns());
       }
       else {
         lsq = new LeastSquares(basis);
@@ -517,7 +518,22 @@ namespace Isis {
           lsq->Solve(Isis::LeastSquares::QRD);
         }
         else {
-          lsq->Solve(Isis::LeastSquares::SPARSE);
+          int zeroColumn = lsq->Solve(Isis::LeastSquares::SPARSE);
+          if (zeroColumn != 0) {
+            std::string msg;
+            int imageColumns = Observations() * p_numImagePartials;
+            if (zeroColumn <= imageColumns) {
+              msg = "Solution matrix has a column of zeros which probably ";
+              msg += "indicates an image with no points.  Running the program, ";
+              msg += "cnetcheck, before jigsaw should catch these problems.";
+            }
+            else {
+              msg = "Solution matrix has a column of zeros which probably ";
+              msg += "indicates a point with no measures.  Running the program, ";
+              msg += "cnetcheck, before jigsaw should catch these problems.";
+            }
+            throw Isis::iException::Message(iException::Math,msg,_FILEINFO_);
+          }
         }
       }
       catch (iException &e) {
@@ -565,28 +581,53 @@ namespace Isis {
       }
 
       Camera *cam = point[i].Camera();
-      double fl = cam->FocalLength();
-      if (!cam->SetUniversalGround(point.UniversalLatitude(),
-                                   point.UniversalLongitude(),
-                                   point.Radius())) {
-         std::string msg = "Point off image (lat/lon = ";
-         msg += "Isis::iString(point.UniversalLatitude()/";
-         msg += "Isis::iString(point.UniversalLongitude() - point may be too ";
-         msg += "close to the edge on point Isis::iString(pointIndex) and ";
-         msg += "Measure Isis::iString(i)";
-         throw iException::Message(iException::User,msg,_FILEINFO_);
-         exit(0);
-      }
+      // Get focal length with direction
+      double fl = cam->DistortionMap()->UndistortedFocalPlaneZ();
+      // Map the control point lat/lon/radius into the camera through the Spice
+      // at the measured point to correctly compute the partials for line scan
+      // cameras.  The camera SetUniversalGround method computes a time based
+      // on the lat/lon/radius and uses the Spice for that time instead of the
+      // measured point's time.
+      cam->SetImage(point[i].Sample(),point[i].Line());  // Set the Spice to the measured point
+
+      // Compute the look vector in body-fixed coordinates
+      double pB[3]; // Point on surface
+      latrec_c( point.Radius() / 1000.0,
+               (point.UniversalLongitude() * Isis::PI / 180.0),
+               (point.UniversalLatitude() * Isis::PI / 180.0),
+               pB);
+
+      // May need to do back of planet test here TODO 
+      std::vector<double> lookB(3);
+      SpiceRotation *bodyRot = cam->BodyRotation();
+      std::vector<double> sB(3); // Spacecraft vector in bodyj-fixed coordinates
+      sB = bodyRot->ReferenceVector(cam->InstrumentPosition()->Coordinate());
+      for (int ic=0; ic<3; ic++)   lookB[ic] = pB[ic] - sB[ic];
+      
+//      if (!cam->SetUniversalGround(point.UniversalLatitude(),
+//                                   point.UniversalLongitude(),
+//                                   point.Radius())) {
+//         std::string msg = "Point off image (lat/lon = ";
+//         msg += "Isis::iString(point.UniversalLatitude()/";
+//         msg += "Isis::iString(point.UniversalLongitude() - point may be too ";
+//         msg += "close to the edge on point Isis::iString(pointIndex) and ";
+//         msg += "Measure Isis::iString(i)";
+//         throw iException::Message(iException::User,msg,_FILEINFO_);
+//         exit(0);
+//      }
 
       // Create the known array to put in the least squares
       std::vector<double> xKnowns(BasisColumns(),0.0);
       std::vector<double> yKnowns(BasisColumns(),0.0);
 
-      // Get the look vector and the instrument rotation
+      // Get the look vector in the camera frame and the instrument rotation
       std::vector<double> lookC(3);
-      cam->LookDirection(((double *)&lookC[0]));  // From computed position
+      std::vector<double> lookJ(3);
+      lookJ = cam->BodyRotation()->J2000Vector( lookB );
       SpiceRotation *instRot = cam->InstrumentRotation();
-      std::vector<double> lookJ = instRot->J2000Vector(lookC);
+      lookC = instRot->ReferenceVector( lookJ);
+
+//      cam->LookDirection(((double *)&lookC[0]));  // From computed position
 
       // Determine the image index for nonheld images
       bool useImage=false;
@@ -707,8 +748,8 @@ namespace Isis {
         }
       }
       if ((!point.Held()) && (point.Type() != ControlPoint::Ground)) {
-        std::vector<double> d_lookB_WRT_LAT = PointPartial(cam,WRT_Latitude);
-        std::vector<double> d_lookB_WRT_LON = PointPartial(cam,WRT_Longitude);
+        std::vector<double> d_lookB_WRT_LAT = PointPartial(point,WRT_Latitude);
+        std::vector<double> d_lookB_WRT_LON = PointPartial(point,WRT_Longitude);
 
         SpiceRotation *bodyRot = cam->BodyRotation();
         std::vector<double> d_lookJ_WRT_LAT = bodyRot->J2000Vector(d_lookB_WRT_LAT);
@@ -726,7 +767,7 @@ namespace Isis {
         index++;
 
         if (p_solveRadii) {
-          std::vector<double> d_lookB_WRT_RAD = PointPartial(cam,WRT_Radius);
+          std::vector<double> d_lookB_WRT_RAD = PointPartial(point,WRT_Radius);
           std::vector<double> d_lookJ_WRT_RAD = bodyRot->J2000Vector(d_lookB_WRT_RAD);
           std::vector<double> d_lookC_WRT_RAD = instRot->ReferenceVector(d_lookJ_WRT_RAD);
           xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_RAD,0);
@@ -736,14 +777,16 @@ namespace Isis {
       }
 
       double mudx = point[i].FocalPlaneMeasuredX();
-      double cudx = point[i].FocalPlaneComputedX();
+//      double cudx = point[i].FocalPlaneComputedX();
+      double cudx = lookC[0] * cam->FocalLength() / lookC[2];
       double mudy = point[i].FocalPlaneMeasuredY();
-      double cudy = point[i].FocalPlaneComputedY();
+//      double cudy = point[i].FocalPlaneComputedY();
+      double cudy = lookC[1] * cam->FocalLength() / lookC[2];
 
       double deltax = mudx - cudx;
       double deltay = mudy - cudy;
 
-      if (cam->DetectorMap()->LineRate() != 0.0) {
+/*      if (cam->DetectorMap()->LineRate() != 0.0) {
         if ( cam->DetectorMap()->IsYAxisTimeDependent() ) {
           deltay = point[i].MeasuredEphemerisTime() - point[i].ComputedEphemerisTime();
           deltay = deltay / cam->DetectorMap()->LineRate();    // Convert to pixels
@@ -756,8 +799,8 @@ namespace Isis {
         }
       }
 
-      deltay *= cam->DetectorMap()->YAxisDirection();
-      deltax *= cam->DetectorMap()->XAxisDirection();
+//      deltay *= cam->DetectorMap()->YAxisDirection();
+//      deltax *= cam->DetectorMap()->XAxisDirection();*/
 
       lsq.AddKnown(xKnowns,deltax);
       lsq.AddKnown(yKnowns,deltay);
@@ -956,14 +999,14 @@ namespace Isis {
     }
   }
 
-  std::vector<double> BundleAdjust::PointPartial(Isis::Camera *cam, PartialDerivative wrt) {
-    double lat = cam->UniversalLatitude() * Isis::PI / 180.0;
-    double lon = cam->UniversalLongitude() * Isis::PI / 180.0;
+  std::vector<double> BundleAdjust::PointPartial(Isis::ControlPoint &point, PartialDerivative wrt) {
+    double lat = point.UniversalLatitude() * Isis::PI / 180.0;
+    double lon = point.UniversalLongitude() * Isis::PI / 180.0;
     double sinLon = sin(lon);
     double cosLon = cos(lon);
     double sinLat = sin(lat);
     double cosLat = cos(lat);
-    double radius = cam->LocalRadius() / 1000.0;
+    double radius = point.Radius() / 1000.0;
 
     std::vector<double> v(3);
     if (wrt == WRT_Latitude) {

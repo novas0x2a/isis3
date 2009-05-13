@@ -21,8 +21,6 @@ void IsisMain() {
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
 
-  int pixInc = ui.GetInteger("PIXINCREMENT");
-
   Progress prog;
   prog.SetMaximumSteps(1);
   prog.CheckStatus ();
@@ -31,7 +29,7 @@ void IsisMain() {
   cube.BlobDelete("Polygon",sn);
 
   ImagePolygon poly;
-  poly.Create(cube,pixInc);
+  poly.Create(cube);
   cube.Write(poly);
 
   Process p;

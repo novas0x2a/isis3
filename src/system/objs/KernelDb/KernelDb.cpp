@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/04/16 23:16:20 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/05/12 20:11:20 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -22,6 +22,7 @@
  
 #include <iomanip>
 #include "iException.h"
+#include "CameraFactory.h"
 #include "Preference.h"
 #include "Filename.h"
 #include "iString.h"
@@ -132,6 +133,7 @@ Kernel KernelDb::FindLast(const std::string &entry, Isis::Pvl &lab) {
 
 std::priority_queue< Kernel > KernelDb::FindAll(const std::string &entry, Isis::Pvl &lab) {
   std::priority_queue< Kernel > filesFound;
+  int cameraVersion = CameraFactory::CameraVersion(lab);
   Isis::PvlObject &cube = lab.FindObject("IsisCube");
 
   // Make sure the entry has been loaded into memory
@@ -223,6 +225,44 @@ std::priority_queue< Kernel > KernelDb::FindAll(const std::string &entry, Isis::
           }
         } catch (Isis::iException &e) {
           // This error is thrown if the group or keyword do not exist in 'lab'
+          matchKeywords = false;
+        }
+      }
+      else if(key.IsNamed("CameraVersion")) {
+        try {
+          for(int camVersionKeyIndex = 0; camVersionKeyIndex < key.Size(); camVersionKeyIndex++) {
+            bool versionMatch = false;
+            iString val = (std::string)key[camVersionKeyIndex];
+            iString commaTok;
+  
+            while ((commaTok = val.Token(",")).length() > 0) {
+              if (commaTok.find('-') != std::string::npos) {
+                iString dashTok;
+                int start = commaTok.Token("-").ToInteger();
+                int end = commaTok.Token("-").ToInteger();
+                int direction;
+                direction = (start<=end) ? 1 : -1;
+                // Save the entire range of bands
+                for (int version = start; version != end+direction; version+=direction) {
+                  if(version == cameraVersion) {
+                    versionMatch = true;
+                  }
+                }
+              }
+              // This token is a single band specification
+              else {
+                if(commaTok.ToInteger() == cameraVersion) {
+                  versionMatch = true;
+                }
+              }
+            }
+  
+            if(!versionMatch)  {
+              matchKeywords = false;
+            }
+
+          }
+        } catch (Isis::iException &e) {
           matchKeywords = false;
         }
       }

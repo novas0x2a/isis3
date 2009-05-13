@@ -2,8 +2,8 @@
 #define Stretch_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/11/13 15:21:04 $
+ * $Revision: 1.5 $
+ * $Date: 2009/04/29 17:00:34 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -116,7 +116,8 @@ namespace Isis {
 
       //! Clears the stretch pairs
       void ClearPairs() { p_pairs = 0; p_input.clear(); p_output.clear(); };
-  
+
+      void CopyPairs(const Stretch &other);
   };
 };
   

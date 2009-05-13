@@ -21,7 +21,7 @@ namespace Qisis {
    * @param title 
    * @param parent 
    */
-  PlotWindow::PlotWindow (QString title,QWidget *parent) : Qisis::MainWindow(title, 0) {
+  PlotWindow::PlotWindow (QString title,QWidget *parent) : Qisis::MainWindow(title, parent) {
     p_selected = -1;
     p_toolBar = NULL;
     p_menubar = NULL;
@@ -51,6 +51,8 @@ namespace Qisis {
     p_plot->setAxisMaxMinor(QwtPlot::yLeft, 5);
     p_plot->setAxisMaxMajor(QwtPlot::xBottom, 30);
     p_plot->setAxisMaxMinor(QwtPlot::xBottom, 5);
+    p_plot->setAxisLabelRotation(QwtPlot::xBottom, 45);
+    p_plot->setAxisLabelAlignment(QwtPlot::xBottom, Qt::AlignRight);
    
     /*Plot Legend*/
     p_legend = new QwtLegend();
@@ -183,7 +185,7 @@ namespace Qisis {
   void PlotWindow::add(PlotCurve *pc){ 
     p_plotCurves.push_back(pc);
     pc->attach(p_plot);
-    if(p_tableWindow!= NULL && p_tableWindow->tableWindow()->isVisible()) fillTable();  
+    fillTable();  
     pc->attachSymbols(p_plot);
     //check to see if the curve is visible.
     if(pc->isVisible()) {
@@ -315,13 +317,19 @@ namespace Qisis {
                                  "./",
                                  QString("Images (*.png *.jpg *.tif)"));
     if (output.isEmpty()) return;
+     //Make sure the filename is valid
+    if (!output.isEmpty()) {
+      if(!output.endsWith(".png") && !output.endsWith(".jpg") && !output.endsWith(".tif")) {
+        output = output + ".png";
+      } 
+    }
 
     QString format = QFileInfo(output).suffix();  
     pixmap = QPixmap::grabWidget(p_plot);
     
     std::string formatString = format.toStdString();
     if (!pixmap.save(output,formatString.c_str())) {
-      QMessageBox::information((QWidget *)parent(),"Error","Unable to save"+output);
+      QMessageBox::information((QWidget *)parent(),"Error","Unable to save "+ output);
       return;
     }
   }
@@ -1380,13 +1388,16 @@ namespace Qisis {
    */ 
   void PlotWindow::fillTable(){
     if (p_tableWindow == NULL) return;
+    p_tableWindow->listWidget()->clear();
+    p_tableWindow->table()->clear();
+    p_tableWindow->table()->setRowCount(0);
+    p_tableWindow->table()->setColumnCount(0);
 
     /*resize rows if needed*/
     unsigned int rows = p_tableWindow->table()->rowCount();
 
     if (rows != p_plotCurves[p_plotCurves.size()-1]->data().size()) {
       int diff = p_plotCurves[p_plotCurves.size()-1]->data().size() - rows;
-
       for (int i = 0; i <= abs(diff); i++) {
 
         if (diff > 0) {
@@ -1402,10 +1413,8 @@ namespace Qisis {
 
     //write X axis
     if (p_tableWindow->table()->columnCount() == 0) {
-
       p_tableWindow->addToTable (true,p_plot->axisTitle(QwtPlot::xBottom).text()
                                  ,p_plot->axisTitle(QwtPlot::xBottom).text(),0);
-
       p_header = p_tableWindow->table()->horizontalHeaderItem(0)->text().toStdString();
 
     } else if (p_header.compare(p_axisTitle)) {
@@ -1597,7 +1606,7 @@ namespace Qisis {
           p_hideShowCurve->setEnabled(true);
         }
 
-        if (p_selected > 0) {
+        if (p_selected > 0 && p_selected < p_plotCurves.size()) {
           if (p_plotCurves[p_selected]->isVisible()) p_hideShowCurve->setText("Hide Curve");
           if (!p_plotCurves[p_selected]->isVisible())p_hideShowCurve->setText("Show Curve");
         }

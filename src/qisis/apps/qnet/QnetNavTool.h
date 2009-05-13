@@ -3,7 +3,7 @@
 
 /**
  * @file
- * $Date: 2009/01/08 19:27:16 $ $Revision: 1.16 $
+ * $Date: 2009/01/26 20:02:16 $ $Revision: 1.17 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -82,6 +82,15 @@ namespace Qisis {
    *                           rather than start with the entire
    *                           points/image list each time it is
    *                           called.
+   *   @history  2009-01-26 Jeannie Walldren - The following
+   *                           changes were made in order to
+   *                           create a Cube Names filter on the
+   *                           Points list: Added CubeNames to
+   *                           PointFilterIndex enumerated values.
+   *                           Added resetCubeList() slot and
+   *                           serialListModified() signal.
+   *                           Modified filter() and
+   *                           createFilters().
    */
   class QnetNavTool : public Tool {
     Q_OBJECT
@@ -101,7 +110,8 @@ namespace Qisis {
         LatLonRange,
         Distance,
         MeasureType,
-        GoodnessOfFit
+        GoodnessOfFit,
+        CubeName
       };
       enum CubeFilterIndex {
         Name,
@@ -125,6 +135,7 @@ namespace Qisis {
       void enableButtons();
       void ignorePoints();
       void deletePoints();
+      void resetCubeList();
 
     signals:
       void loadPoint (Isis::ControlPoint *);
@@ -133,6 +144,7 @@ namespace Qisis {
       void ignoredPoints();
       void deletedPoints();
       void netChanged();
+      void serialListModified();
 
     private:
       void createNavigationDialog(QWidget *parent);

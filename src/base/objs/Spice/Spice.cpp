@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.14 $
- * $Date: 2008/11/28 21:03:20 $
+ * $Revision: 1.15 $
+ * $Date: 2009/03/23 19:14:21 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -47,6 +47,7 @@ namespace Isis {
   *                                      clock kernels (for Viking)
   * @history 2006-02-21 Jeff Anderson/Debbie Cook - Refactor to use SpicePosition
   *                                                 and SpiceRotation classes
+  * @history 2009-03-18 Tracie Sucharski - Remove code for old keywords. 
   */
 
   // TODO: DOCUMENT EVERYTHING
@@ -82,20 +83,8 @@ namespace Isis {
 //  missions (e.g., MESSENGER) may augment the s/c SPK with new planet 
 //  ephemerides. (2008-02-27 (KJB))
     Load(kernels["TargetPosition"]);
-
-    if (kernels.HasKeyword("SpacecraftPosition")) {
-      Load(kernels["SpacecraftPosition"]);
-    }
-    else {
-      Load(kernels["InstrumentPosition"]);
-    }
-
-    if (kernels.HasKeyword("SpacecraftPointing")) {
-      Load(kernels["SpacecraftPointing"]);
-    }
-    else {
-      Load(kernels["InstrumentPointing"]);
-    }
+    Load(kernels["InstrumentPosition"]);
+    Load(kernels["InstrumentPointing"]);
 
     if (kernels.HasKeyword("Frame")) {
       Load(kernels["Frame"]);
@@ -193,43 +182,42 @@ namespace Isis {
     // Check to see if we have nadir pointing that needs to be computed &
     // See if we have table blobs to load
     if (iString((std::string)kernels["TargetPosition"]).UpCase() == "TABLE") {
-      if (kernels["TargetPosition"].Size() != 0) {
-        Table t("SunPosition",lab.Filename());
-        p_sunPosition->LoadCache(t);
-      
-        Table t2("BodyRotation",lab.Filename());
-        p_bodyRotation->LoadCache(t2);
-        if (t2.Label().HasKeyword("SolarLongitude")) {
-          p_solarLongitude = t2.Label()["SolarLongitude"];
-        }
-        else {
-          SolarLongitude();
-        }
+      Table t("SunPosition",lab.Filename());
+      p_sunPosition->LoadCache(t);
+
+      Table t2("BodyRotation",lab.Filename());
+      p_bodyRotation->LoadCache(t2);
+      if (t2.Label().HasKeyword("SolarLongitude")) {
+        p_solarLongitude = t2.Label()["SolarLongitude"];
+      }
+      else {
+        SolarLongitude();
       }
     }
 
+    //  We can't assume InstrumentPointing & InstrumentPosition exist, old
+    //  files may be around with the old keywords, SpacecraftPointing &
+    //  SpacecraftPosition.  The old keywords were in existance before the
+    //  Table option, so we don't need to check for Table under the old
+    //  keywords.
 
-    if (kernels.HasKeyword("InstrumentPointing")) {
-      for(int elem = 0; elem < kernels["InstrumentPointing"].Size(); elem ++) {
-        if (iString((std::string)kernels["InstrumentPointing"][elem]).UpCase() == "NADIR") {
-          delete p_instrumentRotation;
-          p_instrumentRotation = new SpiceRotation(p_ikCode,p_spkBodyCode);
-        }
-        else if (iString((std::string)kernels["InstrumentPointing"][elem]).UpCase() == "TABLE") {
-          Table t("InstrumentPointing",lab.Filename());
-          p_instrumentRotation->LoadCache(t);
-        }
-      }
+    //  2009-03-18  Tracie Sucharski - Removed test for old keywords, any files
+    // with the old keywords should be re-run through spiceinit.
+    if (iString((std::string)kernels["InstrumentPointing"]).UpCase() == "NADIR") {
+      delete p_instrumentRotation;
+      p_instrumentRotation = new SpiceRotation(p_ikCode,p_spkBodyCode);
+    }
+    else if (iString((std::string)kernels["InstrumentPointing"]).UpCase() == "TABLE") {
+      Table t("InstrumentPointing",lab.Filename());
+      p_instrumentRotation->LoadCache(t);
     }
 
-    if (kernels.HasKeyword("InstrumentPosition")) {
-      if (kernels["InstrumentPosition"].Size() != 0) {
-        if (iString((std::string)kernels["InstrumentPosition"]).UpCase() == "TABLE") {
-          Table t("InstrumentPosition",lab.Filename());
-          p_instrumentPosition->LoadCache(t);
-        }
-      }
+    if (iString((std::string)kernels["InstrumentPosition"]).UpCase() == "TABLE") {
+      Table t("InstrumentPosition",lab.Filename());
+      p_instrumentPosition->LoadCache(t);
     }
+
+
 
     NaifStatus::CheckErrors();
   }
@@ -241,9 +229,9 @@ namespace Isis {
 
     for (int i=0; i<key.Size(); i++) {
       if (key[i] == "") continue;
-      if (iString(key[i]).UpCase() == "NULL") continue;
-      if (iString(key[i]).UpCase() == "NADIR") continue;
-      if (iString(key[i]).UpCase() == "TABLE") continue;
+      if (iString(key[i]).UpCase() == "NULL") break;
+      if (iString(key[i]).UpCase() == "NADIR") break;
+      if (iString(key[i]).UpCase() == "TABLE") break;
       Isis::Filename file(key[i]);
       if (!file.exists()) {
         string msg = "Spice file does not exist [" + file.Expanded() + "]";

@@ -31,7 +31,10 @@
     </change>
     <change name="Chris Austin" date="2007-12-19">
       Changed "static char label[256]" to "static char label[1024]", which keeps 
-      this appTest from failing on Gala.
+      this program working on more systems.
+    </change>
+    <change name="Steven Lambright" date="2009-02-23">
+      Removed some unnecessary code that caused problems on some 64bit systems.
     </change>
   </history>
 

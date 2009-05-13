@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/09/30 22:28:38 $
+ * $Revision: 1.7 $
+ * $Date: 2009/03/07 17:39:57 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -58,6 +58,8 @@ namespace Isis {
    *            radius.
    *   @history 2008-09-12 Tracie Sucharski, Add method to return true/false
    *                   for existence of Serial Number.
+   *   @history 2009-03-07 Debbie A. Cook Fixed ComputeErrors method to set focal plane coordinates
+   *                   without changing time and improved error messages
    *
    */
   class ControlPoint {

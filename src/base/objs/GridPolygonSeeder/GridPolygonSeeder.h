@@ -2,8 +2,8 @@
 #define GridPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2008/12/06 00:39:34 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2009/01/30 16:43:57 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -50,6 +50,9 @@ namespace Isis {
    * @history 2008-11-25 Steven Lambright - Added error checking 
    * @history 2008-12-05 Christopher Austin - capped the subgrid to 127x127 to 
    *          prevent segfaults on too high a precision
+   * @history 2000-01-30 Steven Lambright - Fixed an issue with not seeding entire
+   *          polygons when a large portion of the polygon was on the right side
+   *          of the envelope.
    */
   class GridPolygonSeeder : public PolygonSeeder {
     public:
