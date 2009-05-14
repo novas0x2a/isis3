@@ -168,6 +168,9 @@
       IsWideAngleRed() to NarrowAngle(), WideAngleBlue(), WideAngleRed(), 
       respectively.
     </change>
+    <change name="Steven Koechle" date="2009-05-14">
+      Fixed calls to AddComment.  Removed "/*" that should not have been there.
+    </change>
 
   </history>
 

@@ -145,8 +145,8 @@ void IsisMain() {
   calgrp += PvlKeyword("CoefficientFile",coefFile);
 
   calgrp += PvlKeyword("a",gbl::a);
-  calgrp["a"].AddComment("/* Radiometric equation in moccal");
-  calgrp["a"].AddComment("/* r = (pixel - z + off) / a - g / ex - dc");
+  calgrp["a"].AddComment("Radiometric equation in moccal");
+  calgrp["a"].AddComment("r = (pixel - z + off) / a - g / ex - dc");
   calgrp += PvlKeyword("off",gbl::off);
   calgrp += PvlKeyword("ex",gbl::ex);
   calgrp += PvlKeyword("z",gbl::z);
@@ -154,7 +154,7 @@ void IsisMain() {
   calgrp += PvlKeyword("g",gbl::g);
 
   calgrp += PvlKeyword("w0",gbl::w0);
-  calgrp["w0"].AddComment("/* Reflectance = r * iof, where iof = (s * s) / w0");
+  calgrp["w0"].AddComment("Reflectance = r * iof, where iof = (s * s) / w0");
   calgrp += PvlKeyword("s",sunAU);
   calgrp += PvlKeyword("iof",gbl::iof);
 
