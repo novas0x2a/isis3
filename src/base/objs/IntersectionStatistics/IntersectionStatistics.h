@@ -2,8 +2,8 @@
 #define IntersectionStatistics_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $                                                             
- * $Date: 2009/05/07 00:16:12 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/06/05 21:17:53 $                                                                 
  *                                                             
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -29,6 +29,12 @@
 #include "Pvl.h"
 
 namespace Isis {
+
+/**
+ * @brief
+ * @internal
+ *   @history 2009-06-05 Mackenzie Boyd Fixed unittest to work on all systems
+ */
 
   class IntersectionStatistics {
     public:

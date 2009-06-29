@@ -9,32 +9,79 @@
     associated ancillary data including the calibration image, 
     dark reference pixels, and buffer pixels.   There are ten sets
     of statistics that will be produced using:   
-    <pre>
-    1) Lines postramp, the first 30 lines of image data
-    1) Remaining lines of image data
-    2) Image dark reference pixels (16 pixels per line)
-    3) Image buffer pixels (12 pixels per line)
-    4) Calibration image dark reference pixels (16 pixels per line) 
-    5) The calibration image buffer pixels (12 pixels per line)
-    6) Calibration image reverse lines (First 20 lines of calibration image)
-    7) Calibration masked lines (From 5 - 20 lines after reverse depending on TDI)
-    8) Calibration ramp(Remaining lines after masked lines)
-    </pre>
+    <ul type="none">
+      <li>IMAGE_POSTRAMP
+        <ul type="disc">
+          <li>Lines postramp</li>
+          <li>The first 30 lines of image data</li>
+        </ul>
+      </li>
+      <li>IMAGE
+        <ul type="disc">
+          <li>Remaining lines of image data after the postramp.</li>
+          <li>If the input image is 30 lines or less, then all statistics will be zero</li>
+        </ul>
+      </li>
+      <li>IMAGE_DARK
+        <ul type="disc">
+          <li>Image dark reference pixels</li>
+          <li>16 pixels per line</li>
+        </ul>
+      </li>
+      <li>IMAGE_BUFFER
+        <ul type="disc">
+          <li>Image buffer pixels</li>
+          <li>12 pixels per line</li>
+        </ul>
+      </li>
+      <li>CAL_REVERSE
+        <ul type="disc">
+          <li>Calibration image reverse lines</li>
+          <li>First 20 lines of calibration image</li>
+        </ul>
+      </li>
+      <li>CAL_MASK
+        <ul type="disc">
+          <li>Calibration masked lines</li>
+          <li>From 5 - 20 lines after reverse depending on TDI</li>
+        </ul>
+      </li>
+      <li>CAL_RAMP
+        <ul type="disc">
+          <li>Calibration ramp</li>
+          <li>Remaining lines after masked lines</li>
+        </ul>
+      </li>
+      <li>CAL_DARK
+        <ul type="disc">
+          <li>Calibration image dark reference pixels</li>
+          <li>16 pixels per line</li>
+        </ul>
+      </li>
+      <li>CAL_DARK_RAMP
+      </li>
+      <li>CAL_BUFFER
+        <ul type="disc">
+          <li>The calibration image buffer pixels</li>
+          <li>12 pixels per line</li>
+        </ul>
+      </li>
+    </ul>
     The following statistics for each data set will be produced:
-    <pre>
-        Average
-        Standard deviation
-        Variance
-        Minimum
-        Maximum
-        Total pixels
-        Valid pixels
-        Null pixels
-        Low instrument saturation pixels
-        Low representation saturation pixels
-        High instrument saturation pixels
-        High representation saturation pixels
-   </pre>
+    <ul type="none" >
+        <li>Average</li>
+        <li>Standard deviation</li>
+        <li>Variance</li>
+        <li>Minimum</li>
+        <li>Maximum</li>
+        <li>Total pixels</li>
+        <li>Valid pixels</li>
+        <li>Null pixels</li>
+        <li>Low instrument saturation pixels</li>
+        <li>Low representation saturation pixels</li>
+        <li>High instrument saturation pixels</li>
+        <li>High representation saturation pixels</li>
+    </ul>
     The statistics will be output to the print file and additionally, if the user specifies, a file using the
     TO parameter, the statistics will be written to the file in a standard PVL format which can then be read using
     the getkey program. Because the very edges of several parts of the image are
@@ -43,14 +90,13 @@
     first and last samples of any line in the calibration image. For this reason,
     an image with a calibration image of 62 lines by 512 samples will be broken 
     down as follows:
-    <br></br><br></br>
+    <br /><br />
     Last 19 lines of the reverse readout pixels (all but the first)
-    <br></br>
+    <br />
     All 6 (in this case) lines of the masked pixels
-    <br>
+    <br />
     First 33 lines of the ramp pixels (all but the last)
-    </br>
-    
+    <br />
     Since the first and last samples of each of these lines is disregarded 
     automatically, the user is left statistics for the three sections of a
     60 line by 510 sample calbration image.
@@ -106,11 +152,15 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
-      <change name="Kris Becker" date="2009-03-13">
-          Corrected bug in computation of CAL_DARK_RAMP dataset.  It was 
-          hardcoded for handling summing mode 1.  It has been corrected to 
-          handle all summing/tdi combinations.
-      </change>
+    <change name="Kris Becker" date="2009-03-13">
+        Corrected bug in computation of CAL_DARK_RAMP dataset.  It was 
+        hardcoded for handling summing mode 1.  It has been corrected to 
+        handle all summing/tdi combinations.
+    </change>
+    <change name="Christopher Austin" date="2009-06-09">
+      Removed tabs in source code, fixed the example, expanded and structured
+      documentation.
+    </change>
   </history>
 
   <groups>
@@ -176,200 +226,151 @@
     <group name="offsets">
       <parameter name="LEFTIMAGE">
         <type>integer</type>
-	<brief>Offset for the left side of the image area</brief>
-	<internalDefault>0</internalDefault>	
-	<default><item>0</item></default>
-	<description>
-	  this number of pixels will be ignored on the right side of the
-	  ramp, lines postramp, and image areas
-	</description>
+        	<brief>Offset for the left side of the image area</brief>
+        	<internalDefault>0</internalDefault>	
+        	<default><item>0</item></default>
+        	<description>
+        	  this number of pixels will be ignored on the right side of the
+        	  ramp, lines postramp, and image areas
+        	</description>
       </parameter>
       <parameter name="RIGHTIMAGE">
         <type>integer</type>
-	<brief>Offset for the right side of the image area</brief>
-	<internalDefault>1</internalDefault>	
-	<default><item>1</item></default>
-	<description>
-	  this number of pixels will be ignored on the right side of the
-	  ramp, lines postramp, and image areas
-	</description>
+        <brief>Offset for the right side of the image area</brief>
+        <internalDefault>1</internalDefault>	
+        <default><item>1</item></default>
+        <description>
+          this number of pixels will be ignored on the right side of the
+          ramp, lines postramp, and image areas
+        </description>
       </parameter>
       <parameter name="LEFTCALBUFFER">
         <type>integer</type>
-	<brief>Offset for the left side of the calibration buffer</brief>
-	<internalDefault>3</internalDefault>	
-	<default><item>3</item></default>
-	<description>
+      	<brief>Offset for the left side of the calibration buffer</brief>
+      	<internalDefault>3</internalDefault>	
+      	<default><item>3</item></default>
+      	<description>
           This number of pixels will be ignored on the left side of the
           buffer area of the calibration image
-	</description>
+        </description>
       </parameter>
       <parameter name="RIGHTCALBUFFER">
         <type>integer</type>
-	<brief>Offset for the right side of the calibration buffer</brief>
-	<default><item>1</item></default>	
-	<description>
+      	<brief>Offset for the right side of the calibration buffer</brief>
+      	<default><item>1</item></default>	
+      	<description>
          This number of pixels will be ignored on the right side of the
           buffer area of the calibration image
-	</description>
+        </description>
       </parameter>
       <parameter name="LEFTCALDARK">
         <type>integer</type>
-	<brief>Offset for the left side of the calibration dark pixels</brief>
-	<default><item>3</item></default>
-	<description>
+      	<brief>Offset for the left side of the calibration dark pixels</brief>
+      	<default><item>3</item></default>
+      	<description>
           This number of pixels will be ignored on the left side of the
           dark area of the calibration image
-	</description>
+        </description>
       </parameter>
       <parameter name="RIGHTCALDARK">
         <type>integer</type>
-	<brief>Offset for the right side of the calibration dark pixels</brief>
-	<default><item>1</item></default>
-	<description>
+      	<brief>Offset for the right side of the calibration dark pixels</brief>
+      	<default><item>1</item></default>
+      	<description>
           This number of pixels will be ignored on the right side of the
           dark area of the calibration image
-	</description>
+        </description>
       </parameter>
       <parameter name="LEFTBUFFER">
         <type>integer</type>
-	<brief>Offset for the left side of the image buffer</brief>
-	<default><item>3</item></default>
-	<description>
+      	<brief>Offset for the left side of the image buffer</brief>
+      	<default><item>3</item></default>
+      	<description>
           This number of pixels will be ignored on the left side of the
           buffer area of the main image
-	</description>
+        </description>
       </parameter>
       <parameter name="RIGHTBUFFER">
         <type>integer</type>
-	<brief>Offset for the right side of the image buffer</brief>
-	<default><item>1</item></default>	
-	<description>
+      	<brief>Offset for the right side of the image buffer</brief>
+      	<default><item>1</item></default>	
+      	<description>
             This number of pixels will be ignored on the right side of the
             buffer area of the main image
-	</description>
+        </description>
       </parameter>
       <parameter name="LEFTDARK">
         <type>integer</type>
-	<brief>Offset for the left side of the image dark pixels</brief>
-	<default><item>3</item></default>
-	<description>
+      	<brief>Offset for the left side of the image dark pixels</brief>
+      	<default><item>3</item></default>
+      	<description>
           This number of pixels will be ignored on the left side of the
           dark area of the main image
-	</description>
+        </description>
       </parameter>
       <parameter name="RIGHTDARK">
         <type>integer</type>
-	<brief>Offset for the right side of the image dark pixels</brief>
-	<default><item>1</item></default>	
-	<description>
+      	<brief>Offset for the right side of the image dark pixels</brief>
+      	<default><item>1</item></default>	
+      	<description>
           This number of pixels will be ignored on the right side of the
           dark area of the main image
-	</description>
+        </description>
       </parameter>
     </group>
   </groups>
   
   <examples>
+
     <example>
+
       <brief>No offsets used</brief>
       <description>
         Gathering statistics including all buffer and dark pixel values.
       </description>
+
       <terminalInterface>
         <commandLine> from=histatExample.cub to=histatExampleStats.log useoffsets=false
         </commandLine>
         <description>
-        In this example we disregard the ability to use offsets on the buffers. 
-		  Since the default is to include offset values, we must explicitly set 
-		  <pre>useoffsets</pre> to false.
+          In this example we disregard the ability to use offsets on the buffers.
+		      Since the default is to include offset values, we must explicitly set 
+          <strong>useoffsets</strong> to false.
         </description>
       </terminalInterface>
 
       <inputImages>
-        <image src="assets/image/histatExample.jpg" width="500" height="500">
+        <image src="assets/images/histatExample.jpg" width="201" height="550">
           <brief> HiRISE input image for histat</brief>
-          <description>This is the input image for which we will gather statistics. Note that it has 
-			 been run through higlob so that the buffers and ramp are part of the image.
-          </description>
-          <thumbnail caption=" Input image" src="assets/thumb/histatExample.jpg" width="200" height="200"/>
+          <description>This is the input image for which we will gather statistics.</description>
+          <thumbnail caption="Input image" src="assets/thumbs/histatExampleThumb.jpg" width="73" height="200"/>
           <parameterName>FROM</parameterName>
         </image>
       </inputImages>
 
-		<dataFiles>
-		  <dataFile path="assets/histatExampleStats.log">
-		    <brief>
-			   Output from histats without offsets
-			 </brief>
-			 <description>
-			   This is the output file from running histats without any offsets.
-			 </description>
-		  </dataFile>
-		</dataFiles>
+  		<dataFiles>
+  		  <dataFile path="assets/histatExampleNoOffsetStats.log">
+  		    <brief>
+  			   Output from histats without offsets
+  			 </brief>
+  			 <description>
+  			   This is the output file from running histats without any offsets.
+  			 </description>
+  		  </dataFile>
+  		</dataFiles>
 
       <guiInterfaces>
         <guiInterface>
-          <image width="472" height="388" src="assets/image/histatNoOffsetGui.jpg">
+          <image width="451" height="550" src="assets/images/histatNoOffsetGui.jpg">
             <brief>Example Gui</brief>
             <description>Screenshot of GUI with parameters set to gather stats without offsets.</description>
-            <thumbnail width="200" height="165" caption="histat Gui" src="assets/thumb/histatNoOffsetGui.jpg" />
+            <thumbnail width="164" height="200" caption="histat Gui" src="assets/thumbs/histatNoOffsetGuiThumb.jpg" />
           </image>
         </guiInterface>
       </guiInterfaces>
-    </example>
-    
-    <example>
-      <brief>Default offsets</brief>
-      <description>
-        This example gathers only the center 12 pixels from the dark current 
-	area (both calibration and actual image), the center 8 pixels from 
-	the buffer area (both calibration and actual image), and all of the data
-	from what is considered to be the normal, viewable image.
-      </description>
-      <terminalInterface>
-        <commandLine> from=histatExample.cub > histatOut.log
-        </commandLine>
-        <description>
-        Note that we are redirecting standard output from the command line. If 
-	no "TO" file is specified, histat statistics will go to standard output, 
-	a feature we are taking advantage of here.
-        </description>
-      </terminalInterface>
 
-      <inputImages>
-        <image src="assets/image/histatExample.jpg" width="500" height="500">
-          <brief> HiRISE input image for histat</brief>
-          <description>This is the input image for which we will gather statistics.
-          </description>
-          <thumbnail caption=" Input image" src="assets/thumb/histatExample.jpg" width="200" height="200"/>
-          <parameterName>FROM</parameterName>
-        </image>
-      </inputImages>
-	<dataFiles>
-	  <dataFile path="assets/histatOut.log">
-	    <brief>
-	    Output from histats with the default offsets
-	    </brief>
-	    <description>
-            This is the output file from running histats. The outermost
-	    2 pixels on both sides of both buffers have been disregarded.
-	 </description>
-	  </dataFile>
-	</dataFiles>
-
-      <guiInterfaces>
-        <guiInterface>
-          <image width="394" height="388" src="assets/image/histatDefaultGui.jpg">
-            <brief>Example Gui</brief>
-            <description>Screenshot of GUI with parameters set to gather 
-	    statistics not including the 2 outermost columns of dark current and
-	    buffer pixels.</description>
-            <thumbnail width="200" height="197" caption="histat Gui" src="assets/thumb/histatDefaultGui.jpg" />
-          </image>
-        </guiInterface>
-      </guiInterfaces>
     </example>
+
   </examples>
 
 </application>

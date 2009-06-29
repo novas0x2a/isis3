@@ -31,8 +31,8 @@ namespace Qisis {
   void Tool::addTo (Qisis::Workspace *ws) {
     p_workspace = ws;
 
-    connect (ws,SIGNAL(cubeViewportAdded(Qisis::CubeViewport *)),
-             this,SLOT(setCubeViewport(Qisis::CubeViewport *)));
+    //connect (ws,SIGNAL(cubeViewportAdded(Qisis::CubeViewport *)),
+    //         this,SLOT(setCubeViewport(Qisis::CubeViewport *)));
     connect (ws,SIGNAL(cubeViewportActivated(Qisis::CubeViewport *)),
              this,SLOT(setCubeViewport(Qisis::CubeViewport *)));
     connect (ws,SIGNAL(cubeViewportAdded(Qisis::CubeViewport *)),
@@ -177,7 +177,6 @@ namespace Qisis {
     addConnections(p_cvp);
 
     if (p_toolPadAction != NULL) {
-      setRubberBand();
       enableRubberBandTool();
     }
   }
@@ -218,8 +217,6 @@ namespace Qisis {
                this,SLOT(mouseButtonRelease(QPoint,Qt::MouseButton)));
 
     removeConnections(p_cvp);
-
-//    p_cvp->enableRubberBand(false);
   }
 
 

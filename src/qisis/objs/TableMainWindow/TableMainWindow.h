@@ -40,14 +40,6 @@ namespace Qisis {
 
       /**
        * 
-       * Returns the table window
-       * 
-       * @return Qisis::MainWindow* 
-       */
-      Qisis::MainWindow *tableWindow() const { return p_tableWin; }; 
-
-      /**
-       * 
        * Returns the item list 
        * 
        * @return QList<QListWidgetItem*> 
@@ -92,7 +84,8 @@ namespace Qisis {
                        Qt::Orientation o = Qt::Horizontal, QString toolTip = "");
       void deleteColumn(int item);
       void setStatusMessage(QString message);
-
+      void closeEvent(QCloseEvent *event);
+      void hideEvent(QHideEvent *event);
       
     public slots:
       void showTable();
@@ -108,6 +101,7 @@ namespace Qisis {
       void setTrackListItems(bool track = false);
       bool trackListItems();
       void loadTable ();
+      void writeSettings();
 
   signals:
       /**
@@ -121,7 +115,6 @@ namespace Qisis {
       void createTable();      
       void readSettings();
       void readItemSettings(QString heading, QListWidgetItem *item );
-      void writeSettings();
 
     private:
       std::string p_appName; //!< The application name
@@ -133,7 +126,6 @@ namespace Qisis {
       QFile p_currentFile; //!< The current file
 
       QTableWidget *p_table; //!< The table
-      Qisis::MainWindow *p_tableWin; //!< The main window 
       QList<QListWidgetItem*> p_itemList; //!< List of widget items 
       QListWidget *p_listWidget; //!< List widget
       int p_selectedRows; //!< Number of selected rows

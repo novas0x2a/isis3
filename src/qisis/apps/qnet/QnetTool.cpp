@@ -561,6 +561,8 @@ namespace Qisis {
    * @internal
    * @history  2007-06-12 Tracie Sucharski - Swapped left and right mouse
    *                           button actions.
+   * @history  2009-06-08 Tracie Sucharski - Add error checking for editing 
+   *                           or deleting points when no point exists. 
    */
   void QnetTool::mouseButtonRelease(QPoint p, Qt::MouseButton s) {
     CubeViewport *cvp = cubeViewport();
@@ -580,6 +582,12 @@ namespace Qisis {
       Isis::ControlPoint *point =
                  g_controlNetwork->FindClosest(sn,samp,line);
       //  TODO:  test for errors and reality 
+      if (point == NULL) {
+        QString message = "No points exist for editing.  Create points ";
+        message += "using the right mouse button.";
+        QMessageBox::information((QWidget *)parent(),"Warning",message);
+        return;
+      }
       modifyPoint(point);
     }
     else if (s == Qt::MidButton) {
@@ -587,6 +595,12 @@ namespace Qisis {
       Isis::ControlPoint *point =
                  g_controlNetwork->FindClosest(sn,samp,line);
       //  TODO:  test for errors and reality 
+      if (point == NULL) {
+        QString message = "No points exist for deleting.  Create points ";
+        message += "using the right mouse button.";
+        QMessageBox::information((QWidget *)parent(),"Warning",message);
+        return;
+      }
       deletePoint(point);
     }
     else if (s == Qt::RightButton) {

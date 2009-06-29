@@ -7,7 +7,7 @@
 
 namespace Isis {
   //! Construct a control point
-  ControlPoint::ControlPoint () {
+  ControlPoint::ControlPoint () : p_invalid(false) {
     SetId("");
     SetType(Tie);
     SetUniversalGround(Isis::Null,Isis::Null,Isis::Null);
@@ -15,8 +15,12 @@ namespace Isis {
     SetHeld(false);
   }
 
-  //! Construct a control point with given Id
-  ControlPoint::ControlPoint (const std::string &id) {
+  /** 
+   * Construct a control point with given Id 
+   *  
+   * @param id Control Point Id 
+   */
+  ControlPoint::ControlPoint (const std::string &id) : p_invalid(false) {
     SetId(id);
     SetType(Tie);
     SetUniversalGround(Isis::Null,Isis::Null,Isis::Null);
@@ -27,7 +31,9 @@ namespace Isis {
  /**
   * Loads the PvlObject into a ControlPoint
   *
-  * @param p PvlObject containing ControlPoint information
+  * @param p PvlObject containing ControlPoint information 
+  * @param forceBuild Forces invalid Control Measures to be added to this Control 
+  *                   Point
   *
   * @throws Isis::iException::User - Invalid Point Type
   * @throws Isis::iException::User - Unable to add ControlMeasure to ControlPoint
@@ -36,7 +42,7 @@ namespace Isis {
   *                              checking for "True" vs "true", change to
   *                              lower case for comparison.
   */
-  void ControlPoint::Load(PvlObject &p) {
+  void ControlPoint::Load(PvlObject &p, bool forceBuild) {
     SetId(p["PointId"]);
     if (p.HasKeyword("Latitude")) {
       SetUniversalGround(p["Latitude"], p["Longitude"], p["Radius"]);
@@ -60,7 +66,7 @@ namespace Isis {
         if (p.Group(g).IsNamed("ControlMeasure")) {
           ControlMeasure cm;
           cm.Load(p.Group(g));
-          Add(cm);
+          Add(cm,forceBuild);
         }
       }
       catch (iException &e) {
@@ -114,17 +120,25 @@ namespace Isis {
  /**
   * Add a measurement to the control point
   *
-  * @param measure The ControlMeasure to add
+  * @param measure The ControlMeasure to add 
+  * @param forceBuild Forces the Control Measure to be added reguardless of 
+  *                   validity
   */
-  void ControlPoint::Add(const ControlMeasure &measure) {
+  void ControlPoint::Add(const ControlMeasure &measure, bool forceBuild) {
     for (int i=0; i<Size(); i++) {
       if (this->operator[](i).CubeSerialNumber() == measure.CubeSerialNumber()) {
-        std::string msg = "The SerialNumber [";
-        msg += measure.CubeSerialNumber() + "] is not unique, another ControlMeasure shares this SerialNumber"; 
-        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        if( forceBuild ) {
+          p_invalid |= true;
+          break;
+        }
+        else {
+          std::string msg = "The SerialNumber [";
+          msg += measure.CubeSerialNumber() + "] is not unique, another ControlMeasure shares this SerialNumber"; 
+          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        }
       }
     }
-    p_measure.push_back(measure);
+    p_measures.push_back(measure);
   }
 
   /**
@@ -133,13 +147,27 @@ namespace Isis {
    * @param index The index of the control point to delete
    */
   void ControlPoint::Delete(int index) {
-    p_measure.erase(p_measure.begin()+index);
+    p_measures.erase(p_measures.begin()+index);
+
+    // Check if the control point is still invalid or not
+    if(p_invalid) {
+      p_invalid = false;
+      for (int i=0; i<Size() && !p_invalid; i++) {
+        for (int j=i+1; j<Size() && !p_invalid; j++) {
+          if (this->operator[](i).CubeSerialNumber() == this->operator[](j).CubeSerialNumber()) {
+            p_invalid = true;
+          }
+        }
+      }
+
+    }
   }
 
   /**
    *  Return the measurement for the given serial number
    *
-   *  @param serialNumber  The serial number
+   *  @param serialNumber The serial number
+   *  
    *  @return The ControlMeasure corresponding to the give serial number
    */
   ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) {
@@ -157,7 +185,8 @@ namespace Isis {
   /**
    *  Return the measurement for the given serial number
    *
-   *  @param serialNumber  The serial number
+   *  @param serialNumber The serial number
+   *  
    *  @return The ControlMeasure corresponding to the give serial number
    */
   const ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) const{
@@ -205,10 +234,10 @@ namespace Isis {
   double ControlPoint::AverageError() const {
     double cerr = 0.0;
     int count = 0;
-    for (int i=0; i<(int)p_measure.size(); i++) {
-      if (p_measure[i].Ignore()) continue;
-      if (p_measure[i].Type() == ControlMeasure::Unmeasured) continue;
-      cerr += p_measure[i].ErrorMagnitude();
+    for (int i=0; i<(int)p_measures.size(); i++) {
+      if (p_measures[i].Ignore()) continue;
+      if (p_measures[i].Type() == ControlMeasure::Unmeasured) continue;
+      cerr += p_measures[i].ErrorMagnitude();
       count++;
     }
 
@@ -226,14 +255,14 @@ namespace Isis {
    */
   bool ControlPoint::HasReference() {
 
-    if (p_measure.size() == 0) {
+    if (p_measures.size() == 0) {
       std::string msg = "There are no ControlMeasures in the ControlPoint [" + Id() + "]";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
     // Return true if reference measure is found
-    for (unsigned int i=0; i<p_measure.size(); i++) {
-      if (p_measure[i].IsReference()) return true;
+    for (unsigned int i=0; i<p_measures.size(); i++) {
+      if (p_measures[i].IsReference()) return true;
     }
     return false;
   }
@@ -245,19 +274,19 @@ namespace Isis {
   * @return The PvlObject created
   */
   int ControlPoint::ReferenceIndex() {
-    if (p_measure.size() == 0) {
+    if (p_measures.size() == 0) {
       std::string msg = "There are no ControlMeasures in the ControlPoint [" + Id() + "]";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
     // Return the first ControlMeasure that is a reference
-    for (unsigned int i=0; i<p_measure.size(); i++) {
-      if (p_measure[i].IsReference()) return i;
+    for (unsigned int i=0; i<p_measures.size(); i++) {
+      if (p_measures[i].IsReference()) return i;
     }
 
     // Or return the first measured ControlMeasure
-//    for (unsigned int i=0; i<p_measure.size(); i++) {
-//      if (p_measure[i].IsMeasured()) return i;
+//    for (unsigned int i=0; i<p_measures.size(); i++) {
+//      if (p_measures[i].IsMeasured()) return i;
 //    }
 
 //    std::string msg = "There are no Measured ControlMeasures in the ControlPoint [" + Id() + "]";
@@ -312,8 +341,8 @@ namespace Isis {
     double baselon = 180.;
 
     // Loop for each measure and compute the sum of the lat/lon/radii
-    for (int j=0; j<(int)p_measure.size(); j++) {
-      ControlMeasure &m = p_measure[j];
+    for (int j=0; j<(int)p_measures.size(); j++) {
+      ControlMeasure &m = p_measures[j];
       if (m.Type() == ControlMeasure::Unmeasured ) {
         // TODO: How do we deal with unmeasured measures
       }
@@ -387,8 +416,8 @@ namespace Isis {
     double rad = Radius();
 
     // Loop for each measure to compute the error
-    for (int j=0; j<(int)p_measure.size(); j++) {
-      ControlMeasure &m = p_measure[j];
+    for (int j=0; j<(int)p_measures.size(); j++) {
+      ControlMeasure &m = p_measures[j];
       if (m.Ignore()) continue;
       if (m.Type() == ControlMeasure::Unmeasured) continue;
 
@@ -478,11 +507,11 @@ namespace Isis {
     double maxError = 0.0;
     if (Ignore()) return maxError;
 
-    for (int j=0; j<(int) p_measure.size(); j++) {
-      if (p_measure[j].Ignore()) continue;
-      if (p_measure[j].Type() == ControlMeasure::Unmeasured) continue;
-      if (p_measure[j].ErrorMagnitude() > maxError) {
-        maxError = p_measure[j].ErrorMagnitude();
+    for (int j=0; j<(int) p_measures.size(); j++) {
+      if (p_measures[j].Ignore()) continue;
+      if (p_measures[j].Type() == ControlMeasure::Unmeasured) continue;
+      if (p_measures[j].ErrorMagnitude() > maxError) {
+        maxError = p_measures[j].ErrorMagnitude();
       }
     }
 
@@ -509,5 +538,19 @@ namespace Isis {
     else {  // (diff < -180.)
       return (lon - 360.);
     }
+  }
+
+
+  /** 
+   * Returns the number of non-ignored control measures 
+   *  
+   * @return Number of valid control measures 
+   */
+  int ControlPoint::NumValidMeasures() {
+    int size = 0;
+    for(int cm = 0; cm < Size(); cm ++) {
+      if(!p_measures[cm].Ignore()) size ++;
+    }
+    return size;
   }
 }

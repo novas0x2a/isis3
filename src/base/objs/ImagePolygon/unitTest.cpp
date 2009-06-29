@@ -77,6 +77,19 @@ int main () {
   std::cout<< poly.Polys()->toString()<<std::endl;
 
 
+  //  Test lower quality option
+  try {
+    poly.Create(cube,10,12,1,384,640,385);
+  } 
+  catch (iException &e) {
+    std::string msg = "Cannot create lower quality polygon for [" + cube.Filename() + "]";
+    throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+  }
+  //  write poly as WKT
+  std::cout<< poly.Polys()->toString()<<std::endl;
+
+
+
   cube.Close();
 }
 

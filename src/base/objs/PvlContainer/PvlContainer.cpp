@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/10/30 15:22:15 $
+ * $Revision: 1.10 $
+ * $Date: 2009/06/01 17:23:01 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -197,6 +197,27 @@ namespace Isis {
     }
   }
 
+  /**
+   * @brief Insert a keyword at the specified iterator position
+   *  
+   * This method provides the capability to insert a keyword at the specified 
+   * iterator position.  The process follows the description of the STL vector 
+   * definition along with all the caveats (e.g., invalidation of iterators upon
+   * insert operations). 
+   *  
+   * This method will not perform any checks for the existance of the keyword. 
+   * This could lead to multiple instances of the same keyword in the same 
+   * container.  It is up to the caller to manage this issue. 
+   * 
+   * @param key Keyword to insert
+   * @param pos Iterator position where to insert the new keyword
+   * @return PvlContainer::PvlKeywordIterator Returns the position of the
+   *          inserted keyword per the STL vector documentation.
+   */
+   PvlContainer::PvlKeywordIterator PvlContainer::AddKeyword(const Isis::PvlKeyword &key,
+                                                             PvlKeywordIterator pos) { 
+      return (p_keywords.insert(pos, key));
+  }
 
   /**
    * Output the PvlContainer information.

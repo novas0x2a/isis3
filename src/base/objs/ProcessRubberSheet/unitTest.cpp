@@ -29,6 +29,7 @@ class UnitTestTrans : public Isis::Transform {
       if (outSample > 64) {
         inSample = 127 - (outSample - 64);
       }
+      
       inLine = outLine;
 
       static int saveSamp = 0;
@@ -46,7 +47,6 @@ class UnitTestTrans : public Isis::Transform {
     };
 };
 
-
 void IsisMain() {
 
   Isis::Preference::Preferences(true);
@@ -56,7 +56,7 @@ void IsisMain() {
   Isis::ProcessRubberSheet p;
   p.BandChange (myBandChange);
   Isis::Transform *trans = new UnitTestTrans(126, 126);
-
+  
   Isis::Interpolator *interp;
   interp = new Isis::Interpolator(Isis::Interpolator::NearestNeighborType);
 

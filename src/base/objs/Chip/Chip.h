@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2009/04/23 23:35:53 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/06/02 17:13:22 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -57,6 +57,9 @@ namespace Isis {
    *                        infinite loop problem when x.size() never grew
    *                        to be more than 3.
    *   @history 2009-01-19  Steven Koechle, Fixed memory leak
+   *   @history 2009-06-02  Stacy Alley, Added a check in the
+   *            SetSize() method to make sure the given samples
+   *            and lines are not equal to or less than zero.
    * 
    * @see AutoReg
    * @see AutoRegFactory
@@ -74,6 +77,10 @@ namespace Isis {
 
       //! Return the number of lines in the chip
       inline int Lines () const { return p_chipLines; };
+
+      //! Returns the expanded filename of the cube from
+      //! which this chip was chipped.
+      inline std::string Filename() const { return p_filename; };
 
       /**
        * Loads a Chip with a value.  For example, 
@@ -192,6 +199,7 @@ namespace Isis {
       geos::geom::MultiPolygon *p_clipPolygon; //!< clipping polygon set by SetClipPolygon (line,samp)
 
       Affine p_affine;            //!< Transform used to load cubes into chip
+      std::string p_filename;
    };
 };
 

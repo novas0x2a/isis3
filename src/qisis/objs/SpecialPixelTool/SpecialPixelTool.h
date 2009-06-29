@@ -49,6 +49,7 @@ namespace Qisis {
       void setHisColor();
       void setHrsColor();
       void setHdsColor();
+      void setBgColor();
       void defaultBW();
       void defaultColor();
 
@@ -64,6 +65,7 @@ namespace Qisis {
       QColor p_hisDefault; //!< Color chosen for high instrument saturation pixels
       QColor p_hrsDefault; //!< Color chosen for high representation saturation pixels
       QColor p_hdsDefault; //!< Color chosen for pixels
+      QColor p_bgDefault; //!< Color chosen for pixels
       QToolButton *p_nullColor;//!< Null Button
       QToolButton *p_lisColor; //!< Low instrument saturation Button
       QToolButton *p_lrsColor; //!< Low representation saturation Button
@@ -71,6 +73,7 @@ namespace Qisis {
       QToolButton *p_hisColor; //!< High instrument saturation Button
       QToolButton *p_hrsColor; //!< High representation saturation Button
       QToolButton *p_hdsColor; //!< High Button
+      QToolButton *p_bgColor; //!< Background color Button
       QSettings *p_settings; //!<< Settings
       bool p_color; //!< Color Mode?
 

@@ -520,7 +520,8 @@ namespace Isis {
       // and the lint bytes
       int labelRecords = (int)ceil ( (double)labSize / (double)lineBytes);
       (*p_label)["LABEL_RECORDS"].SetValue( iString(labelRecords) );
-      (*p_label)["FILE_RECORDS"].SetValue( iString(labelRecords + (InputCubes[0])->Lines()) );
+      (*p_label)["FILE_RECORDS"].SetValue( iString(labelRecords + (InputCubes[0])->Lines() *
+                                                                   InputCubes[0]->Bands()) );
       (*p_label)["^IMAGE"].SetValue( iString(labelRecords+1) );
       if( p_label->GetFormat() != NULL ) {
         os << *p_label << p_label->GetFormat()->FormatEOL();

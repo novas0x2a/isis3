@@ -21,13 +21,14 @@ namespace Qisis {
     public:
       MainWindow (QString title, QWidget *parent=0, Qt::WFlags flags=0);
       virtual ~MainWindow();
-      void closeEvent(QCloseEvent *event);
-      void hideEvent(QHideEvent *event);
+      virtual void closeEvent(QCloseEvent *event);
+
+      virtual void hideEvent(QHideEvent *event);
       virtual void readSettings();
       virtual void writeSettings();
 
     protected:
-      bool eventFilter(QObject *o,QEvent *e);
+      virtual bool eventFilter(QObject *o,QEvent *e);
 
     private:
       std::string p_appName; //!< Application name.

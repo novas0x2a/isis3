@@ -21,8 +21,10 @@ int main (void)
     // These should be lat/lon at center of image. To obtain these numbers for a new cube/camera,
     // set both the known lat and known lon to zero and copy the unit test output "Latitude off by: "
     // and "Longitude off by: " values directly into these variables.
-    double knownLat = -78.56557059110476;
-    double knownLon = 126.7899573707551;
+    //    double knownLat = -78.56557059110476;
+    //    double knownLon = 126.7899573707551;
+    double knownLat = -78.56562123061852;
+    double knownLon = 126.7899420749119;
 
     //Isis::Pvl p("$mgs/testData/lub0428b.cub");
     Isis::Pvl p("$clementine1/testData/lub0428b.cub");
@@ -80,8 +82,8 @@ void TestLineSamp(Isis::Camera *cam, double samp, double line) {
   if(success) {
     double deltaSamp = samp - cam->Sample();
     double deltaLine = line - cam->Line();
-    if (fabs(deltaSamp) < 0.002) deltaSamp = 0;
-    if (fabs(deltaLine) < 0.002) deltaLine = 0;
+    if (fabs(deltaSamp) < 0.0043) deltaSamp = 0;
+    if (fabs(deltaLine) < 0.0043) deltaLine = 0;
     cout << "DeltaSample = " << deltaSamp << endl;
     cout << "DeltaLine = " << deltaLine << endl << endl;
   }

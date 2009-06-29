@@ -188,15 +188,14 @@ int main (int argc, char *argv[]) {
   QObject::connect(vw , SIGNAL(closeWindow()), ftool, SLOT(exit()));
 
   int status = app->exec();
-  //return status;
+
+  // If we created a thread for listening to qview connections, then stop the thread and free its memory
   if(temp) {
     temp->stop();
-
-    while(temp->isRunning()) {
-      usleep(100000);
-    }
+    temp->wait(); // wait for the stop to finish
     delete temp;
   }
+
   delete htool;
   delete histtool;
   delete pltool;

@@ -3,6 +3,8 @@
 #include "CubeViewport.h"
 #include "SpecialPixel.h"
 
+#include <QApplication>
+
 #define round(x) ((x) > 0.0 ? (x) + 0.5 : (x) - 0.5)
 
 namespace Qisis {
@@ -441,6 +443,22 @@ namespace Qisis {
     if(p_totalBufferSize > p_maxBufferSize) {
       //Write to tmp file
     }
+  }
+
+  /**
+   * Method to see if the entire cube is in the buffer.
+   * 
+   * 
+   * @return bool 
+   */
+  bool ViewportBuffer::hasEntireCube() {
+    double sampTolerance = 0.05 * p_cube->Samples();
+    double lineTolerance = 0.05 * p_cube->Lines();
+
+    return p_sampLineBoundingRect[rectLeft] <= (1 + sampTolerance) &&
+           p_sampLineBoundingRect[rectTop] <= (1 + lineTolerance) &&
+           p_sampLineBoundingRect[rectRight] >= (p_cube->Samples() - sampTolerance) &&
+           p_sampLineBoundingRect[rectBottom] >= (p_cube->Lines() - lineTolerance);
   }
 
   /**

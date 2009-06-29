@@ -89,7 +89,14 @@ void IsisMain ()
   else {  //if ConversionType == Table, Use LUT to create stretch pairs for conversion
     validMax = 4095;
     CreateStretchPairs();
-    p.Progress()->SetText("Image was converted using 12-to-8 bit table. \nConverting prefix pixels to 12 bit and saving line prefix data...");
+    // Pvl outputLabels;
+    Pvl *outputLabel = ocube->Label();
+    //Adjust Table-encoded values from 8 bit back to 12 bit.
+    PvlGroup &inst = outputLabel->FindGroup("Instrument",Pvl::Traverse);
+    double biasStripMean = inst.FindKeyword("BiasStripMean");
+    inst.FindKeyword("BiasStripMean").SetValue(stretch.Map(biasStripMean));
+    inst.FindKeyword("BiasStripMean").AddComment("BiasStripMean value converted back to 12 bit.");
+    p.Progress()->SetText("Image was converted using 12-to-8 bit table. \nConverting prefix pixels back to 12 bit and saving line prefix data...");
   }
   p.StartProcess ();  
   // Write line prefix data to table in output cube
@@ -362,14 +369,18 @@ void TranslateCassIssLabels (Filename &labelFile, Cube *ocube) {
 // modelled after IDL CISSCAL's OverclockAvg() in cassimg_define.pro
 // author Jeannie Walldren 2008-08-21
 double ComputeOverclockAvg(vector <double> pixel){
-  if (compressionType != "Lossy" && flightSoftware < 1.3) {
-    // if the number of columns of valid overclocks in prefix pixels table is not 2, 
-    // then the first column contains nulls, so use column 2 as average
+  // overclocks array is corrupt for lossy images (see cassimg_readvic.pro)
+
+  if (compressionType != "Lossy" && flightSoftware < 1.3) { //numberOfOverclocks == 1
+    // if Bltype CASSINI-ISS or CAS-ISS2, i.e. flight software version < 1.3
+    // then there is only one column of valid overclocks in prefix pixels table, 
+    // the first column contains nulls, so use column 2 as average
       return pixel[1];
   }
   else{//numberOfOverclocks == 2
-    // number of columns of valid overclocks in prefix pixels table is 2,
-    // calculate appropriate average
+    // number of columns of valid overclocks in prefix pixels table is 2
+    // for CAS-ISS3 or CAS-ISS4, i.e. flight software version 1.3 or 1.4
+    // calculate appropriate average (as in cassimg_define.pro, CassImg::OverclockAvg())
     if (sumMode == 1){
       return ((((double) pixel[0])/2 + ((double) pixel[1])/6)/2);
     }

@@ -7,9 +7,5 @@ commands:
 	$(APPNAME) from=$(OUTPUT)/list.lis \
 	OVERLAPLIST=$(INPUT)/overlaps.lis \
 	| grep -v "Processed" | grep -v "Working" \
-	> $(OUTPUT)/csv.pvl;
-	$(APPNAME) from=$(OUTPUT)/list.lis \
-	OVERLAPLIST=$(INPUT)/overlaps.lis \
-	| grep -v "Processed" | grep -v "Working" \
-	> $(OUTPUT)/tab.pvl;
+	> $(OUTPUT)/brief.pvl;
 	$(RM) $(OUTPUT)/list.lis;

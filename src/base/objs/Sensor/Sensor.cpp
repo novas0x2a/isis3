@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2009/02/12 03:03:24 $
+ * $Revision: 1.12 $
+ * $Date: 2009/05/26 01:47:06 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -145,6 +145,8 @@ namespace Isis {
     // If we have a dem kernel then we should iterate until
     // the point converges
     if (p_hasElevationModel) {
+      // Set hasIntersection flag to true so Resolution can be calculated
+      p_hasIntersection = true;
       int maxit = 100;
       int it = 1;
       bool done = false;
@@ -154,6 +156,8 @@ namespace Isis {
           p_hasIntersection = false;
           return p_hasIntersection;
         }
+        // Set the tolerance for 1/100 of a pixel in meters
+        double tolerance = Resolution()/100.0;
         double lat,lon,radius;
         reclat_c(p_pB,&radius,&lon,&lat);
         lat *= 180.0 / Isis::PI;
@@ -178,10 +182,15 @@ namespace Isis {
           p_hasIntersection = false;
           return p_hasIntersection;
         }
-        double dist = (pB[0] - p_pB[0]) * (pB[0] - p_pB[0]) +
+        double dist = sqrt((pB[0] - p_pB[0]) * (pB[0] - p_pB[0]) +
                (pB[1] - p_pB[1]) * (pB[1] - p_pB[1]) +
-               (pB[2] - p_pB[2]) * (pB[2] - p_pB[2]);
-        if (dist < 0.000001) done = true;
+               (pB[2] - p_pB[2]) * (pB[2] - p_pB[2]))*1000.;
+        if (dist < tolerance) {
+          // Now recompute tolerance at updated surface point and recheck
+          double tolerance = Resolution()/100.0;
+          if (dist < tolerance) done = true;
+        }
+//        if (dist < 0.000001) done = true;
         //        if (dist < 0.000000000001) done = true;
        it++;
 

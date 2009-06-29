@@ -30,7 +30,7 @@ int main () {
   schip += PvlKeyword("Lines",35);
   schip += PvlKeyword("Sampling", 50);
 
-  PvlObject o("AutoReg");
+  PvlObject o("AutoRegistration");
   o.AddGroup(alg);
   o.AddGroup(pchip);
   o.AddGroup(schip);

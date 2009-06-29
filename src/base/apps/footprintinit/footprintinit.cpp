@@ -26,10 +26,11 @@ void IsisMain() {
   prog.CheckStatus ();
 
   std::string sn = SerialNumber::Compose(cube);
-  cube.BlobDelete("Polygon",sn);
 
   ImagePolygon poly;
-  poly.Create(cube);
+  poly.Create(cube, ui.GetInteger("PIXINC"));
+
+  cube.BlobDelete("Polygon",sn);
   cube.Write(poly);
 
   Process p;

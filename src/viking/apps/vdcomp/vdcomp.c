@@ -84,7 +84,7 @@
 /*  datri@convex.com, 11-15-91 added recognition of - as stdout for */
 /*  	output filename; disabled various messages; directed        */
 /*	messages to stderr; added exit status			    */
-/*  JUN04 Jeff Anderson - Removed compiler warnings
+/*  JUN04 Jeff Anderson - Removed compiler warnings                 */
 /*  DEC89 Modified program to handle both Voyager and Viking images.*/
 /*  OCT89 Converted Voyager decompression program to handle Viking  */
 /*  compressed images.  Changed obuf to 'unsigned' to simplify      */
@@ -100,6 +100,20 @@
 /*  Inputs   - Input file to be decompressed.                       */
 /*                                                                  */
 /*  Outputs  - Output file containing decompressed image.           */
+/*                                                                  */
+/********************************************************************/
+/*                                                                  */
+/*   Return Value Codes:                                            */
+/*                                                                  */
+/*   0:   Success                                                   */
+/*   1:   Help mode triggered                                       */
+/*   2:   Could not write output file                               */
+/*   3:   Could not open input file                                 */
+/*   4:   Could not open output file                                */
+/*   5:   Out of memory in half_tree                                */
+/*   6:   Out of memory in new_node                                 */
+/*   7:   Invalid byte count in dcmprs                              */
+/*   42:  Input file has invalid or corrupted line header table     */
 /*                                                                  */
 /********************************************************************/
 
@@ -159,14 +173,14 @@ int               label_checksum = 0L, checksum = 0L;
 
 
 /*************************************************/
-main(argc,argv)
+int main(argc,argv)
      int  argc;
      char **argv;
 {
-  unsigned char ibuf[2048],obuf[2048];
+  unsigned char ibuf[65536],obuf[65536];
   unsigned char blank=32;
-  short         host,length,total_bytes,line,i;
-  int          x,long_length,hist[511];
+  short         host,total_bytes,line,i;
+  int           length,x,long_length,hist[511];
   int           count;
 
   /*********************************************************************/
@@ -308,8 +322,24 @@ main(argc,argv)
 
   if (record_bytes == 1204) {
     long_length = 0;
-    for (i=0; i<1056; i++) {
+    int line1Bytes = 0;
+    for (i = 0; i < 1056; i++) {
       length = read_var(ibuf,host);
+
+      // Check to see that all lines are the same number of bytes.
+      if (i == 0) {
+        line1Bytes = length;
+      }
+      else {
+        if (length != line1Bytes) {
+          fprintf(stderr,"\n\ninput file has invalid or corrupted line header table!\n\n");
+          exit(42);
+          // 42 is a good number! .... Also,
+          // vik2isis will handle 42 by throwing an iExeption with the
+          // appropriate message.
+        }
+      }
+
       if (output_format == 1) {
 	fwrite(ibuf,length,1,outfile);
 	long_length = long_length + length;
@@ -355,7 +385,7 @@ main(argc,argv)
       if (count != 1) {
 	fprintf(stderr,"\nError writing output file.  Aborting program.");
 	fprintf(stderr,"\nCheck disk space or for duplicate filename.");
-	exit(1);
+	exit(2);
       }
     }
     else  {
@@ -363,7 +393,7 @@ main(argc,argv)
       if (count != 1) {
 	fprintf(stderr,"\nError writing output file.  Aborting program.");
 	fprintf(stderr,"\nCheck disk space or for duplicate filename.");
-	exit(1);
+	exit(2);
       }
     }
 
@@ -416,13 +446,13 @@ int host;
   if (host == 1 | host == 2) {
     if ((infile = open(inname,O_RDONLY | O_BINARY)) <= 0) {
       fprintf(stderr,"\ncan't open input file: %s\n",inname);
-      exit(1);
+      exit(3);
     }
   }
   else if (host == 3 | host == 5) {
     if ((infile = open(inname,O_RDONLY)) <= 0) {
       fprintf(stderr,"\ncan't open input file: %s\n",inname);
-      exit(1);
+      exit(3);
     }
 
     /****************************************************************/
@@ -481,7 +511,7 @@ int *host;
     if (outname[0] == '-') outfile=stdout;
     else if ((outfile = fopen(outname,"wb"))==NULL) {
       fprintf(stderr,"\ncan't open output file: %s\n",outname);
-      exit(1);
+      exit(4);
     }
   }
 
@@ -494,7 +524,7 @@ int *host;
 #endif
 			   ))==NULL) {
 	  fprintf(stderr,"\ncan't open output file: %s\n",outname);
-	  exit(1);
+	  exit(4);
 	}
       }
       else {
@@ -504,7 +534,7 @@ int *host;
 #endif
 			   ))==NULL) {
 	  fprintf(stderr,"\ncan't open output file: %s\n",outname);
-	  exit(1);
+	  exit(4);
 	}
       }
     }
@@ -515,7 +545,7 @@ int *host;
 #endif
 			 ))==NULL) {
 	fprintf(stderr,"\ncan't open output file: %s\n",outname);
-	exit(1);
+	exit(4);
       }
     }
 
@@ -527,7 +557,7 @@ int *host;
 #endif
 			   ))==NULL) {
 	  fprintf(stderr,"\ncan't open output file: %s\n",outname);
-	  exit(1);
+	  exit(4);
 	}
       }
       else {
@@ -537,7 +567,7 @@ int *host;
 #endif
 			   ))==NULL) {
 	  fprintf(stderr,"\ncan't open output file: %s\n",outname);
-	  exit(1);
+	  exit(4);
 	}
       }
     }
@@ -1019,12 +1049,13 @@ int   host;
           /* VAX host, but not a variable length file            */
           /*******************************************************/
     length = 0;
-    result = read(infile,&length,2);
-    nlen =   read(infile,ibuf,length+(length%2));
+    result = read(infile, &length, 2);
+    nlen =   read(infile, ibuf, length + (length % 2));
 
     /* check to see if we crossed a vax record boundary          */
     while (nlen < length)
-      nlen += read(infile,ibuf+nlen,length+(length%2)-nlen);
+      nlen += read(infile, ibuf + nlen, length + (length % 2) - nlen);
+
     return (length);
 
   case 5: /*******************************************************/
@@ -1208,7 +1239,7 @@ NODE *huff_tree(hist)
   node_list = (NODE **) malloc(sizeof(temp)*512);
   if (node_list == NULL) {
     fprintf(stderr,"\nOut of memory in huff_tree!\n");
-    exit(1);
+    exit(5);
   }
   np = node_list;
 
@@ -1293,7 +1324,7 @@ NODE *new_node(value)
   }
   else {
     fprintf(stderr,"\nOut of memory in new_node!\n");
-    exit(1);
+    exit(6);
   }
 
   return temp;
@@ -1375,7 +1406,7 @@ void dcmprs(ibuf,obuf,nin,nout,root)
     odn = *obuf++ = *ibuf++;
   else {
     fprintf(stderr,"\nInvalid byte count in dcmprs!\n");
-    exit(1);
+    exit(7);
   }
 
   /************************************************************************

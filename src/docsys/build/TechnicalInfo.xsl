@@ -12,6 +12,7 @@ Author
 Deborah Lee Soltesz
 12/05/2002
 
+06/03/2009 - Jeannie Walldren - Removed hardcoded link to ApplicationTest documentation
 -->
 
 
@@ -130,14 +131,7 @@ Deborah Lee Soltesz
             Isis Application XML Reference</a><br/>
             Reference guide for the Isis Application XML language
           </p>
-
-        <!-- hard coded links -->
-           <p>
-             <a href="../Schemas/ApplicationTest/documentation/index.html">
-             Isis Application Test XML Reference</a><br/>
-             Reference guide for the Isis Application Test XML language for creating language-independent application tests
-           </p>
-
+      
         <!-- hard coded links -->
           <p>
             <a href="../Schemas/Documentation/documentation/index.html">

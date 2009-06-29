@@ -2,8 +2,8 @@
 #define AutoReg_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2009/03/30 19:34:41 $
+ * $Revision: 1.11 $
+ * $Date: 2009/06/02 22:46:27 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -25,6 +25,10 @@
 
 #include <string>
 #include <vector>
+
+#include "Statistics.h"
+#include "Chip.h"
+//#include "AutoRegItem.h"
 
 namespace Isis {
   /**
@@ -70,16 +74,35 @@ namespace Isis {
    *             parameters (goodness of fit and skewness) for
    *             successive calls to Register method.  Also check
    *             to see if skewness is null.
+   *    @history 2009-05-08 Stacy Alley - Took out the skewness
+   *             test and added the ellipse eccentricity test in
+   *             the ModelSurface method.  Also added the 'reduce'
+   *             option to speed up the pattern matching process.
+   *    @history 2009-06-02 Stacy Alley - ModelSurface method now
+   *             returns a bool instead of an int.  The p_status
+   *             is set within this method now. The Match method
+   *             now takes another arg... fChip, passed in from
+   *             Register. Also took out a redundant test,
+   *             'CompareFits' after the ModelSurface call.  Also
+   *             changed all the Chips in this header file from
+   *             pointers to non-pointers.
+   *             Saved all the reduced chips and have
+   *             methods to return them so they can be views from
+   *             Qnet.
+   *    @history 2009-06-02 Jeff Anderson - Added
+   *             AdaptiveRegistration virtual methods
+   *
    */
-  class Chip;
   class Pvl;
+  class AutoRegItem;
+
   class AutoReg {
     public:
       AutoReg (Pvl &pvl);
 
       virtual ~AutoReg();
 
-      enum RegisterStatus {
+      enum RegisterStatus{
         Success, //!< Success
         PatternChipNotEnoughValidData, //!< Not enough valid data in pattern chip
         FitChipNoData, //!< Fit chip did not have any valid data
@@ -88,28 +111,35 @@ namespace Isis {
         SurfaceModelSolutionInvalid, //!< Could not model surface for sub-pixel accuracy
         SurfaceModelDistanceInvalid, //!< Surface model moves registration more than one pixel
         PatternZScoreNotMet, //!< Pattern data max or min does not pass the z-score test
-        SurfaceModelToleranceNotMet, //!< Goodness of fit tolerance (with subpixel accuracy) not satisfied
-        FitChipSkewnessNotMet //!< The skewness of the fit chip histogram was not met
+        SurfaceModelEccentricityRatioNotMet //!< Ellipse eccentricity of the surface model not satisfied
       };
 
       //! Return pointer to pattern chip
-      inline Chip *PatternChip () { return p_patternChip; };
+      inline Chip *PatternChip () { return &p_patternChip; };
 
       //! Return pointer to search chip
-      inline Chip *SearchChip() { return p_searchChip; };
+      inline Chip *SearchChip() { return &p_searchChip; };
 
       //! Return pointer to search chip
-      inline Chip *FitChip() { return p_fitChip; };
+      inline Chip *FitChip() { return &p_fitChip; };
+
+      //! Return pointer to reduced pattern chip
+      inline Chip *ReducedPatternChip() { return &p_reducedPatternChip; };
+
+      //! Return pointer to reduced search chip
+      inline Chip *ReducedSearchChip() { return &p_reducedSearchChip; };
+
+      //! Return pointer to reduced fix chip
+      inline Chip *ReducedFitChip() { return &p_reducedFitChip; };
 
       void SetSubPixelAccuracy(bool on);
       void SetPatternValidPercent(const double percent);
-      void SetPatternSampling (const double percent);
-      void SetSearchSampling (const double percent);
       void SetTolerance(double tolerance);
       void SetSurfaceModelWindowSize (int size);
       void SetSurfaceModelDistanceTolerance (double distance);
-      void SetFitChipSkewnessTolerance (double tolerance);
+      void SetReductionFactor (int reductionFactor);
       void SetPatternZScoreMinimum(double minimum);
+      void SetSurfaceModelEccentricityRatio(double ratioTolerance);
 
       //! Return pattern valid percent
       double PatternValidPercent() const { return p_patternValidPercent; };
@@ -150,14 +180,16 @@ namespace Isis {
         score2=p_ZScore2;
       }
 
-      /**
-       * Return the skewness of the fit chip
-       */
-      double Skewness () const {
-        return p_skewness;
-      }
-
       Pvl RegistrationStatistics();
+
+      /**
+       * Return if the algorithm is an adaptive pattern matching
+       * technique
+       */
+      virtual bool IsAdaptive() { return false; }
+
+      virtual AutoReg::RegisterStatus AdaptiveRegistration(int startSamp,
+                                                           int startLine);
 
     protected:
       double p_idealFit;
@@ -166,15 +198,20 @@ namespace Isis {
       void Parse(Pvl &pvl);
       virtual double MatchAlgorithm (Chip &pattern, Chip &subsearch) = 0;
       virtual bool CompareFits(double fit1, double fit2);
-      int ModelSurface(std::vector<double> &x, std::vector<double> &y,
+      bool ModelSurface(std::vector<double> &x, std::vector<double> &y,
                        std::vector<double> &z);
-
+      Chip Reduce(Chip &chip, int reductionFactor);
     private:
       AutoReg (const AutoReg &original){};
+      void Match(Chip &sChip, Chip &pChip, Chip &fChip, int ss, int es, int sl, int el);
+      bool ComputeChipZScore(Chip &chip);
 
-      Chip *p_patternChip;
-      Chip *p_searchChip;
-      Chip *p_fitChip;
+      Chip p_patternChip;
+      Chip p_searchChip;
+      Chip p_fitChip;
+      Chip p_reducedPatternChip;
+      Chip p_reducedSearchChip;
+      Chip p_reducedFitChip;
 
       bool p_subpixelAccuracy;
 
@@ -184,15 +221,13 @@ namespace Isis {
       int p_PatternZScoreNotMet;
       int p_FitChipNoData;
       int p_FitChipToleranceNotMet;
-      int p_FitChipSkewnessNotMet;
       int p_SurfaceModelNotEnoughValidData;
       int p_SurfaceModelSolutionInvalid;
-      int p_SurfaceModelToleranceNotMet;
       int p_SurfaceModelDistanceInvalid;
+      int p_SurfaceModelEccentricityRatioNotMet;
 
       double p_ZScore1;
       double p_ZScore2;
-      double p_skewness;
 
       double p_minimumPatternZScore;
       double p_patternValidPercent;
@@ -202,12 +237,20 @@ namespace Isis {
       double p_cubeSample, p_cubeLine;
       double p_goodnessOfFit;
       double p_tolerance;
-      double p_skewnessTolerance;
 
       std::string p_algorithmName;
 
       int p_windowSize;
       double p_distanceTolerance;
+
+      double p_surfaceModelEccentricityTolerance;
+      double p_surfaceModelEccentricity;
+      double p_bestFit;
+      int p_bestSamp;
+      int p_bestLine;
+      int p_reduceFactor;
+      Isis::AutoReg::RegisterStatus p_status;
+
   };
 };
 

@@ -89,6 +89,9 @@ EndGroup
 ########################################################
 
 Group = DataDirectory
+  Apollo15    = $ISIS3DATA/apollo15
+  Apollo16    = $ISIS3DATA/apollo16
+  Apollo17    = $ISIS3DATA/apollo17
   Base        = $ISIS3DATA/base
   Cassini     = $ISIS3DATA/cassini
   Clementine1 = $ISIS3DATA/clementine1

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2009/05/04 20:06:13 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/05/14 20:41:01 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -65,10 +65,10 @@ namespace Isis {
       double yVal = y[i];
       double xVal = x[i];
       p_totalPixels++;
-  
+
       if (Isis::IsValidPixel(xVal) && Isis::IsValidPixel(yVal)) {
-        p_x.AddData(&xVal,1);
-        p_y.AddData(&yVal,1);
+        p_x.AddData(xVal);
+        p_y.AddData(yVal);
         p_sumxy += xVal * yVal;
         p_validPixels++;
       }

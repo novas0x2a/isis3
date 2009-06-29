@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/07/03 22:28:03 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/05/15 20:30:33 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -95,6 +95,8 @@ void APPLICATION ();
 void startMonitoringMemory();
 void stopMonitoringMemory();
 void SegmentationFault(int);
+void Abort(int);
+void InterruptSignal(int);
 
 /**
  * The programmer supplied main function
@@ -108,6 +110,8 @@ int main (int argc, char *argv[]) {
 #ifdef CWDEBUG
   startMonitoringMemory();
   signal(SIGSEGV, SegmentationFault);
+  signal(SIGABRT, Abort);
+  signal(SIGINT, InterruptSignal);
 #endif
 
   Isis::Application *app = new Isis::Application(argc,argv);
@@ -166,5 +170,21 @@ void SegmentationFault(int) {
     std::cerr << currentStack[i] << std::endl;
   }
 
-  abort();
+  exit(1);
+}
+
+void Abort(int) {
+  std::vector<std::string> currentStack = Isis::iException::getCurrentStack();
+
+  std::cerr << "Abort" << std::endl;
+  for(unsigned int i = 1; i < currentStack.size(); i++) {
+    std::cerr << currentStack[i] << std::endl;
+  }
+
+  exit(1);
+}
+
+
+void InterruptSignal(int) {
+  exit(1);
 }

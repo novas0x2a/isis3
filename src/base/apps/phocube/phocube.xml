@@ -7,7 +7,7 @@
   </brief>
 
   <description>
-    This program creates a cube where the bands represent the photomotry phase,
+    This program creates a cube where the bands represent the photometry phase,
     emission and/or incidence angles. Only the desired bands will be created.
   </description>
 
@@ -62,6 +62,10 @@
     </change>
     <change name="Steven Lambright" date="2009-03-06">
       Fixed a bug that occurred when processing band-dependant cubes
+    </change>
+   <change name="Kris Becker" date="2009-05-29">
+      Added the propagation of the input cube labels, objects, blobs, etc..., so 
+      the pedigree of the input source is retained.
     </change>
 </history>
 

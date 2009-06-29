@@ -112,6 +112,11 @@ namespace Qisis {
     QLabel *hdsLabel = new QLabel("High Display Saturation");
     p_hdsColor->setFixedSize(*size);
 
+    p_bgColor = new QToolButton(p_dialog);
+    connect(p_bgColor,SIGNAL(released()),this,SLOT(setBgColor()));
+    QLabel *bgLabel = new QLabel("Background");
+    p_bgColor->setFixedSize(*size);
+
     connect(this,SIGNAL(setDefaultColors()),this,SLOT(defaultBW()));
     emit setDefaultColors();
 
@@ -123,6 +128,7 @@ namespace Qisis {
     vlayout->addWidget(hrsLabel);
     vlayout->addWidget(ldsLabel);
     vlayout->addWidget(hdsLabel);
+    vlayout->addWidget(bgLabel);
     labels->setLayout(vlayout);
 
     QVBoxLayout *v2layout = new QVBoxLayout();
@@ -133,6 +139,7 @@ namespace Qisis {
     v2layout->addWidget(p_hrsColor);
     v2layout->addWidget(p_ldsColor);
     v2layout->addWidget(p_hdsColor);
+    v2layout->addWidget(p_bgColor);
     colors->setLayout(v2layout);
 
     QHBoxLayout *mainlayout = new QHBoxLayout();
@@ -250,6 +257,12 @@ namespace Qisis {
       greenStretch.SetMaximum(g);
       blueStretch.SetMaximum(b);
 
+      // Apply selected background
+      palette = p_bgColor->palette();
+      QColor bgColor = palette.color(QPalette::Button);
+      bgColor.getRgb(&r,&g,&b);
+      
+      cvp->setBackground(bgColor);
       cvp->stretchRGB(redStretch,greenStretch,blueStretch);
 
       //If any of the defaults changed, make sure to write them
@@ -261,6 +274,7 @@ namespace Qisis {
         p_hisDefault = hisColor;
         p_hrsDefault = hrsColor;
         p_hdsDefault = hdsColor;
+        p_bgDefault = bgColor;
         writeSettings();
       }
     }
@@ -329,6 +343,9 @@ namespace Qisis {
     setColor(p_hdsColor);
   }
 
+  void SpecialPixelTool::setBgColor() {
+    setColor(p_bgColor);
+  }
 
   /**
    * Gets the selected color from the color dialog.
@@ -362,6 +379,7 @@ namespace Qisis {
     p_lisColor->setPalette(*palette);
     p_lrsColor->setPalette(*palette);
     p_ldsColor->setPalette(*palette);
+    p_bgColor->setPalette(*palette);
 
     palette->setColor(QPalette::Button,Qt::white);
     p_hisColor->setPalette(*palette);
@@ -398,6 +416,8 @@ namespace Qisis {
     palette->setColor(QPalette::Button,p_hdsDefault);
     p_hdsColor->setPalette(*palette);
 
+    palette->setColor(QPalette::Button,p_bgDefault);
+    p_bgColor->setPalette(*palette);
   }
 
 
@@ -488,6 +508,14 @@ namespace Qisis {
     else {
       p_hdsDefault = Qt::white;
     }
+
+    //Default value for Bg
+    if(p_settings->value("defaultBg", 1).toInt() == 0) {
+      p_bgDefault = p_settings->value("defaultBg", 1).value<QColor>();
+    }
+    else {
+      p_bgDefault = Qt::black;
+    }
   }
 
 
@@ -512,6 +540,6 @@ namespace Qisis {
     settings.setValue("defaultHis", p_hisDefault);
     settings.setValue("defaultHrs", p_hrsDefault);
     settings.setValue("defaultHds", p_hdsDefault);
-
+    settings.setValue("defaultBg", p_bgDefault);
   }
 }

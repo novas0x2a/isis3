@@ -1,7 +1,7 @@
 /* @file                                                                  
- * $Revision: 1.9 $
- * $Date: 2009/04/21 23:36:28 $
- * $Id: CamTools.cpp,v 1.9 2009/04/21 23:36:28 skoechle Exp $
+ * $Revision: 1.11 $
+ * $Date: 2009/06/23 16:51:24 $
+ * $Id: CamTools.cpp,v 1.11 2009/06/23 16:51:24 kbecker Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -18,7 +18,7 @@
  *   $ISISROOT/doc//documents/Disclaimers/Disclaimers.html                
  *   in a browser or see the Privacy &amp; Disclaimers page on the Isis website,
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
- *   http://www.usgs.gov/privacy.html.                                    
+ *   http://www.usgs.gov/privdacy.html.                                    
  */ 
 #include <cmath>
 #include <string>
@@ -47,14 +47,47 @@
 
 using namespace std;
 
+namespace Isis {
 
+/**
+ * @brief Round values to specified precision
+ * 
+ * @param value  Value to round
+ * @param precision Precision to round value to
+ * 
+ * @return double Rounded value
+ */
 inline double SetRound(double value, const int precision) {
     double scale = pow(10.0, precision);
     value = round(value * scale) / scale;
     return (value);
 }
 
-namespace Isis {
+/** 
+ * @brief Helper function to convert values to doubles
+ * 
+ * @param T Type of value to convert
+ * @param value Value to convert
+ * 
+ * @return double Converted value
+ */
+template <typename T> double ToDouble(const T &value) {
+    return (iString(value).Trim(" \r\t\n").ToDouble());
+}
+
+/** 
+ * @brief Helper function to convert values to strings
+ * 
+ * @param T Type of value to convert
+ * @param value Value to convert
+ * 
+ * @return string Converted value
+ */
+template <typename T> std::string ToString(const T &value) {
+    return (iString(value).Trim(" \r\t\n"));
+}
+
+
 
 bool BandGeometry::isPointValid(const double &sample, const double &line, 
                                 const Camera *camera) const {
@@ -77,6 +110,32 @@ bool BandGeometry::hasCenterGeometry() const {
      if ( !IsSpecial(b->centerLatitude) ) return (true);
    }
    // No valid center exists
+   return (false);
+}
+
+/**
+ * @brief Check geometry for presence of limb 
+ *  
+ * This method checks corner geometry coordinates for the presence of a planet 
+ * limb.  This is a simple check for validity of the latitude coordinate at each 
+ * image corner.  If any of them are invalid (Nulls), then it is deamed to have 
+ * a limb in the image. 
+ *  
+ * Note that this check is only valid if the determination of the geometry has 
+ * been performed.  So care should be used as to when this check is made. 
+ * 
+ * 
+ * @return bool  True if one of the corner latitude coordinates is NULL.
+ */
+bool BandGeometry::hasLimb() const {
+   BandPropertiesListConstIter b;
+   for ( b = _gBandList.begin() ; b != _gBandList.end() ; ++b ) {
+     if ( IsSpecial(b->upperLeftLatitude) ) return (true);
+     if ( IsSpecial(b->upperRightLatitude) ) return (true);
+     if ( IsSpecial(b->lowerRightLatitude) ) return (true);
+     if ( IsSpecial(b->lowerLeftLatitude) ) return (true);
+   }
+   // All outer geometry points are defined
    return (false);
 }
 
@@ -219,6 +278,7 @@ void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry,
 
     // Test for interesting intersections
     if (camera.IntersectsLongitudeDomain(camMap)) g.hasLongitudeBoundary = true;
+    camera.SetBand(band+1);
     if (camera.SetUniversalGround(90.0, 0.0)) {
       if ( isPointValid(camera.Sample(), camera.Line(), &camera) ) {
         g.hasNorthPole = true;
@@ -233,7 +293,7 @@ void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry,
     if ( doPolygon ) {
       // Now compute the the image polygon
       ImagePolygon poly;
-      poly.Create(cube,1,1,0,0,band+1);
+      poly.Create(cube,_pixinc,1,1,0,0,band+1);
       geos::geom::MultiPolygon *multiP = poly.Polys();
       _polys.push_back(multiP->clone());
       if (_combined == 0) {
@@ -246,23 +306,8 @@ void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry,
         delete old;
       }
   
-      Projection *sinu = ProjectionFactory::Create(camMap, true);
-      geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*multiP, sinu);
-      geos::geom::Point *center = sPoly->getCentroid();
-  
-      sinu->SetCoordinate(center->getX(), center->getY());
-      g.centroidLongitude = sinu->UniversalLongitude();
-      g.centroidLatitude  = sinu->UniversalLatitude();
-      g.surfaceArea = sPoly->getArea() / (1000.0 * 1000.0);
-      delete center;
-      delete sPoly;
-      delete sinu;
-  
-      if (camera.SetUniversalGround(g.centroidLatitude, g.centroidLongitude)) {
-        g.centroidLine = camera.Line();
-        g.centroidSample = camera.Sample();
-        g.centroidRadius = camera.LocalRadius();
-      }
+      // multiP is freed by ImagePolygon object
+      _mapping = getProjGeometry(camera, multiP, g);
     }
 
     // Save off this band geometry property
@@ -273,26 +318,9 @@ void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry,
   //  need the camera model
   _summary = getGeometrySummary();
   if ( (size() != 1) && (doPolygon)) {     
-    Projection *sinu = ProjectionFactory::Create(_mapping, true);
     geos::geom::MultiPolygon *multiP = makeMultiPolygon(_combined);
-    geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*multiP, sinu); 
-    geos::geom::Point *center = sPoly->getCentroid();
-
-    sinu->SetCoordinate(center->getX(), center->getY());
-    _summary.centroidLongitude = sinu->UniversalLongitude();
-    _summary.centroidLatitude  = sinu->UniversalLatitude();
-    _summary.surfaceArea = sPoly->getArea() / (1000.0 * 1000.0);
-    delete center;
-    delete sPoly;
+    _mapping = getProjGeometry(camera, multiP, _summary);
     delete multiP;
-    delete sinu;
-
-    if (camera.SetUniversalGround(_summary.centroidLatitude, 
-                                  _summary.centroidLongitude)) { 
-      _summary.centroidLine = camera.Line(); 
-      _summary.centroidSample = camera.Sample();
-      _summary.centroidRadius = camera.LocalRadius();
-    }
   }
 
   return;
@@ -493,6 +521,73 @@ BandGeometry::GProperties BandGeometry::getGeometrySummary() const {
   return (bestBand);
 }
 
+
+Pvl BandGeometry::getProjGeometry(Camera &camera,  
+                                   geos::geom::MultiPolygon *footprint,
+                                   GProperties &g) {
+
+  // Get basic projection information.  Assumes a Sinusoidal projection with
+  // East 360 longitude domain and planetocentric laitudes.
+  Pvl sinuMap;
+  camera.BasicMapping(sinuMap);
+  PvlGroup &mapping = sinuMap.FindGroup("Mapping");
+
+  double clon = g.centerLongitude;
+  double minLon = (double) mapping["MinimumLongitude"];
+  double maxLon = (double) mapping["MaximumLongitude"];
+  if ( IsSpecial(clon) ) clon = (minLon + maxLon)/2.0;
+
+  //  Make adjustments for center projection type/ranges.
+  //  Tests show that converting to 180 domain at poles works better
+  //  than not.
+  geos::geom::MultiPolygon *poly180(0), *poly(footprint);
+  if ( g.hasLongitudeBoundary ) {
+//    if ( !(g.hasNorthPole || g.hasSouthPole) ) {
+      // Convert the mapping group contents to 180 Longitude domain
+      PvlKeyword &ldkey = mapping["LongitudeDomain"];
+      ldkey.SetValue("180");
+
+      PvlKeyword &minkey = mapping["MinimumLongitude"];
+      PvlKeyword &maxkey = mapping["MaximumLongitude"];
+      minkey.SetValue("-180.0");
+      maxkey.SetValue("180.0");
+
+      // Compute new ranges
+      double minLat180, maxLat180, minLon180, maxLon180;
+      camera.GroundRange(minLat180, maxLat180, minLon180, maxLon180, sinuMap);
+      minkey.SetValue(ToString(minLon180));
+      maxkey.SetValue(ToString(maxLon180));
+      clon = (minLon180 + maxLon180) / 2.0;
+
+      // Convert the polygon to 180 domain
+      poly = poly180 = PolygonTools::To180(footprint);
+//    }
+  }
+
+  mapping += PvlKeyword("CenterLongitude", clon);
+
+  Projection *sinu = ProjectionFactory::Create(sinuMap, true);
+  geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*poly, sinu);
+  geos::geom::Point *center = sPoly->getCentroid();
+
+  sinu->SetCoordinate(center->getX(), center->getY());
+  g.centroidLongitude = Projection::To360Domain(sinu->UniversalLongitude());
+  g.centroidLatitude  = sinu->UniversalLatitude();
+  g.surfaceArea = sPoly->getArea() / (1000.0 * 1000.0);
+  delete center;
+  delete sPoly;
+  delete sinu;
+  delete poly180;
+
+  if (camera.SetUniversalGround(g.centroidLatitude, g.centroidLongitude)) {
+    g.centroidLine = camera.Line();
+    g.centroidSample = camera.Sample();
+    g.centroidRadius = camera.LocalRadius();
+  }
+
+  return (sinuMap);
+}
+
 void BandGeometry::generatePolygonKeys(PvlObject &pband) {
   if ( size() <= 0 ) {
     std::string mess = "No Band geometry available!";
@@ -516,6 +611,7 @@ void BandGeometry::generatePolygonKeys(PvlObject &pband) {
   pband += ValidateKey("SurfaceArea",_summary.surfaceArea,"km^2");
   pband += ValidateKey("GlobalCoverage",globalCoverage,"percent");
   if ( _combined != 0 ) {
+    pband += PvlKeyword("PixelIncrement", _pixinc);
     if ( _combined->getGeometryTypeId() != geos::geom::GEOS_MULTIPOLYGON ) {
       geos::geom::MultiPolygon *geom = makeMultiPolygon(_combined);
       pband += PvlKeyword("GisFootprint", geom->toString());
@@ -529,6 +625,8 @@ void BandGeometry::generatePolygonKeys(PvlObject &pband) {
     pband += PvlKeyword("GisFootprint", Null);
   }
 
+  // Add the mapping group used to project polygon
+  pband.AddGroup(_mapping.FindGroup("Mapping"));
   return;
 }
 

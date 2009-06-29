@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2008/10/23 15:44:07 $
+ * $Revision: 1.3 $
+ * $Date: 2009/06/02 20:00:59 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -69,12 +69,12 @@ namespace Isis {
     p_detectorSample = sample;
     p_detectorLine = line;
 
-    // The parent line will be one outside of the framelet (null data) if it doesnt fit
-    //  into this framelet
-    if(p_frameletLine >= actualFrameletHeight*2) {
+    // Didn't succeed if framelet line doesn't make sense
+    if(p_frameletLine > p_frameletHeight + 0.5) {
       return false;
     }
-    if(p_frameletLine <= -actualFrameletHeight) {
+
+    if(p_frameletLine < 0.5) {
       return false;
     }
 
@@ -99,8 +99,9 @@ namespace Isis {
 
     // Compute the framelet number.  We could have padded with null framelets
     // at the top of the image so take that into account.  Setting the framelet
-    // changes the time for the observation
-    int framelet = (int)((line - 1) / actualFrameletHeight) + 1;
+    // changes the time for the observation. Line starts at 0.5 (top of first framelet)
+    // and framelet needs to start at 1.
+    int framelet = (int)((line - 0.5) / actualFrameletHeight) + 1;
     SetFramelet(framelet);
 
     // Convert the parent line/sample to a framelet line/sample

@@ -157,7 +157,7 @@ namespace Qisis {
    */
   QAction *StatisticsTool::toolPadAction(ToolPad *toolpad) {
     QAction *action = new QAction(toolpad);
-    action->setIcon(QPixmap(toolIconDir()+"/labels.png"));
+    action->setIcon(QPixmap(toolIconDir()+"/statistics.png"));
     action->setToolTip("Statistics");
     QObject::connect(action,SIGNAL(activated()),p_dialog,SLOT(show()));
 
@@ -261,7 +261,7 @@ namespace Qisis {
   }
 
   /**
-   * Retrive the statistics based on the box size 
+   * Retrieve the statistics based on the box size 
    * and point on the cube. 
    * 
    * @param p 
@@ -647,6 +647,7 @@ namespace Qisis {
       }
       y += p_boxHeight;
     }
+
     p.setPen(QPen(Qt::red, 1));
     p.save();
     p.translate(midX, midY);

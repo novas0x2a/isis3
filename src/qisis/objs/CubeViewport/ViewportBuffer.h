@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2009/05/11 16:41:07 $
- * $Revision: 1.6 $
+ * $Date: 2009/05/13 19:26:08 $
+ * $Revision: 1.7 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -31,7 +31,7 @@
 #include "Brick.h"
 
 namespace Qisis {
- /**
+/**
  * @brief Reads and stores visible DN values
  *  
  * This class manages visible pixels in a CubeViewport. This class is responsible 
@@ -68,6 +68,7 @@ namespace Qisis {
 
       void emptyBuffer(bool force = false);
 
+      bool hasEntireCube();
       /**
        * Returns the bounding rectangle for the visible cube area in viewport pixels.
        * 
@@ -77,6 +78,7 @@ namespace Qisis {
       QRect bufferXYRect() { return p_XYBoundingRect; }
 
       void setBand(int band);
+      int getBand() { return p_band; }
 
       void enable(bool enabled);
 

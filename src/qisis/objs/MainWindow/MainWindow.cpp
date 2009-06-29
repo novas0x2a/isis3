@@ -104,7 +104,7 @@ namespace Qisis {
    * 
    * @return bool
    */
-  bool MainWindow::eventFilter(QObject *o,QEvent *e) {
+   bool MainWindow::eventFilter(QObject *o,QEvent *e) {
     switch (e->type()) {
       case QEvent::Close:{
         writeSettings();

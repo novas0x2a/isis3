@@ -410,6 +410,7 @@
 			<xs:documentation>enumeration for mission specific Application categorizations</xs:documentation>
 		</xs:annotation>
 		<xs:restriction base="xs:string">
+			<xs:enumeration value="Apollo"/>
 			<xs:enumeration value="Cassini"/>
 			<xs:enumeration value="Clementine"/>
 			<xs:enumeration value="Mariner"/>

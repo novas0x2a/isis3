@@ -460,6 +460,8 @@ namespace Qisis {
    * This method replots the data, with current settings and rubber band, in the plot window.
    */
   void PlotTool::changePlot() {
+    CubeViewport *cvp = cubeViewport();
+
     /* Delete any current curves*/
     p_plotToolWindow->clearPlotCurves();
 
@@ -468,6 +470,9 @@ namespace Qisis {
     double xMax = 10.0;
     Isis::Statistics wavelengthStats;
 
+    QString plotTitle = cvp->windowTitle();
+    plotTitle.truncate(cvp->windowTitle().lastIndexOf('@'));
+
     if (p_currentPlotType == SpectralPlot) {
       std::vector<double> avgarray,minarray,maxarray,std1array,std2array,
                           stddevarray,wavelengtharray;
@@ -475,7 +480,7 @@ namespace Qisis {
 
       getSpectralStatistics(labels, plotStats);
       xMax = labels.size();
-      Isis::Cube *cube = cubeViewport()->cube();
+      Isis::Cube *cube = cvp->cube();
 
       Isis::Pvl &pvl = *cube->Label();
 
@@ -542,6 +547,12 @@ namespace Qisis {
                                      wavelengthStats.Maximum()); 
       }
 
+      if(cvp->isGray()) {
+        plotTitle.append(QString("- Band %1").arg(cvp->grayBand()));
+      }
+      else {
+        plotTitle.append(QString("- Bands %1, %2, %3").arg(cvp->redBand()).arg(cvp->greenBand()).arg(cvp->blueBand()));
+      }   
     }
     else if (p_currentPlotType == SpatialPlot) {
       std::vector<double> dnValues;
@@ -572,9 +583,16 @@ namespace Qisis {
 
       if(p_autoScale->isChecked()) 
         p_plotToolWindow->setScale(QwtPlot::xBottom, 1, xMax);
-      
+
+      if(cvp->isGray()) {
+        plotTitle.append(QString("- Band %1").arg(cvp->grayBand()));
+      }
+      else {
+        plotTitle.append(QString("- Band %1").arg(cvp->redBand()));
+      }       
     }
 
+    p_plotToolWindow->setPlotTitle(plotTitle);
     p_plotToolWindow->showWindow();
     updateTool();
   }

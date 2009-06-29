@@ -8,6 +8,8 @@
 
 using namespace std;
 
+void PrintResults(string, Isis::IntersectionStatistics &);
+
 int main (int argc, char *argv[]) {
   Isis::Preference::Preferences(true);
 
@@ -36,10 +38,10 @@ int main (int argc, char *argv[]) {
     vector<string> idHoldList;
     idHoldList.push_back("I01523019RDR.lev2.cub");
 
-    Isis::IntersectionStatistics iStat (statsList, idList);
+    Isis::IntersectionStatistics iStat(statsList, idList);
     iStat.SetHoldList(idHoldList);
     cout << "iStat creation == SUCCESS" << endl;
-    cout << setprecision(25);
+    cout << setprecision(13);
 
     Isis::OverlapStatistics oStats1(cube1,cube2);
     Isis::OverlapStatistics oStats2(cube1,cube3);
@@ -66,29 +68,27 @@ int main (int argc, char *argv[]) {
                           overlap32, "I02609002RDR.lev2.cub", overlap31.ValidPixels());
 
     iStat.Solve();
-
-    cout << "I00824006RDR.lev2.cub : Gathered Offset: " 
-      << iStat.GetOffset("I00824006RDR.lev2.cub") << endl;
-    cout << "I01523019RDR.lev2.cub : Gathered Offset: " 
-      << iStat.GetOffset("I01523019RDR.lev2.cub") << endl;
-    cout << "I02609002RDR.lev2.cub : Gathered Offset: " 
-      << iStat.GetOffset("I02609002RDR.lev2.cub") << endl;
-
-    cout << "I00824006RDR.lev2.cub : Gathered Gain: " 
-      << iStat.GetGain("I00824006RDR.lev2.cub") << endl;
-    cout << "I01523019RDR.lev2.cub : Gathered Gain: " 
-      << iStat.GetGain("I01523019RDR.lev2.cub") << endl;
-    cout << "I02609002RDR.lev2.cub : Gathered Gain: " 
-      << iStat.GetGain("I02609002RDR.lev2.cub") << endl;
+    PrintResults("I00824006RDR.lev2.cub", iStat);
+    PrintResults("I01523019RDR.lev2.cub", iStat);
+    PrintResults("I02609002RDR.lev2.cub", iStat);
   }
   catch (Isis::iException &e) {
-   e.Report();
- }
+    e.Report();
+  }
 }
 
 
+void PrintResults(string filename, Isis::IntersectionStatistics &iStat) {
+  double offset = iStat.GetOffset(filename);
+  double gain = iStat.GetGain(filename);
 
+  if (fabs(offset) < 1e-15) {
+    offset = 0.0;
+  }
+  if (fabs(gain) < 1e-15) {
+    gain = 0.0;
+  }
 
-
-
-
+  cout << filename << " : Gathered Offset: " << offset << endl;
+  cout << filename << " : Gathered Gain: " << gain << endl;
+}

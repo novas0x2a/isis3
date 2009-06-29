@@ -298,7 +298,7 @@
                  Any file with a .pvl extension is considered a pvl file. Because pvl files contain text, the text file test variables will work on the pvl files; it is not recommended to use
                  these test variables, however, and the result must still be a valid pvl file. The order of the keywords, objects and groups matter and may not be different in any case.
                  In order to set tolerances and ignore keywords, a pvl tolerance file with .DIFF attached to the end will be used. For example, if if file is test.pvl then the tolerance file must be named
-                 test.pvl.DIFF. These files must only exist in the truth data directories. Inside the pvl tolerance file you can specify numerical tolerances and keywords to ignore. 
+                 test.pvl.DIFF. These files must only exist in the input data directories. Inside the pvl tolerance file you can specify numerical tolerances and keywords to ignore. 
                  Inside the pvl tolerance file, there should be one or two groups, Tolerances and IgnoreKeys, in the root of the file. So, a basic pvl tolerance file looks like this:
                  <pre>
                    <code>
@@ -341,7 +341,7 @@ End
                  </pre>
                  To debug these files, or see why two pvl files compare as different, you can use pvldiff. The FROM parameter will be the output file
                  (which will be created with the command <I>make output</I>), the FROM2 parameter will be the truth file and the DIFF parameter will be
-                 the DIFF file inside of the truth folder (the same as the FROM2 parameter with .DIFF added on to the end). When pvldiff is run, it will output
+                 the DIFF file inside of the input folder (the same as the FROM2 parameter with .DIFF added on to the end). When pvldiff is run, it will output
                  the first difference it finds that exceeds the tolerances.  <br />
                  For an example of the pvl test, say we have the pvl file cubelabels.pvl that looks like this:
                  <pre>
@@ -376,7 +376,7 @@ End
                    </code>
                  </pre>
                  The SomeCalculation keyword may vary by 0.000000001 and the ByteOrder could be MSB or LSB. To compensate for this, you would add a file named cubelabels.pvl.DIFF in
-                 the truth folder with the following:
+                 the input folder with the following:
                  <pre>
                    <code>
 Group = Tolerances

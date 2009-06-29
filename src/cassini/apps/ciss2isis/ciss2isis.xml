@@ -50,6 +50,11 @@
     <change name="Jeannie Walldren" date="2008-11-05">
       Modified FixDns method and updated documentation.
     </change>
+    <change name="Jeannie Walldren" date="2009-05-27">
+      Modified to convert BiasStripMean value back to 12-bit using look up table 
+      for images with DataConversionType of Table.  Updated documentation in 
+      ciss2isis.cpp
+    </change>
   </history>
   <liens>
     <item> 

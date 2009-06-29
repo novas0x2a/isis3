@@ -2,12 +2,11 @@
 
 #include <cstdio>
 #include <string>
+#include "stdlib.h"
 
 #include "ProcessImportPds.h"
-
 #include "UserInterface.h"
 #include "Filename.h"
-#include "System.h"
 #include "iException.h"
 #include "Pvl.h"
 #include "iString.h"
@@ -15,37 +14,70 @@
 using namespace std; 
 using namespace Isis;
 
-void TranslateVikingLabels (Pvl &pdsLabel, Cube *ocube);
+void TranslateVikingLabels(Pvl &pdsLabel, Cube *ocube);
 
-void IsisMain ()
+void IsisMain()
 {
   // We should be processing a PDS file
   ProcessImportPds p;
   UserInterface &ui = Application::GetUserInterface();
   Filename in = ui.GetFilename("FROM");
-  string tempName = "$TEMPORARY/" + in.Name() + ".img";
-  Filename temp (tempName);
 
+  string tempName = "$TEMPORARY/" + in.Name() + ".img";
+  Filename temp(tempName);
   bool tempFile = false;
 
-  // If the input file is compressed, use vdcomp to decompress
-  iString ext = iString(in.Extension()).UpCase();
-  if (ext == "IMQ") {
-    try {
-      string command = "$ISISROOT/bin/vdcomp " + in.Expanded() + " " + temp.Expanded();
-      System(command); 
-      in = temp.Expanded();
-      tempFile = true;
-    }
-    catch (iException &e) {
-      e.Clear();
-    }
+  // This program handles both compressed and decompressed files.
+  // To discover if a file is compressed attempt to create a Pvl
+  // object.  If this fails then the file must be compressed, so
+  // decompress the file using vdcomp.
+  try {
+    Pvl compressionTest(in.Expanded());
   }
-  else if (ext != "IMG") {
-    string msg = "Input file [" + in.Name() + 
-               "] does not appear to be a Viking PDS product";
-    throw iException::Message(iException::User,msg, _FILEINFO_);
+  catch (iException & e) {
+    e.Clear();
+    tempFile = true;
+    string command = "$ISISROOT/bin/vdcomp " + in.Expanded() + " " +
+        temp.Expanded() + " &> /dev/null";
+    int returnValue = system(command.c_str()) >> 8;
+    if (returnValue) {
+      string msg = "Error running vdcomp";
+      Isis::iException::errType msgTarget = Isis::iException::Programmer;
+      switch (returnValue) {
+        case 1:
+          msg =  "Vik2Isis called vdcomp and help mode was triggered.\n";
+          msg += "Were any parameters passed?";
+          break;
+        case 2:
+          msg =  "vdcomp could not write its output file.\n" +
+          msg += "Check disk space or for duplicate filename.";
+          break;
+        case 3:
+          msg = "vdcomp could not open the input file!";
+          break;
+        case 4:
+          msg = "vdcomp could not open its output file!";
+          break;
+        case 5:
+          msg = "vdcomp: Out of memory in half_tree!";
+          break;
+        case 6:
+          msg = "vdcomp: Out of memory in new_node";
+          break;
+        case 7:
+          msg = "vdcomp: Invalid byte count in dcmprs";
+          break;
+        case 42:
+          msg = "Input file [" + in.Name() + "] has\ninvalid or" +
+             " corrupted line header table!";
+          msgTarget = Isis::iException::User;
+          break;
+      }
+      throw iException::Message(msgTarget, msg, _FILEINFO_);
+    }
+    in = temp.Expanded();
   }
+
   // Convert the pds file to a cube
   Pvl pdsLabel;
   try {
@@ -66,7 +98,7 @@ void IsisMain ()
   return;
 }
 
-void TranslateVikingLabels (Pvl &pdsLabel, Cube *ocube) {
+void TranslateVikingLabels(Pvl &pdsLabel, Cube *ocube) {
   // Setup the archive group
   PvlGroup arch("Archive");
   arch += PvlKeyword("DataSetId",(string)pdsLabel["DATA_SET_ID"]);

@@ -27,6 +27,9 @@ namespace Isis {
      *          of this object. By calling this twice, and with Camera only
      *          supporting having one distortion map, this object was deleted before
      *          the constructor was finished.
+     * @history 2009-05-22 Debbie A. Cook - Cleaned up code and added iteration loop. Previous
+     *          version only iterated twice, but results indicated more iterations were
+     *          needed for better accuracy.
      * 
      */
     class LoMediumDistortionMap : public CameraDistortionMap {

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/06/19 15:13:18 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/06/02 21:13:46 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -46,20 +46,11 @@ namespace Isis {
  */
   double MinimumDifference::MatchAlgorithm (Chip &pattern, Chip &subsearch) {
     // calculate the sampling information
-    double percent = sqrt(p_patternSamplingPercent/100.0);
-    double numLines = (int)(percent*pattern.Lines());
-    if (numLines < 1.0) numLines = 1.0;
-    double linc = pattern.Lines()/numLines;
-    double numSamples = (int)(percent*pattern.Samples());
-    if (numSamples < 1.0) numSamples = 1.0;
-    double sinc = pattern.Samples()/numSamples;
-    if (linc < 1.0) linc = 1.0;
-    if (sinc < 1.0) sinc = 1.0;
 
     double diff = 0.0;
     double count = 0;
-    for (double l=1.0; l<=pattern.Lines(); l+=linc) {
-      for (double s=1.0; s<=pattern.Samples(); s+=sinc) {
+    for (double l=1.0; l <= pattern.Lines(); l++) {
+      for (double s=1.0; s <= pattern.Samples(); s++) {
         int line = (int)l;
         int samp = (int)s;
 
@@ -72,8 +63,6 @@ namespace Isis {
       }
     }
 
-    double percentValid = (double) count / (numLines * numSamples);
-    if (percentValid * 100.0 < this->PatternValidPercent()) return Isis::Null;
     return diff / count;
   }
 

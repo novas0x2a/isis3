@@ -113,7 +113,6 @@ HiVector compAdd(const HiVector &c0, const HiVector &c1, int &nNull) {
 
 
 void IsisMain() {
-
 //  Get user interface to test for input conditions
   UserInterface &ui = Application::GetUserInterface();
   balance = ui.GetString("BALANCE");
@@ -140,6 +139,13 @@ void IsisMain() {
   fromData[0].mult = HiVector(icube1->Lines(), 1.0);
   fromData[0].add = HiVector(icube1->Lines(), 0.0);
 
+  if(seamSize + skipSize > icube1->Samples()) {
+    string msg = "SEAMSIZE [" + iString(seamSize) + "] + SKIP [" + iString(skipSize) + "] must ";
+    msg += " be less than the number of samples [" + iString(icube1->Samples()) + "] in ";
+    msg += "[" + ui.GetAsString("FROM1") + "]";
+    throw iException::Message(iException::User, msg, _FILEINFO_);
+  }
+
   PvlGroup &from1Archive = icube1->GetGroup("ARCHIVE");
   PvlGroup &from1Instrument = icube1->GetGroup("INSTRUMENT");
   fromData[0].ChnNumber = from1Instrument["ChannelNumber"];
@@ -165,6 +171,13 @@ void IsisMain() {
     fromData[1].nSamples = icube2->Samples();
     fromData[1].mult = HiVector(icube2->Lines(), 1.0);
     fromData[1].add = HiVector(icube2->Lines(), 0.0);
+
+    if(seamSize + skipSize > icube2->Samples()) {
+      string msg = "SEAMSIZE [" + iString(seamSize) + "] + SKIP [" + iString(skipSize) + "] must ";
+      msg += " be less than the number of samples [" + iString(icube2->Samples()) + " in ";
+      msg += "[" + ui.GetAsString("FROM2") + "]";
+      throw iException::Message(iException::User, msg, _FILEINFO_);
+    }
 
     //Test to make sure input files are compatable
     PvlGroup &from2Archive = icube2->GetGroup("ARCHIVE");
@@ -362,28 +375,27 @@ void IsisMain() {
   Application::Log(results);
 }
 
-void getStats(std::vector<Buffer *> &in, std::vector<Buffer *> &out){
+void getStats(std::vector<Buffer *> &in, std::vector<Buffer *> &out) {
   Buffer &channel0 = *in[0];
   Buffer &channel1 = *in[1];
   double x,y;
 
-
   Statistics c0, c1;
-    for (int i = (skipSize-1); i < ((skipSize-1)+seamSize+1); i++) {
-    
-      // set the x value 
-      x = channel0[i];
-      c0.AddData(x);
-      // set the y value 
-      y = channel1[channel1.size()-(skipSize+1)-i] ;
-      c1.AddData(y);
+  for (int i = 0; i < seamSize+1; i++) {
 
-      stats.AddData(&x, &y, 1);
-    }
+    // set the x value 
+    x = channel0[skipSize + i];
+    c0.AddData(x);
 
-    f0LineAvg[channel0.Line()-1] = c0.Average();
-    f1LineAvg[channel1.Line()-1] = c1.Average();
-    return;
+    // set the y value 
+    y = channel1[channel1.size() - (skipSize + 1) - i] ;
+    c1.AddData(y);
+
+    stats.AddData(&x, &y, 1);
+  }
+
+  f0LineAvg[channel0.Line()-1] = c0.Average();
+  f1LineAvg[channel1.Line()-1] = c1.Average();
 }
 
 // Line processing routine

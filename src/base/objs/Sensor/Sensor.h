@@ -2,8 +2,8 @@
 #define Sensor_h
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2009/02/12 03:03:24 $
+ * $Revision: 1.10 $
+ * $Date: 2009/05/26 01:47:06 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -112,14 +112,15 @@ namespace Isis {
  *           handle oblique views. In the past it would oscillate and run out
  *           out iterations.
  *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance from 1e-6 to 1e-12 for dist**2 (mm) 
- *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance back to 1e-6 (mm) 
+ *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance back to 1e-6 (mm)
+ *  @history 2009-02-15 Debbie A. Cook - Added virtual Resolution method
  *  
  */
   class Sensor : public Isis::Spice {
     public:
       Sensor (Isis::Pvl &lab);
 
-      ~Sensor ();
+      virtual ~Sensor ();
 
       void SetEphemerisTime (const double time);
       bool SetLookDirection (const double v[3]);
@@ -170,6 +171,10 @@ namespace Isis {
       double SpacecraftAltitude();
       double DemRadius ( double lat, double lon); //!<Return local radius from dem
       bool HasElevationModel () { return p_hasElevationModel; };
+     /**
+      * Virtual method that returns the pixel resolution of the sensor in km/pix
+      */
+      virtual double Resolution() { return 1.0; };
 
     protected:
       bool p_hasIntersection; /**<This indicates if the surface point or look

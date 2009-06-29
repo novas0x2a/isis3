@@ -2,8 +2,8 @@
 #define ProcessRubberSheet_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/10/30 16:22:14 $
+ * $Revision: 1.5 $
+ * $Date: 2009/06/05 16:17:13 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -79,10 +79,16 @@ namespace Isis {
  *                                         even if all 4 corners of tile are bad.
  *  @history 2008-09-10 Steven Lambright - Made tiling start and end sizes
  *           variable
- *   @history 2008-10-30 Steven Lambright - Fixed problem with definition
+ *  @history 2009-05-21 Steven Lambright - A tiling hint starting at 2 will now
+ *           automatically jump to doing a SlowGeom instead of not working/being
+ *           a valid option. This fixes 2-line push frame cameras.
+ *  @history 2008-10-30 Steven Lambright - Fixed problem with definition
  *            of class Quad, pointed out by "novus0x2a" (Support Board Member)
  *  @todo 2005-02-11 Stuart Sides - finish documentation and add coded and  
  *                                 implementation example to class documentation 
+ *  @history 2009-06-05 Steven Lambright - Added TestLine(...) method and made the checking
+ *             for inserting a null tile more strict (checks the outline of a 2x2 box instead 
+ *             of just the outline of the quad).
  */                                                                       
 
   class ProcessRubberSheet : public Isis::Process {
@@ -149,6 +155,8 @@ namespace Isis {
       void QuadTree (Isis::TileManager &otile, Isis::Portal &iportal, 
                      Isis::Transform &trans, Isis::Interpolator &interp,
                      bool useLastTileMap);
+                     
+      bool TestLine(Isis::Transform &trans, int ssamp, int esamp, int sline, int eline, int increment);
 
       void (*p_bandChangeFunct) (const int band);
 

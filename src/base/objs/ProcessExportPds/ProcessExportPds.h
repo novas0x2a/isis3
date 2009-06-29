@@ -38,6 +38,9 @@ namespace Isis {
    *          in accordace to the pds end of line sequence requirement
    * @history 2008-12-17 Steven Lambright - Added calculations for OFFSET and 
    *          SCALEFACTOR keywords
+   * @history 2009-05-31 Kris Becker - Included the number of bands in the 
+   *          computation of the number of FILE_RECORDS for fixed PDS type
+   *          products.  It assumed only 1 band.
    */
   class ProcessExportPds : public Isis::ProcessExport {
     public:

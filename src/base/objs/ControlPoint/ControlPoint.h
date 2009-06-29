@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2009/03/07 17:39:57 $
+ * $Revision: 1.8 $
+ * $Date: 2009/06/03 23:21:19 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -21,7 +21,7 @@
  *   http://www.usgs.gov/privacy.html.
  */
 
-#if !defined(ControlPoint_h)
+#ifndef ControlPoint_h
 #define ControlPoint_h
 
 #include <vector>
@@ -59,8 +59,10 @@ namespace Isis {
    *   @history 2008-09-12 Tracie Sucharski, Add method to return true/false
    *                   for existence of Serial Number.
    *   @history 2009-03-07 Debbie A. Cook Fixed ComputeErrors method to set focal plane coordinates
-   *                   without changing time and improved error messages
-   *
+   *                   without changing time and improved error messages.
+   *   @history 2009-06-03 Christopher Austin, Added the p_invalid functionality
+   *            along with forceBuild, fixed documentation errors.
+   *  
    */
   class ControlPoint {
     public:
@@ -70,24 +72,44 @@ namespace Isis {
       //! Destroy a control point
       ~ControlPoint () {};
 
-      void Load(PvlObject &p);
+      void Load(PvlObject &p, bool forceBuild=false);
 
       PvlObject CreatePvlObject();
 
-      //! Sets the Id of the control point
+      /** 
+       * Sets the Id of the control point 
+       *  
+       * @param id Control Point Id 
+       */
       void SetId(const std::string &id) { p_id = id; };
 
-      //! Return the Id of the control point
+      /** 
+       * Return the Id of the control point 
+       *  
+       * @return Control Point Id 
+       */
       std::string Id() const { return p_id; };
 
-      void Add(const Isis::ControlMeasure &measure);
+      void Add(const ControlMeasure &measure, bool forceBuild=false);
       void Delete(int index);
 
-      //! Return the ith measurement of the control point
-      ControlMeasure &operator[](int index) { return p_measure[index]; };
+      /** 
+       * Return the ith measurement of the control point 
+       *  
+       * @param index Control Measure index
+       *  
+       * @return The Control Measure at the provided index 
+       */
+      ControlMeasure &operator[](int index) { return p_measures[index]; };
 
-      //! Return the ith measurement of the control point
-      const ControlMeasure &operator[](int index) const { return p_measure[index]; };
+      /** 
+       * Return the ith measurement of the control point 
+       *  
+       * @param index Control Measure index
+       *  
+       * @return The Control Measure at the provided index
+       */
+      const ControlMeasure &operator[](int index) const { return p_measures[index]; };
 
       //! Return the measurement for the given serial number
       ControlMeasure &operator[](const std::string &serialNumber);
@@ -99,37 +121,58 @@ namespace Isis {
       bool HasSerialNumber (std::string &serialNumber);
 
       //! Return the number of measurements in the control point
-      int Size () const { return p_measure.size(); };
+      int Size () const { return p_measures.size(); };
+      int NumValidMeasures ();
 
-      //! Set whether to ignore or use control point
+      /** 
+       * Set whether to ignore or use control point 
+       *  
+       * @param ignore True to ignore this Control Point, False to un-ignore
+       */
       void SetIgnore(bool ignore) { p_ignore = ignore; };
 
       //! Return if the control point should be ignored
       bool Ignore() const { return p_ignore; };
 
-      //! Set the control point as held to its lat/lon
+      //! Return if the control point is invalid
+      bool Invalid() const { return p_invalid; }
+
+      /** 
+       * Set the control point as held to its lat/lon
+       *  
+       * @param held True to hold this Control Point, False to release
+       */
       void SetHeld(bool held) { p_held = held; };
 
       //! Is the control point lat/lon held?
       bool Held() const { return p_held; };
 
       /**
-       * A control point can have one of two types, either Ground or Tie.
-       *
-       * A Ground point is a Control Point whose lat/lon is well established
-       * and should not be changed. Some people will refer to this as a
-       * truth (i.e., ground truth).  Holding a point is equivalent to making
-       * it a ground point.  A ground point can be identifed in one or more
-       * cubes.
-       *
-       * A Tie point is a Control Point that identifies common measurements
-       * between two or more cubes. While it could have a lat/lon, it is not
-       * necessarily correct and is subject to change.  This is the most
-       * common type of control point.
+       * A control point can have one of two types, either Ground or Tie. 
        */
-      enum PointType { Ground, Tie };
+      enum PointType {
+        /**
+         * A Ground point is a Control Point whose lat/lon is well established
+         * and should not be changed. Some people will refer to this as a
+         * truth (i.e., ground truth).  Holding a point is equivalent to making
+         * it a ground point.  A ground point can be identifed in one or more
+         * cubes.
+         */
+        Ground,
+        /**
+         * A Tie point is a Control Point that identifies common measurements
+         * between two or more cubes. While it could have a lat/lon, it is not
+         * necessarily correct and is subject to change.  This is the most
+         * common type of control point.
+         */
+        Tie 
+        };
 
-      //! Change the type of the control point
+      /** 
+       * Change the type of the control point 
+       *  
+       * @param type The type for this Control Point 
+       */
       void SetType (PointType type) { p_type = type; };
 
       //! Return the type of the point
@@ -163,14 +206,16 @@ namespace Isis {
       double WrapLongitude ( double lon, double baselon);
 
     private:
-      std::string p_id;
-      std::vector<Isis::ControlMeasure> p_measure;
-      PointType p_type;
-      bool p_ignore;
-      bool p_held;
-      double p_latitude;
-      double p_longitude;
-      double p_radius;
+      std::string p_id; //!< Point Id
+      std::vector<Isis::ControlMeasure> p_measures; //!< List of Control Measures
+      PointType p_type; //!< This Control Point's Type
+      bool p_ignore;    //!< If this Control Point is ignored
+      bool p_held;      //!< If this Control Point is held
+      double p_latitude;  //!< The Latitude of this Control Point
+      double p_longitude; //!< The Longtude of this Control Point
+      double p_radius;    //!< The raduis of this Control Point
+
+      bool p_invalid;  //!< If this Control Point is invalid
   };
 };
 

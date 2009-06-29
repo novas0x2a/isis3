@@ -13,7 +13,7 @@ int main () {
   Isis::PvlContainer ani("Animals");
   ani += dog;
   ani += cat;
-  ani.AddComment("/* Pets are cool");
+  ani.AddComment("/* Pets are cool */");
 
 //  cout << "1 ..." << endl;
   cout << ani << endl; 
@@ -27,5 +27,11 @@ int main () {
 
 //  cout << "4 ..." << endl;
   ani -= ani[0];
+  cout << ani << endl;
+
+  cout << "Test inserter ..." << endl;
+  Isis::PvlKeyword monkey("Orangutan", "gross");
+  ani.AddKeyword(dog, ani.Begin());
+  ani.AddKeyword(monkey, ani.Begin());
   cout << ani << endl;
 }

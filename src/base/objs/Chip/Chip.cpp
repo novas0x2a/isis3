@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2009/04/23 23:35:53 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2009/06/02 17:13:22 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -77,6 +77,10 @@ namespace Isis {
    * @param lines     number of lines in the chip
    */
   void Chip::SetSize(const int samples, const int lines) {
+    if(samples <= 0.0 || lines <= 0.0) {
+      std::string msg = "samples and lines must be greater than zero.";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
     p_chipSamples = samples;
     p_chipLines = lines;
     p_buf.clear();
@@ -119,7 +123,6 @@ namespace Isis {
    */
   void Chip::Load(Cube &cube, const double rotation, const double scale,
                   const int band) {
-
     // Initialize our affine transform
     p_affine.Identity();
 
@@ -135,6 +138,7 @@ namespace Isis {
     // Store off the cube address in case someone wants to match
     // this chip
     p_cube = &cube;
+    p_filename = p_cube->Filename();
   }
 
 
@@ -302,6 +306,8 @@ namespace Isis {
     // Store off the cube address in case someone wants to match
     // this chip
     p_cube = &cube;
+    p_filename = p_cube->Filename();
+
   }
 
 
@@ -455,30 +461,33 @@ namespace Isis {
    * @param line 
    * @param output 
    */
-  void Chip::Extract (int samp, int line, Chip &output){
-    int samples = output.Samples(); 
-    int lines = output.Lines();
+  void Chip::Extract (int samp, int line, Chip &chipped){
+    int samples = chipped.Samples(); 
+    int lines = chipped.Lines();
+    //chipped.Init(samples, lines);
+    chipped.p_tackSample = ((samples - 1) / 2) + 1;
+    chipped.p_tackLine = ((lines - 1) / 2) + 1;
 
     for (int oline=1; oline<=lines; oline++) {
       for (int osamp=1; osamp<=samples; osamp++) {
-        int thisSamp = samp + (osamp - output.TackSample());
-        int thisLine = line + (oline - output.TackLine());
+        int thisSamp = samp + (osamp - chipped.TackSample());
+        int thisLine = line + (oline - chipped.TackLine());
         if ((thisSamp < 1) || (thisLine < 1) || 
             (thisSamp > Samples()) || thisLine > Lines()) {
-          output(osamp,oline) = Isis::Null;
+          chipped(osamp,oline) = Isis::Null;
         }
         else {
-          output(osamp,oline) = (*this)(thisSamp,thisLine);
+          chipped(osamp,oline) = (*this)(thisSamp,thisLine);
         }
       }
     }
 
-    output.p_cube = p_cube;
-    output.p_affine = p_affine;
-    output.p_validMinimum = p_validMinimum;
-    output.p_validMaximum = p_validMaximum;
-    output.p_tackSample = output.TackSample() + TackSample() - samp;
-    output.p_tackLine = output.TackLine() + TackLine() - line;
+    chipped.p_cube = p_cube;
+    chipped.p_affine = p_affine;
+    chipped.p_validMinimum = p_validMinimum;
+    chipped.p_validMaximum = p_validMaximum;
+    chipped.p_tackSample = chipped.TackSample() + TackSample() - samp;
+    chipped.p_tackLine = chipped.TackLine() + TackLine() - line;
 
     return;
   }
@@ -519,7 +528,7 @@ namespace Isis {
         }
         else {
           geos::geom::Point *pnt = globalFactory.createPoint(
-                                                      geos::geom::Coordinate(CubeSample(), CubeLine()));
+                                   geos::geom::Coordinate(CubeSample(), CubeLine()));
           if (pnt->within(p_clipPolygon)) {
             port.SetPosition (CubeSample(),CubeLine(), band);
             cube.Read(port);
@@ -529,7 +538,7 @@ namespace Isis {
           else {
             p_buf[line-1][samp-1] = Isis::NULL8;
           }
-	  delete pnt;
+	        delete pnt;
         }
       }
     }

@@ -33,7 +33,8 @@ int main (int argc, char *argv[]) {
 
 void doit(Isis::Pvl &lab) {
   try {
-    std::cout << "Version: " << Isis::CameraFactory::CameraVersion(lab) << std::endl;
+    std::cout << "Version: ";
+    std::cout << Isis::CameraFactory::CameraVersion(lab) << std::endl;
   }
   catch (Isis::iException &error) {
     error.Report (false);

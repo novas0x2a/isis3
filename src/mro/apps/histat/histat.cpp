@@ -35,7 +35,7 @@ void IsisMain() {
   int leftDark       = 0;
   int rightDark      = 0;
   
-  if (ui.GetBoolean("USEOFFSETS")){  
+  if (ui.GetBoolean("USEOFFSETS")){
     imageLeft      = ui.GetInteger("LEFTIMAGE");
     imageRight     = ui.GetInteger("RIGHTIMAGE");
     rampLeft       = ui.GetInteger("LEFTIMAGE");
@@ -80,7 +80,7 @@ void IsisMain() {
         ThrowException(buf.size(), leftBuffer, rightBuffer, "image buffer");
     }
     if (dark.size() <= (unsigned int)(leftDark + rightDark)){
-        ThrowException(dark.size(), leftDark, rightDark, "image dark reference");    	
+        ThrowException(dark.size(), leftDark, rightDark, "image dark reference");
     }
     
     for (int i=leftDark; i<(int)dark.size()-rightDark; i++) {
@@ -129,15 +129,12 @@ void IsisMain() {
   Table calimg("HiRISE Calibration Image");
   icube->Read(calimg);
   Statistics calStats;
-  Statistics reverseStats,	//Statistics for the Reverse
-  				// readout lines of the cal
-				//image
-				
-  	     maskStats,		//Statistics for the masked
-	     			// lines of the cal image
-				
-	     rampStats;		//Statistics for the ramped
-	     			// lines of the cal image
+  //Statistics for the Reverse readout lines of the cal image
+  Statistics reverseStats;
+  //Statistics for the masked lines of the cal image
+  Statistics maskStats;
+  //Statistics for the ramped lines of the cal image
+  Statistics rampStats;
 
   //Iterate through the calibration image
   
@@ -157,7 +154,7 @@ void IsisMain() {
   
   //Add in the mask data
   for (int rec = 22 ; rec < maskLines - 1 ; rec++){//Lines [22, 38] !!!!dependant on bin
-	 vector<int> lineBuffer = calimg[rec]["Calibration"];
+    vector<int> lineBuffer = calimg[rec]["Calibration"];
     for (int i = 2 ; i < (int)lineBuffer.size() - 1 ; i++){ //Samples [2, *-1]
       double d = lineBuffer[i];
       if (d == NULL2) { d = NULL8;}
@@ -200,7 +197,7 @@ void IsisMain() {
       ThrowException(buf.size(), calLeftBuffer, calRightBuffer, "calibration buffer");
     }
     if (dark.size() <= (unsigned int)(calLeftDark + calRightDark)){
-      ThrowException(dark.size(), calLeftDark, calRightDark, "calibration dark reference");    	
+      ThrowException(dark.size(), calLeftDark, calRightDark, "calibration dark reference");
     }
     for (int i=calLeftDark; i<(int)dark.size() - calRightDark; i++) {
       double d;
@@ -235,7 +232,7 @@ void IsisMain() {
   Buffer out(imageBuffer.SampleDimension() - (imageLeft + imageRight), 
              imageBuffer.LineDimension(),
              imageBuffer.BandDimension(),
-	     imageBuffer.PixelType());
+             imageBuffer.PixelType());
   
   
   for (int postRampLine = 0 ; postRampLine < LINES_POSTRAMP ; postRampLine++){
@@ -254,8 +251,8 @@ void IsisMain() {
     }
     imageStats.AddData(out.DoubleBuffer(), out.size());
     imageBuffer++;
-  }  
-  
+  }
+
   
   // Generate the statistics in pvl form
   const int NUM_GROUPS = 10;
@@ -311,6 +308,6 @@ PvlGroup PvlStats(Statistics &stats, const string &name) {
 void ThrowException(int vectorSize, int left, int right, string name){
   string err;
   err = "You are trying to skip as many or more samples of the " + name + 
-     	" than exist";
+        " than exist";
   throw iException::Message(iException::User,err,_FILEINFO_);
 }

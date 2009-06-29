@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.16 $                                                             
- * $Date: 2009/03/02 15:46:59 $                                                                 
+ * $Revision: 1.19 $                                                             
+ * $Date: 2009/06/05 19:14:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -80,6 +80,13 @@ namespace Isis {
  *   @history 2009-03-02 Steven Lambright - This class now keeps track of the
  *            current child band, has added error checks, and now hopefully
  *            resets state when methods like GroundRangeResolution are called.
+ *   @history 2009-05-21 Steven Lambright - The geometric tiling hint can now be
+ *            2,2 as a special case meaning no tiling will be used (the initial
+ *            box will be a 2x2 box - only the 4 corners - is the
+ *            idea behind using this value).
+ *   @history 2009-05-22 Debbie A. Cook - Added Resolution method for Sensor (parent) virtual
+ *   @history 2009-06-05 Mackenzie Boyd - Updated samson
+ *            truthdata
  */
 
   class Camera : public Isis::Sensor {
@@ -165,6 +172,13 @@ namespace Isis {
       double SampleResolution ();
       double DetectorResolution ();
   
+     /**
+      * Returns the resolution of the camera
+      * 
+      * @return double pixel resolution
+      */
+      virtual double Resolution() { return PixelResolution(); };
+
       double LowestImageResolution ();
       double HighestImageResolution ();
   

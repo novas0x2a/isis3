@@ -491,10 +491,10 @@ namespace Qisis {
     p_plot->updateLayout();
 
     /*We need to change the title on the table.*/
-    if(p_tableWindow != NULL && p_tableWindow->tableWindow()->isVisible()) 
+    if(p_tableWindow != NULL && p_tableWindow->isVisible()) 
       p_tableWindow->table()->horizontalHeaderItem(p_selected)->setText(p_titleLineEdit->text());
 
-    if(p_tableWindow != NULL && p_tableWindow->tableWindow()->isVisible()) 
+    if(p_tableWindow != NULL && p_tableWindow->isVisible()) 
       p_tableWindow->listWidget()->item(p_selected)->setText(p_titleLineEdit->text());
   }
 
@@ -1112,10 +1112,10 @@ namespace Qisis {
     configDialog->hide();
     p_plot->replot();
     /*We need to change the title on the table.*/
-    if(p_tableWindow != NULL && p_tableWindow->tableWindow()->isVisible()) 
+    if(p_tableWindow != NULL && p_tableWindow->isVisible()) 
       p_tableWindow->table()->horizontalHeaderItem(p_selected)->setText(p_plotCurves[p_selected]->title().text());
 
-    if(p_tableWindow != NULL && p_tableWindow->tableWindow()->isVisible()) 
+    if(p_tableWindow != NULL && p_tableWindow->isVisible()) 
       p_tableWindow->listWidget()->item(p_selected)->setText(p_plotCurves[p_selected]->title().text());
   }
 
@@ -1476,7 +1476,7 @@ namespace Qisis {
        p_tableWindow->setTrackListItems(false);
     }
     fillTable();
-    p_tableWindow->tableWindow()->show();
+    p_tableWindow->show();
     p_tableWindow->syncColumns();
   }
 

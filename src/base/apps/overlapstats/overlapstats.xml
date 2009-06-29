@@ -9,9 +9,8 @@
     Taking a list of cubes and an image overlap list file from 
     "findimageoverlaps", this application determines the statistics on all 
     overlapping polygons of those provided images, and displays those values 
-    in the print.prt file.  Note that the units of Thichness is done in 
-    number of images, Area is done in square meters, and SN Count is also done 
-    in number of images.
+    in the print.prt file.  Note that the units of Area is square meters, and
+    Image is images per polygon.
     </p>
     <p>
     In addition, if there are any cubes within the list that do not overlap with
@@ -54,6 +53,13 @@
       Altered the DETAILS FULL and BRIEF options based off of user input. Now,
       the statistical data will always be placed in the print.prt file, and the
       TO file will only be used for the detailed output of the overlaps.
+    </change>
+    <change name="Christopher Austin" date="2009-06-05">
+      Added the SINGLELINE parameter and changed the keywords SerialNumber* to
+      ImageStack*
+    </change>
+    <change name="Christopher Austin" date="2009-06-08">
+      Removed the *Sum keywords from the BRIEF output, and added PolygonCount.
     </change>
   </history>
 
@@ -117,6 +123,7 @@
             <exclusions>
               <item>TO</item>
               <item>TABLETYPE</item>
+              <item>SINGLELINE</item>
             </exclusions>
           </option>
           <option value="FULL">
@@ -157,21 +164,40 @@
           in accordance to the following option.
         </description>
         <list>
-          <option value="CSV">
-            <brief>CSV</brief>
-            <description>
-              Output the resulting statistics into Comma Seperated Value (CSV)
-              format.
-            </description>
-          </option>
           <option value="TAB">
             <brief> Tab Table </brief>
             <description>
               Places the resulting statistics into an easy to read table,
               which displays values seperates by tabs.
             </description>
+            <exclusions>
+              <item>SINGLELINE</item>
+            </exclusions>
+          </option>
+          <option value="CSV">
+            <brief>CSV</brief>
+            <description>
+              Output the resulting statistics into Comma Seperated Value (CSV)
+              format.
+            </description>
+            <inclusions>
+              <item>SINGLELINE</item>
+            </inclusions>
           </option>
         </list>
+      </parameter>
+
+      <parameter name="SINGLELINE">
+        <type>boolean</type>
+        <default><item>TRUE</item></default>
+        <brief>
+          Place all Serial Numbers on the same CVS line
+        </brief>
+        <description>
+          When True, places all Serial Numbers and Filenames on the same line
+          in the output CVS file. When False, Serial Numbers and Filenames
+          are placed in columns for readability.
+        </description>
       </parameter>
 
       <parameter name="ERRORS">

@@ -20,30 +20,58 @@ Cube *summedOutput;
 void TranslateData(Buffer &inData);
 void TranslateLabels (Pvl &pdsLabel, Cube *ocube);
 
-void IsisMain ()
-{
-  // Grab the file to import
+void IsisMain (){
+
+  //initialize globals
+  summed = false; 
   summedOutput = NULL;
+  // Grab the file to import
   ProcessImportPds p;
   UserInterface &ui = Application::GetUserInterface();
   Filename inFile = ui.GetFilename("FROM");
   Filename out = ui.GetFilename("TO");
 
-  // Make sure it is a Galilao ssi image
+  // Make sure it is a Galileo SSI image
   Pvl lab(inFile.Expanded());
 
   //Checks if in file is rdr
   if( lab.HasObject("IMAGE_MAP_PROJECTION") ) {
     string msg = "[" + inFile.Name() + "] appears to be an rdr file.";
     msg += " Use pds2isis.";
-    throw iException::Message(iException::User,msg, _FILEINFO_);
+    throw iException::Message(iException::Io,msg, _FILEINFO_);
   }
 
+  // data set id value must contain "SSI-2-REDR-V1.0"(valid SSI image) 
+  // or "SSI-4-REDR-V1.0"(reconstructed from garbled SSI image)
+  string dataSetId;
+  dataSetId = (string)lab["DATA_SET_ID"];
+  try {
+    if (dataSetId.find("SSI-2-REDR-V1.0") == string::npos
+        && dataSetId.find("SSI-4-REDR-V1.0") == string::npos) {
+      string msg = "Invalid DATA_SET_ID [" + dataSetId + "]";
+      throw iException::Message(iException::Pvl,msg,_FILEINFO_);
+    }
+  }
+  catch (iException &e) {
+    string msg = "Unable to read [DATA_SET_ID] from input file [" +
+                 inFile.Expanded() + "]";
+    throw iException::Message(iException::Io,msg,_FILEINFO_);
+  }
+
+  // set summing mode 
   if(ui.GetString("FRAMEMODE") == "AUTO") {
     double frameDuration = lab["FRAME_DURATION"];
-    if (frameDuration > 2.0 && frameDuration < 3.0) {
+    // reconstructed images are 800x800 (i.e. not summed)
+    // even though they have frame duration of 2.333 
+    // (which ordinarily indicates a summed image)
+    if (dataSetId.find("SSI-4-REDR-V1.0") != string::npos) {
+      summed = false; 
+    }
+    else if (frameDuration > 2.0 && frameDuration < 3.0) {
       summed = true;
     }
+    // seti documentation implies valid frame duration values are 2.333, 8.667, 30.333, 60.667 
+    // however some images have value 15.166 (see example 3700R.LBL)
     else if (frameDuration > 15.0 && frameDuration < 16.0) {
       summed = true;
     }
@@ -53,20 +81,6 @@ void IsisMain ()
   }
   else {
     summed = false;
-  }
-
-  try {
-    string id;
-    id = (string)lab["DATA_SET_ID"];
-    if (id.find("SSI-2-REDR-V1.0") == string::npos) {
-      string msg = "Invalid DATA_SET_ID [" + id + "]";
-      throw iException::Message(iException::Pvl,msg,_FILEINFO_);
-    }
-  }
-  catch (iException &e) {
-    string msg = "Unable to read [DATA_SET_ID] from input file [" +
-                 inFile.Expanded() + "]";
-    throw iException::Message(iException::Io,msg,_FILEINFO_);
   }
 
   Progress prog;

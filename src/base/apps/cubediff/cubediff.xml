@@ -90,6 +90,10 @@
     <change name="Brendan George" date="2007-08-09">
         Integrated WriteTabular and Column (tabular output objects) as
         application-specific classes
+    </change> 
+    <change name="Steven Koechle" date="2009-05-14">
+        Changed output, if no valid pixel differences, output zero instead of 
+        NULL8
     </change>
   </history>
 

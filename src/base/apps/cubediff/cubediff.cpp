@@ -85,11 +85,19 @@ void IsisMain() {
     results += PvlKeyword ("Sample",sample);
     results += PvlKeyword ("Line",line);
     results += PvlKeyword ("Band",band);
-    results += PvlKeyword ("AverageDifference",(double)stats.Average());
-    results += PvlKeyword ("StandardDeviation",(double)stats.StandardDeviation());
-    results += PvlKeyword ("Variance",(double)stats.Variance());
-    results += PvlKeyword ("MinimumDifference",(double)stats.Minimum());
-    results += PvlKeyword ("MaximumDifference",(double)stats.Maximum());
+    if(stats.TotalPixels() < 1) {
+      results += PvlKeyword ("AverageDifference",0);
+      results += PvlKeyword ("StandardDeviation",0);
+      results += PvlKeyword ("Variance",0);
+      results += PvlKeyword ("MinimumDifference",0);
+      results += PvlKeyword ("MaximumDifference",0);
+    } else {
+      results += PvlKeyword ("AverageDifference",(double)stats.Average());
+      results += PvlKeyword ("StandardDeviation",(double)stats.StandardDeviation());
+      results += PvlKeyword ("Variance",(double)stats.Variance());
+      results += PvlKeyword ("MinimumDifference",(double)stats.Minimum());
+      results += PvlKeyword ("MaximumDifference",(double)stats.Maximum());
+    }
     results += PvlKeyword ("ValidPixelDifferences",stats.TotalPixels());
     results += PvlKeyword ("SpecialPixelDifferences",spCount);
     results += PvlKeyword ("SigFigAccuracy", (int)sigFigAccuracy);

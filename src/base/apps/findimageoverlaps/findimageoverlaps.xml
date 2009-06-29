@@ -26,6 +26,14 @@
     <change name="Steven Lambright" date="2009-01-07">
       Added the number of errors to the results output
     </change>
+    <change name="Steven Lambright" date="2009-05-27">
+      Uses different method call to ImageOverlapSet for optimization
+    </change>
+    <change name="Steven Lambright" date="2009-05-28">
+      The input list will be internally sorted by serial number so that
+      one list of input images will always produce the same results regardless 
+      of the sort order.
+    </change>
   </history>
 
   <groups>

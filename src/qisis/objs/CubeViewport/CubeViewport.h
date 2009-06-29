@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2009/05/11 16:41:07 $
- * $Revision: 1.19 $
+ * $Date: 2009/05/13 19:26:07 $
+ * $Revision: 1.20 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -173,6 +173,7 @@ namespace Qisis {
       QPoint cursorPosition() const;
       void setCursorPosition(int x, int y);
       void setCaption();
+      void setBackground(QColor color) { p_bgColor = color; };
 
       /**
        * Returns the pixmap
@@ -183,7 +184,38 @@ namespace Qisis {
       QPixmap pixmap() { return p_pixmap; };
 
       void registerTool (Tool *tool);
-      
+
+      /**
+       * Returns the gray viewport buffer (Will be NULL if in RGB mode.)
+       * 
+       * 
+       * @return ViewportBuffer* 
+       */
+      ViewportBuffer *grayBuffer() {return p_grayBuffer; }
+
+      /**
+       * Returns the red viewport buffer (Will be NULL if in Gray mode.)
+       * 
+       * 
+       * @return ViewportBuffer* 
+       */
+      ViewportBuffer *redBuffer() {return p_redBuffer; }
+
+      /**
+       * Returns the green viewport buffer (Will be NULL if in Gray mode.)
+       * 
+       * 
+       * @return ViewportBuffer* 
+       */
+      ViewportBuffer *greenBuffer() {return p_greenBuffer; }
+
+      /**
+       * Returns the blue viewport buffer (Will be NULL if in Gray mode.)
+       * 
+       * 
+       * @return ViewportBuffer* 
+       */
+      ViewportBuffer *blueBuffer() {return p_blueBuffer; }
 
    signals:
       void viewportUpdated();//!< Emitted when viewport updated.
@@ -200,10 +232,6 @@ namespace Qisis {
       void discardChanges(); //!< Emitted when changes should be discarded
 
     public slots:
-      void setStretchInfo(int band, bool stretchFlag, double min, double max);
-      double getStretchMin(int band);
-      double getStretchMax(int band);
-      bool getStretchFlag(int band);
       QSize sizeHint() const;
       void setLinked(bool b);
       void setScale (double scale);
@@ -214,9 +242,7 @@ namespace Qisis {
 
       void viewRGB (int redBand, int greenBand, int blueBand);
       void viewGray (int band);
-      void autoStretch (int lineRate=0);
-      void autoStretch (int ssamp, int esamp, int sline, int eline,
-                        int lineRate=0);
+
       void stretchRGB (const QString &rstr,
                        const QString &gstr,
                        const QString &bstr);
@@ -224,6 +250,7 @@ namespace Qisis {
       void stretchRGB (const Isis::Stretch &rstr,
                        const Isis::Stretch &gstr,
                        const Isis::Stretch &bstr);
+      void stretchGray (const Isis::Stretch &stretch);
       void cubeChanged(bool changed);
       void show();
 
@@ -242,17 +269,18 @@ namespace Qisis {
     private:
       void doResize();
       void updateScrollBars(int x, int y);
-      void computeStretch(Isis::Brick *brick, int band,
-                          int ssamp, int esamp,
-                          int sline, int eline, int linerate,
-                          Isis::Stretch &stretch);
+      void initialStretch();
+      //void computeStretch(Isis::Brick *brick, int band,
+      //                    int ssamp, int esamp,
+      //                    int sline, int eline, int linerate,
+      //                    Isis::Stretch &stretch);
 
-      ViewportBuffer *p_grayBuffer;
-      ViewportBuffer *p_redBuffer;
-      ViewportBuffer *p_greenBuffer;
-      ViewportBuffer *p_blueBuffer;
+      ViewportBuffer *p_grayBuffer; //!< Viewport Buffer to manage gray band
+      ViewportBuffer *p_redBuffer; //!< Viewport Buffer to manage red band
+      ViewportBuffer *p_greenBuffer; //!< Viewport Buffer to manage green band
+      ViewportBuffer *p_blueBuffer; //!< Viewport Buffer to manage blue band
 
-      bool p_wasResized;
+      QColor p_bgColor; //!< The color to paint the background of the viewport
 
       Isis::Cube *p_cube;//!< The cube associated with the viewport.
       Isis::Camera *p_camera;//!< The camera from the cube.
@@ -309,28 +337,6 @@ namespace Qisis {
       void updateWhatsThis();
 
       QList<Tool *> p_toolList;//!< A list of the tools 
-
-      class CubeBandsStretch {
-        public:
-          double p_stretchMin; //!< Min stretch 
-          double p_stretchMax; //!< Max stretch 
-          bool p_stretched; //!< Stretched?
-
-          /**
-           * CubeBandsStretch constructor
-           * 
-           */
-          CubeBandsStretch() {
-            p_stretchMin = 0;
-            p_stretchMax = 0;
-            p_stretched = false; 
-  
-          };
-      };
-  
-      QList<CubeBandsStretch *> p_bandsStretchList; //!< A list of the stretches
-
-
   };
 };
 

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/09/11 16:41:03 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/06/05 16:17:13 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -88,8 +88,14 @@ namespace Isis {
         bool useLastTileMap = false;
         for (int band=1; band<=OutputCubes[0]->Bands(); band++) {
           otile.SetTile(tile,band);
-          //SlowGeom (otile,iportal,trans,interp);  
-          QuadTree (otile,iportal,trans,interp,useLastTileMap);
+
+          if(p_startQuadSize == 2) {
+            SlowGeom (otile,iportal,trans,interp);  
+          }
+          else {
+            QuadTree (otile,iportal,trans,interp,useLastTileMap);
+          }
+
           useLastTileMap = true;
 
           OutputCubes[0]->Write(otile);
@@ -108,8 +114,12 @@ namespace Isis {
           p_bandChangeFunct (lastOutputBand);
         }
 
-        //    SlowGeom (otile,iportal,trans,interp);  
-        QuadTree (otile,iportal,trans,interp,false);
+        if(p_startQuadSize == 2) {
+          SlowGeom (otile,iportal,trans,interp);  
+        }
+        else {
+          QuadTree (otile,iportal,trans,interp,false);
+        }
 
         OutputCubes[0]->Write(otile);
         p_progress->CheckStatus();
@@ -207,6 +217,33 @@ namespace Isis {
     }
   }
   
+    
+  /**
+   * This function walks a line (or rectangle) and tests a point every increment pixels. If any of these
+   *   points can transform, then this method will return true. Otherwise, this returns false.
+   *
+   * @param trans The Transform object to test on
+   * @param ssamp Starting Sample
+   * @param esamp Ending Sample
+   * @param sline Starting Line
+   * @param eline Ending Line
+   * @param increment The increment to step by while walking this line/rectangle
+   */
+  bool ProcessRubberSheet::TestLine(Isis::Transform &trans, int ssamp, int esamp, int sline, int eline, int increment) {
+    for(int line = sline; line <= eline; line += increment) {
+      for(int sample = ssamp; sample <= esamp; sample += increment) {
+        double sjunk = 0.0;
+        double ljunk = 0.0;
+        
+        if(trans.Xform (sjunk, ljunk, sample, line)) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  }
+  
   // Process a quad trying to find input positions for output positions
   void ProcessRubberSheet::ProcessQuad (std::vector<Quad *> &quadTree, Isis::Transform &trans,
                                         std::vector< std::vector<double> > &lineMap, 
@@ -259,25 +296,41 @@ namespace Isis {
             return;
           }
         }
-        // Do the top and bottom edges
-        for (double samp=quad->ssamp+1; samp<=quad->esamp-1; samp+=4.0) {
-          double sjunk, ljunk;
-          if (trans.Xform (sjunk, ljunk, samp, quad->sline) ||
-              trans.Xform (sjunk, ljunk, samp, quad->eline)) {
-            SplitQuad(quadTree);
-            return;
-          }       
-        }  
-  
-        // Do the left and right edges
-        for (double line=quad->sline+1; line<=quad->eline-1; line+=4.0) {
-          double sjunk, ljunk;
-          if (trans.Xform (sjunk, ljunk, quad->ssamp, line) ||
-              trans.Xform (sjunk, ljunk, quad->esamp, line)) {
-            SplitQuad(quadTree);
-            return;
-          }       
+        
+        int centerSample = (quad->ssamp + quad->esamp) / 2;
+        int centerLine   = (quad->sline + quad->eline) / 2;
+        
+        // All 4 corner points have failed tests.
+        //
+        // If we find data around the quad by walking around a 2x2 grid in the box, then
+        //   we need to split the quad. Check outside the box and interior crosshair.
+        //
+        //   This is what we're walking:
+        //                       -----------
+        //                       |    |    |
+        //                       |    |    |
+        //                       |----|----|
+        //                       |    |    |
+        //                       |    |    |
+        //                       -----------
+          // Top Edge
+        if(TestLine(trans, quad->ssamp+1, quad->esamp-1, quad->sline, quad->sline, 4) ||
+          // Bottom Edge
+           TestLine(trans, quad->ssamp+1, quad->esamp-1, quad->eline, quad->eline, 4) ||
+           // Left Edge
+           TestLine(trans, quad->ssamp, quad->ssamp, quad->sline+1, quad->eline-1, 4) ||
+           // Right Edge
+           TestLine(trans, quad->esamp, quad->esamp, quad->sline+1, quad->eline-1, 4) ||
+           // Center Column
+           TestLine(trans, centerSample, centerSample, quad->sline+1, quad->eline-1, 4) ||
+           // Center Row
+           TestLine(trans, quad->ssamp+1, quad->esamp-1, centerLine, centerLine, 4)) {
+           
+           
+           SplitQuad(quadTree);
+           return;
         }
+      
         //  Nothing in quad, fill with nulls
         for (int i=quad->sline; i<=quad->eline; i++) {
           for (int j=quad->ssamp; j<=quad->esamp; j++) {

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.22 $                                                             
- * $Date: 2009/02/13 16:05:58 $                                                                 
+ * $Revision: 1.23 $                                                             
+ * $Date: 2009/05/27 22:11:14 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -36,6 +36,7 @@
 #include "geos/geom/Polygon.h"
 #include "geos/operation/distance/DistanceOp.h"
 #include "geos/opOverlay.h"
+#include "geos/precision/GeometrySnapper.h"
 
 #include "SpecialPixel.h"
 #include "PolygonTools.h"
@@ -58,7 +59,6 @@ namespace Isis {
    */
   geos::geom::MultiPolygon *PolygonTools::LatLonToXY(
       const geos::geom::MultiPolygon &lonLatPolygon, Projection *projection) {
-
     if (projection == NULL) {
       string msg = "Unable to convert Lon/Lat polygon to X/Y. ";
       msg += "No projection has was supplied";
@@ -89,7 +89,15 @@ namespace Isis {
             xycoords->add(geos::geom::Coordinate(projection->XCoord(),
                                            projection->YCoord()));
           } // end num coords in hole loop
-          holes->push_back(globalFactory.createLinearRing(xycoords));
+
+          geos::geom::LinearRing *hole = globalFactory.createLinearRing(xycoords);
+
+          if(hole->isValid() && !hole->isEmpty()) {
+            holes->push_back(hole);
+          }
+          else {
+            delete hole;
+          }
         } // end num holes in polygon loop
 
         // Convert the exterior ring of this polygon
@@ -105,8 +113,15 @@ namespace Isis {
                                          projection->YCoord()));
         } // end exterior ring coordinate loop
 
-        xyPolys->push_back(globalFactory.createPolygon(
-            globalFactory.createLinearRing(xycoords), holes));
+        geos::geom::Polygon *newPoly = globalFactory.createPolygon(
+            globalFactory.createLinearRing(xycoords), holes);
+
+        if(newPoly->isValid() && !newPoly->isEmpty() && newPoly->getArea() > 1.0e-14) {
+          xyPolys->push_back(newPoly);
+        }
+        else {
+          delete newPoly;
+        }
       } // end num geometry in multi-poly
 
       // Create a new multipoly from all the new X/Y polygon(s)
@@ -633,8 +648,8 @@ namespace Isis {
         }
       }
       catch(iException &e) {
-        // Sometimes despike and fix fail, but the input is really valid. This will be
-        //   fixed soon, but for now if we can just go with the non-despiked polygon.
+        // Sometimes despike and fix fail, but the input is really valid. We can just go 
+        // with the non-despiked polygon.
         if(ls->isValid() && ls->getGeometryTypeId() == geos::geom::GEOS_LINEARRING) {
           lr = (geos::geom::LinearRing *)ls->clone();
           e.Clear();
@@ -647,8 +662,10 @@ namespace Isis {
       // Create a new polygon with the holes and save it
       if (!lr->isEmpty()) {
         geos::geom::Polygon *tp = Isis::globalFactory.createPolygon(lr, holes);
+
         if (tp->isEmpty() || !tp->isValid()) {
           delete tp;
+          newPolys->push_back (poly->clone());
         }
         else {
           newPolys->push_back (tp);
@@ -661,7 +678,16 @@ namespace Isis {
 
     if(!mp->isValid() || mp->isEmpty()) {
       delete mp;
+      mp = NULL;
       iString msg = "Despike failed to correct the polygon";
+      throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+    }
+
+    // if multipoly area changes more than 25% we did something bad to the multipolygon
+    if(fabs((mp->getArea() / multiPoly->getArea()) - 1.0) > 0.50) {
+      iString msg = "Despike failed to correct the polygon " + mp->toString();
+      delete mp;
+      
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
     }
 
@@ -814,7 +840,7 @@ namespace Isis {
 
     // Checks the ratio of the distance between the last point and the line, and the last point and the middle point
     // if the ratio is very small then there is a spike
-    if(distanceLastLine / distanceLastMiddle >= .10) {
+    if(distanceLastLine / distanceLastMiddle >= .05) {
       spiked = false;
     }
 
@@ -822,6 +848,30 @@ namespace Isis {
     if (spiked && distanceLastLine > tolerance) {
       spiked = false;
     }
+
+    if(!spiked) {
+      geos::geom::CoordinateSequence *coords = new geos::geom::CoordinateArraySequence();
+      coords->add(first);
+      coords->add(middle);
+      coords->add(last);
+      coords->add(first);
+
+      // shell takes ownership of coords
+      geos::geom::LinearRing *shell = Isis::globalFactory.createLinearRing(coords);
+      std::vector<geos::geom::Geometry*> *empty = new std::vector<geos::geom::Geometry*>;
+
+      // poly takes ownership of shell and empty
+      geos::geom::Polygon *poly = Isis::globalFactory.createPolygon(shell, empty);
+     
+
+      // if these 3 points define a straight line then the middle is worthless (defines nothing) or problematic
+      if(poly->getArea() < 1.0e-10) {
+        spiked = true;
+      }
+
+      delete poly;
+    }
+    
 
     delete firstPt;
     delete middlePt;
@@ -864,7 +914,9 @@ namespace Isis {
     }
   }
 
+
   geos::geom::Geometry *PolygonTools::Operate(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom2, unsigned int opcode) {
+
     geos::operation::overlay::OverlayOp::OpCode code = 
       (geos::operation::overlay::OverlayOp::OpCode)opcode;
 
@@ -872,6 +924,17 @@ namespace Isis {
     bool failed = true;
     geos::geom::Geometry *geomFirst  = MakeMultiPolygon(geom1);
     geos::geom::Geometry *geomSecond = MakeMultiPolygon(geom2);
+
+    geos::precision::GeometrySnapper snap(*geomFirst);
+    geos::geom::Geometry *geomSnapped = snap.snapTo(*geomSecond, 1.0e-10)->clone();
+    if(!geomSnapped->isValid()) {
+      delete geomSnapped;
+    }
+    else {
+      delete geomFirst;
+      geomFirst = geomSnapped;
+    }
+
     unsigned int precision = 15;
     unsigned int minPrecision = 13;
     while(failed) {
@@ -921,11 +984,20 @@ namespace Isis {
     if(result && !result->isValid()) {
       try {
         geos::geom::Geometry *newResult = FixGeometry(result);
+
+        if(fabs(newResult->getArea() / result->getArea() - 1.0) > 0.50) {
+          delete newResult;
+          delete result;
+
+          iString msg = "Operation [" + iString((int)opcode) + "] failed";
+          throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+        }
+
         delete result;
         result = newResult;
       }
       catch (iException &e) {
-        iString msg = "Operation [" + iString((int)opcode) + " failed";
+        iString msg = "Operation [" + iString((int)opcode) + "] failed";
         throw iException::Message(iException::Programmer, msg, _FILEINFO_);
       }
     }
@@ -934,7 +1006,6 @@ namespace Isis {
       iString msg = "Operation [" + iString((int)opcode) + " failed";
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
     }
-
 
     return result;
   }
@@ -983,7 +1054,14 @@ namespace Isis {
 
     // Convert each polygon in this multi-polygon
     for (unsigned int geomIndex = 0; geomIndex < poly->getNumGeometries(); geomIndex ++) {
-      newPolys->push_back(FixGeometry((geos::geom::Polygon*)(poly->getGeometryN(geomIndex))));
+      geos::geom::Polygon* fixedpoly = FixGeometry((geos::geom::Polygon*)(poly->getGeometryN(geomIndex)));
+      if( fixedpoly->isValid() ) {
+        newPolys->push_back( fixedpoly );
+      }
+      else {
+        delete fixedpoly;
+      }
+      fixedpoly = NULL;
     }
 
     geos::geom::MultiPolygon *mp = Isis::globalFactory.createMultiPolygon(newPolys);
@@ -992,6 +1070,7 @@ namespace Isis {
 
 
   geos::geom::Polygon *PolygonTools::FixGeometry(const geos::geom::Polygon *poly) {
+
     // Convert each hole inside this polygon
     vector<geos::geom::Geometry *> *holes = new vector<geos::geom::Geometry *>;
     for (unsigned int holeIndex = 0; holeIndex < poly->getNumInteriorRing(); holeIndex ++) {
@@ -1052,10 +1131,13 @@ namespace Isis {
    * @return geos::geom::LinearRing* A possibly valid linear ring
    */
   geos::geom::LinearRing *PolygonTools::FixGeometry(const geos::geom::LinearRing *ring) {
+
     geos::geom::CoordinateSequence *coords = ring->getCoordinates();
 
     // Check this, just in case
-    if(coords->getSize() <= 0) return (geos::geom::LinearRing *)ring->clone();
+    if(coords->getSize() < 4) {
+      return globalFactory.createLinearRing(new geos::geom::DefaultCoordinateSequence ());
+    }
 
     geos::geom::CoordinateSequence *newCoords = new geos::geom::DefaultCoordinateSequence ();
     const geos::geom::Coordinate *lastCoordinate = &coords->getAt(0);
@@ -1072,7 +1154,6 @@ namespace Isis {
         lastCoordinate->x - thisCoordinate->x,
         lastCoordinate->y - thisCoordinate->y,
       };
-
 
       // geos isnt differentiating between points this close
       double minDiff = fabs(DecimalPlace(thisCoordinate->x) - DecimalPlace(difference[0]));
@@ -1091,7 +1172,7 @@ namespace Isis {
       }
       else if(difference[0] == 0.0 && difference[1] == 0.0) {
         // subtracted the two points, got 0.0, so it's same point... make sure it gets ignored!
-        minDiff = 1E99; 
+        minDiff = 1E99;
       }
 
       // geos has a hard time differentiating when points get too close...
@@ -1514,5 +1595,151 @@ namespace Isis {
         return "UNKNOWN";
     }
   }
+
+
+  bool PolygonTools::Equal( const geos::geom::MultiPolygon * poly1, const geos::geom::MultiPolygon * poly2 ) {
+
+    vector<const geos::geom::Polygon*> polys1;
+    vector<const geos::geom::Polygon*> polys2;
+    
+    if (poly1->getNumGeometries() != poly2->getNumGeometries())  return false;
+
+    // Convert each polygon in this multi-polygon
+    for (unsigned int geomIndex = 0; geomIndex < poly1->getNumGeometries(); geomIndex ++) {
+      polys1.push_back( (geos::geom::Polygon*)poly1->getGeometryN(geomIndex) );
+      polys2.push_back( (geos::geom::Polygon*)poly2->getGeometryN(geomIndex) );
+    }
+
+    for (int p1 = polys1.size()-1; (p1 >= 0) && polys1.size(); p1 --) {
+      for (int p2 = polys2.size()-1; (p2 >= 0) && polys2.size(); p2 --) {
+        if ( Equal(polys1[p1],polys2[p2]) ) {
+          // Delete polys1[p1] by replacing it with the last Polygon in polys1
+          polys1[p1] = polys1[polys1.size()-1];
+          polys1.resize( polys1.size()-1 );
+          // Delete polys2[p2] by replacing it with the last Polygon in polys2
+          polys2[p2] = polys2[polys2.size()-1];
+          polys2.resize( polys2.size()-1 );
+        }
+      }
+    }
+    
+    return (polys1.size() == 0) && (polys2.size() == 0);
+  }
+
+
+  bool PolygonTools::Equal( const geos::geom::Polygon * poly1, const geos::geom::Polygon * poly2 ) {
+    vector<const geos::geom::LineString *> holes1;
+    vector<const geos::geom::LineString *> holes2;
+
+    if (poly1->getNumInteriorRing() != poly2->getNumInteriorRing())  return false;
+
+    if ( !Equal(poly1->getExteriorRing(),poly2->getExteriorRing()) )  return false;
+
+    // Convert each hole inside this polygon
+    for (unsigned int holeIndex = 0; holeIndex < poly1->getNumInteriorRing(); holeIndex ++) {
+
+      // We hope they are all linear rings (closed/simple), but if not just leave it be
+      if(poly1->getInteriorRingN(holeIndex)->getGeometryTypeId() == geos::geom::GEOS_LINESTRING) {
+        holes1.push_back( poly1->getInteriorRingN(holeIndex) );
+      }
+
+      if(poly2->getInteriorRingN(holeIndex)->getGeometryTypeId() == geos::geom::GEOS_LINESTRING) {
+        holes2.push_back( poly2->getInteriorRingN(holeIndex) );
+      }
+
+    }
+
+    if (holes1.size() != holes2.size())  return false;
+
+    for (int h1 = holes1.size()-1; (h1 >= 0) && holes1.size(); h1 --) {
+      for (int h2 = holes2.size()-1; (h2 >= 0) && holes2.size(); h2 --) {
+        if ( Equal(holes1[h1],holes2[h2]) ) {
+          // Delete holes1[h1] by replacing it with the last Polygon in holes1
+          holes1[h1] = holes1[holes1.size()-1];
+          holes1.resize( holes1.size()-1 );
+          // Delete holes2[h2] by replacing it with the last Polygon in holes2
+          holes2[h2] = holes2[holes2.size()-1];
+          holes2.resize( holes2.size()-1 );
+        }
+      }
+    }
+      
+    return (holes1.size() == 0) && (holes2.size() == 0);
+  }
+
+
+  bool PolygonTools::Equal( const geos::geom::LineString * lineString1, const geos::geom::LineString * lineString2 ) {
+
+    geos::geom::CoordinateSequence *coords1 = lineString1->getCoordinates();
+    geos::geom::CoordinateSequence *coords2 = lineString2->getCoordinates();
+    bool isEqual = true;
+
+    if (coords1->getSize() != coords2->getSize() ) isEqual = false;
+
+    unsigned int index1 = 0;
+    unsigned int index2 = 0;
+
+    // -1 extra for dupicate start/end coordinates
+    for( ; index2 < coords2->getSize()-1 && isEqual; index2 ++) {
+      if (Equal(coords1->getAt(index1),coords2->getAt(index2)))  break;
+    }
+
+    if (index2 == coords2->getSize()-1) isEqual = false;
+
+    for ( ; index1 < coords1->getSize()-1 && isEqual; index1 ++, index2 ++) {
+      if (!Equal(coords1->getAt(index1),coords2->getAt(index2 % (coords2->getSize()-1)))) {
+        isEqual = false;
+      }
+    }
+
+    delete coords1;
+    delete coords2;
+    return isEqual;
+  }
+
+
+  bool PolygonTools::Equal( const geos::geom::Coordinate & coord1, const geos::geom::Coordinate & coord2 ) {
+
+    if (!Equal(coord1.x,coord2.x))  return false;
+    if (!Equal(coord1.y,coord2.y))  return false;
+    if (!Equal(coord1.y,coord2.y))  return false;
+
+    return true;
+  }
+
+
+  bool PolygonTools::Equal( const double d1, const double d2 ) {
+
+    const double cutoff = 1e15;
+
+
+    int decimalPlace = DecimalPlace(d1);
+    double factor = pow(10.0, (int)decimalPlace);
+
+    // reduced num is in the form 0.nnnnnnnnnn...
+    double reducedNum = d1 / factor;
+
+    double round_offset = (d1 < 0)? -0.5 : 0.5;
+
+    // cast off the digits past the precision's place
+    long long num1 = ((long long)(reducedNum * cutoff + round_offset));
+
+
+    decimalPlace = DecimalPlace(d2);
+    factor = pow(10.0, (int)decimalPlace);
+
+    // reduced num is in the form 0.nnnnnnnnnn...
+    reducedNum = d2 / factor;
+
+    round_offset = (d2 < 0)? -0.5 : 0.5;
+
+    // cast off the digits past the precision's place
+    long long num2 = ((long long)(reducedNum * cutoff + round_offset));
+
+
+    return (num1 == num2);
+  }
+
+
 } // end namespace isis
 

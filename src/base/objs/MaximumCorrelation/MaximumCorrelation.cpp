@@ -3,32 +3,21 @@
 #include "MultivariateStatistics.h"
 
 namespace Isis {
-  double MaximumCorrelation::MatchAlgorithm (Chip &pattern, Chip &subsearch) {
-    // calculate the sampling information
-    double percent = sqrt(p_patternSamplingPercent/100.0);
-    double numLines = (int)(percent*pattern.Lines());
-    if (numLines < 1.0) numLines = 1.0;
-    double linc = pattern.Lines()/numLines;
-    double numSamples = (int)(percent*pattern.Samples());
-    if (numSamples < 1.0) numSamples = 1.0;
-    double sinc = pattern.Samples()/numSamples;
-    if (linc < 1.0) linc = 1.0;
-    if (sinc < 1.0) sinc = 1.0;
-
+  double MaximumCorrelation::MatchAlgorithm (Chip &pattern, Chip &subsearch) {    
     MultivariateStatistics mv;
-    for (double l=1.0; l<=pattern.Lines(); l+=linc) {
-      for (double s=1.0; s<=pattern.Samples(); s+=sinc) {
-        int line = (int)l;
-        int samp = (int)s;
+    std::vector <double> pdn, sdn;
+    pdn.resize(pattern.Samples());
+    sdn.resize(pattern.Samples());
 
-        double pdn = pattern(samp,line);
-        double sdn = subsearch(samp,line);
-        mv.AddData(&pdn,&sdn,1);
+    for (int l=1; l<=pattern.Lines(); l++) {
+      for (int s=1; s<=pattern.Samples(); s++) {
+        pdn[s-1] = pattern(s,l);
+        sdn[s-1] = subsearch(s,l);
       }
+      mv.AddData(&pdn[0],&sdn[0], pattern.Samples());
     }
-
     double percentValid = (double) mv.ValidPixels() / 
-                     (numLines * numSamples);
+                     (pattern.Lines() * pattern.Samples());
     if (percentValid * 100.0 < this->PatternValidPercent()) return Isis::Null;
 
     double r = mv.Correlation();

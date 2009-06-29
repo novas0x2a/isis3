@@ -50,6 +50,10 @@
         PIXINC parameter was removed, ImagePolygon now uses a new method of 
         finding footprints
     </change>
+    <change name="Steven Lambright" date="2009-05-29">
+        PIXINC re-implemented. This functionality is crucial. Existing polygons will no
+        longer be deleted if this program fails.
+    </change>
   </history>
 
   <groups>
@@ -66,6 +70,21 @@
         <filter>
           *.cub
         </filter>
+      </parameter>
+    </group>
+
+    <group name="Options">
+      <parameter name="PIXINC">
+        <type>integer</type>
+        <minimum inclusive="yes">1</minimum>
+        <default><item>1</item></default>
+        <brief>
+          The accuracy of the footprint (larger is less accurate)
+        </brief>
+        <description>
+          This is approximately how many samples/lines in the input image 
+          to skip for every point stored in the footprint.
+        </description>
       </parameter>
     </group>
   </groups>

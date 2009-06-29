@@ -1,11 +1,11 @@
-using namespace std;
-
 #include <iomanip>
 #include <iostream>
 #include "Camera.h"
 #include "CameraFactory.h"
 #include "iException.h"
 #include "Preference.h"
+
+using namespace std;
 
 void TestLineSamp(Isis::Camera *cam, double samp, double line);
 
@@ -21,8 +21,8 @@ int main (void)
     // These should be lat/lon at center of image. To obtain these numbers for a new cube/camera,
     // set both the known lat and known lon to zero and copy the unit test output "Latitude off by: "
     // and "Longitude off by: " values directly into these variables.
-    double knownLat = 48.53342057540436;
-    double knownLon = 332.0434164728163;
+    double knownLat = 48.53342079272975;
+    double knownLon = 332.0434164961534;
 
     Isis::Pvl p("$odyssey/testData/V14093008RDR.even.cub");
     Isis::Camera *cam = Isis::CameraFactory::Create(p);

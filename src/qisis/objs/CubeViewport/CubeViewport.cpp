@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2009/05/11 16:41:07 $
- * $Revision: 1.32 $
+ * $Date: 2009/05/13 19:26:07 $
+ * $Revision: 1.33 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -136,11 +136,11 @@ namespace Qisis {
       "Bands = " +
       QString::number(cube->Bands()) + "</blockquote></p>";
 
-    /*setting up the qlist of CubeBandsStretch objs.*/
+    /*setting up the qlist of CubeBandsStretch objs.
     for( int b = 0; b < p_cube->Bands(); b++) {
       CubeBandsStretch *stretch = new CubeBandsStretch();
       p_bandsStretchList.push_back(stretch); 
-    }
+    }*/
 
     p_grayBuffer = new ViewportBuffer(this, p_cube);
     p_grayBuffer->enable(false);
@@ -149,18 +149,25 @@ namespace Qisis {
     p_redBuffer = NULL;
     p_greenBuffer = NULL;
     p_blueBuffer = NULL;
+
+    p_bgColor = Qt::black;
  }
 
-  /*
-
-  */
+  /**
+   * This method is called to initially show the viewport. It will set the
+   * scale to show the entire cube and enable the gray buffer.
+   * 
+   */
   void CubeViewport::show() {
-    QAbstractScrollArea::show();
-    setScale(fitScale(), cubeSamples()/2.0, cubeLines()/2.0);
+    double sampScale = (double) sizeHint().width() / (double) cubeSamples();
+    double lineScale = (double) sizeHint().height() / (double) cubeLines();
+    double scale = sampScale < lineScale ? sampScale:lineScale;
 
-    autoStretch();
-
+    setScale(scale, cubeSamples()/2.0, cubeLines()/2.0);
     p_grayBuffer->enable(true);
+
+    QAbstractScrollArea::show();
+
     p_paintPixmap = true;
     paintPixmap();
   }
@@ -383,8 +390,8 @@ namespace Qisis {
     if(p_greenBuffer) p_greenBuffer->pan(panX, panY);
     if(p_blueBuffer) p_blueBuffer->pan(panX, panY);
 
-    paintPixmap();
-    viewport()->update();
+    //paintPixmap();
+    //viewport()->update();
   }
 
 
@@ -570,6 +577,8 @@ namespace Qisis {
     }
 
     viewport()->repaint();
+
+    emit scaleChanged();
   }
 
 
@@ -707,10 +716,11 @@ namespace Qisis {
    */
   void CubeViewport::paintPixmap (QRect rect) {
     if (!p_paintPixmap) return;
+
     QApplication::setOverrideCursor(Qt::WaitCursor);
 
     QPainter p(&p_pixmap);
-    p.fillRect(rect, QBrush(Qt::black));
+    p.fillRect(rect, QBrush(p_bgColor));
 
     QRect dataArea;
 
@@ -1072,8 +1082,9 @@ namespace Qisis {
     if(p_blueBuffer) delete p_blueBuffer;
     p_blueBuffer = NULL;
 
-    autoStretch ();
-    viewport()->update();
+    for (int i=0; i < p_toolList.size(); i++) {
+      p_toolList[i]->updateTool();
+    }
   }
 
 
@@ -1104,8 +1115,9 @@ namespace Qisis {
     if(p_grayBuffer) delete p_grayBuffer;
     p_grayBuffer = NULL;
 
-    autoStretch();
-    viewport()->update();
+    for (int i=0; i < p_toolList.size(); i++) {
+      p_toolList[i]->updateTool();
+    }
   }
 
 
@@ -1136,6 +1148,10 @@ namespace Qisis {
    */
   void CubeViewport::stretchGray (const QString &gstr) {
     p_gray.stretch.Parse(gstr.toStdString());
+
+    p_red.stretch.Parse(gstr.toStdString());
+    p_green.stretch.Parse(gstr.toStdString());
+    p_blue.stretch.Parse(gstr.toStdString());
     paintPixmap();
     viewport()->update();
   }
@@ -1153,11 +1169,20 @@ namespace Qisis {
   void CubeViewport::stretchRGB(const Isis::Stretch &rstr,
                                 const Isis::Stretch &gstr,
                                 const Isis::Stretch &bstr) {
-
-
     p_red.stretch = rstr;
     p_green.stretch = gstr;
     p_blue.stretch = bstr;
+    paintPixmap();
+    viewport()->update();
+  }
+
+
+  void CubeViewport::stretchGray (const Isis::Stretch &stretch) {
+    p_gray.stretch = stretch;
+
+    p_red.stretch.CopyPairs(stretch);
+    p_green.stretch.CopyPairs(stretch);
+    p_blue.stretch.CopyPairs(stretch);
     paintPixmap();
     viewport()->update();
   }
@@ -1241,127 +1266,54 @@ namespace Qisis {
   }
 
 
-  /**
-   * Apply automatic stretch using data from entire cube
-   * 
-   * 
-   * @param lineRate 
-   */
-  void CubeViewport::autoStretch (int lineRate) {
-    autoStretch(1,cubeSamples(),1,cubeLines(),lineRate);
-  }
-
-
-  /**
-   * Apply automatic stretch using data from a portion of the cube
-   * 
-   * 
-   * @param ssamp 
-   * @param esamp 
-   * @param sline 
-   * @param eline 
-   * @param lineRate 
-   */
-  void CubeViewport::autoStretch (int ssamp, int esamp,
-                                  int sline, int eline, int lineRate) {
-    if (lineRate <= 0) lineRate = (int) ((eline - sline + 1.0) * 0.1);
-    if (lineRate <= 0) lineRate = 1;
-
-    if (p_color) {
-      computeStretch(p_redBrick,p_red.band,
-                     ssamp,esamp,sline,eline,lineRate,
-                     p_red.stretch);
-      computeStretch(p_grnBrick,p_green.band,
-                     ssamp,esamp,sline,eline,lineRate,
-                     p_green.stretch);
-      computeStretch(p_bluBrick,p_blue.band,
-                     ssamp,esamp,sline,eline,lineRate,
-                     p_blue.stretch);
+  void CubeViewport::initialStretch() {
+    std::vector< std::pair <ViewportBuffer *, Isis::Stretch *> > buffers;
+    if(p_grayBuffer) {
+      buffers.push_back(std::pair <ViewportBuffer *, Isis::Stretch *>(p_grayBuffer, &p_gray.stretch));
     }
-    else {
-      computeStretch(p_gryBrick,p_gray.band,
-                     ssamp,esamp,sline,eline,lineRate,
-                     p_gray.stretch);
-
-      p_red.stretch.ClearPairs();
-      for (int i=0; i < p_gray.stretch.Pairs(); i++) {
-        p_red.stretch.AddPair(p_gray.stretch.Input(i),p_gray.stretch.Output(i));
-      }
-
-      p_green.stretch.ClearPairs();
-      for (int i=0; i < p_gray.stretch.Pairs(); i++) {
-        p_green.stretch.AddPair(p_gray.stretch.Input(i),p_gray.stretch.Output(i));
-      }
-
-      p_blue.stretch.ClearPairs();
-      for (int i=0; i < p_gray.stretch.Pairs(); i++) {
-        p_blue.stretch.AddPair(p_gray.stretch.Input(i),p_gray.stretch.Output(i));
-      }
-
+    if(p_redBuffer) {
+      buffers.push_back(std::pair <ViewportBuffer *, Isis::Stretch *>(p_redBuffer, &p_red.stretch));
     }
-    paintPixmap();
-    viewport()->update();
-  }
-
-
-  /**
-   * Compute automatic stretch for a portion of the cube
-   * 
-   * 
-   * @param brick 
-   * @param band 
-   * @param ssamp 
-   * @param esamp 
-   * @param sline 
-   * @param eline 
-   * @param lineRate 
-   * @param stretch 
-   *  
-   * @internal 
-   *   @history 2008-12-03 Jeannie Walldren - Fixed bug in if
-   *            statement condition by adding a "minus
-   *            DBL_EPSILON" and changing "not equal" to "less
-   *            than"
-   */
-  void CubeViewport::computeStretch(Isis::Brick *brick, int band,
-                                    int ssamp, int esamp,
-                                    int sline, int eline, int lineRate,
-                                    Isis::Stretch &stretch) {
-    Isis::Statistics stats;
-    int bufns = esamp - ssamp + 1;
-    brick->Resize(bufns,1,1);
-
-    for (int line=sline; line <= eline; line+=lineRate) {
-      brick->SetBasePosition(ssamp,line,band);
-      p_cube->Read(*brick);
-      stats.AddData(brick->DoubleBuffer(),bufns);
+    if(p_greenBuffer) {
+      buffers.push_back(std::pair <ViewportBuffer *, Isis::Stretch *>(p_greenBuffer, &p_green.stretch));
+    }
+    if(p_blueBuffer) {
+      buffers.push_back(std::pair <ViewportBuffer *, Isis::Stretch *>(p_blueBuffer, &p_blue.stretch));
     }
 
-	if(fabs(stats.BestMinimum()) < DBL_MAX && fabs(stats.BestMaximum()) < DBL_MAX) {
-      Isis::Histogram hist(stats.BestMinimum(),stats.BestMaximum());
-      for (int line=sline; line <= eline; line+=lineRate) {
-        brick->SetBasePosition(ssamp,line,band);
-        p_cube->Read(*brick);
-        hist.AddData(brick->DoubleBuffer(),bufns);
+    for(unsigned int i = 0; i < buffers.size(); i++) {
+      ViewportBuffer *currBuffer = buffers[i].first;
+      Isis::Stretch *currStretch = buffers[i].second;
+
+      Isis::Statistics stats;
+      for(int line = 0; line < currBuffer->bufferXYRect().height(); line++) {
+        stats.AddData(&currBuffer->getLine(line).front(), currBuffer->getLine(line).size()); 
       }
 
-      stretch.ClearPairs();
-      double percentile1 = hist.Percent(0.5);
-      double percentile2 = hist.Percent(99.5);
-      if (fabs(percentile1 - percentile2) > DBL_EPSILON) {
-        stretch.AddPair(percentile1,0.0);
-        stretch.AddPair(percentile2,255.0);
+    	if(fabs(stats.BestMinimum()) < DBL_MAX && fabs(stats.BestMaximum()) < DBL_MAX) {
+        Isis::Histogram hist(stats.BestMinimum(),stats.BestMaximum());
+        for(int line = 0; line < currBuffer->bufferXYRect().height(); line++) {
+          hist.AddData(&currBuffer->getLine(line).front(), currBuffer->getLine(line).size()); 
+        }
+    
+        currStretch->ClearPairs();
+        double percentile1 = hist.Percent(0.5);
+        double percentile2 = hist.Percent(99.5);
+        if (fabs(percentile1 - percentile2) > DBL_EPSILON) {
+          currStretch->AddPair(percentile1, 0.0);
+          currStretch->AddPair(percentile2, 255.0);
+        }
+        else {
+          currStretch->AddPair(-DBL_MAX, 0.0);
+          currStretch->AddPair(DBL_MAX, 255.0);
+        }
+    	}
+    	else {
+    	  currStretch->ClearPairs();
+        currStretch->AddPair(-DBL_MAX, 0.0);
+        currStretch->AddPair(DBL_MAX, 255.0);
       }
-      else {
-        stretch.AddPair(-DBL_MAX,0.0);
-        stretch.AddPair(DBL_MAX,255.0);
-      }
-	}
-	else {
-	  stretch.ClearPairs();
-      stretch.AddPair(-DBL_MAX,0.0);
-      stretch.AddPair(DBL_MAX,255.0);
-	}
+    }
   }
 
   /**
@@ -1381,7 +1333,6 @@ namespace Qisis {
    * @param stretchFlag
    * @param min
    * @param max
-   */
   void CubeViewport::setStretchInfo(int band, bool stretchFlag, double min, double max){
       p_bandsStretchList[band-1]->p_stretchMin = min;
       p_bandsStretchList[band-1]->p_stretchMax = max;
@@ -1391,7 +1342,7 @@ namespace Qisis {
       p_gray.stretch.AddPair(min,0.0);
       p_gray.stretch.AddPair(max,255.0);
    
-  }
+  }*/
 
   /** 
    * 
@@ -1399,10 +1350,10 @@ namespace Qisis {
    * @param band
    * 
    * @return double
-   */
+   *
   double CubeViewport::getStretchMin(int band){
     return p_bandsStretchList[band-1]->p_stretchMin;
-  }
+  }*/
 
   /** 
    * 
@@ -1410,10 +1361,10 @@ namespace Qisis {
    * @param band
    * 
    * @return double
-   */
+   *
   double CubeViewport::getStretchMax(int band){
     return p_bandsStretchList[band-1]->p_stretchMax;
-  }
+  }*/
 
   /** 
    * 
@@ -1421,10 +1372,10 @@ namespace Qisis {
    * @param band
    * 
    * @return bool
-   */
+   *
   bool CubeViewport::getStretchFlag(int band){
     return p_bandsStretchList[band-1]->p_stretched;
-  }
+  }*/
 
 
   /**

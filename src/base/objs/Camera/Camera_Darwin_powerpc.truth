@@ -18,13 +18,13 @@ IsBandIndependent called...
 ReferenceBand: 0
 HasReferenceBand: 0
 SetBand called, band: 7
-Sample: 408.127
+Sample: 408.126
 Line: 962.452
 GroundRange: 0
 IntersectsLongitudeDomain: 0
-PixelResolution: 628.045
-LineResolution: 628.045
-SampleResolution: 628.045
+PixelResolution: 628.044
+LineResolution: 628.044
+SampleResolution: 628.044
 DetectorResolution: 157.011
 LowestImageResolution: 2047.19
 HighestImageResolution: 429.526
@@ -98,6 +98,7 @@ Object = IsisCube
     InstrumentPointing  = $mgs/kernels/ck/mgs_sc_ab1.bc
     InstrumentPosition  = $mgs/kernels/spk/mgs_ab1.bsp
     ShapeModel          = $base/dems/molaMarsPlanetaryRadius0002.cub
+    CameraVersion       = 1
   End_Group
 
   Group = Radiometry

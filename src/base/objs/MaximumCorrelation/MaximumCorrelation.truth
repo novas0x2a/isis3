@@ -1,4 +1,4 @@
-Object = AutoReg
+Object = AutoRegistration
   Group = Algorithm
     Name             = MaximumCorrelation
     Tolerance        = 0.1

@@ -30,6 +30,11 @@
     <change name="Steven Koechle" date="2009-01-21">
       Changed to use the Isis::Filename class and use the temporary preferences
     </change>
+    <change name="Eric Hyer" date="2009-06-23">
+      Replaced file extention checking with file data checking for determining
+      whether the file is decompressed already or not.  Also added ability to
+      handle vdcomp error codes and throw meaningful iExceptions.
+    </change>
   </history>
 
   <category>

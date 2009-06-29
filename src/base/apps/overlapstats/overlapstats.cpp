@@ -51,9 +51,11 @@ void IsisMain() {
 
   string delim = "";
   string pretty = ""; // Makes tab tables look pretty, ignored in CSV
+  bool singleLine = false;
   if ( ui.WasEntered("DETAIL") ) {
     if ( ui.GetString("TABLETYPE") == "CSV" ) {
       delim = ",";
+      singleLine = ui.GetBoolean("SINGLELINE");
       // This line was removed because reability (ios::showpoint) was more
       // important than an extra decimal place of precision.
       //output.setf(ios::scientific,ios::floatfield);
@@ -130,9 +132,10 @@ void IsisMain() {
             output << delim << pretty << pretty << "Image Count";
             output << delim << "Serial Numbers in Overlap";
             output << delim << "Image Files in Overlap";
+            output << endl;
             firstFullOutput = false;
           }
-          output << endl << index << pretty;
+          output << index << pretty;
           output << delim << thicknessValue;
           if( tab ) {
             output << delim << FormatString( areaValue, 18, 4 );
@@ -143,11 +146,14 @@ void IsisMain() {
           output << delim << (*overlaps[index])[0];
           output << delim << serialNumbers.Filename( (*overlaps[index])[0] );
           for( int sn=1; sn < overlaps[index]->Size(); sn ++ ) {
-            output << endl << pretty << delim << pretty << delim << pretty << delim;
-            output << pretty << pretty << delim << pretty;
-            output << (*overlaps[index])[sn];
+            if( !singleLine ) {
+              output << endl << pretty << delim << pretty << delim << pretty << delim;
+              output << pretty << pretty;
+            }
+            output << delim << pretty << (*overlaps[index])[sn];
             output << delim << serialNumbers.Filename( (*overlaps[index])[sn] );
           }
+          output << endl;
         }
 
         delete mpXY;
@@ -203,21 +209,20 @@ void IsisMain() {
   brief += PvlKeyword( "ThicknessAverage", thickness.Average() );
   brief += PvlKeyword( "ThicknessStandardDeviation", thickness.StandardDeviation() );
   brief += PvlKeyword( "ThicknessVariance", thickness.Variance() );
-  brief += PvlKeyword( "ThicknessSum", thickness.Sum() );
 
   brief += PvlKeyword( "AreaMinimum", area.Minimum() );
   brief += PvlKeyword( "AreaMaximum", area.Maximum() );
   brief += PvlKeyword( "AreaAverage", area.Average() );
   brief += PvlKeyword( "AreaStandardDeviation", area.StandardDeviation() );
   brief += PvlKeyword( "AreaVariance", area.Variance() );
-  brief += PvlKeyword( "AreaSum", area.Sum() );
 
-  brief += PvlKeyword( "SerialNumberMinimum", sncount.Minimum() );
-  brief += PvlKeyword( "SerialNumberMaximum", sncount.Maximum() );
-  brief += PvlKeyword( "SerialNumberAverage", sncount.Average() );
-  brief += PvlKeyword( "SerialNumberStandardDeviation", sncount.StandardDeviation() );
-  brief += PvlKeyword( "SerialNumberVariance", sncount.Variance() );
-  brief += PvlKeyword( "SerialNumberSum", sncount.Sum() );
+  brief += PvlKeyword( "ImageStackMinimum", sncount.Minimum() );
+  brief += PvlKeyword( "ImageStackMaximum", sncount.Maximum() );
+  brief += PvlKeyword( "ImageStackAverage", sncount.Average() );
+  brief += PvlKeyword( "ImageStackStandardDeviation", sncount.StandardDeviation() );
+  brief += PvlKeyword( "ImageStackVariance", sncount.Variance() );
+
+  brief += PvlKeyword( "PolygonCount", overlaps.Size() );
 
   // Add non-overlapping cubes to the output
   if ( !nooverlap.empty() ) {

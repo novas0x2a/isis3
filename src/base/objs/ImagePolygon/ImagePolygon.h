@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.16 $
- * $Date: 2009/05/06 18:04:59 $
+ * $Revision: 1.23 $
+ * $Date: 2009/06/19 18:12:04 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -107,6 +107,25 @@ namespace Isis {
  *           of finding the first point was seperated into its own method.
  *  @history 2009-05-06 Steven Koechle - Fixed Error where a NULL polygon was
  *           being written.
+ *  @history 2009-05-28 Steven Lambright - This program will no longer generate
+ *           invalid polygons and should use despike as a correction algorithm
+ *           if it is necessary.
+ *  @history 2009-05-28 Stuart Sides - Added a new argument to Create for
+ *           controling the quality of the polygon.
+ *  @history 2009-05-28 Steven Lambright - Moved the quality parameter in the
+ *           argument list, improved speed and the edges of files (and subareas)
+ *           should be checked if the algorithm reaches them now. Fixed the
+ *           sub-area capabilities.
+ *  @history 2009-06-16 Christopher Austin - Fixed WalkPoly() to catch large
+ *           pixel increments that ( though snapping ) skip over the starting
+ *           point. Also skip the first left turn in FindNextPoint() to prevent
+ *           double point checking as well as errors with snapping.
+ *  @history 2009-06-17 Christopher Austin - Removed p_name. Uses parent Name()
+ *  @history 2009-06-18 Christopher Austin - Changes starting point skipping
+ *           solution to a snap. Added fix for polygons that form
+ *           self-intersecting polygons due to this first point snapping.
+ *  @history 2009-06-19 Christopher Austin - Temporarily reverted for backport
+ *           and fixed truthdata for SpiceRotation
  */
 
   class ImagePolygon : public Isis::Blob {
@@ -115,7 +134,7 @@ namespace Isis {
       ImagePolygon ();
       ~ImagePolygon ();
 
-      void Create (Cube &cube,int ss=1,int sl=1,int ns=0,int nl=0,
+      void Create (Cube &cube,int quality=1, int ss=1,int sl=1,int ns=0,int nl=0,
                    int band=1);
 
       //!  Return a geos Multipolygon
@@ -124,41 +143,49 @@ namespace Isis {
       //!  Return name of polygon
       std::string Name () { return p_name; };
 
-  protected:
+    protected:
       void ReadData (std::fstream &is);
       void WriteInit ();
       void WriteData (std::fstream &os);
 
-  private:
-    //Please do not add new polygon manipulation methods to this class.
-    //Polygon manipulation should be done in the PolygonTools class.
+    private:
+      // Please do not add new polygon manipulation methods to this class.
+      // Polygon manipulation should be done in the PolygonTools class.
       bool SetImage (const double sample, const double line);
 
       geos::geom::Coordinate FindFirstPoint ();
       void WalkPoly ();
-      geos::geom::Coordinate FindNextPoint(geos::geom::Coordinate *currentPoint, geos::geom::Coordinate lastPoint, int recursionDepth=0);
+      geos::geom::Coordinate FindNextPoint(geos::geom::Coordinate *currentPoint,
+                                           geos::geom::Coordinate lastPoint,
+                                           int recursionDepth=0);
       
       double Distance(geos::geom::Coordinate *p1, geos::geom::Coordinate *p2);
 
+      void MoveBackInsideImage(double &sample, double &line, double sinc, double linc);
+      bool InsideImage(double sample, double line);
       void Fix360Poly ();
       void FixPolePoly(std::vector<geos::geom::Coordinate> *crossingPoints);
 
-      Cube *p_cube;
-      bool p_isProjected;
+      Cube *p_cube;       //!< The cube provided
+      bool p_isProjected; //!< True when the provided cube is projected
 
-      Brick *p_brick;
+      Brick *p_brick;     //!< Used to check for valid DNs
 
-      geos::geom::CoordinateSequence *p_pts;
+      geos::geom::CoordinateSequence *p_pts; //!< The sequence of coordinates that compose the boundry of the image
 
-      geos::geom::MultiPolygon *p_polygons;
+      geos::geom::MultiPolygon *p_polygons;  //!< The multipolygon of the image
 
-      std::string p_name;
-      std::string p_polyStr;
+      std::string p_name;    //!< Name of Blob
+      std::string p_polyStr; //!< The string representation of the polygon
 
-      UniversalGroundMap *p_gMap;
+      UniversalGroundMap *p_gMap; //!< The cube's ground map
 
-      int p_cubeSamps;
-      int p_cubeLines;
+      int p_cubeStartSamp; //!< The the sample of the first valid point in the cube
+      int p_cubeStartLine; //!< The the line of the first valid point in the cube
+      int p_cubeSamps;     //!< The number of samples in the cube
+      int p_cubeLines;     //!< The number of lines in the cube
+
+      int p_quality; //!< The increment for walking along the edge of the polygon
 
   };
 };

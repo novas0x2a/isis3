@@ -2,8 +2,8 @@
 #define CamTools_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $
- * $Date: 2009/02/26 18:22:27 $
+ * $Revision: 1.6 $
+ * $Date: 2009/06/23 16:51:24 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -117,19 +117,26 @@ struct DeleteObject {
    * @history 2009-02-26 Kris Becker - Removed unconditional computation of 
    *          polygon even when the user did not request it.  Reorganized some
    *          keywords to their relevant group locations.
+   * @history 2009-05-29 Kris Becker - Added _pixinx parameter 
+   * @history 2009-06-22 Kris Becker - Added hasLimb() method to check for the 
+   *          presence of a planet limb; Added getProjGeometry() method.
    */
 class BandGeometry {
 
   public:
-    BandGeometry() : _nLines(0), _nSamps(0), _nBands(0), _radius(1.0),
-                     _isBandIndependent(true), _hasCenterGeom(false),
-                     _gBandList(), _polys(), _combined(0), _mapping() {  }
+    BandGeometry() : _nLines(0), _nSamps(0), _nBands(0), _pixinc(1),
+                     _radius(1.0), _isBandIndependent(true), 
+                     _hasCenterGeom(false), _gBandList(), _polys(), 
+                     _combined(0), _mapping() {  }
     ~BandGeometry() { destruct(); }
 
+    void setPixInc(const int pixinc) { _pixinc = pixinc; }
+    int getPixInc() const { return (_pixinc); }
     int size() const { return (_gBandList.size()); }
     bool isPointValid(const double &sample, const double &line, const Camera *camera = 0) const; 
     bool isBandIndependent() const { return (_isBandIndependent); }
     bool hasCenterGeometry() const;
+    bool hasLimb() const;
     void collect(Camera &camera, Cube &cube, bool doGeometry, bool doPolygon);
     void generateGeometryKeys(PvlObject &pband);
     void generatePolygonKeys(PvlObject &pband);
@@ -202,6 +209,7 @@ class BandGeometry {
     int _nLines;
     int _nSamps;
     int _nBands;
+    int _pixinc;
     double _radius;
     bool _isBandIndependent;
     bool _hasCenterGeom;
@@ -213,6 +221,8 @@ class BandGeometry {
 
     void destruct();
     GProperties getGeometrySummary() const;
+    Pvl getProjGeometry(Camera &camera,  geos::geom::MultiPolygon *footprint,
+                         GProperties &g);
     double getRadius() const;
     double getPixelResolution() const;
     double getPixelsPerDegree(double pixres, double radius) const; 

@@ -6,8 +6,8 @@
 namespace Isis {
   //!Creates an empty ControlNet object
   ControlNet::ControlNet () {
+    p_invalid = false;
     p_numMeasures = 0;
-    p_numValidMeasures = 0;
     p_numIgnoredMeasures = 0;
   }
 
@@ -16,27 +16,39 @@ namespace Isis {
   * Creates a ControlNet object with the given list of control points and cubes
   *
   * @param ptfile Name of file containing a Pvl list of control points 
-  * @param progress A pointer to the progress of reading in the control points
+  * @param progress A pointer to the progress of reading in the control points 
+  * @param forceBuild Forces invalid Control Points to be added to this Control 
+  *                   Network
   */
-  ControlNet::ControlNet(const std::string &ptfile, Progress *progress) {
+  ControlNet::ControlNet(const std::string &ptfile, Progress *progress, bool forceBuild) {
+    p_invalid = false;
     p_numMeasures = 0;
-    p_numValidMeasures = 0;
     p_numIgnoredMeasures = 0;
-    ReadControl(ptfile, progress);
+    ReadControl(ptfile, progress, forceBuild);
   }
 
 
  /**
   * Adds a ControlPoint to the ControlNet 
+  *  
   * @param point Control point to be added 
+  * @param forceBuild Forces invalid Control Points to be added to this Control 
+  *                   Network
+  *  
   * @throws Isis::iException::Programmer - "ControlPoint must 
   *             have unique Id"
   */
-  void ControlNet::Add (const ControlPoint &point) {
+  void ControlNet::Add (const ControlPoint &point, bool forceBuild) {
     for (int i=0; i<Size(); i++) {
       if (p_points[i].Id() == point.Id()) {
-        std::string msg = "ControlPoint must have unique Id";
-        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        if( forceBuild ) {
+          p_invalid |= true;
+          break;
+        }
+        else {
+          std::string msg = "ControlPoint must have unique Id";
+          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        }
       }
     }
     p_points.push_back(point);
@@ -57,7 +69,24 @@ namespace Isis {
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
     else {
+      // See if removing this point qualifies for a re-check of validity
+      bool check = false;
+      if( p_invalid && (*(p_points.begin()+index)).Invalid() ) check = true;
+
       p_points.erase(p_points.begin()+index);
+
+      // Check validity if needed
+      if( check ) {
+        p_invalid = false;
+        for (int i=0; i<Size() && !p_invalid; i++) {
+          for (int j=i+1; j<Size() && !p_invalid; j++) {
+            if (p_points[i].Id() == p_points[j].Id()) {
+              p_invalid = true;
+            }
+          }
+        }
+      }
+
     }
   }
 
@@ -90,6 +119,8 @@ namespace Isis {
   *
   * @param ptfile Name of file containing a Pvl list of control points 
   * @param progress A pointer to the progress of reading in the control points 
+  * @param forceBuild Forces invalid Control Points to be added to this Control 
+  *                   Network
   *
   * @throws Isis::iException::User - "Invalid Network Type"
   * @throws Isis::iException::User - "Invalid Control Point" 
@@ -99,7 +130,7 @@ namespace Isis {
   * @history 2009-04-07 Tracie Sucharski - Keep track of ignored measures. 
   *  
   */
-  void ControlNet::ReadControl(const std::string &ptfile, Progress *progress) {
+  void ControlNet::ReadControl(const std::string &ptfile, Progress *progress, bool forceBuild) {
     Pvl p(ptfile);
     try {
       PvlObject cn = p.FindObject("ControlNetwork");
@@ -134,7 +165,7 @@ namespace Isis {
         try {
           if (cn.Object(i).IsNamed("ControlPoint")) {
             ControlPoint cp;
-            cp.Load(cn.Object(i));
+            cp.Load(cn.Object(i),forceBuild);
             p_numMeasures += cp.Size();
             if (cp.Ignore()) {
               p_numIgnoredMeasures += cp.Size();
@@ -144,7 +175,7 @@ namespace Isis {
                 if (cp[m].Ignore()) p_numIgnoredMeasures++;
               }
             }
-            Add(cp);
+            Add(cp,forceBuild);
           }
         }
         catch (iException &e) {
@@ -420,4 +451,20 @@ namespace Isis {
       }
     }
   }
+
+
+  /** 
+   * Returns the number of non-ignored control points 
+   *  
+   * @return Number of valid control points 
+   */
+  int ControlNet::NumValidPoints() {
+    int size = 0;
+    for(int cp = 0; cp < Size(); cp ++) {
+      if(!p_points[cp].Ignore()) size ++;
+    }
+    return size;
+  }
+
+
 }

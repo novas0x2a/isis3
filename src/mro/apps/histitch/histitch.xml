@@ -37,19 +37,19 @@
       Original version
     </change>
     <change name="Elizabeth Ribelin" date="2005-02-22">
-        Added obsevation id, ccd id, and channel number tests
+      Added obsevation id, ccd id, and channel number tests
     </change>
     <change name="Kris Becker" date="2006-02-22">
-        Made FROM2 optional and allow creation of full CCD with just one
-        channel file.
+      Made FROM2 optional and allow creation of full CCD with just one
+      channel file.
     </change> 
     <change name="Brendan George" date="2006-08-24">
-        Added StitchedChannels keyword to Instrument Group, to identify
-        which channels were used.
+      Added StitchedChannels keyword to Instrument Group, to identify
+      which channels were used.
     </change>
     <change name="Brendan George" date="2006-09-01">
-        Added StitchedProductIds keyword to Instrument group, to identify
-        which images were used.
+      Added StitchedProductIds keyword to Instrument group, to identify
+      which images were used.
     </change>
     <change name="Brendan George" date="2006-09-28">
         Documentation fixes
@@ -61,24 +61,28 @@
       Removed references to CubeInfo 
     </change>
     <change name="Kris Becker" date="2008-10-02">
-        Added new EQUALIZE balance option that has utilizes new options WIDTH, 
-        FILL, CHANNEL and OPERATOR parameters.  This new option applies a 
-        line-by-line equalization of the CCD channels using and addative or 
-        multiplicative option.
+      Added new EQUALIZE balance option that has utilizes new options WIDTH, 
+      FILL, CHANNEL and OPERATOR parameters.  This new option applies a 
+      line-by-line equalization of the CCD channels using and addative or 
+      multiplicative option.
     </change> 
     <change name="Jeannie Walldren" date="2008-11-05"> 
       Replaced references to DataInterp class with NumericalApproximation.
     </change>
     <change name="Kris Becker" date="2008-12-08">
-        Set  channel 1 (left) as the default to hold instead of channel 0.   
-        Added reporting of results to label in the Histitch group.  Also added 
-        creation of a Table of data when the EQUALIZE BALANCE option is 
-        selected.
+      Set  channel 1 (left) as the default to hold instead of channel 0.   
+      Added reporting of results to label in the Histitch group.  Also added 
+      creation of a Table of data when the EQUALIZE BALANCE option is 
+      selected.
     </change> 
     <change name="Kris Becker" date="2008-12-23">
-        The BALANCE=TRUE option now honors the CHANNEL parameter and applies the 
-        coefficient/ratio to the other channel.
+      The BALANCE=TRUE option now honors the CHANNEL parameter and applies the 
+      coefficient/ratio to the other channel.
     </change> 
+    <change name="Steven Lambright &amp; Stacy Alley" date="2009-06-09">
+      Added error checking to SKIP and SEAMSIZE parameters. Fixed problem
+      with accessing out of array bounds.
+    </change>
   </history>
 
   <groups>
@@ -224,6 +228,7 @@
         <default>
           <item> 7 </item>
         </default>
+        <minimum inclusive="true">0</minimum>
         <brief> Number of Pixels to skip on the edges of the image. </brief>
         <description>
           Number of pixels to skip on each side of the seam before the program 
@@ -235,6 +240,7 @@
         <default>
           <item> 11 </item>
         </default>
+        <minimum inclusive="true">1</minimum>
         <brief> Number of Pixels on the seam </brief>
         <description>
           Number of pixels (after skipping 'SKIP' number of pixels) used to 

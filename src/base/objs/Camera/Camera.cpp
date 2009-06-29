@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.17 $
- * $Date: 2009/03/02 15:45:03 $
+ * $Revision: 1.18 $
+ * $Date: 2009/05/21 21:11:25 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -1303,9 +1303,10 @@ namespace Isis {
    * necessary to project a cube. If the chunk of data fails to be linear, then it 
    * will be split up into 4 corners and each of the new chunks (corners) are 
    * reconsidered up until endSize is reached - the endsize size will be 
-   * considered, it is inclusive. The startSize must be a multiple of 2 greater 
-   * than 2, and the endSize must be a multiple of 2 equal to or less than the 
-   * start size but greater than 2. 
+   * considered, it is inclusive. The startSize must be a power of 2 greater 
+   * than 2, and the endSize must be a power of 2 equal to or less than the 
+   * start size but greater than 2. If both the startSize and endSize are set to 2 
+   * then no geometric tiling will be enabled. 
    * 
    * @param startSize The tile size to start with; default 128
    * @param endSize The tile size to give up at; default 8
@@ -1313,6 +1314,13 @@ namespace Isis {
   void Camera::SetGeometricTilingHint(int startSize, int endSize) {
     // verify the start size is a multiple of 2 greater than 2
     int powerOf2 = 2;
+
+    // No hint if 2's are passed in
+    if(startSize == 2 && endSize == 2) {
+      p_geometricTilingStartSize = 2;
+      p_geometricTilingEndSize = 2;
+      return;
+    }
 
     if(endSize > startSize) {
       iString message = "Camera::SetGeometricTilingHint End size must be smaller than the start size";
@@ -1326,9 +1334,8 @@ namespace Isis {
 
     bool foundEnd = false;
     while(powerOf2 > 0 && startSize != powerOf2) {
-      powerOf2 *= 2;
-
       if(powerOf2 == endSize) foundEnd = true;
+      powerOf2 *= 2;
     }
     
     // Didnt find a solution, the integer became negative first, must not be

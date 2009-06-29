@@ -2,8 +2,8 @@
 #define DARKCURRENT_H
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2009/01/26 20:26:02 $
+ * $Revision: 1.3 $
+ * $Date: 2009/05/27 21:26:15 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -44,6 +44,11 @@ namespace Isis {
  *  @history 2008-11-05 Jeannie Walldren - Original Version
   * @history 2009-01-26 Jeannie Walldren - Changed declarations
   *            of 2 dimensional vectors
+ *  @history 2009-05-27 Jeannie Walldren - Added
+ *           p_flightSoftware variable.  Updated
+ *           ComputeLineTime() code with algorithm from the new
+ *           version of linetime.pro in idl cisscal 3.6.  Fixed
+ *           instrument data rate value in the constructor.
  */                                                                       
   class DarkCurrent {
     public:
@@ -72,9 +77,10 @@ namespace Isis {
     //LABEL VARIABLES
     int p_btsm;                   //!< Value dependent upon <b>PvlKeyword</b> DelayedReadoutFlag. Valid values are: "No"=0, "Yes"=1, "Unknown"=-1.  Called "botsim" or "btsm" in IDL code.
     double p_compRatio;           //!< Value of <b>PvlKeyword</b> CompressionRatio from the labels of the image.  Called "ratio" in IDL code.
-    string p_compType;       //!< Value of <b>PvlKeyword</b> CompressionType from the labels of the image.  Called "comp" in IDL code.
-    string p_dataConvType;   //!< Value of <b>PvlKeyword</b> DataConversionType from the labels of the image.  Called "conv" in IDL code.
+    string p_compType;            //!< Value of <b>PvlKeyword</b> CompressionType from the labels of the image.  Called "comp" in IDL code.
+    string p_dataConvType;        //!< Value of <b>PvlKeyword</b> DataConversionType from the labels of the image.  Called "conv" in IDL code.
     double p_expDur;              //!< Value of <b>PvlKeyword</b> ExposureDuration from the labels of the image.  Called "exposure" or "time" in IDL code.
+    iString p_flightSoftware;     //!< Value of <b>PvlKeyword</b> FlightSoftwareVersion from the labels of the image.  Called "fsw" in IDL code.
     int p_gainMode;               //!< Value of <b>PvlKeyword</b> GainModeId from the labels of the image.
     double p_instDataRate;        //!< Value of <b>PvlKeyword</b> InstrumentDataRate from the labels of the image.
     bool p_narrow;                //!< Indicates whether the image is from a narrow-angle camera

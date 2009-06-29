@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2009/05/11 16:33:58 $
- * $Revision: 1.10 $
+ * $Date: 2009/05/13 19:22:57 $
+ * $Revision: 1.11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -114,9 +114,9 @@ namespace Qisis {
        */
       virtual void paintViewport(CubeViewport *vp,QPainter *painter) {};
 
-
     public slots:
       void activate (bool);
+      virtual void updateTool();
 
     protected slots:
       void setCubeViewport (Qisis::CubeViewport *cvp);
@@ -176,7 +176,6 @@ namespace Qisis {
       virtual void mouseButtonRelease(QPoint p, Qt::MouseButton s) {};
 
 
-      virtual void updateTool();
 
 
       /** 
@@ -187,10 +186,11 @@ namespace Qisis {
 
 
       /** 
-       * Drequires the programmer to have this member
+       * requires the programmer to have this member
        * 
        */
       virtual void scaleChanged() {};
+
 
 
       /** 
@@ -199,16 +199,6 @@ namespace Qisis {
        * @param viewport
        */
       void registerTool(Qisis::CubeViewport *viewport);
-
-
-      /** 
-       * Enables the rubberband for the tool if there is an active
-       * cubeviewport
-       * 
-       */
-      virtual void setRubberBand() { 
-        //if (p_cvp != NULL) p_cvp->enableRubberBand(false);
-      };
 
 
     signals:

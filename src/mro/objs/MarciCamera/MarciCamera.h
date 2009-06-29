@@ -23,6 +23,8 @@ namespace Isis {
      *            properly.
      *   @history 2009-03-17 Steven Lambright - Fixed UV to work with the distortion
      *            model correctly
+     *   @history 2009-05-21 Steven Lambright - Fixed GeometricTilingHint for summed
+     *            images
      */
     class MarciCamera : public Isis::Camera {
       public:

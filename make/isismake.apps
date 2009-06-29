@@ -35,6 +35,9 @@ clean:
 	  fi; \
 	fi
 
+sanitize: clean
+	-$(RM) tttt* junk.* TEMP*
+
 install: app
 	if [ ! -d "$(ISISROOT)/bin/xml" ]; \
 	then \
@@ -95,6 +98,8 @@ help:
 	echo "                                  for full documentation building"
 	echo "make clean                    : Removes the application, *.html and *.o files."
 	echo "                                  Also cleans the test directories"
+	echo "make sanitize                 : Calls the clean target then removes tttt* junk.*"
+	echo "                                  and TEMP* files"
 	echo "make testdir                  : Make the test directory for new applications"
 	echo "make test                     : Run all app tests and print result, remove"
 	echo "                                  output"

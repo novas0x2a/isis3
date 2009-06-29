@@ -5,6 +5,6 @@ include $(ISISROOT)/make/isismake.tsts
 commands:
 	$(LS) $(INPUT)/*.cub > $(OUTPUT)/list.lis;
 	$(APPNAME) fromlist=$(OUTPUT)/list.lis prefix=$(OUTPUT)/cat \
-	network=$(INPUT)/cnet.net | grep -v "100% Processed" \
+	cnet=$(INPUT)/cnet.net | grep -v "Processed" \
 	> $(OUTPUT)/output.txt;
 	$(RM) $(OUTPUT)/list.lis;

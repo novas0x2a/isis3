@@ -44,12 +44,11 @@ namespace gbl {
   void Linearize();
   void FindDustRingParameters();
   Filename FindFlatFile();
-  void FindCorrectionFactor();
+  void FindCorrectionFactors(); 
   void DNtoElectrons();
   void FindShutterOffset();
   void DivideByAreaPixel();
-  void FindEfficiencyFactor_IntensityUnits();
-  void FindEfficiencyFactor_IoverF();
+  void FindEfficiencyFactor(string fluxunits);
   iString GetCalibrationDirectory(string calibrationType);
 
   //global variables
@@ -76,6 +75,7 @@ namespace gbl {
   double sumFactor;
   double efficiencyFactor;
   //correction factor variables
+  double polarizationFactor;
   double correctionFactor;
 }
 
@@ -99,6 +99,7 @@ void IsisMain(){
   gbl::opticsArea = 1.0;
   gbl::sumFactor  = 1.0;
   gbl::efficiencyFactor = 1.0;
+  gbl::polarizationFactor = 1.0;
   gbl::correctionFactor = 1.0;
 
   // Set up our ProcessByLine
@@ -134,8 +135,8 @@ void IsisMain(){
     firstpass.StartProcess(gbl::CopyInput);
     firstpass.EndProcess();
   }
-  //???-jw- No bitweight files for GainState 0 were found in the zip calibration file 
-  // For now we will skip bitweight correction in this case, but we may want to throw an error if these files are missing
+  // Skip bitweight correction for GainState==0, there is no data for this case, 
+  // see ground calibration report 5.1.9 Uneven Bit Weighting
   else if(gbl::cissLab->GainState() == 0) {
     gbl::calgrp.FindKeyword("BitweightCorrectionPerformed").SetValue("No: No bitweight calibration file for GainState 0.");  
     gbl::calgrp += PvlKeyword("BitweightFile","Not applicable: No bitweight correction.");
@@ -202,15 +203,10 @@ void IsisMain(){
   gbl::DNtoElectrons();
   gbl::FindShutterOffset();
   gbl::DivideByAreaPixel();
-  if(ui.GetString("FLUXUNITS") == "I/F") {
-    gbl::FindEfficiencyFactor_IoverF();
-  }
-  else{
-    gbl::FindEfficiencyFactor_IntensityUnits();
-  }
+  gbl::FindEfficiencyFactor(ui.GetString("FLUXUNITS"));
 
   //Correction Factor
-  gbl::FindCorrectionFactor();
+  gbl::FindCorrectionFactors();
   if(gbl::flatCorrection) {
     secondpass.SetInputCube(flatFile.Expanded(),att);
   }
@@ -243,8 +239,11 @@ void IsisMain(){
  * @param out Vector of pointers to output buffer.  
  * @internal 
  *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-05-27 Jeannie Walldren - Added polarization
+ *            factor correction.  Updated ConstOffset value per
+ *            new idl cisscal version, 3.6.
  */
-void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){           
+void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
   Buffer *flat = 0;
   Buffer *dustCorr = 0;
   Buffer *mottleCorr = 0;
@@ -269,7 +268,7 @@ void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////
       // STEP 2)  remove bias (debias)
-      if(gbl::numberOfOverclocks){//slightly off by .001? for 8LSBimage and off by about .4 for sum2image
+      if(gbl::numberOfOverclocks){
         outLine[sampIndex] = outLine[sampIndex] - gbl::bias[lineIndex];
       }
       else {
@@ -320,7 +319,22 @@ void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
              //	JPL confirm that these values must be subtracted thus: 
       if(gbl::divideByExposure) {
         double exposureTime = gbl::cissLab->ExposureDuration() - (*gbl::offset)[gbl::offset->Index(sampIndex+1,1,1)];
-        double ConstOffset = 1.0;
+        // IDL documentation:
+        //  Need to develop way to subtract constant offset discussed in
+        //  section 4.3 of Ground Calibration Report. Right now just use 1 ms
+        //  for all cases.
+        //  CORRECTION: New analysis of Vega images points to a value more like
+        //  2.85 ms (correct to within about 0.05 ms for the NAC, less certain
+        //  for the WAC. Use this until better data available. (12/1/2005 - BDK)
+        //  UPDATE: Used azimuthal ring scans to pin down WAC to around 1.8 ms.
+        //  (1/18/2006 - BDK) 
+        double ConstOffset;
+        if (gbl::cissLab->InstrumentId() == "ISSNA"){
+          ConstOffset = 2.85;
+        }
+        else {
+          ConstOffset = 1.8;
+        }
         exposureTime = exposureTime - ConstOffset;
         outLine[sampIndex] = outLine[sampIndex]*1000/exposureTime;	// 1000 to scale ms to seconds
       }
@@ -331,7 +345,7 @@ void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////
       // STEP 7)  correction factors
-      outLine[sampIndex] = outLine[sampIndex] / gbl::correctionFactor;
+      outLine[sampIndex] = outLine[sampIndex] / (gbl::correctionFactor * gbl::polarizationFactor);
 
       ///////////////////////////////////////////////////////////////////////////////////////////////////////////
     }
@@ -339,6 +353,7 @@ void gbl::Calibrate(vector<Buffer *> &in, vector<Buffer *> &out){
       outLine[sampIndex] = bitweightCorrected[sampIndex][lineIndex]; 
     }
   }
+  return;
 }
 
 
@@ -364,6 +379,7 @@ void gbl::CopyInput(Buffer &in){
     // assign input value to image vector
     gbl::bitweightCorrected[sampIndex][lineIndex] = in[sampIndex];
   }
+  return;
 }
 
 /**
@@ -394,6 +410,7 @@ void gbl::BitweightCorrect(Buffer &in){
       gbl::bitweightCorrected[sampIndex][lineIndex] = in[sampIndex];
     }
   }
+  return;
 }
 
 
@@ -455,8 +472,6 @@ Filename gbl::FindBitweightFile(){
   else {
     bitweightName += "wac";
   }
-  //Currently (2008-08-14) there are no bitweight files for gain state 0, 
-  // but if no file is found, this is handled in IsisMain
   iString gainState(gbl::cissLab->GainState());
   bitweightName = bitweightName + "g" + gainState;
 
@@ -478,7 +493,7 @@ Filename gbl::FindBitweightFile(){
 
 /**
  * This method is modelled after IDL CISSCAL's 
- *  cassimg_debias.pro.  The purpose is to computes the bias
+ *  cassimg_debias.pro.  The purpose is to compute the bias
  *  (zero-exposure DN level of CCD chip) to be subtracted in the
  *  Calibrate() method.
  *  There are two ways to do this
@@ -488,6 +503,8 @@ Filename gbl::FindBitweightFile(){
  *  
  *  @internal 
  *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-05-27 Jeannie Walldren - Commented out table
+ *            if-statement as done idl cisscal version 3.6.
  */
 void gbl::ComputeBias(){
   gbl::calgrp += PvlKeyword("BiasSubtractionPerformed","Yes");
@@ -497,7 +514,7 @@ void gbl::ComputeBias(){
   double flightSoftwareVersion;
 
   if(fsw == "Unknown"){
-    flightSoftwareVersion = 0.0;
+    flightSoftwareVersion = 0.0;// cassimg_readlabels.pro sets this to 1.3, we treat this as 1.2???
   }
   else{
     flightSoftwareVersion = fsw.ToDouble();
@@ -513,16 +530,22 @@ void gbl::ComputeBias(){
     gbl::calgrp += PvlKeyword("BiasSubtractionMethod","Overclock fit");
   }
   // otherwise overclocked pixels are invalid and must use bias strip mean where possible
-  else {
-    if(gbl::cissLab->DataConversionType() == "Table"){  // Lossy + Table = no debias
-      gbl::calgrp.FindKeyword("BiasSubtractionPerformed").SetValue("No: Table converted and Lossy compressed");
-      gbl::calgrp += PvlKeyword("BiasSubtractionMethod","Not applicable: No bias subtraction");
-      gbl::calgrp += PvlKeyword("NumberOfOverclocks", "Not applicable: No bias subtraction");
-      gbl::bias.resize(1);
-      gbl::bias[0] = 0.0;
-      return;
-    }
-    if(flightSoftwareVersion == 1.2 || flightSoftwareVersion ==1.3){ // Lossy + 1.2 or 1.3 = no debias
+  else { // overclocks array is corrupt for lossy images (see cassimg_readvic.pro)
+#if 0
+    // 2009-04-27 Jeannie Walldren
+    //   following code comment out in new idl cisscal version, 3.6:
+     if(gbl::cissLab->DataConversionType() == "Table"){  // Lossy + Table = no debias
+       gbl::calgrp.FindKeyword("BiasSubtractionPerformed").SetValue("No: Table converted and Lossy compressed");
+       gbl::calgrp += PvlKeyword("BiasSubtractionMethod","Not applicable: No bias subtraction");
+       gbl::calgrp += PvlKeyword("NumberOfOverclocks", "Not applicable: No bias subtraction");
+       gbl::bias.resize(1);
+       gbl::bias[0] = 0.0;
+       return;
+     }
+#endif
+
+     // according to SIS if 1.2 or 1.3 and Lossy, ignore bias strip mean - invalid data
+    if(flightSoftwareVersion <= 1.3){ // Lossy + 1.2 or 1.3 = no debias
       gbl::calgrp.FindKeyword("BiasSubtractionPerformed").SetValue("No: Lossy compressed on CAS-ISS2 or CAS-ISS3");
       gbl::calgrp += PvlKeyword("BiasSubtractionMethod","Not applicable: No bias subtraction");
       gbl::calgrp += PvlKeyword("NumberOfOverclocks", "Not applicable: No bias subtraction");
@@ -531,8 +554,9 @@ void gbl::ComputeBias(){
       return;
     }
     gbl::calgrp += PvlKeyword("BiasSubtractionMethod","Bias strip mean");
-    gbl::numberOfOverclocks = 0;
+    gbl::numberOfOverclocks = 0;//overclocks array is corrupt for lossy images
   }
+  //Choose bias subtraction method
   if(gbl::numberOfOverclocks){         // use overclocked pixels as default
     gbl::bias = gbl::OverclockFit();
   }
@@ -557,11 +581,11 @@ void gbl::ComputeBias(){
  */
 vector<double> gbl::OverclockFit(){
   vector< vector <double> > overclocks;
-  //  Read overclocked info from Table saved during ciss2isis run
-  //  Table should have 3 columns:
-  // col 3 is the "average" of the overclocked pixels
-  // if there are 2 overclocks, columns 1 and 2 contain them
-  // otherwise column 1 is all null and we use column 2
+  //  Read overclocked info from table saved during ciss2isis
+  //  table should have 3 columns:
+  //     -col 3 is the "average" of the overclocked pixels
+  //       -if there are 2 overclocks, columns 1 and 2 contain them
+  //       -otherwise column 1 is all null and we use column 2
   Table overClkTable("ISS Prefix Pixels");
   gbl::incube->Read(overClkTable);
   for(int i = 0; i < overClkTable.Records(); i++){
@@ -712,7 +736,13 @@ void gbl::Linearize(){
  * mottle correction: dustFile, mottleFile, strengthFactor. 
  *  
  * @internal 
- *   @history 2008-11-05 Jeannie Walldren - Original version 
+ *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-05-27 Jeannie Walldren - Changed to read
+ *            effective wavelength from 5th column of file
+ *            (rather than 3rd) since effective wavelength file
+ *            updated with new idl cisscal version, 3.6.  Added
+ *            effective wavelength to calibration group in
+ *            labels.
  */
 void gbl::FindDustRingParameters(){
   //	No dustring or mottle correction for WAC 
@@ -779,10 +809,10 @@ void gbl::FindDustRingParameters(){
   vector <int> filterIndex (2);
   filterIndex[0] = gbl::cissLab->FilterIndex()[0];
   filterIndex[1] = gbl::cissLab->FilterIndex()[1];
-  if( filterIndex[0] == 17 && filterIndex[1] == 18 ){
+  if( filterIndex[0] == 17 && filterIndex[1] == 18 ){//filter combo CL1/CL2
     filterIndex[0] = -1;
   }
-  if(filterIndex[0] < 17 && filterIndex[1] < 17 ){
+  if((filterIndex[0] < 17 && filterIndex[1] < 17 ) || (filterIndex[0] >= 17 && filterIndex[1] >= 17)){
     gbl::strengthFactor = 0.0;
     // use effective wavelength to estimate strength factor:
     Filename effectiveWavelength(gbl::GetCalibrationDirectory("efficiency") + "na_effwl.tab");
@@ -793,7 +823,7 @@ void gbl::FindDustRingParameters(){
     }
     gbl::calgrp += PvlKeyword("EffectiveWavelengthFile",effectiveWavelength.Expanded());             
     CisscalFile *effwlDB = new CisscalFile(effectiveWavelength.Expanded());
-    iString col1,col2,col3;//col4  = FWHM in nm, is not used, so no need to read
+    iString col1,col2,col3, col4, col5;
     double effwl;
     for(int i = 0; i < effwlDB->LineCount(); i++){
       iString line; 
@@ -804,22 +834,18 @@ void gbl::FindDustRingParameters(){
       if(col1 == gbl::cissLab->FilterName()[0]){
         col2 = line.Token(" ");
         if(col2 == gbl::cissLab->FilterName()[1]){
-          col3 = line.Token(" ");
-          if(col3 == ""){
+          col3 = line.Token(" ");  // central wavelength of filter combo
+          col4 = line.Token(" ");  // full-width at half-maximum (FWHM) of filter combo
+          col5 = line.Token(" ");  // effective wavelength
+          if(col5 == ""){
             //       Couldn't find a match in the database
             gbl::calgrp.FindKeyword("MottleCorrectionPerformed").SetValue("Yes: EffectiveWavelengthFile contained no factor for filter combination, used strengthFactor of 1.0");
             gbl::strengthFactor = 1.0;
           }
           else{
-            if(col3 == "-NaN"){
-              effwl = Isis::Null;
-              gbl::calgrp.FindKeyword("MottleCorrectionPerformed").SetValue("Yes: EffectiveWavelengthFile contained -NaN for filter combination, used strengthFactor of 1.0");
-              gbl::strengthFactor = 1.0;
-            }
-            else{
-              effwl = col3.ToDouble();
-              gbl::strengthFactor = 1.30280 - 0.000717552 * effwl;
-            }
+            effwl = col5.ToDouble();
+            gbl::calgrp += PvlKeyword("EffectiveWavelength", effwl);
+            gbl::strengthFactor = 1.30280 - 0.000717552 * effwl;
           }
           break;
         }
@@ -925,10 +951,10 @@ Filename gbl::FindFlatFile(){
         if(col3 == gbl::cissLab->FilterName()[0]){
           col4 = line.Token(" "); col4.Trim("'"); 
           if(col4 == gbl::cissLab->FilterName()[1]){
-            col5 = line.Token(" "); col5.Trim("'"); 
-            col6 = line.Token(" "); col6.Trim("'"); 
-            col7 = line.Token(" "); col7.Trim("'"); 
-            col8 = line.Trim(" ");                
+            col5 = line.Token(" "); col5.Trim("'");  // col5 = gainstate (not used)
+            col6 = line.Token(" "); col6.Trim("'");  // col6 = antiblooming state (not used)
+            col7 = line.Token(" "); col7.Trim("'");  // col7 = file number (not used)
+            col8 = line.Trim(" ");                   // col8 = slope file name
             break;
           }
           else {
@@ -987,6 +1013,9 @@ Filename gbl::FindFlatFile(){
  *  
  *  @internal 
  *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-05-27 Jeannie Walldren - Removed return
+ *            statement and added else statement so that the
+ *            TrueGain keyword is added in any case.
  */
 void gbl::DNtoElectrons(){
   gbl::calgrp += PvlKeyword("DNtoFluxPerformed","Yes");
@@ -1012,17 +1041,18 @@ void gbl::DNtoElectrons(){
                                          "Input file contains invalid GainState. See Software Interface Specification (SIS), Version 1.1, page 86.", 
                                          _FILEINFO_);
     }
-    return;
   }
-  switch(gbl::cissLab->GainState()) {
-    case 0:  gbl::trueGain = 27.68/0.125446;break;
-    case 1:  gbl::trueGain = 27.68/0.290637;break;
-    case 2:  gbl::trueGain = 27.68/1.0;     break;
-    case 3:  gbl::trueGain = 27.68/2.360374;break;
-    default: // invalid gainstate, unable to convert DN to electrons, stop calibration
-      throw iException::Message(iException::Pvl, 
-                                       "Input file contains invalid GainState. See Software Interface Specification (SIS), Version 1.1, page 86.", 
-                                       _FILEINFO_);
+  else{
+    switch(gbl::cissLab->GainState()) {
+      case 0:  gbl::trueGain = 27.68/0.125446;break;
+      case 1:  gbl::trueGain = 27.68/0.290637;break;
+      case 2:  gbl::trueGain = 27.68/1.0;     break;
+      case 3:  gbl::trueGain = 27.68/2.360374;break;
+      default: // invalid gainstate, unable to convert DN to electrons, stop calibration
+        throw iException::Message(iException::Pvl, 
+                                         "Input file contains invalid GainState. See Software Interface Specification (SIS), Version 1.1, page 86.", 
+                                         _FILEINFO_);
+    }
   }
   gbl::calgrp += PvlKeyword("TrueGain", gbl::trueGain);
   return;
@@ -1122,105 +1152,60 @@ void gbl::DivideByAreaPixel(){
 /**
  * This method is modelled after IDL CISSCAL's
  * cassimg_dividebyefficiency.pro. The purpose is to find the 
- * efficiency factor for I/F flux units.  The results diverge 
- * from the IDL results due to differences in the way they 
- * calculate solar distance. However, the DN results are still 
- * within 0.2% after we divide by efficiency factor 
+ * efficiency factor for the given flux units. This value is 
+ * used to correct the image for filter and CCD efficiency. 
+ *  
+ * @b Note: For "I/F", The results diverge from the IDL results 
+ * due to differences in the way they calculate solar distance. 
+ * However, the DN results are still within 0.2% after we divide 
+ * by efficiency factor. 
  * 
  * @internal 
- *   @history 2008-11-05 Jeannie Walldren - Original version
- *   @history 2009-02-12 Jeannie Walldren - Modified code to
- *            make a second attempt to find the planet if the
+ *   @history 2008-11-05 Jeannie Walldren - Original version of
+ *            FindEfficiencyFactor_IoverF() and
+ *            FindEfficiencyFactor_IntensityUnits() written.
+ *   @history 2009-02-12 Jeannie Walldren - Modified
+ *            FindEfficiencyFactor_IoverF() code to make a
+ *            second attempt to find the planet if the
  *            Isis::Camera class fails to find it at the center
  *            point of the cube. Previously, if the target was
  *            not found, an exception was thrown. Now the
  *            SubSpacecraftPoint() method from Isis::Camera
  *            class is used to try to locate the target before
  *            throwing the exception.
+ *   @history 2009-05-27 Jeannie Walldren - Joined
+ *            FindEfficiencyFactor_IoverF() and
+ *            FindEfficiencyFactor_IntensityUnits() into
+ *            FindEfficiencyFactor() per new idl cisscal
+ *            version, 3.6, updates. This version no longer uses
+ *            the effic_db (now called omega0) to calculate the
+ *            efficiency factor for intensity units.  Now, the
+ *            method is not far off from the I/F method.
  */
-void gbl::FindEfficiencyFactor_IoverF(){ 
-  // get distance from sun (AU):
-  double distFromSun = 0; 
-  try{
-    Camera *cam = gbl::incube->Camera();
-    bool camSuccess = cam->SetImage(gbl::incube->Samples()/2,gbl::incube->Lines()/2);
-    if(!camSuccess) {// the camera was unable to find the planet at the center of the image
-      double lat, lon;
-      // find values for lat/lon directly below spacecraft
-      cam->SubSpacecraftPoint(lat,lon);
-      // use these values to set the ground coordinates
-      cam->SetUniversalGround(lat,lon);
-    }
-    distFromSun = cam->SolarDistance();
-  }
-  catch(iException &e){ // unable to get solar distance, can't divide by efficiency, stop calibration
-    throw e.Message(iException::Camera, 
-                    "Unable to calibrate image using I/F. Cannot calculate Solar Distance using Isis::Camera object.",
-                    _FILEINFO_);
-  }
-  if(distFromSun <= 0){ // solar distance <= 0, can't divide by efficiency, stop calibration
-    throw iException::Message(iException::Camera, 
-                              "Unable to calibrate image using I/F. Solar Distance calculated is less than or equal to 0.",
-                              _FILEINFO_);
-  }
+
+void gbl::FindEfficiencyFactor(string fluxunits){
+
   gbl::calgrp += PvlKeyword("DividedByEfficiency","Yes");
+  gbl::calgrp += PvlKeyword("EfficiencyFactorMethod", fluxunits);
+  vector<double> lambda; // lambda will contain all wavelength vectors used
 
-  // I/F mode ON:
-  gbl::calgrp += PvlKeyword("EfficiencyFactorMethod", "I/F");
-  gbl::calgrp += PvlKeyword("SolarDistance", distFromSun);
-  iString units;
-
-  // read in spectral file
-  Filename specfile(gbl::GetCalibrationDirectory("efficiency") + "solarflux.tab");
-  if(!specfile.Exists()) { // spectral file not found, stop calibration
-    throw iException::Message(iException::Io, 
-                              "Unable to calibrate image using I/F. SpectralFile ***" 
-                              + specfile.Expanded() + "*** not found.", _FILEINFO_);
-  }
-  gbl::calgrp += PvlKeyword("SpectralFile", specfile.Expanded());
-  double angstromsToNm = 10.0;
-  double pifact = Isis::PI;
-  units = "I/F";
-
-  CisscalFile *spectral = new CisscalFile(specfile.Expanded());
-  double x, y;
-  vector<double> wavelengthF, flux;
-  vector<double> lambda;
-  for(int i = 0; i < spectral->LineCount(); i++){
-    iString line;
-    spectral->GetLine(line);  //assigns value to line
-    line = line.ConvertWhiteSpace();
-    line = line.Compress();
-    line = line.TrimHead(" ");
-    if (line == "") {
-      break;
-    }
-    x = line.Token(" ").ToDouble() / angstromsToNm;
-    y = line.Trim(" ").ToDouble() * angstromsToNm;
-    wavelengthF.push_back(x);
-    flux.push_back(y);
-  }
-  spectral->Close();
-  if (wavelengthF[0] > wavelengthF.back()){
-      // wavelength is in descending order, reverse to ascending order  
-    reverse(wavelengthF.begin(), wavelengthF.end());
-    reverse(flux.begin(), flux.end());
-  }
-  lambda = wavelengthF;
-  
-  // now read in system transmission (T0*T1*T2*QE) 
+  //--- 1) CREATE LINEAR APPROXIMATION FROM SYSTEM TRANSMISSION FILE ----------
+  // find system transmission file (T0*T1*T2*QE) 
+ 
   Filename transfile(gbl::GetCalibrationDirectory("efficiency/systrans") 
                      + gbl::cissLab->InstrumentId().DownCase() 
                      + gbl::cissLab->FilterName()[0].DownCase() 
                      + gbl::cissLab->FilterName()[1].DownCase() + "_systrans.tab");
   if(!transfile.Exists()) { // transmission file not found, stop calibration
     throw iException::Message(iException::Io, 
-                              "Unable to calibrate image using I/F. TransmissionFile ***" 
+                              "Unable to calibrate image. TransmissionFile ***" 
                               + transfile.Expanded() + "*** not found.", _FILEINFO_);
   }
+  // read in system transmission to find transmitted wavelength and flux
   gbl::calgrp += PvlKeyword("TransmissionFile", transfile.Expanded());
   CisscalFile *trans = new CisscalFile(transfile.Expanded());
   vector<double> wavelengthT, transmittedFlux;
+  double x, y;
   for(int i = 0; i < trans->LineCount(); i++){
     iString line;
     trans->GetLine(line);  //assigns value to line
@@ -1234,18 +1219,21 @@ void gbl::FindEfficiencyFactor_IoverF(){
     y = line.Token(" ").ToDouble();
     wavelengthT.push_back(x);
     transmittedFlux.push_back(y);
-    lambda.push_back(x);
   }
   trans->Close();
+  // wavelength and flux are in descending order, reverse to ascending order
   if (wavelengthT[0] > wavelengthT.back()){
-      // wavelength is in descending order, reverse to ascending order
     reverse(wavelengthT.begin(), wavelengthT.end());
     reverse(transmittedFlux.begin(), transmittedFlux.end());
-    for (unsigned int i = 0; i < wavelengthT.size(); i++){
-      lambda[i+wavelengthF.size()] = wavelengthT[i];
-    }
+  } 
+  lambda = wavelengthT;
+  // Create Linear approximation from the transmitted data
+  NumericalApproximation newtrans (NumericalApproximation::Linear);
+  for(unsigned int i = 0; i < transmittedFlux.size(); i++){
+    newtrans.AddData(wavelengthT[i], transmittedFlux[i]);
   }
 
+  //--- 2) CREATE LINEAR APPROXIMATION FROM QUANTUM EFFICIENCY FILE -----------
   // find quantum efficiency file
   Filename qecorrfile;
   if( gbl::cissLab->NarrowAngle()) {
@@ -1256,9 +1244,10 @@ void gbl::FindEfficiencyFactor_IoverF(){
   }
   if(!qecorrfile.Exists()) { // quantum efficiency file not found, stop calibration
     throw iException::Message(iException::Io, 
-                              "Unable to calibrate image using I/F. QuantumEfficiencyFile ***" 
+                              "Unable to calibrate image. QuantumEfficiencyFile ***" 
                               + qecorrfile.Expanded() + "*** not found.", _FILEINFO_);
   }
+  // read qe file to find qe wavelength and correction
   gbl::calgrp += PvlKeyword("QuantumEfficiencyFile", qecorrfile.Expanded());
   CisscalFile *qeCorr = new CisscalFile(qecorrfile.Expanded());
   vector<double> wavelengthQE, qecorrection;
@@ -1278,55 +1267,173 @@ void gbl::FindEfficiencyFactor_IoverF(){
     lambda.push_back(x);
   }
   qeCorr->Close();
+  // wavelength and qecorr are in descending order, reverse to ascending order
   if (wavelengthQE[0] > wavelengthQE.back()){
-    // wavelength is in descending order, reverse to ascending order
     reverse(wavelengthQE.begin(), wavelengthQE.end());
     reverse(qecorrection.begin(), qecorrection.end());
-    for (unsigned int i = 0; i < wavelengthQE.size(); i++){
-      lambda[i+wavelengthF.size()+wavelengthT.size()] = wavelengthT[i];
-    }
   }
-  // create new wavelength vector
-  double minlam = ceil (max(wavelengthF.front(),max(wavelengthT.front(),wavelengthQE.front())));
-  double maxlam = floor(min(wavelengthF.back(),min(wavelengthT.back(),wavelengthQE.back())));
-  for (int i = (int)lambda.size()-1; i >= 0; i--) {
-    if(lambda[i] < minlam || lambda[i] > maxlam) {
-      lambda.erase(lambda.begin()+i);
-    }
-  }
-
-  // NumericalApproximation requires lambda to be sorted and unique
-  sort(lambda.begin(), lambda.end()); 
-  vector<double>::iterator it = unique(lambda.begin(),lambda.end());
-  lambda.resize(it - lambda.begin());
-
-
-  NumericalApproximation newtrans (NumericalApproximation::Linear);
+  // Create Linear approximation from the qe data
   NumericalApproximation newqecorr(NumericalApproximation::Linear);
-  NumericalApproximation newflux  (NumericalApproximation::Linear);
-  vector<double> fluxproduct;
-  for(unsigned int i = 0; i < transmittedFlux.size(); i++){
-    newtrans.AddData(wavelengthT[i], transmittedFlux[i]);
-  }
   for(unsigned int i = 0; i < qecorrection.size(); i++){
     newqecorr.AddData(wavelengthQE[i], qecorrection[i]);
   }
-  for(unsigned int i = 0; i < flux.size(); i++){
-    newflux.AddData(wavelengthF[i], flux[i]);
-  }
-  for(unsigned int i = 0; i < lambda.size(); i++){
-    double a = newtrans.Evaluate(lambda[i]);
-    double b = newqecorr.Evaluate(lambda[i]);
-    double c = newflux.Evaluate(lambda[i])/(pifact*pow(distFromSun,2.0));
-    fluxproduct.push_back(a*b*c);
-  }
-  // changed from numericalapproximation to numericalapprox methods
-  NumericalApproximation spline(NumericalApproximation::CubicNatural);
-  spline.AddData(lambda, fluxproduct);
-  gbl::efficiencyFactor = spline.BoolesRule(spline.DomainMinimum(), spline.DomainMaximum());
-  gbl::calgrp += PvlKeyword("EfficiencyDataBase","Not applicable: I/F chosen");
-  gbl::calgrp += PvlKeyword("EfficiencyFactor", gbl::efficiencyFactor, units);
 
+
+  // these variables will be defined in the if-statement
+  iString units;
+  double minlam, maxlam;
+  vector<double> fluxproduct1, fluxproduct2;
+
+  if (fluxunits == "INTENSITY") {
+    gbl::calgrp += PvlKeyword("SpectralFile", "Not applicable: Intensity Units chosen");
+    gbl::calgrp += PvlKeyword("SolarDistance", "Not applicable: Intensity Units chosen");
+    //--- 3a) SORT AND MAKE LAMBDA UNIQUE, REMOVE OUTLIERS, -------------------
+    //---     FIND FLUX PRODUCTS TO BE INTERPOLATED ---------------------------
+    units = "phot/cm^2/s/nm/ster";
+
+    // lambda domain min is the largest of the minimum wavelength values (rounded up)
+    minlam = ceil (max(wavelengthT.front(),wavelengthQE.front()));
+    // lambda domain max is the smallest of the maximum wavelength values (rounded down)
+    maxlam = floor(min(wavelengthT.back(),wavelengthQE.back()));
+
+    // NumericalApproximation requires lambda to be sorted
+    sort(lambda.begin(), lambda.end()); 
+    // NumericalApproximation requires lambda to be unique
+    vector<double>::iterator it = unique(lambda.begin(),lambda.end());
+    lambda.resize(it - lambda.begin());
+
+    // remove any values that fall below minlam
+    while(lambda[0] < minlam) {
+      lambda.erase(lambda.begin());
+    }
+
+    // remove any values that fall above maxlam
+    while(lambda[lambda.size()-1] > maxlam) {
+      lambda.erase(lambda.end()-1);
+    }
+
+    for(unsigned int i = 0; i < lambda.size(); i++){
+      double a = newtrans.Evaluate(lambda[i]);
+      double b = newqecorr.Evaluate(lambda[i]);
+      fluxproduct1.push_back(a*b);
+    }
+    fluxproduct2 = fluxproduct1;
+  }
+  else {// if(fluxunits == "I/F") {
+    //--- 3b) CALCULATE SOLAR DISTANCE, ---------------------------------------
+    // ---    CREATE LINEAR APPROXIMATION FROM SPECTRAL FILE ------------------
+    //---     SORT AND MAKE LAMBDA UNIQUE, REMOVE OUTLIERS, -------------------
+    //---     FIND FLUX PRODUCTS TO BE INTERPOLATED ---------------------------
+
+    units = "I/F";
+  
+    // find spectral file
+    Filename specfile(gbl::GetCalibrationDirectory("efficiency") + "solarflux.tab");
+    if(!specfile.Exists()) { // spectral file not found, stop calibration
+      throw iException::Message(iException::Io, 
+                                "Unable to calibrate image using I/F. SpectralFile ***" 
+                                + specfile.Expanded() + "*** not found.", _FILEINFO_);
+    }
+    gbl::calgrp += PvlKeyword("SpectralFile", specfile.Expanded());
+
+    // get distance from sun (AU):
+    double angstromsToNm = 10.0;
+    double distFromSun = 0; 
+    try{
+      Camera *cam = gbl::incube->Camera();
+      bool camSuccess = cam->SetImage(gbl::incube->Samples()/2,gbl::incube->Lines()/2);
+      if(!camSuccess) {// the camera was unable to find the planet at the center of the image
+        double lat, lon;
+        // find values for lat/lon directly below spacecraft
+        cam->SubSpacecraftPoint(lat,lon);
+        // use these values to set the ground coordinates
+        cam->SetUniversalGround(lat,lon);
+      }
+      distFromSun = cam->SolarDistance();
+    }
+    catch(iException &e){ // unable to get solar distance, can't divide by efficiency, stop calibration
+      throw e.Message(iException::Camera, 
+                      "Unable to calibrate image using I/F. Cannot calculate Solar Distance using Isis::Camera object.",
+                      _FILEINFO_);
+    }
+    if(distFromSun <= 0){ // solar distance <= 0, can't divide by efficiency, stop calibration
+      throw iException::Message(iException::Camera, 
+                                "Unable to calibrate image using I/F. Solar Distance calculated is less than or equal to 0.",
+                                _FILEINFO_);
+    }
+    gbl::calgrp += PvlKeyword("SolarDistance", distFromSun);
+
+    // read spectral file to find wavelength and flux  
+    CisscalFile *spectral = new CisscalFile(specfile.Expanded());
+    vector<double> wavelengthF, flux;
+    for(int i = 0; i < spectral->LineCount(); i++){
+      iString line;
+      spectral->GetLine(line);  //assigns value to line
+      line = line.ConvertWhiteSpace();
+      line = line.Compress();
+      line = line.TrimHead(" ");
+      if (line == "") {
+        break;
+      }
+      x = line.Token(" ").ToDouble() / angstromsToNm;
+      y = line.Trim(" ").ToDouble() * angstromsToNm;
+      wavelengthF.push_back(x);
+      flux.push_back(y);
+      lambda.push_back(x);
+    }
+    spectral->Close();
+    // wavelength is in descending order, reverse to ascending order  
+    if (wavelengthF[0] > wavelengthF.back()){
+      reverse(wavelengthF.begin(), wavelengthF.end());
+      reverse(flux.begin(), flux.end());
+    }
+    // Create Linear Approximation
+    NumericalApproximation newflux(NumericalApproximation::Linear);
+    for(unsigned int i = 0; i < flux.size(); i++){
+      newflux.AddData(wavelengthF[i], flux[i]);
+    }
+
+    // lambda domain min is the largest of the minimum wavelength values (rounded up)
+    minlam = ceil (max(wavelengthF.front(),max(wavelengthT.front(),wavelengthQE.front())));
+    // lambda domain max is the smallest of the maximum wavelength values (rounded down)
+    maxlam = floor(min(wavelengthF.back(),min(wavelengthT.back(),wavelengthQE.back())));
+
+    // NumericalApproximation requires lambda to be sorted
+    sort(lambda.begin(), lambda.end()); 
+    // NumericalApproximation requires lambda to be unique
+    vector<double>::iterator it = unique(lambda.begin(),lambda.end());
+    lambda.resize(it - lambda.begin());
+
+    // remove any values that fall below minlam
+    while(lambda[0] < minlam) {
+      lambda.erase(lambda.begin());
+    }
+
+    // remove any values that fall above maxlam
+    while(lambda[lambda.size()-1] > maxlam) {
+      lambda.erase(lambda.end()-1);
+    }
+
+    for(unsigned int i = 0; i < lambda.size(); i++){
+      double a = newtrans.Evaluate(lambda[i]);
+      double b = newqecorr.Evaluate(lambda[i]);
+      double c = newflux.Evaluate(lambda[i])/(Isis::PI*pow(distFromSun,2.0));
+      fluxproduct1.push_back(a*b*c);
+      fluxproduct2.push_back(a*b);
+    }
+  }
+
+  //--- 4) CALCULATE EFFICIENCY FACTOR AND TOTAL EFFICIENCY -------------------
+  //---    USING LAMBDA AND FLUX PRODUCTS -------------------------------------
+  NumericalApproximation spline1(NumericalApproximation::CubicNatural);
+  NumericalApproximation spline2(NumericalApproximation::CubicNatural);
+  spline1.AddData(lambda, fluxproduct1);
+  spline2.AddData(lambda, fluxproduct2);
+  gbl::efficiencyFactor = spline1.BoolesRule(spline1.DomainMinimum(), spline1.DomainMaximum());
+  double efficiency = spline2.BoolesRule(spline2.DomainMinimum(), spline2.DomainMaximum());
+  gbl::calgrp += PvlKeyword("EfficiencyFactor", gbl::efficiencyFactor, units);
+  gbl::calgrp += PvlKeyword("TotalEfficiency", efficiency);
+  
   // Cannot divide by 0.0
   if(gbl::efficiencyFactor == 0) {
     throw iException::Message(iException::Math, 
@@ -1336,97 +1443,6 @@ void gbl::FindEfficiencyFactor_IoverF(){
   return;
 }
 
-/**
- * This method is modelled after IDL CISSCAL's 
- * cassimg_dividebyefficiency.pro. The purpose is to find the 
- * efficiency factor for intensity units type flux units.  This 
- * value is used to correct the image for filter and CCD 
- * efficiency. 
- *  
- * @internal 
- *   @history 2008-11-05 Jeannie Walldren - Original version *  
- */
-void gbl::FindEfficiencyFactor_IntensityUnits(){            
-  gbl::calgrp += PvlKeyword("DividedByEfficiency","Yes");
-  gbl::calgrp += PvlKeyword("EfficiencyFactorMethod", "Intensity Units");
-  gbl::calgrp += PvlKeyword("SolarDistance","Not applicable: Intensity Units chosen");
-  gbl::calgrp += PvlKeyword("SpectralFile","Not applicable: Intensity Units chosen");
-  gbl::calgrp += PvlKeyword("TransmissionFile","Not applicable: Intensity Units chosen");
-  gbl::calgrp += PvlKeyword("QuantumEfficiencyFile","Not applicable: Intensity Units chosen");
-
-  iString units;
-  gbl::efficiencyFactor = 0.0;
-
-  //	The calibration results files now include a file
-  //	 "effic.db" which is a text database containing
-  //	 conversion factors for the two instruments and their
-  //	 planned and calibrated filter combinations.
-  Filename efficiencyDB(gbl::GetCalibrationDirectory("efficiency") + "effic_db.tab");
-  if(!efficiencyDB.Exists()) { // efficiency database not found, stop calibration
-    throw iException::Message(iException::Io, 
-                              "Unable to calibrate image using intensity units. EfficiencyDataBase ***"
-                              + efficiencyDB.Expanded() + "*** not found.", _FILEINFO_);
-  }
-  gbl::calgrp += PvlKeyword("EfficiencyDataBase",efficiencyDB.Expanded());
-  CisscalFile *effFact = new CisscalFile(efficiencyDB.Expanded());
-  iString col1, col2, col3, col4;
-  for(int i = 0; i < effFact->LineCount(); i++){
-    iString line;
-    effFact->GetLine(line);  //assigns value to line
-    line = line.ConvertWhiteSpace();
-    line = line.Compress();
-    col1 = line.Token(" ");
-    if( col1 == gbl::cissLab->InstrumentId()){
-      col2 = line.Token(" ");
-      if( col2 == gbl::cissLab->FilterName()[0] ){
-        col3 = line.Token(" ");
-        if( col3 == gbl::cissLab->FilterName()[1] ){
-          col4 = line.Trim(" ");
-
-          if(col4 == ""){ // efficiency factor not found, stop calibration
-            throw iException::Message(iException::Io,
-                                      "Unable to calibrate image. EfficiencyDataBase contained no factor for filter combination "
-                                      + gbl::cissLab->FilterName()[0] + "/" + gbl::cissLab->FilterName()[1]+".",
-                                      _FILEINFO_);
-          }
-          else{
-            if(col4.ToDouble() == 0.0) { // efficiency factor= 0, stop calibration
-              throw iException::Message(iException::Io,
-                                        "Unable to calibrate image. EfficiencyDataBase contained value of 0.0 for filter combination "
-                                        + gbl::cissLab->FilterName()[0] + "/" + gbl::cissLab->FilterName()[1]+".",
-                                        _FILEINFO_);
-            }
-            else{
-              gbl::efficiencyFactor = col4.ToDouble();
-              break;
-            }
-          }
-        }
-        else{
-          continue;
-        }
-      }
-      else {
-        continue;
-      }
-    }
-    else {
-      continue;
-    }
-  }
-  effFact->Close();
-  units = "phot/cm^2/s/nm/ster";
-  gbl::calgrp += PvlKeyword("EfficiencyFactor", gbl::efficiencyFactor, units);
-
-  // if no factor was found for instrument ID and filter combination
-  if(gbl::efficiencyFactor == 0.0) {
-    throw iException::Message(iException::Io, 
-                              "Unable to calibrate image. EfficiencyDataBase contained no factor for filter combination "
-                              + gbl::cissLab->FilterName()[0] + "/" + gbl::cissLab->FilterName()[1]+".",
-                              _FILEINFO_);
-  }
-  return;
-}
 
 //=====End DN to Flux Methods====================================================================//
 
@@ -1440,9 +1456,89 @@ void gbl::FindEfficiencyFactor_IntensityUnits(){
  *  for ad-hoc factors.
  *  
  * @internal 
- *   @history 2008-11-05 Jeannie Walldren - Original version *  
+ *   @history 2008-11-05 Jeannie Walldren - Original version
+ *   @history 2009-05-27 Jeannie Walldren - Renamed from
+ *            FindCorrectionFactor since code was added to find
+ *            the polarization correction factor, when
+ *            available.
  */
-void gbl::FindCorrectionFactor(){
+void gbl::FindCorrectionFactors(){
+  string filter1 = gbl::cissLab->FilterName()[0];
+  string filter2 = gbl::cissLab->FilterName()[1];
+  // check if polarized filters
+  if(filter1 == "IRP0" || filter1 == "P120" || filter1 == "P60" || filter1 == "P0"
+     || filter2 == "IRP90" || filter2 == "IRP0" ) {
+    Filename polarizationFactorFile(gbl::GetCalibrationDirectory("correction") + "pol_correction.tab");
+    if(!polarizationFactorFile.Exists()) { // correction factor file not found, stop calibration
+      throw iException::Message(iException::Io, 
+                                "Unable to calibrate image. PolarizationFactorFile ***" 
+                                + polarizationFactorFile.Expanded() + "*** not found.", _FILEINFO_);
+    }
+    gbl::calgrp += PvlKeyword("PolarizationFactorPerformed","Yes");
+    gbl::calgrp.FindKeyword("PolarizationFactorPerformed").AddComment("Correction Factor Parameters");
+    gbl::calgrp += PvlKeyword("PolarizationFactorFile",polarizationFactorFile.Expanded());
+    CisscalFile *polFact = new CisscalFile(polarizationFactorFile.Expanded());
+    gbl::polarizationFactor = 0.0;
+    iString col1, col2, col3, col4;
+    for(int i = 0; i < polFact->LineCount(); i++){
+      iString line;
+      polFact->GetLine(line);  //assigns value to line
+      line = line.ConvertWhiteSpace();
+      line = line.Compress();
+      col1 = line.Token(" ");
+      if( col1 == gbl::cissLab->InstrumentId()){
+        col2 = line.Token(" ");
+        if( col2 == gbl::cissLab->FilterName()[0] ){
+          col3 = line.Token(" ");
+          if( col3 == gbl::cissLab->FilterName()[1] ){
+            col4 = line.Trim(" ");
+            if(col4 == ""){
+              gbl::polarizationFactor = 1.0;
+              // dividing by polarization factor of 1.0 implies this correction is not performed
+              gbl::calgrp.FindKeyword("PolarizationFactorPerformed").SetValue("No: PolarizationFactorFile contained no factor for filter combination");
+            }
+            else{
+              gbl::polarizationFactor = col4.ToDouble();
+            }
+            break;
+          }
+          else{
+            continue;
+          }
+        }
+        else {
+          continue;
+        }
+      }
+      else {
+        continue;
+      }
+    }
+    polFact->Close();
+    
+    // if no factor was found for instrument ID and filter combination
+    if(gbl::polarizationFactor == 0.0){
+      gbl::polarizationFactor = 1.0;
+      // dividing by polarization factor of 1.0 implies this correction is not performed
+      gbl::calgrp.FindKeyword("PolarizationFactorPerformed").SetValue("No: PolarizationFactorFile contained no factor for filter combination");
+    }
+    else{
+      // polarization factor is defined such that they are applied with the correction factor for the related CLR/Filter pair
+      if(gbl::cissLab->InstrumentId() == "ISSNA") {
+        filter1 = "CL1";                           
+      }                                            
+      if(gbl::cissLab->InstrumentId() == "ISSWA") {
+        filter2 = "CL2";                           
+      }
+    }
+    gbl::calgrp += PvlKeyword("PolarizationFactor",gbl::polarizationFactor);
+
+  }
+  else{
+    // no polarization correction - gbl::polarizationFactor already initialized to 1 in main()
+    gbl::calgrp += PvlKeyword("PolarizationFactorPerformed","No");
+    gbl::calgrp.FindKeyword("PolarizationFactorPerformed").AddComment("Correction Factor Parameters");
+  }
   // Get the directory where the CISS calibration directories are.
   Filename correctionFactorFile(gbl::GetCalibrationDirectory("correction") + "correctionfactors_qecorr.tab");
   if(!correctionFactorFile.Exists()) { // correction factor file not found, stop calibration
@@ -1451,7 +1547,6 @@ void gbl::FindCorrectionFactor(){
                               + correctionFactorFile.Expanded() + "*** not found.", _FILEINFO_);
   }
   gbl::calgrp += PvlKeyword("CorrectionFactorPerformed","Yes");
-  gbl::calgrp.FindKeyword("CorrectionFactorPerformed").AddComment("Correction Factor Parameters");
   gbl::calgrp += PvlKeyword("CorrectionFactorFile",correctionFactorFile.Expanded());
   CisscalFile *corrFact = new CisscalFile(correctionFactorFile.Expanded());
   gbl::correctionFactor = 0.0;
@@ -1464,9 +1559,9 @@ void gbl::FindCorrectionFactor(){
     col1 = line.Token(" ");
     if( col1 == gbl::cissLab->InstrumentId()){
       col2 = line.Token(" ");
-      if( col2 == gbl::cissLab->FilterName()[0] ){
+      if( col2 == filter1 ){
         col3 = line.Token(" ");
-        if( col3 == gbl::cissLab->FilterName()[1] ){
+        if( col3 == filter2 ){
           col4 = line.Trim(" ");
           if(col4 == ""){
             gbl::correctionFactor = 1.0;

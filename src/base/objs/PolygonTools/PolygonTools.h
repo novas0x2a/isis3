@@ -2,8 +2,8 @@
 #define Polygontools_h
 /**
  * @file
- * $Revision: 1.21 $
- * $Date: 2009/04/22 19:46:32 $
+ * $Revision: 1.22 $
+ * $Date: 2009/05/27 22:11:14 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -115,8 +115,6 @@ namespace Isis {
  *            type of cases.
  *   @history 2009-01-28 Steven Lambright - Fixed bug in Operate(...) method
  *            when reducing precision
- *   @history 2009-04-22 Steven Koechle - Made the ReducePrecision methods on
- *            Geometries public
  */                                                                       
 
   class PolygonTools {
@@ -158,11 +156,11 @@ namespace Isis {
       
       static std::string GetGeometryName(const geos::geom::Geometry *geom);
 
-      static geos::geom::Geometry     *ReducePrecision(const geos::geom::Geometry *geom, unsigned int precision);
-      static geos::geom::MultiPolygon *ReducePrecision(const geos::geom::MultiPolygon *poly, unsigned int precision);
-      static geos::geom::Polygon      *ReducePrecision(const geos::geom::Polygon *poly, unsigned int precision);
-      static geos::geom::LinearRing   *ReducePrecision(const geos::geom::LinearRing *ring, unsigned int precision);
-      static geos::geom::Coordinate   *ReducePrecision(const geos::geom::Coordinate *coord, unsigned int precision);
+      static bool Equal( const geos::geom::MultiPolygon * poly1, const geos::geom::MultiPolygon * poly2 );
+      static bool Equal( const geos::geom::Polygon * poly1, const geos::geom::Polygon * poly2 );
+      static bool Equal( const geos::geom::LineString * lineString1, const geos::geom::LineString * lineString2 );
+      static bool Equal( const geos::geom::Coordinate & coord1, const geos::geom::Coordinate & coord2 );
+      static bool Equal( const double d1, const double d2 );
   private:
       geos::geom::MultiPolygon *p_polygons;
 
@@ -176,7 +174,14 @@ namespace Isis {
       static geos::geom::Polygon      *FixGeometry(const geos::geom::Polygon *poly);
       static geos::geom::LinearRing   *FixGeometry(const geos::geom::LinearRing *ring);
 
+  public:
+      static geos::geom::Geometry     *ReducePrecision(const geos::geom::Geometry *geom, unsigned int precision);
+      static geos::geom::MultiPolygon *ReducePrecision(const geos::geom::MultiPolygon *poly, unsigned int precision);
+      static geos::geom::Polygon      *ReducePrecision(const geos::geom::Polygon *poly, unsigned int precision);
+      static geos::geom::LinearRing   *ReducePrecision(const geos::geom::LinearRing *ring, unsigned int precision);
+      static geos::geom::Coordinate   *ReducePrecision(const geos::geom::Coordinate *coord, unsigned int precision);
       static double ReducePrecision(double num, unsigned int precision);
+  private:
 
       static geos::geom::Geometry *Operate(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom2, unsigned int opcode);
 

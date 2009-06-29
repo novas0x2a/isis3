@@ -128,7 +128,18 @@ namespace Isis {
       new CameraSkyMap(this);
       LoadCache();
 
-      SetGeometricTilingHint(16, 4);
+      if(sumMode == 1) {
+        SetGeometricTilingHint(16, 4);
+      }
+      else if(sumMode == 2) {
+        SetGeometricTilingHint(8, 4);
+      }
+      else if(sumMode == 4) {
+        SetGeometricTilingHint(4, 4);
+      }
+      else {
+        SetGeometricTilingHint(2, 2);
+      }
     }
 
    /**

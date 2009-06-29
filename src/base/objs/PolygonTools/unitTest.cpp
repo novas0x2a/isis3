@@ -51,11 +51,11 @@ int main () {
 
     vector<geos::geom::Geometry *> *hole2 = new vector<geos::geom::Geometry *>;
     hole2->push_back(Isis::globalFactory.createLinearRing(pts3));
-  
+
     // Create the second polygon
     polys.push_back (Isis::globalFactory.createPolygon (
                          Isis::globalFactory.createLinearRing (pts2), hole2));
-  
+
     // Create a multipolygon from the two polygons
     geos::geom::MultiPolygon* mPolygon = Isis::globalFactory.createMultiPolygon (polys);
 
@@ -79,7 +79,7 @@ int main () {
 
     cout << "Lon/Lat polygon = " << mPolygon->toString() << endl << endl;
 
-    cout << "X/Y polygon radius (1) = " 
+    cout << "X/Y polygon radius (1) = "
          << (PolygonTools::LatLonToXY(*mPolygon, proj))->toString() << endl << endl;
 
     delete proj;
@@ -122,6 +122,7 @@ int main () {
     vector<geos::geom::Geometry *> llpolys;
     llpolys.push_back (Isis::globalFactory.createPolygon (
                            Isis::globalFactory.createLinearRing (llpts),NULL));
+
     geos::geom::MultiPolygon* llmPolygon = Isis::globalFactory.createMultiPolygon (llpolys);
 
     geos::geom::MultiPolygon *slmPolygon = PolygonTools::LatLonToSampleLine(*llmPolygon, &ugm);
@@ -142,6 +143,77 @@ int main () {
     double th = PolygonTools::Thickness( mPolygon );
     cout << iString( th ) << endl;
 
+    cout << endl << endl;
+    
+    cout << "Testing Despike" << endl;
+    pts = new geos::geom::CoordinateArraySequence ();
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.00000000001, -10.0));
+    pts->add (geos::geom::Coordinate (5.00000000001, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    cout << "Input: " << Isis::globalFactory.createLinearRing (pts)->toString() << endl;
+    cout << "Output: " << PolygonTools::Despike(Isis::globalFactory.createLinearRing (pts))->toString() << endl;
+
+    cout << endl << endl;
+    
+    cout << "Testing FixGeometry" << endl;
+    pts = new geos::geom::CoordinateArraySequence ();
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.0, 5.0));
+    pts->add (geos::geom::Coordinate (5.00000000000001, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    cout << "Input: " << Isis::globalFactory.createLinearRing (pts)->toString() << endl;
+    cout << "Output: " << PolygonTools::Despike(Isis::globalFactory.createLinearRing (pts))->toString() << endl;
+
+    cout << endl << endl;
+    
+    cout << "Testing Equal" << endl;
+    pts = new geos::geom::CoordinateArraySequence ();
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.0, 1.0));
+    pts->add (geos::geom::Coordinate (5.0, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 5.0));
+    pts->add (geos::geom::Coordinate (1.0, 1.0));
+    geos::geom::Polygon *poly1 = Isis::globalFactory.createPolygon(Isis::globalFactory.createLinearRing (*pts), NULL);
+    cout << "Same Poly Equal?                     " << PolygonTools::Equal(poly1, poly1) << " - " << poly1->equals(poly1) << endl;
+    pts2 = new geos::geom::CoordinateArraySequence ();
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    geos::geom::Polygon *poly2 = Isis::globalFactory.createPolygon(Isis::globalFactory.createLinearRing (*pts2), NULL);
+    cout << "Rearranged Poly Equal?               " << PolygonTools::Equal(poly1, poly2) << " - " << poly1->equals(poly2) << endl;
+    pts2 = new geos::geom::CoordinateArraySequence ();
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 5.0));
+    pts2->add (geos::geom::Coordinate (1.000000000000001, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    poly2 = Isis::globalFactory.createPolygon(Isis::globalFactory.createLinearRing (*pts2), NULL);
+    cout << "Past 15 Places Equal?                " << PolygonTools::Equal(poly1, poly2) << " - " << poly1->equals(poly2) << endl;
+    pts2 = new geos::geom::CoordinateArraySequence ();
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 5.0));
+    pts2->add (geos::geom::Coordinate (1.00000000000001, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    poly2 = Isis::globalFactory.createPolygon(Isis::globalFactory.createLinearRing (*pts2), NULL);
+    cout << "At 15 Place Difference Equal?        " << PolygonTools::Equal(poly1, poly2) << " - " << poly1->equals(poly2) << endl;
+    pts2 = new geos::geom::CoordinateArraySequence ();
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0000000000001, 5.0));
+    pts2->add (geos::geom::Coordinate (1.0, 1.0));
+    pts2->add (geos::geom::Coordinate (5.0, 1.0));
+    poly2 = Isis::globalFactory.createPolygon(Isis::globalFactory.createLinearRing (*pts2), NULL);
+    cout << "Significantly Different Equal?       " << PolygonTools::Equal(poly1, poly2) << " - " << poly1->equals(poly2) << endl;
+
+    return 0;
   }
   catch (Isis::iException &e) {
     cout << "ERROR " << e.what() << endl;

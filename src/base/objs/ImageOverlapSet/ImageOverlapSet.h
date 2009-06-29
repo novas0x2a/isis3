@@ -2,8 +2,8 @@
 #define ImageOverlapSet_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.15 $                                                             
- * $Date: 2009/03/13 00:29:33 $
+ * $Revision: 1.17 $                                                             
+ * $Date: 2009/06/01 15:18:11 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -25,6 +25,9 @@
 
 #include <vector>
 #include <string>
+
+#include <QThread>
+#include <QMutex>
 
 #include "geos/geom/MultiPolygon.h"
 #include "geos/geom/LinearRing.h"
@@ -74,8 +77,14 @@ namespace Isis {
    *  @history 2009-01-28 Steven Lambright - Fixed memory leaks
    *  @history 2009-03-12 Christopher Austin - Added the MULTIPOLYGON to
    *           HandleError() as the Keyword "Polygon"
+   *  @history 2009-06-01 Christopher Austin - Changed the basic algorithm to
+   *           improve results.
+   *  @history 2009-06-01 Steven Lambright - Multi-threaded this object. Split
+   *           code into smaller methods, now new elements are inserted next
+   *           instead of appended to the end of the overlap list, and added more
+   *           error-recovery solutions.
    */
-  class ImageOverlapSet {
+  class ImageOverlapSet : private QThread {
     public:
       ImageOverlapSet (bool continueOnError = false);
       virtual ~ImageOverlapSet();
@@ -83,7 +92,7 @@ namespace Isis {
       void FindImageOverlaps(SerialNumberList &boundaries);
       void FindImageOverlaps(std::vector<std::string> sns,
                              std::vector<geos::geom::MultiPolygon*> polygons);
-
+      void FindImageOverlaps(SerialNumberList &boundaries, std::string outputFile);
       void ReadImageOverlaps(const std::string &filename);
       void WriteImageOverlaps(const std::string &filename);
 
@@ -104,27 +113,49 @@ namespace Isis {
        */
       const ImageOverlap* operator[](int index) {return p_lonLatOverlaps[index];};
 
-      std::vector<ImageOverlap*> operator[](std::string sn);
+      std::vector<ImageOverlap*> operator[](std::string serialNumber);
 
+      //! Return the a list of errors encountered
       const std::vector<PvlGroup> &Errors() { return p_errorLog; } 
-
     protected:
       void FindAllOverlaps (SerialNumberList *snlist = NULL);
       void AddSerialNumbers (ImageOverlap *to, ImageOverlap *from);
 
+      //! This is a list of detailed* errors including all known information
       std::vector<PvlGroup> p_errorLog;
 
     private:
+      //! Find overlaps is all the threaded calculate does
+      void run() { FindAllOverlaps(p_snlist); }
+
+      void DespikeLonLatOverlaps ();
+
       std::vector<ImageOverlap *> p_lonLatOverlaps; //!< The list of lat/lon overlaps
 
       ImageOverlap* CreateNewOverlap (std::string serialNumber,
                                       geos::geom::MultiPolygon* lonLatPolygon);
 
+      bool SetPolygon(geos::geom::Geometry *poly, int position, ImageOverlap *sncopy = NULL, bool insert=false);
       void HandleError(iException &e, SerialNumberList *snlist, iString msg = "", int overlap1 = -1, int overlap2 = -1);
       void HandleError(geos::util::GEOSException *exc, SerialNumberList *snlist, iString msg = "", int overlap1 = -1, int overlap2 = -1);
       void HandleError(SerialNumberList *snlist, iString msg, int overlap1 = -1, int overlap2 = -1);
 
-      bool p_continueAfterError;
+      bool p_continueAfterError; //!< If false iExceptions will be thrown from FindImageOverlaps(...)
+      bool p_threadedCalculate; //!< True if we want to do calculations in a threaded way
+      int p_writtenSoFar; //!< The index of the last overlap that is done writing (number written-1)
+      int p_calculatedSoFar; //!< The index of the last overlap that is done calculating (number calculated-1)
+
+      //! This is used for multi-threaded calls to FindAllOverlaps only; this class never gets ownership of this pointer
+      SerialNumberList *p_snlist;
+
+      /**
+       * This mutex will be used to have blocking on the write method when 
+       * multi-threading (instead of busy waiting), it is not intended to prevent 
+       * calculations and writing from happening simultaneously. Every time we have 
+       * new polygons this is unlocked by FindImageOverlaps(...) and re-locked by 
+       * WriteImageOverlaps(...). 
+       */
+      QMutex p_calculatePolygonMutex;
   };
 };
 

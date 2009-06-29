@@ -40,7 +40,7 @@ namespace Isis {
     * 
     *    distX = x - x0
     *    distY = y - y0, where (x,y) are the distorted focal plane coordinates.
-    *    r^2 = DistX^2 + DistY^2 
+    *    r^2 = (DistX^2 + DistY^2)/sref^2 
     * 
     * The distortion coefficients in the NAIF instrument
     * kernel are expected to be in the form of:
@@ -54,7 +54,7 @@ namespace Isis {
     * These coefficient will be used to convert from focal plane x,y to 
     * to undistorted x,y as follows:
     * 
-    *  dr/r = k0 + k1*r^2 + k2*r^4 
+    *  dr/r = (k0 + k1*r^2 + k2*r^4)/sref 
     *  ux = x - DistX*dr/r, similarly for uy
     * 
     * @param naifIkCode    Code to search for in instrument kernel
@@ -65,7 +65,6 @@ namespace Isis {
       p_camera->FocalPlaneMap()->SetFocalPlane(0., 0.);
       double boreS = p_camera->FocalPlaneMap()->DetectorSample();
       double boreL = p_camera->FocalPlaneMap()->DetectorLine();
-
       std::string centkey = "INS" + Isis::iString(naifIkCode) + "_POINT_OF_SYMMETRY";
       p_sample0 = boreS - p_camera->Spice::GetDouble(centkey, 0);
       p_line0 = boreL + p_camera->Spice::GetDouble(centkey, 1);
@@ -91,12 +90,20 @@ namespace Isis {
     */
     bool LoMediumDistortionMap::SetFocalPlane(const double dx, 
                                                   const double dy) {
+
+      // Set sRef needed for lo medium distortion algorithm
+      double sRef = 5000.;
+
+      // lo medium distortion algorithm is applied in the image plane so convert back to sample/line
       p_focalPlaneX = dx;
       p_focalPlaneY = dy;
-      p_camera->FocalPlaneMap()->SetFocalPlane(dx, dy);
 
+      //      if (fabs(dx) > 33.  ||  fabs(dy) > 30) return false;
+
+      p_camera->FocalPlaneMap()->SetFocalPlane(dx, dy);
       double ds = p_camera->FocalPlaneMap()->DetectorSample();
       double dl = p_camera->FocalPlaneMap()->DetectorLine();
+
       // Translate the focal plane x/y coordinate to be relative to the
       // distortion point of symmetry
       double dists  =  ds - p_sample0;
@@ -105,22 +112,43 @@ namespace Isis {
       // Get the distance from the focal plane center and if we are close
       // skip the distortion
       double origr2 = dists * dists + distl * distl;
-      double r2 = origr2;
-      if (r2 <= 1.0E-6) {
+      double sp = sqrt(origr2);  // pixels
+      if (sp <= .000001) {
         p_undistortedFocalPlaneX = dx;
         p_undistortedFocalPlaneY = dy;
         return true;
       }
 
       // Otherwise remove distortion
-      double rRef2 = 5000. * 5000.;
-      double drOverR  =  (p_odk[0] + r2*(p_odk[1] + r2*p_odk[2]/rRef2)/rRef2)/5000.;
-      // Get improved value from estimate
-      r2  =  r2 * (1. - drOverR) * (1. - drOverR);
-      drOverR  =  (p_odk[0] + r2*(p_odk[1] + r2*p_odk[2]/rRef2)/rRef2)/5000.;
-      drOverR  = drOverR*sqrt(r2)/sqrt(origr2);
-      double undistortedSample = dists * (1. - drOverR) + p_sample0;
-      double undistortedLine = distl * (1. - drOverR) + p_line0;
+      // Use the distorted radial coordinate, rp (r prime), to estimate the ideal radial coordinate 
+      double nS = sp/sRef;
+      double dS = p_odk[0]*nS + p_odk[1]*pow(nS,3) + p_odk[2]*pow(nS,5);
+      double prevdS = 2*dS;
+      double pixtol = .000001;
+      int numit=0;
+      double s;
+
+      // Now use the estimate to compute the radial coordinate and get an improved estimate
+      while (fabs(dS-prevdS) > pixtol) {
+
+        if (numit > 14  || fabs(dS) > 1E9) {
+          dS = 0.;
+          //          if (numit > 14) std::cout<<"Too many iterations"<<std::endl;
+          //          if (fabs(dS) > 1E9) std::cout<<"Diverging"<<std::endl;
+          break;
+        }
+
+        prevdS = dS;
+        s  =  sp - dS;
+        nS = s/sRef;
+        dS = p_odk[0]*nS + p_odk[1]*pow(nS,3) + p_odk[2]*pow(nS,5);
+        numit++;
+      }
+
+      s  =  sp - dS;
+      double ratio = s/sp;
+      double undistortedSample  =  dists*ratio + p_sample0;
+      double undistortedLine  =  distl*ratio + p_line0;
       p_camera->FocalPlaneMap()->SetDetector(undistortedSample, undistortedLine);
       p_undistortedFocalPlaneX = p_camera->FocalPlaneMap()->FocalPlaneX();
       p_undistortedFocalPlaneY = p_camera->FocalPlaneMap()->FocalPlaneY();
@@ -150,6 +178,12 @@ namespace Isis {
       p_undistortedFocalPlaneX = ux*signFactor;
       p_undistortedFocalPlaneY = uy*signFactor;
 
+      //      if (fabs(ux) > 33.  ||  fabs(uy) > 30.) return false;
+
+      // Set sRef needed for lo medium distortion algorithm
+      double sRef = 5000.;
+
+      // The algorithm is applied in the image plane so convert back to sample/line
       p_camera->FocalPlaneMap()->SetFocalPlane(p_undistortedFocalPlaneX, p_undistortedFocalPlaneY);
       double us = p_camera->FocalPlaneMap()->DetectorSample();
       double ul = p_camera->FocalPlaneMap()->DetectorLine();
@@ -161,7 +195,7 @@ namespace Isis {
 
       // Compute the distance from the focal plane center and if we are
       // close to the center then no distortion is required
-      double rp2 = distus * distus + distul * distul;
+      double rp2 = (distus * distus + distul * distul);  // pixels squared
 
       if (rp2 < 1.0E-6) {
         p_focalPlaneX = p_undistortedFocalPlaneX;
@@ -170,8 +204,8 @@ namespace Isis {
       }
 
       // Add distortion.  First compute fractional distortion at rp (r-prime)
-      double rRef2 = 5000. * 5000.;
-      double drOverR  =  (p_odk[0]  +  rp2*(p_odk[1] + rp2*p_odk[2]/rRef2)/rRef2)/5000.;
+      rp2 = rp2/sRef/sRef;
+      double drOverR  =  (p_odk[0]  +  rp2*p_odk[1] + rp2*rp2*p_odk[2])/sRef;
 
       // Compute the focal plane distorted s/l
       double ds  =  p_sample0 + (distus * (1. + drOverR) );  

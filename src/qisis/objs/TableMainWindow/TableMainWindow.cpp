@@ -13,8 +13,8 @@ namespace Qisis {
    * @param parent 
    */
   TableMainWindow::TableMainWindow (QString title, QWidget *parent) : Qisis::MainWindow(title, parent) {
-    installEventFilter(this);
     p_parent = parent;
+    connect(p_parent,SIGNAL(closeWindow()),this,SLOT(writeSettings()));
     p_title = title;
     p_table = NULL;
     p_visibleColumns = -1;
@@ -33,60 +33,60 @@ namespace Qisis {
    */  
   void TableMainWindow::createTable() {
     #if defined(__APPLE__)
-      p_tableWin = new Qisis::MainWindow(p_title, p_parent, Qt::Tool);
+      setWindowFlags(Qt::Tool);
     #endif
 
     #if !defined(__APPLE__)
-      p_tableWin = new Qisis::MainWindow(p_title, p_parent, Qt::Dialog);
+      setWindowFlags(Qt::Dialog);
     #endif
 
-      p_tableWin->statusBar()->setSizeGripEnabled(true);
+    statusBar()->setSizeGripEnabled(true);
     // Create the table widget 
-    p_table = new QTableWidget(p_tableWin);
+    p_table = new QTableWidget(this);
     p_table->setAlternatingRowColors(true);
-    p_tableWin->setCentralWidget(p_table);   
+    setCentralWidget(p_table);   
 
    // Create the dock area 
-    p_dock = new QDockWidget("Columns",p_tableWin);
+    p_dock = new QDockWidget("Columns",this);
+    p_dock->setObjectName("dock");
     p_dock->setAllowedAreas(Qt::LeftDockWidgetArea|Qt::RightDockWidgetArea);
     p_dock->setMinimumWidth(190);
     p_listWidget = new QListWidget(p_dock);
     p_dock->setWidget(p_listWidget);
-    p_tableWin->addDockWidget(Qt::LeftDockWidgetArea,p_dock,Qt::Vertical);
+    addDockWidget(Qt::LeftDockWidgetArea,p_dock,Qt::Vertical);
     connect(p_listWidget,SIGNAL(itemChanged(QListWidgetItem *)),
             this,SLOT(syncColumns()));
 			
     // Create the file menu 
-    //QMenuBar *menuBar = new QMenuBar();
-    QMenuBar *menuBar = p_tableWin->menuBar();
+    QMenuBar *menuBar = this->menuBar();
     QMenu *fileMenu = menuBar->addMenu("&File");
     
-    p_save = new QAction(p_tableWin);
+    p_save = new QAction(this);
     p_save->setText("Save...");
     p_save->setShortcut(Qt::CTRL + Qt::Key_S);
     connect(p_save,SIGNAL(activated()),this,SLOT(saveTable()));
     p_save->setDisabled(true);
     
-    QAction *saveas = new QAction(p_tableWin);
+    QAction *saveas = new QAction(this);
     saveas->setText("Save As...");
     connect(saveas,SIGNAL(activated()),this,SLOT(saveAsTable()));
     
-    QAction *load = new QAction(p_tableWin);
+    QAction *load = new QAction(this);
     load->setText("Load...");
     connect(load,SIGNAL(activated()),this,SLOT(loadTable()));
     
-    QAction *del = new QAction(p_tableWin);
+    QAction *del = new QAction(this);
     del->setText("Delete Selected Row(s)");
     del->setShortcut(Qt::Key_Delete);
     connect(del,SIGNAL(activated()),this,SLOT(deleteRows()));
     
-    QAction *clear = new QAction(p_tableWin);
+    QAction *clear = new QAction(this);
     clear->setText("Clear table");
     connect(clear,SIGNAL(activated()),this,SLOT(clearTable()));
     
-    QAction *close = new QAction(p_tableWin);
+    QAction *close = new QAction(this);
     close->setText("Close");
-    connect(close,SIGNAL(activated()),p_tableWin,SLOT(hide()));
+    connect(close,SIGNAL(activated()),this,SLOT(hide()));
     
     fileMenu->addAction(p_save);
     fileMenu->addAction(saveas);
@@ -108,17 +108,18 @@ namespace Qisis {
      toolBar->addAction(del);
      toolBar->addAction(clear);
      toolBar->addAction(close);
-     p_tableWin->addToolBar(toolBar);
+     this->addToolBar(toolBar);
    #endif 
 
     // Create the view menu
     QMenu *viewMenu = menuBar->addMenu("&View");
-    QAction *cols = new QAction(p_tableWin);
+    QAction *cols = new QAction(this);
     cols->setText("Columns");
     connect(cols,SIGNAL(activated()),p_dock,SLOT(show()));
     viewMenu->addAction(cols);
 
-    p_tableWin->setMenuBar(menuBar);
+    this->setMenuBar(menuBar);
+    installEventFilter(this);
   }
   
 
@@ -129,7 +130,7 @@ namespace Qisis {
    * @param message
    */
   void TableMainWindow::setStatusMessage(QString message){
-	p_tableWin->statusBar()->showMessage(message);
+    this->statusBar()->showMessage(message);
   }
 
 
@@ -224,7 +225,7 @@ namespace Qisis {
   * side list. (dock area)
   */
   void TableMainWindow::syncColumns() {
-    if (p_tableWin->isHidden()) { return; }
+    if (this->isHidden()) { return; }
 
     p_visibleColumns = 0;
     for (int i=0; i<p_listWidget->count(); i++) {
@@ -255,7 +256,7 @@ namespace Qisis {
    * 
    */
   void TableMainWindow::syncRows() {
-    if (p_tableWin->isHidden()) return;
+    if (this->isHidden()) return;
 
     p_visibleColumns = 0;
     for (int i=0; i<p_listWidget->count(); i++) {
@@ -293,7 +294,7 @@ namespace Qisis {
    bool vis = p_table->isVisible();
    p_table = NULL;
    p_listWidget = NULL;
-   p_tableWin->close();
+   this->close();
 
    if(vis) showTable();
  
@@ -308,7 +309,7 @@ namespace Qisis {
   void TableMainWindow::showTable(){
     syncColumns();
     if(p_table == NULL) createTable();
-    p_tableWin->show();
+    this->show();
   }
   
 
@@ -374,8 +375,7 @@ namespace Qisis {
    * @param row
    */
   void TableMainWindow::clearRow (int row){
-    if(!p_tableWin->isVisible()) { 
-	}
+    if(!this->isVisible()) return;
   
     for (int c=0; c<p_table->columnCount(); c++) {
       p_table->item(row,c)->setText("");
@@ -478,7 +478,7 @@ namespace Qisis {
         t << line << endl;
     }
     p_currentFile.close();
-    p_tableWin->setWindowTitle(p_title + " : " + p_currentFile.fileName());
+    this->setWindowTitle(p_title + " : " + p_currentFile.fileName());
   }
 
 
@@ -501,7 +501,6 @@ namespace Qisis {
     Isis::Filename config("$HOME/.Isis/" + appName + "/" + instanceName + ".config");
     //if(p_settings != 0) delete p_settings;
     p_settings = new QSettings(QString::fromStdString(config.Expanded()), QSettings::NativeFormat);
-    QByteArray state = p_settings->value("state", QByteArray("0")).toByteArray();
     bool docFloats = p_settings->value("docFloat", false).toBool();
     p_dock->setFloating(docFloats);
 
@@ -760,7 +759,7 @@ namespace Qisis {
     }
 
     p_currentFile.close();
-    p_tableWin->setWindowTitle(p_title + " : " + fn);
+    this->setWindowTitle(p_title + " : " + fn);
     emit fileLoaded();
   }
 
@@ -775,13 +774,35 @@ namespace Qisis {
   bool TableMainWindow::eventFilter(QObject *o,QEvent *e) {
     switch (e->type()) {
       case QEvent::Close:{
-        writeSettings();
+        this->writeSettings();
       }
 
       default: {
         return false;
       }
     }
+  }
+
+
+  /**
+   * 
+   * 
+   * 
+   * @param event 
+   */
+  void TableMainWindow::closeEvent(QCloseEvent *event) {
+    this->writeSettings(); 
+  }
+
+
+  /**
+   * 
+   * 
+   * 
+   * @param event 
+   */
+  void TableMainWindow::hideEvent(QHideEvent *event) {
+    this->writeSettings(); 
   }
 
 
@@ -826,5 +847,6 @@ namespace Qisis {
   void TableMainWindow::setCurrentIndex(int currentIndex){
     p_currentIndex = currentIndex;
   }
+
 }
 

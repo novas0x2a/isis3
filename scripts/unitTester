@@ -40,7 +40,7 @@ then
 fi
 
 make unitTest || exit 3
-RESULTS="temporary.unitTest.01"
+RESULTS="unitTest.output"
 /bin/rm -f $RESULTS
 if [ ! -f unitTest.exclude ]
 then
@@ -50,12 +50,11 @@ then
     /bin/rm $RESULTS 
     exit 0
   else
-    /bin/rm $RESULTS
     exit 5
   fi
 else
   ./unitTest 2>&1 | $GREP -v -f unitTest.exclude 1>$RESULTS 2>&1 || exit 4 
-  TRUTH2="temporary.unitTest.02"
+  TRUTH2="temporary.unitTest.truth"
   /bin/rm -f $TRUTH2 
   cat $TRUTH | $GREP -v -f unitTest.exclude 1>$TRUTH2 2>&1 || exit 99 
   if `diff $TRUTH2 $RESULTS 1>/dev/null 2>&1`
@@ -63,7 +62,7 @@ else
     /bin/rm $RESULTS $TRUTH2 
     exit 0
   else
-    /bin/rm $RESULTS $TRUTH2
+    /bin/rm $TRUTH2
     exit 5
   fi
 fi

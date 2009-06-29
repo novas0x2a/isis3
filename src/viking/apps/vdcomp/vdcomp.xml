@@ -32,6 +32,9 @@
       Modified code to allow string length of 1024 characters for input and 
       output filenames.
     </change>
+    <change name="Eric Hyer" date="2009-06-23">
+      Increased buffer sizes for ibuf and obuf.  Also added some error checking.
+    </change>
   </history>
 
   <category>
