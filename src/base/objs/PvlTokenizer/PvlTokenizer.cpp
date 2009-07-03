@@ -19,6 +19,7 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.
  */                                                                       
+#include <cstdio>
 #include <sstream>
 #include <fstream>
 #include "PvlTokenizer.h"
