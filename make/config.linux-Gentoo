@@ -1,0 +1,121 @@
+#---------------------------------------------------------------------------
+# Set up for cwd
+#---------------------------------------------------------------------------
+CWDINCDIR = $$(pkg-config --cflags-only-I libcwd_r)
+CWDLIBDIR =
+CWDLIB    = $$(pkg-config --libs libcwd_r)
+
+#---------------------------------------------------------------------------
+# Set up for Qt
+#---------------------------------------------------------------------------
+QT_PKGS := QtXmlPatterns QtXml QtNetwork QtSql QtGui QtCore QtSvg
+QTINCDIR := $$(pkg-config --cflags $(QT_PKGS))
+QTLIBDIR :=
+QTLIB    := $$(pkg-config --libs $(QT_PKGS))
+UIC      := uic
+MOC      := moc
+RCC      := rcc
+
+#---------------------------------------------------------------------------
+# Set up for Qwt
+#---------------------------------------------------------------------------
+QWTINCDIR = -I/usr/include/qwt5
+QWTLIBDIR =
+QWTLIB    = -lqwt
+
+#---------------------------------------------------------------------------
+# Set up for Xerces
+#---------------------------------------------------------------------------
+XERCESINCDIR = -I/usr/include/xercesc
+XERCESLIBDIR =
+XERCESLIB    = -lxerces-c
+
+#---------------------------------------------------------------------------
+# Set up for naif
+#---------------------------------------------------------------------------
+NAIFINCDIR =
+NAIFLIBDIR =
+NAIFLIB    = -lcspice
+
+#---------------------------------------------------------------------------
+# Set up for TNT
+#---------------------------------------------------------------------------
+TNTINCDIR = -I/usr/include/tnt
+TNTLIBDIR =
+TNTLIB    =
+
+#---------------------------------------------------------------------------
+# Set up for JAMA
+#---------------------------------------------------------------------------
+JAMAINCDIR =
+JAMALIBDIR =
+JAMALIB    =
+
+#---------------------------------------------------------------------------
+# Set up for GEOS
+#---------------------------------------------------------------------------
+GEOSINCDIR = -I/usr/include/geos
+GEOSLIBDIR =
+GEOSLIB    = -lgeos
+
+#---------------------------------------------------------------------------
+# Set up for the GNU Scientific Library (GSL).  Note that this setup
+# suppports include patterns such as <gsl/gsl_errno.h>.  With this
+# format, any other include spec that points to the general include
+# directory, such as GEOS, will suffice.  Therefore, an explicit
+# include directive is ommitted but provided as an empty reference
+# in cases where it may be located elsewhere.  This also goes for the
+# library reference.
+#---------------------------------------------------------------------------
+GSLINCDIR = $$(pkg-config --cflags gsl)
+GSLLIBDIR =
+GSLLIB    = $$(pkg-config --libs gsl)
+
+#---------------------------------------------------------------------------
+# Set up for GMM
+#---------------------------------------------------------------------------
+GMMINCDIR = -I/usr/include/gmm
+GMMLIBDIR =
+GMMLIB    =
+
+#---------------------------------------------------------------------------
+# Set up for SuperLU
+#---------------------------------------------------------------------------
+SUPERLUINCDIR = -I/usr/include/superlu
+SUPERLULIBDIR =
+SUPERLULIB    = -lsuperlu
+
+#---------------------------------------------------------------------------
+# Set up for Google Protocol Buffers (ProtoBuf)
+#---------------------------------------------------------------------------
+PROTOBUFINCDIR := $$(pkg-config --cflags protobuf)
+PROTOBUFLIBDIR :=
+PROTOBUFLIB    := $$(pkg-config --libs protobuf)
+
+#---------------------------------------------------------------------------
+# Set up for kakadu
+# The Kakadu library is proprietary. The source files cannot be distributed
+# with ISIS3. If you need to rebuild ISIS3 on your system, then you will
+# need to modify the lines below that pertain to the location of the
+# header files and library on your system. The compilation flag, ENABLEJP2K,
+# should be set to true if you are building with the Kakadu library and
+# you want to use the JPEG2000 specific code in the ISIS3 system. Otherwise,
+# set the ENABLEJP2K flag to false.
+#---------------------------------------------------------------------------
+KAKADUINCDIR = -I/usr/include/kakadu/coresys/common -I/usr/include/kakadu/apps/support -I/usr/include/kakadu/apps/compressed_io
+KAKADULIBDIR =
+KAKADULIB    = -lkdu -lkdu_apps
+ISISCPPFLAGS += -DENABLEJP2K=1
+
+#---------------------------------------------------------------------------
+# Set up for BOOST
+#---------------------------------------------------------------------------
+BOOSTINCDIR =
+BOOSTLIBDIR =
+BOOSTLIB    =
+#BOOSTLIBDIR = -L$(ISIS3LOCAL)/lib
+#BOOSTLIB    = -lboost_date_time -lboost_filesystem -lboost_graph -lboost_math_c99f \
+#              -lboost_math_c99l -lboost_math_c99 -lboost_math_tr1f -lboost_math_tr1l \
+#              -lboost_math_tr1 -lboost_prg_exec_monitor -lboost_program_options \
+#              -lboost_regex -lboost_serialization -lboost_signals -lboost_system \
+#              -lboost_thread -lboost_unit_test_framework -lboost_wave -lboost_wserialization

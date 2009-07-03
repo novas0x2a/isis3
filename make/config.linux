@@ -64,6 +64,10 @@ ifeq ($(VENDOR),suse)
   VERSION := $(basename $(shell fgrep -h -w VERSION /etc/SuSE-release | cut -d ' ' -f 3) )
 endif
 
+ifneq ("$(wildcard /etc/gentoo-release)","")
+  include $(ISISROOT)/make/config.linux-Gentoo
+else
+
 ifeq ($(HOST_ARCH),Linux)
   ifeq ($(HOST_MACH),x86_64)
     include $(ISISROOT)/make/config.linux-x86_64
@@ -74,4 +78,6 @@ ifeq ($(HOST_ARCH),Linux)
       include $(ISISROOT)/make/config.linux-Suse9
     endif
   endif
+endif
+
 endif
