@@ -3,8 +3,8 @@
 #---------------------------------------------------------------------------
 # Compiler options
 #---------------------------------------------------------------------------
-CXX           = g++
-CC            = gcc
+CXX           = ccache g++
+CC            = ccache gcc
 ISISCPPFLAGS  = -Wall
 ISISCPPFLAGS += -ansi
 ISISCPPFLAGS += -DISIS_LITTLE_ENDIAN=1
