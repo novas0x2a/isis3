@@ -59,7 +59,8 @@ void IsisMain() {
 
   for ( int f = 1; f < (int)filelist.size(); f ++ ) {
 
-    ControlNet currentnet( Filename(filelist[f]).Expanded() );
+    Filename fn(filelist[f]);
+    ControlNet currentnet( fn.Expanded() );
 
     // Checks to make sure the ControlNets are valid to merge
     if ( cnet.Target() != currentnet.Target() ) {

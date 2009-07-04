@@ -194,7 +194,8 @@ Filename FindRed(FileList &inList, int n) {
   int lastRedNum = -1;
   for(unsigned int i = 0; nonMroFile.empty() && i < inList.size(); i++) {
     try {
-      Pvl labels(Filename(inList[i]).Expanded());
+      Filename fn(inList[i]);
+      Pvl labels(fn.Expanded());
       PvlGroup &inst = labels.FindGroup("Instrument", Pvl::Traverse);
 
       string redNum = ((string)inst["CcdId"]).substr(3);
