@@ -160,7 +160,7 @@
           file wished to be used in creating the normalized cube.
         </description>
         <list>
-          <option name="BYNUMBER">
+          <option value="BYNUMBER">
             <brief>Specify the column of the spectrum file to be used by 
               column number</brief>
             <description>
@@ -175,9 +175,7 @@
               <item>NAME</item>
             </exclusions>
           </option>
-          <option name="BYNAME">
-            <type>string</type>
-            <default><item>Average</item></default>
+          <option value="BYNAME">
             <brief>Specify the column of the spectrum file to be used by 
               column name</brief>
             <description>

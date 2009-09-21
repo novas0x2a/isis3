@@ -2,8 +2,8 @@
 #define ControlMeasure_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/07/09 17:55:17 $
+ * $Revision: 1.6 $
+ * $Date: 2009/09/01 17:53:05 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -24,13 +24,16 @@
  */
 
 #include <string>
-#include "Application.h"
-#include "SpecialPixel.h"
-#include "iException.h"
-#include "Camera.h"
-#include "iTime.h"
+
+template< class A> class QVector;
+template< class A, class B > class QPair;
+class QString;
 
 namespace Isis {
+  
+  class PvlGroup;
+  class Camera;
+  
   /**
    * @brief a control measurement
    *
@@ -84,7 +87,7 @@ namespace Isis {
        */
       enum MeasureType { Unmeasured, Manual, Estimated, Automatic,
                          ValidatedManual, ValidatedAutomatic };
-
+      
       // Constructor
       ControlMeasure();
 
@@ -216,17 +219,15 @@ namespace Isis {
       //! Return the diameter of the crater in pixels (0 implies no crater)
       double Diameter() const { return p_diameter; };
 
-      //! Set date/time the coordinate was last changed to the current date/time
-      void SetDateTime() { p_dateTime = iTime::CurrentLocalTime(); };
-
+      void SetDateTime();
+      
       //! Set date/time the coordinate was last changed to specified date/time
       void SetDateTime(const std::string &datetime) { p_dateTime = datetime; };
 
       //! Return the date/time the coordinate was last changed
       std::string DateTime() const { return p_dateTime; };
 
-      //! Set chooser name to a user who last changed the coordinate
-      void SetChooserName() { p_chooserName = Application::UserName(); };
+      void SetChooserName();
 
       //! Set the chooser name to an application that last changed the coordinate
       void SetChooserName(const std::string &name) { p_chooserName = name; };
@@ -279,6 +280,9 @@ namespace Isis {
 
       //! Get the computed ephemeris time of the measure
       double ComputedEphemerisTime() const { return p_computedEphemerisTime; };
+      
+      const double GetMeasureData(QString type) const;
+      const QVector< QString > GetMeasureDataNames() const;
 
     private:
       MeasureType p_measureType;

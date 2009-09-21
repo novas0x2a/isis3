@@ -67,6 +67,11 @@
       Added the propagation of the input cube labels, objects, blobs, etc..., so 
       the pedigree of the input source is retained.
     </change>
+    <change name="Sharmila Prasad" date="2009-07-17">
+      Set the defaults for PIXELRESOLUTION, LINERESOLUTION,
+      SAMPLERESOLUTION, DETECTORRESOLUTION, NORTHAZIMUTH, 
+      SUNAZIMUTH, SPACECRAFTAZIMUTH, OFFNADIRANGLE to FALSE
+    </change>
 </history>
 
   <category>
@@ -147,7 +152,7 @@
       </parameter>
       <parameter name="PIXELRESOLUTION">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a pixel resolution band.</brief>
         <description>
           If this parameter is true then a pixel resolution band will be created
@@ -155,7 +160,7 @@
       </parameter>
       <parameter name="LINERESOLUTION">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a line resolution band.</brief>
         <description>
           If this parameter is true then a line resolution band will be created
@@ -163,7 +168,7 @@
       </parameter>
       <parameter name="SAMPLERESOLUTION">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a sample resolution band.</brief>
         <description>
           If this parameter is true then a sample resolution band will be 
@@ -172,7 +177,7 @@
       </parameter>
       <parameter name="DETECTORRESOLUTION">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a detector resolution band.</brief>
         <description>
           If this parameter is true then a detector resolution band will be 
@@ -181,7 +186,7 @@
       </parameter>
       <parameter name="NORTHAZIMUTH">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a north azimuth band.</brief>
         <description>
           If this parameter is true then a north azimuth band will be created
@@ -189,7 +194,7 @@
       </parameter>
       <parameter name="SUNAZIMUTH">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a sun azimuth band.</brief>
         <description>
           If this parameter is true then a sun azimuth band will be 
@@ -198,7 +203,7 @@
       </parameter>
       <parameter name="SPACECRAFTAZIMUTH">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a spacecraft azimuth band.</brief>
         <description>
           If this parameter is true then a spacecraft azimuth band will be 
@@ -207,7 +212,7 @@
       </parameter>
       <parameter name="OFFNADIRANGLE">
         <type>boolean</type>
-        <default><item>TRUE</item></default>
+        <default><item>FALSE</item></default>
         <brief>Create a offNadir angle band.</brief>
         <description>
           If this parameter is true then a offNadir angle band will be created

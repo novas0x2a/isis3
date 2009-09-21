@@ -20,10 +20,9 @@ namespace Isis {
    * @see automaticRegistration.doc
    */
   AutoReg::AutoReg (Pvl &pvl) {
-    // Set default parameters
-    p_algorithmName = "Unknown";
-    p_idealFit = 0.0;
+    p_template = pvl.FindObject("AutoRegistration");
 
+    // Set default parameters
     p_patternChip.SetSize(3,3);
     p_searchChip.SetSize(5,5);
     p_fitChip.SetSize(5,5);
@@ -40,6 +39,7 @@ namespace Isis {
     SetReductionFactor(1);
 
     // Clear statistics
+    //TODO: Delete these after control net refactor.
     p_Total = 0;
     p_Success = 0;
     p_PatternChipNotEnoughValidData = 0;
@@ -50,10 +50,52 @@ namespace Isis {
     p_SurfaceModelSolutionInvalid = 0;
     p_SurfaceModelDistanceInvalid = 0;
     p_SurfaceModelEccentricityRatioNotMet = 0;
+   
+    Init();
+    Parse(pvl);
+  }
+
+  /**
+   * 
+   * 
+   */
+  void AutoReg::Init(){
+    // Set computed parameters to NULL so we don't use values from a previous
+    // run
     p_ZScore1 = Isis::Null;
     p_ZScore2 = Isis::Null;
+    p_goodnessOfFit = Isis::Null;
+    p_surfaceModelEccentricity = Isis::Null;
 
-    Parse(pvl);
+    p_bestSamp = 0;
+    p_bestLine = 0;
+    p_bestFit = Isis::Null;
+
+    // --------------------------------------------------
+    // Nulling out the fit chip
+    // --------------------------------------------------
+    for (int line=1; line<=p_fitChip.Lines(); line++) {
+      for (int samp=1; samp<=p_fitChip.Samples(); samp++) {
+        p_fitChip.SetValue(samp,line,Isis::Null);
+      }
+    }
+    // --------------------------------------------------
+    // Nulling out the reduced pattern chip
+    // --------------------------------------------------
+    for (int line=1; line<=p_reducedPatternChip.Lines(); line++) {
+      for (int samp=1; samp<=p_reducedPatternChip.Samples(); samp++) {
+        p_reducedPatternChip.SetValue(samp,line,Isis::Null);
+      }
+    }
+    // --------------------------------------------------
+    // Nulling out the reduced search chip
+    // --------------------------------------------------
+    for (int line=1; line<=p_reducedSearchChip.Lines(); line++) {
+      for (int samp=1; samp<=p_reducedSearchChip.Samples(); samp++) {
+        p_reducedSearchChip.SetValue(samp,line,Isis::Null);
+      }
+    }
+
   }
 
   //! Destroy AutoReg object
@@ -95,7 +137,6 @@ namespace Isis {
     try {
       // Get info from Algorithm group
       PvlGroup &algo = pvl.FindGroup("Algorithm", Pvl::Traverse);
-      p_algorithmName =  (std::string) algo["Name"];
       SetTolerance(algo["Tolerance"]);
 
       if (algo.HasKeyword("SubpixelAccuracy")) {
@@ -110,8 +151,8 @@ namespace Isis {
       PvlGroup &pchip = pvl.FindGroup("PatternChip",Pvl::Traverse);
       PatternChip()->SetSize((int)pchip["Samples"],(int)pchip["Lines"]);
 
-      double minimum = -DBL_MAX;
-      double maximum = DBL_MAX;
+      double minimum = Isis::ValidMinimum;
+      double maximum = Isis::ValidMaximum;
       if (pchip.HasKeyword("ValidMinimum")) minimum = pchip["ValidMinimum"];
       if (pchip.HasKeyword("ValidMaximum")) maximum = pchip["ValidMaximum"];
       PatternChip()->SetValidRange(minimum,maximum);
@@ -124,8 +165,8 @@ namespace Isis {
       PvlGroup &schip = pvl.FindGroup("SearchChip",Pvl::Traverse);
       SearchChip()->SetSize((int)schip["Samples"],(int)schip["Lines"]);
 
-      minimum = -DBL_MAX;
-      maximum = DBL_MAX;
+      minimum = Isis::ValidMinimum;
+      maximum = Isis::ValidMaximum;
       if (schip.HasKeyword("ValidMinimum")) minimum = schip["ValidMinimum"];
       if (schip.HasKeyword("ValidMaximum")) maximum = schip["ValidMaximum"];
       SearchChip()->SetValidRange(minimum,maximum);
@@ -316,7 +357,7 @@ namespace Isis {
     // ----------------------------------
     for (int line=1; line<=rChip.Lines(); line++) {
       for (int samp=1; samp<=rChip.Samples(); samp++) {
-        rChip(samp,line) = Isis::Null;
+        rChip.SetValue(samp,line,Isis::Null);
       }
     }
 
@@ -332,10 +373,10 @@ namespace Isis {
         stats.Reset();
         for(int line = isl; line < iel; line++ ) {
           for(int sample = iss; sample < ies; sample++ ) {
-            stats.AddData(chip(sample, line));
+            stats.AddData(chip.GetValue(sample, line));
           }
         }
-        rChip(s,l) = stats.Average();
+        rChip.SetValue(s,l,stats.Average());
       }
     }
     return rChip;
@@ -369,38 +410,7 @@ namespace Isis {
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
 
-    // Set computed parameters to NULL so we don't use values from a previous
-    // run
-    p_ZScore1 = Isis::Null;
-    p_ZScore2 = Isis::Null;
-    p_goodnessOfFit = Isis::Null;
-    p_surfaceModelEccentricity = Isis::Null;
-
-    // --------------------------------------------------
-    // Nulling out the fit chip
-    // --------------------------------------------------
-    for (int line=1; line<=p_fitChip.Lines(); line++) {
-      for (int samp=1; samp<=p_fitChip.Samples(); samp++) {
-        p_fitChip(samp,line) = Isis::Null;
-      }
-    }
-    // --------------------------------------------------
-    // Nulling out the reduced pattern chip
-    // --------------------------------------------------
-    for (int line=1; line<=p_reducedPatternChip.Lines(); line++) {
-      for (int samp=1; samp<=p_reducedPatternChip.Samples(); samp++) {
-        p_reducedPatternChip(samp,line) = Isis::Null;
-      }
-    }
-    // --------------------------------------------------
-    // Nulling out the reduced search chip
-    // --------------------------------------------------
-    for (int line=1; line<=p_reducedSearchChip.Lines(); line++) {
-      for (int samp=1; samp<=p_reducedSearchChip.Samples(); samp++) {
-        p_reducedSearchChip(samp,line) = Isis::Null;
-      }
-    }
-
+    Init();
     p_Total++;
 
     // See if the pattern chip has enough good data
@@ -425,10 +435,7 @@ namespace Isis {
     int sl = (p_patternChip.Lines() - 1) / 2 + 1;
     int es = p_searchChip.Samples()-ss+1;
     int el = p_searchChip.Lines()-sl+1;
-    p_bestSamp = 0;
-    p_bestLine = 0;
-    p_bestFit = Isis::Null;
-
+    
     // ----------------------------------------------------------------------
     // Before we attempt to apply the reduction factor, we need to make sure
     // we won't produce a chip of a bad size.
@@ -437,6 +444,12 @@ namespace Isis {
       std::string msg = "Reduction factor is too large";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
+
+    // Establish the center search tack point as best pixel to start for the
+    // adaptive algorithm prior to reduction.
+    int bestSearchSamp = p_searchChip.TackSample();
+    int bestSearchLine = p_searchChip.TackLine();
+    
 
     // ---------------------------------------------------------------------
     // if the reduction factor is still not equal to one, then we go ahead
@@ -455,7 +468,7 @@ namespace Isis {
         // ----------------------------------
         for (int line=1; line<=p_reducedPatternChip.Lines(); line++) {
           for (int samp=1; samp<=p_reducedPatternChip.Samples(); samp++) {
-            p_reducedPatternChip(samp,line) = Isis::Null;
+            p_reducedPatternChip.SetValue(samp,line,Isis::Null);
           }
         }
 
@@ -506,6 +519,11 @@ namespace Isis {
       es = newes;
       sl = newsl;
       el = newel;
+      // We have found a good pixel in the reduction chip, but we 
+      // don't want to use it's position, so reset in prep. for 
+      // non-adaptive registration.  Save it off for the adaptive algorithm.
+      bestSearchSamp = bs;
+      bestSearchLine = bl;
       p_bestSamp = 0;
       p_bestLine = 0;
       p_bestFit = Isis::Null;
@@ -515,9 +533,17 @@ namespace Isis {
     // to be closely registered.  Within a few pixels.  So let it take over
     // doing the sub-pixel accuracy computation
     if (IsAdaptive()) {
-      int startSamp = (es - ss) / 2;
-      int startLine = (el - sl) / 2;
-      return AdaptiveRegistration(startSamp,startLine);
+      p_status = AdaptiveRegistration(p_searchChip, p_patternChip, p_fitChip,
+                                      ss, sl, es, el, bestSearchSamp, 
+                                      bestSearchLine);
+      if(p_status == AutoReg::Success) {
+        p_searchChip.SetChipPosition(p_chipSample,p_chipLine);
+        p_cubeSample = p_searchChip.CubeSample();
+        p_cubeLine   = p_searchChip.CubeLine();
+        p_goodnessOfFit = p_bestFit;
+        p_Success++;
+      }
+      return p_status;
     }
 
     // Not adaptive continue with slower search traverse
@@ -557,10 +583,10 @@ namespace Isis {
         for (int samp = p_bestSamp-p_windowSize/2; samp <= p_bestSamp+p_windowSize/2; samp++) {
           if (samp < 1) continue;
           if (samp > p_fitChip.Samples()) continue;
-          if (p_fitChip(samp,line) == Isis::Null) continue;
+          if (p_fitChip.GetValue(samp,line) == Isis::Null) continue;
           samps.push_back((double) samp);
           lines.push_back((double) line);
-          fits.push_back(p_fitChip(samp,line));
+          fits.push_back(p_fitChip.GetValue(samp,line));
         }
       }
 
@@ -586,8 +612,8 @@ namespace Isis {
       // See if the surface model solution moved too far from our whole pixel
       // solution
       // ---------------------------------------------------------------------
-      if (fabs(p_bestSamp - p_chipSample) > p_distanceTolerance ||
-          fabs(p_bestLine - p_chipLine) > p_distanceTolerance) {
+      if (std::fabs(p_bestSamp - p_chipSample) > p_distanceTolerance ||
+          std::fabs(p_bestLine - p_chipLine) > p_distanceTolerance) {
         p_SurfaceModelDistanceInvalid++;
         p_status = SurfaceModelDistanceInvalid;
         return SurfaceModelDistanceInvalid;
@@ -618,7 +644,7 @@ namespace Isis {
     for (int i=0; i<chip.Samples(); i++) {
       double pixels[chip.Lines()];
       for (int j=0; j<chip.Lines(); j++) {
-        pixels[j] = (chip)(i+1,j+1);
+        pixels[j] = chip.GetValue(i+1,j+1);
       }
       patternStats.AddData(pixels, chip.Lines());
     }
@@ -663,7 +689,7 @@ namespace Isis {
     fChip.SetSize(sChip.Samples(),sChip.Lines());
     for (int line=1; line<=fChip.Lines(); line++) {
       for (int samp=1; samp<=fChip.Samples(); samp++) {
-        fChip(samp,line) = Isis::Null;
+        fChip.SetValue(samp,line,Isis::Null);
       }
     }
 
@@ -675,14 +701,14 @@ namespace Isis {
         // Extract the sub search chip and make sure it has enough valid data
         sChip.Extract(samp,line, subsearch);
 
-        if (!subsearch.IsValid(p_patternValidPercent/100.0)) continue;
+        if (!subsearch.IsValid(p_patternValidPercent)) continue;
 
         // Try to match the two subchips
         double fit = MatchAlgorithm(pChip, subsearch);
 
         // If we had a fit save off information about that fit
         if (fit != Isis::Null) {
-          fChip(samp, line) = fit;
+          fChip.SetValue(samp,line,fit);
           if ((p_bestFit == Isis::Null) || CompareFits(fit,p_bestFit)) {
             p_bestFit = fit;
             p_bestSamp = samp;
@@ -837,13 +863,13 @@ namespace Isis {
    * @param fit2  2nd goodness of fit
    */
   bool AutoReg::CompareFits (double fit1, double fit2) {
-    return(std::abs(fit1-p_idealFit) <= std::abs(fit2-p_idealFit));
+    return(std::fabs(fit1-IdealFit()) <= std::fabs(fit2-IdealFit()));
   }
 
   // See if the fit is arbitrarily close
   // to the ideal value
   bool AutoReg::IsIdeal(double fit) {
-    return( std::abs(p_idealFit - fit) < 0.00001 );
+    return( std::fabs(IdealFit() - fit) < 0.00001 );
   }
 
 
@@ -916,28 +942,118 @@ namespace Isis {
     model += PvlKeyword("SurfaceModelDistanceInvalid", p_SurfaceModelDistanceInvalid);
     pvl.AddGroup(model);
 
-    return pvl;
+    return (AlgorithmStatistics(pvl));
   }
 
   /**
    * This virtual method must be written for adaptive pattern
    * matching algorithms.  Adaptive algorithms are assumed to
-   * compute the registration to sub-pixel accuracy.
+   * compute the registration to sub-pixel accuracy and stay 
+   * within the defined window.  A status should be returned 
+   * indicating success for subpixel computation or failure and 
+   * the reason why via the enumeration, RegisterStatus.  If the 
+   * status is returned is success, the programmer needs to set 
+   * the sub-pixel chip coordinates using the protected methods 
+   * SetChipSample(), SetChipLine(). 
+   *  
+   * For those algorithms that need it, the best sample and line in the search 
+   * chip is provided.  This is either the initial tack sample and line in the 
+   * search chip or it is the centered sample and line after the reduction 
+   * algorithm is applied (KJB, 2009-08-26). 
    *
    * @author janderson (6/2/2009)
    *
-   * @param startSamp The recommended sample in the search chip to
-   *                  start the adaptive algorithm
-   * @param startLine The recommended line in the search chip to
-   *                  start the adaptive algorithm
+   * @param startSamp Defines the starting sample of the window 
+   *                  the adaptive algorithm should remain inside
+   *                  this boundary.
+   * @param startLine Defines the starting line of the window 
+   *                  the adaptive algorithm should remain inside
+   *                  this boundary.
+   * @param endSamp Defines the ending sample of the window 
+   *                  the adaptive algorithm should remain inside
+   *                  this boundary.
+   * @param endLine Defines the ending line of the window 
+   *                  the adaptive algorithm should remain inside
+   *                  this boundary.
    *
-   * @return AutoReg::RegisterStatus
+   * @return AutoReg::RegisterStatus  Status of match 
    */
-  AutoReg::RegisterStatus AutoReg::AdaptiveRegistration(int startSamp,
-                                                        int startLine) {
+  AutoReg::RegisterStatus AutoReg::AdaptiveRegistration(Chip &sChip, 
+                                                        Chip &pChip, 
+                                                        Chip &fChip,
+                                                        int startSamp,
+                                                        int startLine,
+                                                        int endSamp,
+                                                        int endLine,
+                                                        int bestSamp,
+                                                        int bestLine) {
     std::string msg = "Programmer needs to write their own virtual AdaptiveRegistration method";
     throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     return Success;
   }
 
+  /**
+   * This function returns the keywords that this object was 
+   * created from. 
+   * 
+   * @return PvlGroup The keywords this object used in 
+   *         initialization
+   */ 
+  PvlGroup AutoReg::RegTemplate() {
+    PvlGroup reg("AutoRegistration");
+
+    PvlGroup &algo = p_template.FindGroup("Algorithm", Pvl::Traverse);
+    reg += PvlKeyword("Algorithm", algo["Name"][0]);
+    reg += PvlKeyword("Tolerance", algo["Tolerance"][0]);
+    if (algo.HasKeyword("SubpixelAccuracy")) {
+      reg += PvlKeyword("SubpixelAccuracy", algo["SubpixelAccuracy"][0]);
+    }
+    if (algo.HasKeyword("ReductionFactor")) {
+      reg += PvlKeyword("ReductionFactor", algo["ReductionFactor"][0]);
+    }
+
+    PvlGroup &pchip = p_template.FindGroup("PatternChip",Pvl::Traverse);
+    reg += PvlKeyword("PatternSamples", pchip["Samples"][0]);
+    reg += PvlKeyword("PatternLines", pchip["Lines"][0]);
+    if (pchip.HasKeyword("ValidMinimum")) {
+      reg += PvlKeyword("PatternMinimum", pchip["ValidMinimum"][0]);
+    }
+    if (pchip.HasKeyword("ValidMaximum")) {
+      reg += PvlKeyword("PatternMaximum", pchip["ValidMaximum"][0]);
+    }
+    if (pchip.HasKeyword("MinimumZScore")) {
+      reg += PvlKeyword("MinimumZScore", pchip["MinimumZScore"][0]);
+    }
+    if (pchip.HasKeyword("ValidPercent")) {
+      SetPatternValidPercent((double)pchip["ValidPercent"]);
+      reg += PvlKeyword("ValidPercent", pchip["ValidPercent"][0]);
+    }
+
+    PvlGroup &schip = p_template.FindGroup("SearchChip",Pvl::Traverse);
+    reg += PvlKeyword("SearchSamples", schip["Samples"][0]);
+    reg += PvlKeyword("SearchLines", schip["Lines"][0]);
+    if (schip.HasKeyword("ValidMinimum")) {
+      reg += PvlKeyword("SearchMinimum", schip["ValidMinimum"][0]);
+    }
+    if (schip.HasKeyword("ValidMaximum")) {
+      reg += PvlKeyword("SearchMaximum", schip["ValidMaximum"][0]);
+    }
+
+    if(p_template.HasGroup("SurfaceModel")) {
+      PvlGroup &smodel = p_template.FindGroup("SurfaceModel", Pvl::Traverse);
+      if(smodel.HasKeyword("DistanceTolerance")) {
+	reg += PvlKeyword("DistanceTolerance", smodel["DistanceTolerance"][0]);
+      }
+
+      if(smodel.HasKeyword("WindowSize")) {
+	reg += PvlKeyword("WindowSize", smodel["WindowSize"][0]);
+      }
+
+      if(smodel.HasKeyword("EccentricityRatio")) {
+	reg += PvlKeyword("EccentricityRatio", smodel["EccentricityRatio"][0]);
+      }
+    }
+
+    return reg;
+  }
 }

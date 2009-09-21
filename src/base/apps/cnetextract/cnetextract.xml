@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="cnetextract" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Extracts portions of an existing Control Network
+  </brief>
+
+  <description>
+    Extracts Control Points into a new Control Network from a specified Control
+    Network in accordance to specified filters.
+
+    A results group will be recorded, including the Control Points removed
+    during extraction, as well as all of the Control Points which had Control
+    Measures removed from them.
+
+    In addition, Control Points extracted as well as a summary of the results
+    group are both included in the record.
+  </description>
+
+  <history>
+    <change name="Christopher Austin" date="2009-07-22">
+      Original version
+    </change>
+    <change name="Christopher Austin" date="2009-07-31">
+      Refactored for readability, added parameter defaults, and added detail to
+      the application log.
+    </change>
+    <change name="Christopher Austin" date="2009-08-11">
+      Added an additional output progress bar.
+    </change>
+    <change name="Christopher Austin" date="2009-08-21">
+      Added the points kept to the print file.
+    </change>
+    <change name="Christopher Austin" date="2009-08-28">
+      Fixed TOLIST blank lines, added the POINTLIST option, and changed the
+      CUBEPOINTS parameter to take a filename instead of a boolean.
+    </change>
+  </history>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <groups>
+
+    <group name="Input Files">
+
+      <parameter name="FROMLIST">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>List of ISIS3 input cubes in the Control Network</brief>
+          <description>
+          A text file containing one column of ISIS3 cube file names. Every file
+          used in the match point file should be represented in this list.
+          </description>
+          <filter>
+            *.txt *.lis *.list
+          </filter>
+        </parameter>
+
+        <parameter name="CNET">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>Isis3 input Control Network file</brief>
+          <description>
+            Use this parameter to specify the control network file to extract
+            the OUTNET from.
+            </description>
+          <filter>
+            *.net
+          </filter>
+        </parameter>
+
+    </group>
+
+    <group name="Output">
+
+      <parameter name="TOLIST">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>List of ISIS3 output cubes</brief>
+          <description>
+          This text file contains one column of ISIS3 cube file names associated
+          with the OUTNET. This list can only include cubes that were privided
+          in the FROMLIST.
+          </description>
+          <filter>
+            *.txt *.lis *.list
+          </filter>
+        </parameter>
+
+        <parameter name="OUTNET">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>Isis3 output Control Network file</brief>
+          <description>
+            The resultant Control Network extracted from CNET.
+            </description>
+          <filter>
+            *.net
+          </filter>
+        </parameter>
+        <parameter name="NETWORKID">
+        <type>string</type>
+        <internalDefault>Parent Network Id</internalDefault>
+        <brief>
+            Name of the extracted Control Network
+        </brief>
+        <description>
+            The ID or name of the extracted Control Network. This string should
+            be unique.
+        </description>
+      </parameter>
+      <parameter name="DESCRIPTION">
+        <type>string</type>
+        <default><item>cnetextracted</item></default>
+        <brief>
+            The description of the extracted network.
+        </brief>
+        <description>
+            A string describing purpose of this extracted control network.
+        </description>
+      </parameter>
+
+    </group>
+
+    <group name="Filters">
+
+      <parameter name="NOIGNORE">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Remove ignored points when extracting the Control Net</brief>
+        <description>
+          When true, all ignored Control Points and all ignored Control
+          Measures provided by the Control Net will be removed.
+
+          The keywords IgnoredPoints and IgnoredMeasures will be logged when
+          using this option. They depict which Control Points and Control Measures
+          were not extracted due to this filter.
+        </description>
+      </parameter>
+
+      <parameter name="NOHELD">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Remove held points when extracting the Control Net</brief>
+        <description>
+          When true, all held Control Points in the Control Net will be
+          removed.
+
+          The keyword HeldPoints will be logged when using this option. Each
+          Control Point it contains was not extracted due to this filter.
+        </description>
+      </parameter>
+
+      <parameter name="NOSINGLEMEASURE">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Remove Control Points with one Control Measure</brief>
+        <description>
+  	       When true, all Control Points that are reduced to zero or one Control
+           Measure (from other selected filters) will not be included in the
+           output Control Network.
+
+          The keyword SingleMeasurePoints will be logged when using this option. Each
+          Control Point it contains was not extracted due to this filter.
+        </description>
+        <exclusions>
+          <item>REFERENCE</item>
+        </exclusions>
+      </parameter>
+
+      <parameter name="REFERENCE">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Extract reference Control Measures</brief>
+        <description>
+          When true, only reference Control Measures will be extracted into the
+          output Control Net. This option cannot be used in conjunction with the
+          NOSINGLEMEASURE option since there is only a single reference
+          measure in any Control Point.
+
+          The keyword NonReferenceMeasures will be logged when using this option.
+          Each Control Measure it contains was not extracted due to this filter.
+        </description>
+        <exclusions>
+          <item>NOSINGLEMEASURE</item>
+        </exclusions>
+      </parameter>
+
+      <parameter name="CUBEPOINTS">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <internalDefault>None</internalDefault>
+        <brief>Extract Control Points containing these input cube</brief>
+        <description>
+          Use this parameter to select the filename which contains a list of
+          cubes. All the Control Points which contain at least on of these
+          cubes will be extracted.
+
+          The keyword NonCubePoints will be logged when using this option.
+          Each Control Point it contains was not extracted due to this filter.
+        </description>
+        <filter>
+          *.lis
+        </filter>
+        <inclusions>
+          <item>CUBEMEASURES</item>
+        </inclusions>
+      </parameter>
+      <parameter name="CUBEMEASURES">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Extract Control Measures containing an input cube</brief>
+        <description>
+          When true, remove all Control Measures from extracted Control Points
+          which do not contain a cube from the CUBEPOINTS list.
+          This option can only be used when a file has been provided for
+          CUBEPOINTS.
+
+          The keyword NonCubeMeasures will be logged when using this option.
+          Each Control Measure it contains was not extracted due to this filter.
+        </description>
+      </parameter>
+
+      <parameter name="POINTLIST">
+       <type>filename</type>
+       <fileMode>input</fileMode>
+       <internalDefault>None</internalDefault>
+       <brief>File containing Control Point Ids which will be extracted</brief>
+       <description>
+         Use this parameter to select the filename which contains a list of
+        point ids. All the Control Points with matching Ids will be extracted
+        as long as another seleted filter does not exclude the Control Point.
+
+        The keyword NonListedPoints will be logged when using this option.
+        Each Control Point it contains was not extracted due to this filter.
+       </description>
+       <filter>
+         *.lis
+       </filter>
+     </parameter>
+
+      <parameter name="LATLON">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Extract Control Points in the lat/lon range</brief>
+        <description>
+  	       When true, all Control Points that are outside of the provided
+           latitude longitude range will be removed. Control Points whos
+           latitude longitude cannot be computed will be removed.
+
+           Ground Points will use the lat/lon values provided in the CNET while
+           Tie Points will calculate their lat/lon from the images provided by
+           the FROMLIST.  These calculated lat/lon values will be added to Tie
+           Point in the OUTNET for reference purposes. No Isis application will
+           use these added Control Point keywords.
+
+          The keywords LatLonOutOfRange and NoLatLonPoints will be logged when
+          using this option. Each Control Point they contain were not extracted
+          due to this filter, were LatLonOutOfRange is the Control Points who
+          did not fall within the provided range, and NoLatLonPoints were the
+          Control Points for which a Latitude and Longitude could not be
+          determined.
+
+           Note: This option is expensive.
+        </description>
+        <inclusions>
+          <item>MINLAT</item>
+          <item>MAXLAT</item>
+          <item>MINLON</item>
+          <item>MAXLON</item>
+        </inclusions>
+      </parameter>
+      <parameter name="MINLAT">
+        <type>double</type>
+        <default><item>-90.0</item></default>
+        <brief>Minimum Control Point Latitude</brief>
+        <description>
+          Any Control Point with a latitude less than LATMIN will be removed.
+        </description>
+      </parameter>
+      <parameter name="MAXLAT">
+        <type>double</type>
+        <default><item>90.0</item></default>
+        <brief>Maximum Control Point Latitude</brief>
+        <description>
+          Any Control Point with a latitude greater than LATMAX will be removed.
+        </description>
+      </parameter>
+      <parameter name="MINLON">
+        <type>double</type>
+        <default><item>0.0</item></default>
+        <brief>Minimum Control Point Longitude</brief>
+        <description>
+          Any Control Point with a longitude less than LONMIN will be removed.
+
+           If MINLON is greater than MAXLON than the latitude range is assumed
+           to cross the 0/360 latitude boundry, where points with latitudes greater
+           than MINLON or less than MAXLON will be included.
+        </description>
+      </parameter>
+      <parameter name="MAXLON">
+        <type>double</type>
+        <default><item>360.0</item></default>
+        <brief>Maximum Control Point Longitude</brief>
+        <description>
+          Any Control Point with a longitude greater than LONMAX will be removed.
+
+           If MAXLON is less than MINLON than the latitude range is assumed
+           to cross the 0/360 latitude boundry, where points with latitudes greater
+           than MINLON or less than MAXLON will be included.
+        </description>
+      </parameter>
+
+    </group>
+
+  </groups>
+
+</application>

@@ -9,94 +9,245 @@ using namespace std;
 int main (int argc, char *argv[]) {
   Isis::Preference::Preferences(true);
 
-
   cout << "Unit test for Isis::UserInterface ..." << endl;
 
-  try {
-  int myArgc = 2;
-  char *myArgv[2] = {"unitTest","from=input.cub to=output.cub"};
-
   Isis::iString unitTestXml = Isis::Filename("unitTest.xml").Expanded();
-  Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
-  cout << "FROM:    " << ui.GetAsString("FROM") << endl;
-  cout << "TO:      " << ui.GetAsString("TO") << endl;
-  cout << "GUI:     " << ui.IsInteractive() << endl;
-  cout << endl;
-
   string highpass = Isis::Filename("$ISISROOT/src/base/apps/highpass/highpass.xml").Expanded();
-  char *myArgv2[2] = {"highpass","from=dog to=biscuit line=3 samp=3"};
-  Isis::UserInterface ui2(highpass,myArgc,myArgv2);
-  cout << "FROM:    " << ui2.GetAsString("FROM") << endl;
-  cout << "TO:      " << ui2.GetAsString("TO") << endl;
-  cout << "GUI:     " << ui2.IsInteractive() << endl;
-  cout << endl;
-
-  myArgc = 1;
-  char *myArgv3[1] = {"unitTest"};
-  Isis::UserInterface ui3(unitTestXml,myArgc,myArgv3);
-  cout << "FROM:    " << ui3.GetAsString("FROM") << endl;
-  cout << "TO:      " << ui3.GetAsString("TO") << endl;
-  cout << "GUI:     " << ui3.IsInteractive() << endl;
-  cout << endl;
-
-  myArgc = 1;
-  char *myArgv5[1] = {"unitTest"};
-  Isis::UserInterface ui5(unitTestXml,myArgc,myArgv5);
-  cout << "GUI:     " << ui5.IsInteractive() << endl;
-  cout << endl;
-
-  myArgc = 1;
-  char *myArgv6[1] = {"./unitTest"};
-  Isis::UserInterface ui6(unitTestXml,myArgc,myArgv6);
-  cout << "GUI:     " << ui6.IsInteractive() << endl;
-  cout << endl;
-
-  cout << "Starting Batchlist Test" << endl;
-  myArgc = 2;
-  char *myArgv8[2] = {"unitTest","from= $1 to= $2 -batchlist=unitTest.lis"};
-  Isis::UserInterface ui8(unitTestXml,myArgc,myArgv8);
-  for (int i=0; i< ui8.BatchListSize(); i++) {
-    ui8.SetBatchList(i);
-    cout << "FROM:    " << ui.GetAsString("FROM") << endl;
-    cout << "TO:      " << ui.GetAsString("TO") << endl;
-    cout << "GUI:     " << ui.IsInteractive() << endl;
-    cout << endl;
-  }
-  cout << "Finished Batchlist Test" << endl;
-  cout << endl;
 
   try {
-  myArgc = 2;
-  char *myArgv7[2] = {"./unitTest","-restore=unitTest.par"};
-  Isis::UserInterface ui7(unitTestXml,myArgc,myArgv7);
-  cout << "FROM:    " << ui7.GetAsString("FROM") << endl;
-  cout << "TO:      " << ui7.GetAsString("TO") << endl;
-  cout << "GUI:     " << ui7.IsInteractive() << endl;
-  cout << endl;
-  }
-  catch (Isis::iException &e) {
-    e.Report(false);
-    cout << endl;
-  }
+    cout << "Basic FROM/TO Test" << endl;
+    {
+      const int myArgc = 3;
+      char *myArgv[myArgc] = {"unitTest","from=input.cub", "to=output.cub"};
+      
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
 
-  try {
-  myArgc = 2;
-  char *myArgv3[2] = {"$ISISROOT/src/base/apps/highpass/highpass","bogus=parameter"};
-  Isis::UserInterface stupid(highpass,myArgc,myArgv3);
-  }
-  catch (Isis::iException &e) {
-    e.Report(false);
-    cout << endl;
-  }
+    cout << "Testing param= value Format" << endl;
+    {
+      const int myArgc = 7;
+      char *myArgv[myArgc] = {"highpass","from=dog", "to=biscuit", "line=", "3", "samp=", "3"};
 
-  try {
-  myArgc = 2;
-  char *myArgv7[2] = {"$ISISROOT/src/base/apps/highpass/highpass","-restore=junk.par"};
-  Isis::UserInterface stupid(highpass,myArgc,myArgv7);
-  }
-  catch (Isis::iException &e) {
-    e.Report(false);
-  }
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing No Arguments (Defaults)" << endl;
+    {
+      const int myArgc = 1;
+      char *myArgv[myArgc] = {"unitTest"};
+
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing Basic Array Argument" << endl;
+    {
+      const int myArgc = 7;
+      char *myArgv[myArgc] = {"highpass","from=dog", "to=(biscuit,bread)", "line=", "3", "samp=", "3"};
+
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      vector<string> vals;
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      ";
+      ui.GetAsString("TO", vals);
+
+      for(unsigned int i = 0; i < vals.size(); i++) {
+        if(i != 0) cout << ",";
+
+        cout << vals[i];
+      }
+
+      cout << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing Complicated Array Argument" << endl;
+    {
+      const int myArgc = 7;
+      char *myArgv[myArgc] = {"highpass","from=dog", 
+        "to=(biscuit\\,,'bread,',\",b,\\,iscuit2,\"\\,,)", 
+        "line=", "3", "samp=", "3"};
+
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      vector<string> vals;
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << endl;
+      ui.GetAsString("TO", vals);
+
+      for(unsigned int i = 0; i < vals.size(); i++) {
+        cout << " >> " << vals[i] << endl;
+      }
+
+      cout << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing param = value Format" << endl;
+    {
+      const int myArgc = 13;
+      char *myArgv[myArgc] = {"highpass", "from", "=", "dog", "to", "=", "bread", "line", "=", "3", "samp", "=", "3"};
+
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      vector<string> vals;
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing Space in Argument Value" << endl;
+    {
+      const int myArgc = 3;
+      char *myArgv[myArgc] = {"unitTest","from=input file.cub", "to=output.cub"};
+      
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    cout << "Testing unitTest v. ./unitTest for GUI" << endl;
+    {
+      const int myArgc = 1;
+      char *myArgv[myArgc] = {"unitTest"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    {
+      const int myArgc = 1;
+      char *myArgv[myArgc] = {"./unitTest"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+
+    {
+      cout << "Starting Batchlist Test" << endl;
+      const int myArgc = 4;
+      char *myArgv[myArgc] = {"unitTest","from=$1", "to=$2", "-batchlist=unitTest.lis"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      for (int i=0; i< ui.BatchListSize(); i++) {
+        ui.SetBatchList(i);
+        cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+        cout << "TO:      " << ui.GetAsString("TO") << endl;
+        cout << "GUI:     " << ui.IsInteractive() << endl;
+        cout << endl;
+      }
+      cout << "Finished Batchlist Test" << endl;
+      cout << endl;
+    }
+
+    cout << "Testing =value" << endl;
+    try {
+      const int myArgc = 4;
+      char *myArgv[myArgc] = {"unitTest","=input.cub", "to", "=output.cub"};
+      
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    cout << "Testing param =value" << endl;
+    try {
+      const int myArgc = 10;
+      char *myArgv[myArgc] = {"highpass", "from=dog", "to", "=bread", "line", "=", "3", "samp", "=", "3"};
+
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      vector<string> vals;
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    cout << "Testing unterminated array-value quote" << endl;
+    try {
+      const int myArgc = 2;
+      char *myArgv[myArgc] = {"./unitTest","from=(\"hello)"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    cout << "Testing array-value ending in backslash" << endl;
+    try {
+      const int myArgc = 2;
+      char *myArgv[myArgc] = {"./unitTest","from=(hello)\\"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    try {
+      const int myArgc = 2;
+      char *myArgv[myArgc] = {"./unitTest","-restore=unitTest.par"};
+      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      cout << "FROM:    " << ui.GetAsString("FROM") << endl;
+      cout << "TO:      " << ui.GetAsString("TO") << endl;
+      cout << "GUI:     " << ui.IsInteractive() << endl;
+      cout << endl;
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    try {
+      const int myArgc = 2;
+      char *myArgv[myArgc] = {"$ISISROOT/src/base/apps/highpass/highpass","bogus=parameter"};
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+      cout << endl;
+    }
+
+    try {
+      const int myArgc = 2;
+      char *myArgv[myArgc] = {"$ISISROOT/src/base/apps/highpass/highpass","-restore=junk.par"};
+      Isis::UserInterface ui(highpass,myArgc,myArgv);
+    }
+    catch (Isis::iException &e) {
+      e.Report(false);
+    }
   }
   catch (Isis::iException &e) {
     e.Report(false);

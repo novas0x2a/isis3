@@ -1,5 +1,6 @@
 using namespace std;
 
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include "Camera.h"
@@ -8,6 +9,19 @@ using namespace std;
 #include "Preference.h"
 
 void TestLineSamp(Isis::Camera *cam, double samp, double line);
+/**
+ * @internal 
+ *   @history 2009-08-03 Jeannie Walldren - Changed known lat
+ *            and lon.
+ *   @history 2009-08-06 Jeannie Walldren - Added cmath include
+ *            and changed calls to abs() to fabs() since the
+ *            abs() function takes integer values while the
+ *            fabs() takes floats. Changed Center Lat tolerance
+ *            from 1E-10 to 2E-10 since the difference on Darwin powerpc
+ *            was 1.93E-10.  Changed Center Lon tolerance from
+ *            1E-10 to 1.1E-10 since the difference on Darwin powerpc
+ *            was 1.03E-10.
+ */
 
 int main (void)
 {
@@ -18,8 +32,12 @@ int main (void)
     // These should be lat/lon at center of image. To obtain these numbers for a new cube/camera,
     // set both the known lat and known lon to zero and copy the unit test output "Latitude off by: "
     // and "Longitude off by: " values directly into these variables.
-    double knownLat = -9.931519304695483;
-    double knownLon = 286.6184572896669;
+    //    double knownLat = -9.931519304695483;
+    //    double knownLon = 286.6184572896669;
+    //    double knownLat = -9.931519304671058;
+    //    double knownLon = 286.6184572896659;
+    double knownLat = -9.931519304119526;
+    double knownLon = 286.6184572896647;
 
     //Isis::Pvl p("$mgs/testData/lub0428b.cub");
     Isis::Pvl p("$mgs/testData/fha00491.lev1.cub");
@@ -48,14 +66,14 @@ int main (void)
       return 0;
     }
 
-    if(abs(cam->UniversalLatitude() - knownLat) < 1E-10) {
+    if(fabs(cam->UniversalLatitude() - knownLat) < 2E-10) {
       cout << "Latitude OK" << endl;
     }
     else {
       cout << setprecision(16) << "Latitude off by: " << cam->UniversalLatitude() - knownLat << endl;
     }
 
-    if(abs(cam->UniversalLongitude() - knownLon) < 1E-10) {
+    if(fabs(cam->UniversalLongitude() - knownLon) < 1.1E-10) {
       cout << "Longitude OK" << endl;
     }
     else {

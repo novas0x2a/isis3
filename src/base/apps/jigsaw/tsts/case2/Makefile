@@ -12,7 +12,7 @@ commands:
 	cnet=$(INPUT)/mocVik.net \
 	onet=$(OUTPUT)/case2OutNet.pvl \
 	maxits=10 \
-	tol=.8774 \
+	tol=0.908  \
 	update=no \
 	spsolve=position | grep -v "100% Processed" > $(OUTPUT)/case2OutLog.pvl;
 	$(RM) $(OUTPUT)/cub.lis $(OUTPUT)/held.lis > /dev/null;

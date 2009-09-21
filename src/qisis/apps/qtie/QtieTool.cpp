@@ -31,6 +31,9 @@
 #include "History.h"
 #include "PvlObject.h"
 #include "PvlEditDialog.h"
+#include "iTime.h"
+#include "Application.h"
+#include "BundleAdjust.h"
 
 using namespace Qisis;
 using namespace std;
@@ -266,6 +269,33 @@ namespace Qisis {
 
 
   /**
+   * New files selected, clean up old file info
+   * 
+   * @internal
+   * @history  2007-06-12 Tracie Sucharski - Added method to allow user to  
+   *                           run on new files. 
+   */
+  void QtieTool::clearFiles() {
+    p_tieTool->setShown(false);
+  //  delete p_baseCube;
+  //  delete p_matchCube;
+
+    delete p_serialNumberList;
+    p_serialNumberList = new Isis::SerialNumberList(false);
+
+    delete p_controlNet;
+    p_controlNet = new Isis::ControlNet();
+    p_controlNet->SetType(Isis::ControlNet::ImageToGround);
+    p_controlNet->SetNetworkId("Qtie");
+
+    delete p_baseGM;
+    delete p_matchGM;
+
+  }
+
+
+
+  /**
    * Save control point under crosshairs of ChipViewports
    * 
    */
@@ -303,6 +333,11 @@ namespace Qisis {
   void QtieTool::mouseButtonRelease(QPoint p, Qt::MouseButton s) {
     CubeViewport *cvp = cubeViewport();
     if (cvp  == NULL) return;
+    if (cubeViewportList()->size() != 2) {
+      QString message = "You must have a basemap and a match cube open.";
+      QMessageBox::critical((QWidget *)parent(),"Error",message);
+      return;
+    }
     if (cvp->cube() == p_baseCube) {
       QString message = "Select points on match Cube only.";
       QMessageBox::information((QWidget *)parent(),"Warning",message);
@@ -324,6 +359,12 @@ namespace Qisis {
       Isis::ControlPoint *point =
       p_controlNet->FindClosest(sn,samp,line);
       //  TODO:  test for errors and reality 
+      if (point == NULL) {
+        QString message = "No points exist for editing.  Create points ";
+        message += "using the right mouse button.";
+        QMessageBox::information((QWidget *)parent(),"Warning",message);
+        return;
+      }
       modifyPoint(point);
     }
     else if (s == Qt::MidButton) {
@@ -331,6 +372,12 @@ namespace Qisis {
       Isis::ControlPoint *point =
       p_controlNet->FindClosest(sn,samp,line);
       //  TODO:  test for errors and reality 
+      if (point == NULL) {
+        QString message = "No points exist for deleting.  Create points ";
+        message += "using the right mouse button.";
+        QMessageBox::information((QWidget *)parent(),"Warning",message);
+        return;
+      }
       deletePoint(point);
     }
     else if (s == Qt::RightButton) {
@@ -654,6 +701,7 @@ namespace Qisis {
 
     h.AddEntry(history);
     p_matchCube->Write(h);
+    p_matchCube->ReOpen("r");
 
   }
 

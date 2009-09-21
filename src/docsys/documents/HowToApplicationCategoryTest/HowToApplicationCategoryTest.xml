@@ -46,7 +46,8 @@
                     operating system, or changing compilers.  They are also important when changes are made to the entire
                     system (such as refactoring) or to other files that directly affect the application.  If something is changed that affects
                     the outcome of the application, the test will fail, making the programmer aware that something has changed and
-                    needs to be examined.  This guide focuses on the specific task of adding tests to an existing application or cateogry.
+                    needs to be examined.  This guide focuses on the specific 
+                    task of adding tests to an existing application or category.
                 </p>
 
                 <!-- QUESTIONS AND ANSWERS -->
@@ -298,8 +299,12 @@
                  Any file with a .pvl extension is considered a pvl file. Because pvl files contain text, the text file test variables will work on the pvl files; it is not recommended to use
                  these test variables, however, and the result must still be a valid pvl file. The order of the keywords, objects and groups matter and may not be different in any case.
                  In order to set tolerances and ignore keywords, a pvl tolerance file with .DIFF attached to the end will be used. For example, if if file is test.pvl then the tolerance file must be named
-                 test.pvl.DIFF. These files must only exist in the input data directories. Inside the pvl tolerance file you can specify numerical tolerances and keywords to ignore. 
-                 Inside the pvl tolerance file, there should be one or two groups, Tolerances and IgnoreKeys, in the root of the file. So, a basic pvl tolerance file looks like this:
+                 test.pvl.DIFF. These files must only exist in the input data 
+                 directory. Inside the pvl tolerance file you can specify 
+                 numerical tolerances and keywords to ignore. Inside the pvl 
+                 tolerance file, there should be one or two groups, Tolerances 
+                 and IgnoreKeys, in the root of the file. So, a basic pvl 
+                 tolerance file looks like this:
                  <pre>
                    <code>
 Group = Tolerances
@@ -325,7 +330,9 @@ KeywordName = true
                    </code>
                  </pre>
                  Note: The value of this keyword does not matter. <br />
-                 With these formats in mind, to give a tolerance for the keyword StandardDeviation of 0.0000000001 and ignore the keyword FileName the pvl tolerance file would looks like this:
+                 With these formats in mind, to give a tolerance for the keyword 
+                 StandardDeviation of 0.0000000001 and ignore the keyword 
+                 FileName the pvl tolerance file would look like this:
                  <pre>
                    <code>
 Group = Tolerances
@@ -391,6 +398,41 @@ End
                    </code>
                  </pre>
                  This would ignore the value of ByteOrder always and SomeCalculation if it were within the tolerance.
+                <p>
+                    Finally, you can create unique tolerances and ignore 
+                    keys for each element of an array contained within a 
+                    keyword, like so:
+                </p>
+                <pre>
+                  <code>
+Group = Tolerances
+ SomeArray = (0.000000001, 0.0, 0.025)
+ AnotherArray = 0.000000001
+End_Group
+
+Group = IgnoreKeys
+ SomeArray =(false, true, false)
+End_Group
+
+End
+                  </code>
+                </pre>
+                In the above case, the keyword SomeArray would have a tolerance 
+                of 0.000000001 applied to the first element, a tolerance of 
+                0.025 applied to the third element, and the second element would 
+                be ignored entirely.  
+                <p>
+                    Just make sure when working with arrays that you have
+                    exactly the same number of tolerances/ignore keys for the 
+                    keyword as there are elements in the array.  Alternatively, 
+                    you can list only one tolerance or ignore key for the 
+                    keyword, and it will be applied to every element in the 
+                    array.  In the above case, the keyword AnotherArray could
+                    have 50 elements, but each element would have a tolerance of
+                    0.000000001 applied to it.  Having multiple tolerances and 
+                    ignore keys without matching the number of array elements, 
+                    however, will result in an error.  
+                </p>
                </p>
 
                 <h3>Test Data</h3>

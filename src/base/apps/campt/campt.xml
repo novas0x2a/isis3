@@ -20,47 +20,51 @@
     resolution.  The following is an example of the output given when campt is ran:
     <pre>
 Group = GroundPoint
-  Filename               = /usgs/cpkgs/isis3/data/mgs/testData/ab102401.cub
-  Sample                 = 1.0
-  Line                   = 1.0
-  PixelValue             = 0.0607816
-  PlanetocentricLatitude = 34.444196777763
-  PlanetographicLatitude = 34.760399604837
-  PositiveEastLongitude  = 223.84999971299
-  PositiveWestLongitude  = 136.15000028701
-  BodyFixedCoordinate    = (-2015.9595225544, -1936.6155808127, 1917.2574858384) &lt;km&gt;
-  LocalRadius            = 3389756.4767145 &lt;m&gt;
-  SampleResolution       = 536.05556350077 &lt;m&gt;
-  LineResolution         = 536.05556350077 &lt;m&gt;
+  Filename                   = /usgs/cpkgs/isis3/data/mgs/testData/ab102401.cub
+  Sample                     = 1.0
+  Line                       = 1.0
+  PixelValue                 = 0.0607816
+  RightAscension             = 65.749350916052
+  Declination                = -18.390093214966
+  PlanetocentricLatitude     = 34.444196777763
+  PlanetographicLatitude     = 34.760399604837
+  PositiveEastLongitude      = 223.84999971299
+  PositiveWestLongitude      = 136.15000028701
+  BodyFixedCoordinate        = (-2015.9595225544, -1936.6155808127, 1917.2574858384) &lt;km&gt;
+  LocalRadius                = 3389756.4767145 &lt;m&gt;
+  SampleResolution           = 536.05556350077 &lt;m&gt;
+  LineResolution             = 536.05556350077 &lt;m&gt;
 
   # Spacecraft Information
-  SpacecraftPosition     = (-2025.6211429076, -2130.1417975758, 2009.318879871) &lt;km&gt;
-  SpacecraftAzimuth      = 0.006855593033889
-  SlantDistance          = 214.52515878961 &lt;km&gt;
-  TargetCenterDistance   = 3560.6189705415 &lt;km&gt;
-  SubSpacecraftLatitude  = 34.354896748841
-  SubSpacecraftLongitude = 226.44072947174
-  SpacecraftAltitude     = 170.83335389965 &lt;km&gt;
-  SpacecraftRoll         = 0.22118085908063
+  SpacecraftPosition         = (-2025.6211429076, -2130.1417975758, 2009.318879871) &lt;km&gt;
+  SpacecraftAzimuth          = 0.006855593033889
+  SlantDistance              = 214.52515878961 &lt;km&gt;
+  TargetCenterDistance       = 3560.6189705415 &lt;km&gt;
+  SubSpacecraftLatitude      = 34.354896748841
+  SubSpacecraftLongitude     = 226.44072947174
+  SpacecraftAltitude         = 170.83335389965 &lt;km&gt;
+  OffNadirAngle              = 36.149255932304
+  SubSpacecraftGroundAzimuth = 91.64525294858
 
   # Sun Information
-  SunPosition            = (-177337948.13839, 112957442.69098, -33704752.205292) &lt;km&gt;
-  SubSolarAzimuth        = 172.30460990873
-  SolarDistance          = 1.4234246174889 &lt;AU&gt;
-  SubSolarLatitude       = -9.1071705738361
-  SubSolarLongitude      = 147.50443340123
+  SunPosition                = (-177337948.13839, 112957442.69098, -33704752.205292) &lt;km&gt;
+  SubSolarAzimuth            = 172.30460990873
+  SolarDistance              = 1.4234246174889 &lt;AU&gt;
+  SubSolarLatitude           = -9.1071705738361
+  SubSolarLongitude          = 147.50443340123
+  SubSolarGroundAzimuth      = 254.69139701227
 
   # Illumination and Other
-  Phase                  = 120.59515694473
-  Incidence              = 84.106289446623
-  Emission               = 38.288719431206
-  NorthAzimuth           = 261.46910874636
+  Phase                      = 120.59515694473
+  Incidence                  = 84.106289446623
+  Emission                   = 38.288719431206
+  NorthAzimuth               = 261.46910874636
 
   # Time
-  EphemerisTime          = -69382819.160519 &lt;seconds&gt;
-  UTC                    = 1997-10-20T10:58:37.6570806
-  LocalSolarTime         = 17.089704420784 &lt;hour&gt;
-  SolarLongitude         = 201.83159041209
+  EphemerisTime              = -69382819.160519 &lt;seconds&gt;
+  UTC                        = 1997-10-20T10:58:37.6570806
+  LocalSolarTime             = 17.089704420784 &lt;hour&gt;
+  SolarLongitude             = 201.83159041209
 End_Group
     </pre>
     <p>
@@ -128,8 +132,23 @@ End_Group
     <change name="Steven Koechle" date="2008-08-19">
       Removed unnecessary duplicate cube creation
      </change>
+    <change name="Janet Barrett" date="2008-11-15">
+      Added SubSolarGroundAzimuth and SubSpacecraftGroundAzimuth
+      to PVL output. The SubSolarGroundAzimuth is the clockwise
+      angle on the ground between a line drawn from the ground 
+      point to the North pole of the body and a line drawn from 
+      the ground point to the subsolar point. The 
+      SubSpacecraftGroundAzimuth is defined similarly except it
+      uses the subspacecraft point.
+    </change>
     <change name="Steven Lambright" date="2009-01-05">
       Added the ALLOWOUTSIDE option
+    </change>
+    <change name="Mackenzie Boyd" date="2009-08-24">
+      Modified to use new class CameraPointInfo
+    </change>
+    <change name="Mackenzie Boyd" date="2009-09-14">
+      Added missed functionality for defaulting to center sample/line
     </change>
   </history>
 

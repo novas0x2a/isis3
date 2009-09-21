@@ -30,7 +30,7 @@ namespace Isis {
    *
    * @param frameCode Valid naif frame code.
    */
-  LineScanCameraRotation::LineScanCameraRotation( int frameCode, Isis::Pvl &lab, std::vector<double> timeCache ) : SpiceRotation ( frameCode ) {
+  LineScanCameraRotation::LineScanCameraRotation( int frameCode, Isis::Pvl &lab, std::vector<double> timeCache, double tol ) : SpiceRotation ( frameCode ) {
     // Initialize optional paramters;
     p_pitchRate = 0.;
     p_yaw = 0.;
@@ -56,7 +56,7 @@ namespace Isis {
     // Load the line scan specific rotation matrix caches before loading the regular Spice caches because 
     // the CreateCache method will unload all the kernels after the caches are created
     LoadCache();
-    p_spi->CreateCache(timeCache[0],timeCache[timeCache.size()-1],timeCache.size());
+    p_spi->CreateCache(timeCache[0],timeCache[timeCache.size()-1],timeCache.size(), tol);
     }
 
 
@@ -229,6 +229,9 @@ namespace Isis {
 
       p_cache.push_back( p_RJ );
     }
+
+    // Set source to cache to get updated values
+    SetSource(SpiceRotation::Memcache);
 
     // Make sure SetEphemerisTime updates the matrix by resetting it twice (in case the first one
     // matches the current et.  p_et is private and not available from the child class

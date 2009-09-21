@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2009/02/02 14:50:57 $                                                                 
+ * $Revision: 1.9 $                                                             
+ * $Date: 2009/08/05 21:44:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -227,6 +227,24 @@ namespace Isis {
       iString msg = "Minor axis points must be greater that 0.0 [(" + iString(p_minorAxisPts) + "]"; 
       throw iException::Message(iException::User, msg, _FILEINFO_);
     }
+  }
+
+  PvlGroup LimitPolygonSeeder::PluginParameters(std::string grpName) {
+    PvlGroup pluginInfo(grpName);
+
+    PvlKeyword name("Name", Algorithm());
+    PvlKeyword minThickness("MinimumThickness", MinimumThickness());
+    PvlKeyword minArea("MinimumArea", MinimumArea());
+    PvlKeyword majAxis("MajorAxisPoints", p_majorAxisPts);
+    PvlKeyword minAxis("MinorAxisPoints", p_minorAxisPts);
+
+    pluginInfo.AddKeyword(name);
+    pluginInfo.AddKeyword(minThickness);
+    pluginInfo.AddKeyword(minArea);
+    pluginInfo.AddKeyword(majAxis);
+    pluginInfo.AddKeyword(minAxis);
+
+    return pluginInfo;
   }
 
 }; // End of namespace Isis

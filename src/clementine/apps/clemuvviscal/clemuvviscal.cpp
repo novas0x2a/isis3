@@ -297,12 +297,13 @@ void FixTemp(int imgID){
   int currIndex = 0;
 
   do {
+    currID = t[currIndex]["ImageID"];
     currIndex ++;
-    currID = t[currIndex]["ImageID"]; 
   } while ((imgID > currID) && (currIndex < t.Records()));
+  currIndex --;  // Fixes an out-of-bounds segmentation fault
 
   // Make sure currIndex makes sense
-  if (currIndex < 0 || currIndex > t.Records()) {
+  if (currIndex < 0 || currIndex >= t.Records()) {
     focalPlaneTemp = 0;
     return;
   }

@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/12/24 17:28:24 $
+ * $Revision: 1.5 $
+ * $Date: 2009/08/20 21:38:01 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -57,7 +57,7 @@ namespace Qisis {
       ~ChipViewport ();
 
       //!  Set chip
-      void setChip (Isis::Chip *chip);
+      void setChip (Isis::Chip *chip, Isis::Cube *chipCube);
 
       //!  Load with another ChipViewport
       void loadView(ChipViewport &newView);
@@ -97,7 +97,7 @@ namespace Qisis {
       void setCircle (bool checked);
       void setCircleSize (int size);
 
-      void geomChip (Isis::Chip *matchChip);
+      void geomChip (Isis::Chip *matchChip, Isis::Cube *matchChipCube);
       void nogeomChip ();
 
       void panUp();
@@ -140,13 +140,15 @@ namespace Qisis {
       };
 
       BandInfo p_gray;//!< info for the gray bands.
-      Isis::Chip *p_chip;//!< The chip.
+      Isis::Chip *p_chip;//!< The chip
+      Isis::Cube *p_chipCube;//!< The chip's cube
 
       int p_width;//!< Chip width
       int p_height;//!< Chip height
 
       bool p_geomIt;//!< geomIt?
       Isis::Chip *p_matchChip;//!< The matching chip.
+      Isis::Cube *p_matchChipCube;//!< The matching chip's cube
 
       double p_zoomFactor;//!< Zoom Factor
       int p_rotation;//!< Rotation

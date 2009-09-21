@@ -93,8 +93,15 @@ namespace Isis {
       ((VimsGroundMap*)GroundMap())->Init(lab);
       ((VimsSkyMap*)SkyMap())->Init(lab);
 
-      if (channel == "VIS") CreateCache(etStart,etStop,64*64);
-      if (channel == "IR") CreateCache(etStart,etStop,64*64);
+      double tol = PixelResolution();
+
+      if (tol < 0.) {
+        // Alternative calculation of .01*ground resolution of a pixel
+        tol = PixelPitch()*SpacecraftAltitude()/FocalLength()/1000./100.;
+        }
+
+      if (channel == "VIS") CreateCache(etStart,etStop,64*64, tol);
+      if (channel == "IR") CreateCache(etStart,etStop,64*64, tol);
 
       //  Call SetImage so that the et is reset to beginning of image w/o
       //   padding.

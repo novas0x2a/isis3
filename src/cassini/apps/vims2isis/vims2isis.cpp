@@ -1,4 +1,5 @@
 #include "Isis.h"
+#include "EndianSwapper.h"
 #include "ProcessImportPds.h"
 #include "ProcessByLine.h"
 #include "Filename.h"
@@ -8,6 +9,7 @@
 #include "iException.h"
 #include "iString.h"
 #include "Brick.h"
+#include "Table.h"
 
 #include <algorithm>
 #include <stdio.h>
@@ -15,11 +17,24 @@
 using namespace std;
 using namespace Isis;
 
-void ReadVimsBIL(std::string inFile, const PvlKeyword &suffixItems, std::string outFile);
-void TranslateVisLabels (Pvl &pdsLab, Cube *viscube);
-void TranslateIrLabels (Pvl &pdsLab, Cube *ircube);
-void ProcessCube (Buffer &in, Buffer &out);
+typedef struct {
+  int mi32OrigBandStart;
+  int mi32OrigBinEnd;
+  int mi32BandCenterStart;
+  int mi32BandCenterEnd;
+  int mi32NaifFrameCode;
+}VIMS;
 
+enum VimsType { VIS, IR };
+
+void ReadVimsBIL(std::string inFile, const PvlKeyword &suffixItems, std::string outFile);
+void TranslateVimsLabels (Pvl &pdsLab, Cube *vimscube, VimsType vType);
+void ProcessCube (Buffer &in, Buffer &out);
+void ProcessBands(Pvl &pdsLab, Cube *vimscube, VimsType vtype);
+
+//***********************************************************************
+//   IsisMain()
+//***********************************************************************
 void IsisMain ()
 {
   UserInterface &ui = Application::GetUserInterface();
@@ -79,19 +94,40 @@ void IsisMain ()
 
   //Now separate the cubes
   ProcessByLine l;
-  CubeAttributeInput inattvis = CubeAttributeInput("+1-96");
-  l.SetInputCube(tempname.Name(),inattvis);
-  Cube *oviscube = l.SetOutputCube("VIS");
-  l.StartProcess(ProcessCube);
-  TranslateVisLabels(pdsLab,oviscube);
-  l.EndProcess();
 
-  CubeAttributeInput inattir = CubeAttributeInput("+97-352");
-  l.SetInputCube(tempname.Name(),inattir);
-  Cube *oircube = l.SetOutputCube("IR");
-  l.StartProcess(ProcessCube);
-  TranslateIrLabels(pdsLab,oircube);
-  l.EndProcess();
+  PvlGroup status("Results");
+
+  //VIS cube
+  const PvlObject &qube = lab.FindObject("Qube");
+  if(qube["SAMPLING_MODE_ID"][1] != "N/A") {
+    CubeAttributeInput inattvis = CubeAttributeInput("+1-96");
+    l.SetInputCube(tempname.Name(),inattvis);
+    Cube *oviscube = l.SetOutputCube("VIS");
+    l.StartProcess(ProcessCube);
+    TranslateVimsLabels(pdsLab, oviscube, VIS);  
+    l.EndProcess();
+
+    status += PvlKeyword("VisCreated", "true");
+  }
+  else {
+    status += PvlKeyword("VisCreated", "false");
+  }
+  
+  //IR cube
+  if(qube["SAMPLING_MODE_ID"][0] != "N/A") {
+    CubeAttributeInput inattir = CubeAttributeInput("+97-352");
+    l.SetInputCube(tempname.Name(),inattir);
+    Cube *oircube = l.SetOutputCube("IR");
+    l.StartProcess(ProcessCube);
+    TranslateVimsLabels(pdsLab, oircube, IR);
+    l.EndProcess();
+    status += PvlKeyword("IrCreated", "true");
+  }
+  else {
+    status += PvlKeyword("IrCreated", "false");
+  }
+
+  Application::Log(status);
 
   //Clean up
   string tmp(tempname.Expanded());
@@ -99,13 +135,17 @@ void IsisMain ()
 }
 
 /** 
- * We created a method to manually skip the suffix and corner data for this image
- *   to avoid implementing it in ProcessImport and ProcessImportPds. To fully support 
- *   this file format, we would have to re-implement the ISIS2 Cube IO plus add prefix
- *   data features to it. This is a shortcut; because we know these files have one sideplane
- *   and four backplanes, we know how much data to skip when. This should be fixed if we ever
- *   decide to fully support suffix and corner data, which would require extensive changes to
- *   ProcessImport/ProcessImportPds. Method written by Steven Lambright.
+ *   We created a method to manually skip the suffix and corner
+ *   data for this image to avoid implementing it in
+ *   ProcessImport and ProcessImportPds. To fully support this
+ *   file format, we would have to re-implement the ISIS2 Cube
+ *   IO plus add prefix data features to it. This is a shortcut;
+ *   because we know these files have one sideplane and four
+ *   backplanes, we know how much data to skip when. This should
+ *   be fixed if we ever decide to fully support suffix and
+ *   corner data, which would require extensive changes to
+ *   ProcessImport/ProcessImportPds. Method written by Steven
+ *   Lambright.
  * 
  * @param inFilename Filename of the input file
  * @param outFile Filename of the output file
@@ -117,6 +157,21 @@ void ReadVimsBIL(std::string inFilename, const PvlKeyword &suffixItems, std::str
   Pvl pdsLabel(inFilename);
   Isis::Filename transFile (transDir + "/" + "translations/pdsQube.trn");
   Isis::PvlTranslationManager pdsXlater (pdsLabel, transFile.Expanded());
+
+
+  TableField sideplaneLine("Line", Isis::TableField::Integer);
+  TableField sideplaneBand("Band", Isis::TableField::Integer);
+  TableField sideplaneValue("Value", Isis::TableField::Integer);
+
+  TableRecord record;
+  record += sideplaneLine;
+  record += sideplaneBand;
+  record += sideplaneValue;
+  Table sideplaneVisTable("SideplaneVis", record);
+  Table sideplaneIrTable("SideplaneIr", record);
+
+  sideplaneVisTable.SetAssociation(Table::Lines);
+  sideplaneIrTable.SetAssociation(Table::Lines);
 
   Isis::iString str;
   str = pdsXlater.Translate ("CoreBitsPerPixel");
@@ -274,15 +329,46 @@ void ReadVimsBIL(std::string inFilename, const PvlKeyword &suffixItems, std::str
       out.SetBasePosition(1, line+1, band+1);
       outCube.Write (out);
 
-      pos = fin.tellg();
-      fin.seekg (4*(int)suffixItems[0], ios_base::cur);
+      if((int)suffixItems[0] != 0) {
+        pos = fin.tellg();
+        char *sideplaneData = new char[4*(int)suffixItems[0]];
+        fin.read (sideplaneData, 4*(int)suffixItems[0]);
+        int suffixData = (int)swapper.Int((int *)sideplaneData);
+        record[0] = line+1;
+        record[1] = band+1;
+        record[2] = suffixData;
 
-      // Check the last io
-      if (!fin.good ()) {
-        string msg = "Cannot read file [" + inFilename + "]. Position [" +
-                     Isis::iString((int)pos) + "]. Byte count [" +
-                     Isis::iString(4) + "]" ;
-        throw Isis::iException::Message(Isis::iException::Io,msg, _FILEINFO_);
+        if(band < 96) {
+          sideplaneVisTable += record;
+
+          // set HIS pixels appropriately
+          for(int samp = 0; samp < ns; samp++) {
+            if(out[samp] >= 4095) {
+              out[samp] = Isis::His;
+            }
+          }
+        }
+        else {
+          record[1] = (band+1) - 96;
+          sideplaneIrTable += record;
+
+          // set HIS pixels appropriately
+          for(int samp = 0; samp < ns; samp++) {
+            if(out[samp] + suffixData >= 4095) {
+              out[samp] = Isis::His;
+            }
+          }
+        }
+
+        delete [] sideplaneData;
+
+        // Check the last io
+        if (!fin.good ()) {
+          string msg = "Cannot read file [" + inFilename + "]. Position [" +
+                       Isis::iString((int)pos) + "]. Byte count [" +
+                       Isis::iString(4) + "]" ;
+          throw Isis::iException::Message(Isis::iException::Io,msg, _FILEINFO_);
+        }
       }
     } // End band loop
 
@@ -299,119 +385,138 @@ void ReadVimsBIL(std::string inFilename, const PvlKeyword &suffixItems, std::str
 
   } // End line loop
 
+  outCube.Write(sideplaneVisTable);
+  outCube.Write(sideplaneIrTable);
+
   // Close the file and clean up
   fin.close ();
   outCube.Close();
   delete [] in;
 }
 
-//Function to separate the cube into two parts
+//************************************************************
+//  Name:        ProcessCube
+// 
+//  Description: Function to copy cube from input to ouput
+// 
+//  Parameters:  Buffer &in  - Input Cube
+//               Buffer &out - Output Cube
+// 
+//  Return:      None 
+//************************************************************
 void ProcessCube (Buffer &in, Buffer &out){
   for (int i=0;i<in.size();i++) {
     out[i] = in[i];
   }
 }
 
-void TranslateVisLabels (Pvl &pdsLab, Cube *viscube){
+//************************************************************
+//  Name:        ProcessBands
+// 
+//  Description: Function to process bands for both IR and VIS
+// 
+//  Parameters:  Pvl & pdsLab - Label
+//               Cube *vimsCube
+//               VimsType vtype - whether VIS/IS cubes
+// 
+//  Return:      None 
+//************************************************************
+void ProcessBands(Pvl &pdsLab, Cube *vimsCube, VimsType vtype)
+{
+  VIMS vims;
+  //input band specific information
+  if (vtype== VIS) {
+    vims.mi32OrigBandStart   = 1;
+    vims.mi32OrigBinEnd      = vimsCube->Bands();
+    vims.mi32BandCenterStart = 0;
+    vims.mi32BandCenterEnd   = 96;
+    vims.mi32NaifFrameCode   = -82370;
+  }
+  else if (vtype==IR) {
+    vims.mi32OrigBandStart   = 97;
+    vims.mi32OrigBinEnd      = 352;
+    vims.mi32BandCenterStart = 96;
+    vims.mi32BandCenterEnd   = 352;
+    vims.mi32NaifFrameCode   = -82371;
+  }
   PvlObject qube(pdsLab.FindObject("Qube"));
-  //Create the Instrument Group
-  PvlGroup inst("Instrument");
-  inst += PvlKeyword("SpacecraftName","Cassini-Huygens");
-  inst += PvlKeyword("InstrumentId",(string) qube["InstrumentId"]);
-  inst += PvlKeyword("Channel","VIS");
-  inst += PvlKeyword("TargetName",(string) qube["TargetName"]);
-  inst += PvlKeyword("SpacecraftClockStartCount",
-                     (string) qube["SpacecraftClockStartCount"]);
-  inst += PvlKeyword("SpacecraftClockStopCount",
-                     (string) qube["SpacecraftClockStopCount"]);
-  inst += PvlKeyword("StartTime",(string) iString((string)qube["StartTime"]).Trim("Z"));
-  inst += PvlKeyword("StopTime",(string) iString((string)qube["StopTime"]).Trim("Z"));
-  inst += PvlKeyword("NativeStartTime",(string) qube["NativeStartTime"]);
-  inst += PvlKeyword("NativeStopTime",(string) qube["NativeStopTime"]);
-  inst += PvlKeyword("InterlineDelayDuration",
-                     (string) qube["InterlineDelayDuration"]);
-  PvlKeyword expDuration("ExposureDuration");
-  expDuration.AddValue(qube["ExposureDuration"][0],"IR");
-  expDuration.AddValue(qube["ExposureDuration"][1],"VIS");
-  inst += expDuration;
-  inst += PvlKeyword("SamplingMode",(string) qube["SamplingModeId"][1]);
-  inst += PvlKeyword("XOffset",(string) qube["XOffset"]);
-  inst += PvlKeyword("ZOffset",(string) qube["ZOffset"]);
-  inst += PvlKeyword("SwathWidth",(string) qube["SwathWidth"]);
-  inst += PvlKeyword("SwathLength",(string) qube["SwathLength"]);
 
-  viscube->PutGroup(inst);
-
-  //Create the BandBin Group
+ //Create the BandBin Group
   PvlGroup bandbin("BandBin");
   PvlKeyword originalBand("OriginalBand");
-  for (int i=1; i<=viscube->Bands(); i++) {
+  for (int i=vims.mi32OrigBandStart; i <= vims.mi32OrigBinEnd; i++) {
     originalBand.AddValue(i);
   }
   bandbin += originalBand;
   PvlKeyword center("Center");
   PvlGroup bbin(qube.FindGroup("BandBin"));
-  for (int i=0; i<96; i++) {
+  for (int i=vims.mi32BandCenterStart; i < vims.mi32BandCenterEnd; i++) {
     center += (string) bbin["BandBinCenter"][i];
   }
   bandbin += center;
 
-  viscube->PutGroup(bandbin);
+  vimsCube->PutGroup(bandbin);
 
   //Create the Kernels Group
   PvlGroup kern("Kernels");
-  kern += PvlKeyword("NaifFrameCode",-82370);
-  viscube->PutGroup(kern);
+  kern += PvlKeyword("NaifFrameCode",vims.mi32NaifFrameCode);
+  vimsCube->PutGroup(kern);      
 }
 
-void TranslateIrLabels (Pvl &pdsLab, Cube *ircube){
+//************************************************************
+//  Name:        TranslateVimsLabels
+// 
+//  Description: Function to translate Vims label for both  IR 
+//               & VIS cubes
+// 
+//  Parameters:  Pvl & pdsLab - Label
+//               Cube *vimsCube - output VIS/IR cubes
+//               VimsType vType - VIS / IR
+//               
+//  Return:      None
+//************************************************************
+void TranslateVimsLabels (Pvl &pdsLab, Cube *vimscube, VimsType vType){  
+
+  Isis::PvlGroup &dataDir = Isis::Preference::Preferences().FindGroup("DataDirectory");
+  string transDir = (string) dataDir["Cassini"];
+  
+  Isis::Filename transFile (transDir + "/" + "translations/vimsPds.trn");
   PvlObject qube(pdsLab.FindObject("Qube"));
-  //Create the Instrument Group
-  PvlGroup inst("Instrument");
-  inst += PvlKeyword("SpacecraftName","Cassini-Huygens");
-  inst += PvlKeyword("InstrumentId",(string) qube["InstrumentId"]);
-  inst += PvlKeyword("Channel","IR");
-  inst += PvlKeyword("TargetName",(string) qube["TargetName"]);
-  inst += PvlKeyword("SpacecraftClockStartCount",
-                     (string) qube["SpacecraftClockStartCount"]);
-  inst += PvlKeyword("SpacecraftClockStopCount",
-                     (string) qube["SpacecraftClockStopCount"]);
-  inst += PvlKeyword("StartTime",(string) iString((string)qube["StartTime"]).Trim("Z"));
-  inst += PvlKeyword("StopTime",(string) iString((string)qube["StopTime"]).Trim("Z"));
-  inst += PvlKeyword("NativeStartTime",(string) qube["NativeStartTime"]);
-  inst += PvlKeyword("NativeStopTime",(string) qube["NativeStopTime"]);
-  inst += PvlKeyword("InterlineDelayDuration",
-                     (string) qube["InterlineDelayDuration"]);
+  Pvl pdsLabel(pdsLab);  
+  Isis::PvlTranslationManager labelXlater (pdsLabel, transFile.Expanded());
+  
+  Pvl outputLabel;
+  labelXlater.Auto(outputLabel);
+
+  //Add needed keywords that are not in translation table to cube's instrument group
+  PvlGroup &inst = outputLabel.FindGroup("Instrument", Pvl::Traverse); 
+
+  //trim start and stop time
+  string strTime=inst.FindKeyword("StartTime")[0];
+  inst.FindKeyword("StartTime").SetValue((string)((iString)strTime).Trim("Z")); 
+  strTime = (string)qube["StopTime"];
+  inst.FindKeyword("StopTime").SetValue((string)((iString)strTime).Trim("Z")); 
+
+  inst += PvlKeyword("SamplingMode", (string)qube["SamplingModeId"][1]);
+  if (vType == VIS) {
+    inst += PvlKeyword("Channel", "VIS");
+  }
+  else{
+    inst += PvlKeyword("Channel", "IR");
+  }
+
   PvlKeyword expDuration("ExposureDuration");
   expDuration.AddValue(qube["ExposureDuration"][0],"IR");
   expDuration.AddValue(qube["ExposureDuration"][1],"VIS");
   inst += expDuration;
-  inst += PvlKeyword("SamplingMode",(string) qube["SamplingModeId"][0]);
-  inst += PvlKeyword("XOffset",(string) qube["XOffset"]);
-  inst += PvlKeyword("ZOffset",(string) qube["ZOffset"]);
-  inst += PvlKeyword("SwathWidth",(string) qube["SwathWidth"]);
-  inst += PvlKeyword("SwathLength",(string) qube["SwathLength"]);
+  
+  inst += PvlKeyword("GainMode", (string)qube["GainModeId"][1]);  
+  
+  vimscube->PutGroup(inst);
 
-  ircube->PutGroup(inst);
+  //Get Archive
+  PvlGroup &archive = outputLabel.FindGroup("Archive", Pvl::Traverse);
+  vimscube->PutGroup(archive);
 
-  //Create the BandBin Group
-  PvlGroup bandbin("BandBin");
-  PvlKeyword originalBand("OriginalBand");
-  for (int i=97; i<=352; i++) {
-    originalBand.AddValue(i);
-  }
-  bandbin += originalBand;
-  PvlKeyword center("Center");
-  PvlGroup bbin(qube.FindGroup("BandBin"));
-  for (int i=96; i<352; i++) {
-    center += (string) bbin["BandBinCenter"][i];
-  }
-  bandbin += center;
-
-  ircube->PutGroup(bandbin);
-
-  //Create the Kernels Group
-  PvlGroup kern("Kernels");
-  kern += PvlKeyword("NaifFrameCode",-82371); 
-  ircube->PutGroup(kern);
+  ProcessBands(pdsLab, vimscube, vType);
 }

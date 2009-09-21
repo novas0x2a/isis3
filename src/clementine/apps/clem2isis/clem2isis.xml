@@ -4,8 +4,6 @@
   <brief>
     Convert Clementine data to Isis cube
   </brief>
- 
-
 
   <description>
     This program takes a Clementine image and formats it into an Isis cube. The
@@ -13,8 +11,6 @@
     the user.
   </description>
   
-
-
   <category>
     <missionItem>Clementine</missionItem>
   </category>
@@ -32,7 +28,7 @@
         for an int,  which differs in size.
     </change>
     <change name="Jeff Anderson" date="2007-01-08">
-	    Fixed bug with non-permanent char* pointer
+     Fixed bug with non-permanent char* pointer
     </change>
     <change name="Steven Koechle" date="2007-05-22">
        Removed "Z" from end of value for StartTime label.
@@ -72,9 +68,11 @@
       Added BandBin keywords Center and Width to clementine.trn and
       alter the output values only if the filter is not the F filter.
     </change>
+    <change name="Mackenzie Boyd" date="2009-05-26">
+      Modified label transfer to include MCP_Gain_Mode_ID when images is from 
+      HIRES camera.
+    </change>
   </history>
-  
-
 
   <groups>
     <group name="Files">
@@ -114,11 +112,12 @@
       </description>
       <terminalInterface>
         <commandLine>
-	  from= lne4885r.300
-	  to=lne4885r.cub
+          from= lne4885r.300
+          to=lne4885r.cub
         </commandLine>
         <description>
-	This example shows the use of clem2isis create an Isis3 cube from a PDS image.
+          This example shows the use of clem2isis create an Isis3 cube from a PDS 
+          image.
         </description>
       </terminalInterface>
    
@@ -126,10 +125,10 @@
         <guiInterface>
           <image width="448" height="550" src="assets/images/clem2isisGUI.jpg">
             <brief>
-	    Example GUI
+              Example GUI
             </brief>
             <description>
-	      Screenshot of the GUI with parameters
+              Screenshot of the GUI with parameters
             </description>
             <thumbnail width="163" height="200" caption="clem2isis gui"
              src="assets/thumbs/clem2isisGUI.jpg" />
@@ -140,10 +139,10 @@
       <dataFiles>
         <dataFile path="assets/lne4885r.300">
           <brief>
-	    Input PDS image.
+            Input PDS image.
           </brief>
           <description>
-	    This is the image from PDS
+            This is the image from PDS
           </description>
           <parameterName>FROM</parameterName>
         </dataFile>
@@ -152,10 +151,10 @@
       <outputImages>
         <image width="491" height="492" src="assets/images/lne4885r.jpg">
           <brief>
-	  Final output image after the conversion
+            Final output image after the conversion
           </brief>
           <description>
-	    Converts from PDS format to a Isis3 cube.
+            Converts from PDS format to a Isis3 cube.
           </description>
           <thumbnail caption= "The cube image after conversion"
           src="assets/thumbs/lne4885r.jpg" width="200" height="200"/>

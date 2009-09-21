@@ -1,8 +1,12 @@
 APPNAME = hical
 
+output.txt.SKIPLINES = 7
+output.txt.IGNORELINES = CONF
+
 include $(ISISROOT)/make/isismake.tsts
-hical_RED2_0.cub.TOLERANCE = .00000015
 
 commands:
-	$(APPNAME) from=$(INPUT)/PSP_001446_1790_RED2_0.cub \
-	  to=$(OUTPUT)/hical_RED2_0.cub > /dev/null;
+	$(APPNAME) FROM=$(INPUT)/PSP_001446_1790_RED2_0.cub \
+	TO=$(OUTPUT)/output.cub OPATH=. > /dev/null;
+	$(MV) PSP_001446_1790_RED2_0.hical.log \
+	$(OUTPUT)/output.txt;

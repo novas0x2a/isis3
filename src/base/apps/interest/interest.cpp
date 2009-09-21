@@ -222,6 +222,10 @@ void IsisMain() {
     }
     cubes.clear();
 
+    // add operator to print.prt
+    PvlGroup opGroup = interest->Operator(); 
+    Application::Log(opGroup); 
+
     delete interest;
   }
   // REFORMAT THESE ERRORS INTO ISIS TYPES AND RETHROW

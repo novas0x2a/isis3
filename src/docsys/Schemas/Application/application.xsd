@@ -390,12 +390,13 @@
 			<xs:enumeration value="Cameras"/>
 			<xs:enumeration value="Control Networks"/>
 			<xs:enumeration value="Display"/>
-      <xs:enumeration value="Fourier Domain"/>
+			<xs:enumeration value="Fourier Domain"/>
 			<xs:enumeration value="Filters"/>
 			<xs:enumeration value="Geometry"/>
 			<xs:enumeration value="Import and Export"/>
 			<xs:enumeration value="Map Projection"/>
 			<xs:enumeration value="Math and Statistics"/>
+			<xs:enumeration value="Mosaicking"/>
 			<xs:enumeration value="Radiometric and Photometric Correction"/>
 			<xs:enumeration value="Registration and Pattern Matching"/>
 			<xs:enumeration value="Scripting"/>
@@ -422,6 +423,7 @@
 			<xs:enumeration value="Mars Odyssey"/>
 			<xs:enumeration value="Mars Exploration Rover"/>
 			<xs:enumeration value="Messenger"/>
+			<xs:enumeration value="Robotic Lunar Observatory"/>
 			<xs:enumeration value="Small Missions for Advanced Research and Technology 1"/>
 			<xs:enumeration value="Voyager"/>
 			<xs:enumeration value="Viking"/>

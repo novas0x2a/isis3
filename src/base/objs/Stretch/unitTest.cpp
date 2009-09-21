@@ -3,6 +3,7 @@
 #include "Stretch.h"
 #include "iException.h"
 #include "Preference.h"
+#include "Histogram.h"
 
 using namespace std;
 int main () {
@@ -81,10 +82,54 @@ int main () {
   catch (Isis::iException &e) {
     e.Report(false);
   }
+  
+  // test the Parse for when inputs are %'s
+  cout << endl << "Testing new Parse that takes %'s for input side of pairs" << endl;
+  
+  Isis::Histogram temp(0.0, 100.0, 101);
+  Isis::Histogram * h = &temp;
+  for (double i = 0.0; i <= 100.0; i++) {
+    h->AddData(&i, 1);
+  }
+  
+  s.Parse("0:0 25:0 50:50 100:100", h);
+  cout << s.Map(75.0) << endl;
+  cout << endl;
+
+  try {
+    s.Parse("0:0 50:0 49:255 100:255", h);
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
+  }
+
+  // test for % < 0
+  try {
+    s.Parse("-5:10", h);
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
+  }
+
+  // test for % > 100
+  try {
+    s.Parse("121:215", h);
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
+  }
+
+  // test for other bad data
+  try {
+    s.Parse("-5xyzzy:0 50:0 100:255", h);
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
+  }
 
   try {
       s.ClearPairs();
-      std::string fname = "test.pvl";
+      std::string fname = "unitTest.pvl";
       std::string grp = "Pairs";
       s.Load(fname,grp);
       for (int i=0; i<s.Pairs(); i++) {
@@ -100,8 +145,9 @@ int main () {
       }
       remove (output.c_str());
 
-  } catch (Isis::iException &e) {
-      e.Report(false);
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
   }
 
   std::cout << "testing copy pairs" << std::endl;
@@ -110,7 +156,7 @@ int main () {
   s.AddPair(255.0, 255.0);
 
   std::cout << "original stretch pairs" << std::endl;
-  for (int i=0; i<s.Pairs(); i++) {
+  for (int i = 0; i < s.Pairs(); i++) {
     std::cout << s.Input(i) << ", " << s.Output(i) << std::endl;
   }
 
@@ -122,5 +168,4 @@ int main () {
   }
 
   return 0;
-}           
-
+}

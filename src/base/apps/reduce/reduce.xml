@@ -63,6 +63,11 @@
       The "Scale" keyword in the Projection group in the labels is now being 
       updated if this program is run on a projected cube. 
     </change>
+    <change name="Mackenzie Boyd" date="2009-09-03">
+      Added keyword REDUCTION_TYPE to allow for clear switching between ons, onl 
+      and sscale, lscale.  Fixed problem involving cube remaning open after an 
+      exception.
+    </change>
   </history>
 
   <category>
@@ -110,34 +115,76 @@
           This chooses the algorithm used to reduce the image.  The possibilities
           are: average or nearest-beighbor.
         </description>
-	<list>
-	  <option value="AVERAGE">
-	    <brief>Average surrounding pixels</brief>
-	    <description>
-	      Use pixel averaging to reduce the image.
-	    </description>
-	  </option>
-	  <option value="NEAREST">
-	    <brief>Nearest-Neighbor</brief>
-	    <description>
-	      Use nearest neighbor to reduce the image.
-	    </description>
-	  </option>
-	</list>
+        <list>
+          <option value="AVERAGE">
+            <brief>Average surrounding pixels</brief>
+            <description>
+              Use pixel averaging to reduce the image.
+            </description>
+          </option>
+          <option value="NEAREST">
+            <brief>Nearest-Neighbor</brief>
+            <description>opened
+              Use nearest neighbor to reduce the image.
+            </description>
+          </option>
+        </list>
       </parameter>
+      
+      <parameter name="REDUCTION_TYPE">
+        <type>string</type>
+        <brief>
+          Parameters used to set scaling values
+        </brief>
+        <default><item>TOTAL</item></default>
+        <description>
+          Select between using a scaling factor or a total number of pixels for 
+          the reduced image.
+        </description>
+        <list>
+          <option value="SCALE">
+            <brief>
+              Use a scaling factor
+            </brief>
+            <description>
+              Uses a scaling factor to reduce the image.
+            </description>
+            <exclusions>
+              <item>ONS</item>
+              <item>ONL</item>
+            </exclusions>
+            <inclusions>
+              <item>SSCALE</item>
+              <item>LSCALE</item>
+            </inclusions>
+          </option>
+          <option value="TOTAL">
+            <brief>
+              Use a total number of pixels
+            </brief>
+            <description>
+              User a total number of pixels to reduce the image.
+            </description>
+            <inclusions>
+              <item>ONS</item>
+              <item>ONL</item>
+            </inclusions>
+            <exclusions>
+              <item>SSCALE</item>
+              <item>LSCALE</item>
+            </exclusions>
+          </option>
+        </list>
+      </parameter>
+      
       <parameter name="SSCALE">
         <type>double</type>
         <minimum inclusive="yes">1.0</minimum>
         <default><item>1.0</item></default>
-        <exclusions>
-          <item>ONS</item>
-          <item>ONL</item>
-        </exclusions>
-	<inclusions><item>LSCALE</item></inclusions>
         <brief>Sample scaling factor</brief>
         <description>
           This is the scaling factor for the sample direction.  For example,
-	  SSCALE=4 will reduce the number of samples by 1/4th.
+          SSCALE=4 will reduce the number of samples by 1/4th.
         </description>
       </parameter>
 
@@ -145,47 +192,32 @@
         <type>double</type>
         <minimum inclusive="yes">1.0</minimum>
         <default><item>1.0</item></default>
-        <exclusions>
-          <item>ONS</item>
-          <item>ONL</item>
-        </exclusions>
-	<inclusions><item>SSCALE</item></inclusions>
         <brief>Line scaling factor</brief>
         <description>
           This is the scaling factor for the line direction.  For example,
-	  LSCALE=4 will reduce the number of lines by 1/4th.
+          LSCALE=4 will reduce the number of lines by 1/4th.
         </description>
       </parameter>
 
       <parameter name="ONS">
         <type>integer</type>
-	<minimum inclusive="yes">1</minimum>
-        <exclusions>
-          <item>SSCALE</item>
-          <item>LSCALE</item>
-        </exclusions>
-	<inclusions><item>ONL</item></inclusions>
+        <minimum inclusive="yes">1</minimum>
         <brief>Number of samples in output</brief>
         <description>
           The number of samples desired in the output cube.  This value
-	  must be less than or equal to the number of samples in the input
-	  image.
+          must be less than or equal to the number of samples in the input
+          image.
         </description>
       </parameter>
 
       <parameter name="ONL">
         <type>integer</type>
-	<minimum inclusive="yes">1</minimum>
-        <exclusions>
-          <item>SSCALE</item>
-          <item>LSCALE</item>
-        </exclusions>
-	<inclusions><item>ONS</item></inclusions>
+        <minimum inclusive="yes">1</minimum>
         <brief>Number of lines in output</brief>
         <description>
           The number of lines desired in the output cube.  This value
-	  must be less than or equal to the number of lines in the input
-	  image.
+          must be less than or equal to the number of lines in the input
+          image.
         </description>
       </parameter>
 
@@ -199,13 +231,13 @@
           of two results in a 2x2 window (four pixels) being reduced to one
           pixel.  If VPER is set at 50, then at least two pixels of the four
           must be valid (50%).  If this criteria is met, the resulting value
-	  of the output pixel will be the average of the valid input pixels.
+          of the output pixel will be the average of the valid input pixels.
           Otherwise the output pixel will be set to the input pixel which is
           closest to the center of the window.
-         </description>
-        </parameter>
+        </description>
+      </parameter>
 
-        <parameter name="VPER_REPLACE">
+      <parameter name="VPER_REPLACE">
         <type>string</type>
         <brief>Replacement method when VPER fails</brief>
         <default><item>NULL</item></default>
@@ -213,21 +245,21 @@
           When the set VPER variable is not met, this is how the pixel with be 
           filled.
         </description>
-	<list>
-	  <option value="NULL">
-	    <brief>NULL replacement</brief>
-	    <description>
-	      Use NULL value when VPER is invalid..
-	    </description>
-	  </option>
-	  <option value="NEAREST">
-	    <brief>Nearest-Neighbor replacement</brief>
-	    <description>
-	      Use nearest neighbor when VPER is invalid.
-	    </description>
-	  </option>
-	</list>
-        </parameter>
+    	<list>
+    	  <option value="NULL">
+    	    <brief>NULL replacement</brief>
+    	    <description>
+    	      Use NULL value when VPER is invalid..
+    	    </description>
+    	  </option>
+    	  <option value="NEAREST">
+    	    <brief>Nearest-Neighbor replacement</brief>
+    	    <description>
+    	      Use nearest neighbor when VPER is invalid.
+    	    </description>
+    	  </option>
+    	</list>
+      </parameter>
     </group>
   </groups>
   <examples>

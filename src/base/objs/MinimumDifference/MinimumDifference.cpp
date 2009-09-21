@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2009/06/02 21:13:46 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/08/20 21:38:00 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -54,8 +54,8 @@ namespace Isis {
         int line = (int)l;
         int samp = (int)s;
 
-        double pdn = pattern(samp,line);
-        double sdn = subsearch(samp,line);
+        double pdn = pattern.GetValue(samp,line);
+        double sdn = subsearch.GetValue(samp,line);
         if (IsSpecial(pdn)) continue;
         if (IsSpecial(sdn)) continue;
         diff += fabs(pdn - sdn);

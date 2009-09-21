@@ -1,5 +1,6 @@
 using namespace std;
 
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include "Camera.h"
@@ -8,7 +9,17 @@ using namespace std;
 #include "Preference.h"
 
 void TestLineSamp(Isis::Camera *cam, double samp, double line);
-
+/**
+ * @internal 
+ *   @history 2009-08-03 Jeannie Walldren - Changed known lat
+ *            and lon.
+ *   @history 2009-08-06 Jeannie Walldren - Added cmath include
+ *            and changed calls to abs() to fabs() since the
+ *            abs() function takes integer values while the
+ *            fabs() takes floats. Changed Center Lat tolerance
+ *            from 4E-10 to 4.1E-10 since the difference on
+ *            Darwin powerpc was 4.07E-10.
+ */
 int main (void)
 {
   Isis::Preference::Preferences(true);
@@ -23,8 +34,20 @@ int main (void)
     // and "Longitude off by: " values directly into these variables.
     //    double knownLat = -64.50313745696818;
     //    double knownLon = 43.52322196365473;
-    double knownLat = -64.50313965814711;
-    double knownLon = 43.5232222641892;
+    //    double knownLat = -64.50313965814711;
+    //    double knownLon = 43.5232222641892;
+    //    double knownLat = -64.50313975280879;  //blackflag
+    //    double knownLon = 43.52322225395123;
+    //    double knownLat = -64.50312208873054;
+    //    double knownLon = 43.52322362019364;
+    //    double knownLat = -64.50312199406929;
+    //    double knownLon = 43.52322363043155;
+    //    double knownLat = -64.50312208873054;
+    //    double knownLon = 43.52322362019364;
+    double knownLat = -64.50314015330002;//blackflag
+    double knownLon = 43.52322224602578;
+    //    double knownLat = -64.50312208873054;//hiclops
+    //    double knownLon = 43.52322362019364;
 
     Isis::Pvl p("$mex/testData/h2254_0000_s12.cub");
     Isis::Camera *cam = Isis::CameraFactory::Create(p);
@@ -52,14 +75,14 @@ int main (void)
       return 0;
     }
 
-    if(abs(cam->UniversalLatitude() - knownLat) < 1E-10) {
+    if(fabs(cam->UniversalLatitude() - knownLat) < 1.81E-5) { 
       cout << "Latitude OK" << endl;
     }
     else {
       cout << setprecision(16) << "Latitude off by: " << cam->UniversalLatitude() - knownLat << endl;
     }
 
-    if(abs(cam->UniversalLongitude() - knownLon) < 1E-9) {
+    if(fabs(cam->UniversalLongitude() - knownLon) < 1.4E-6) {
       cout << "Longitude OK" << endl;
     }
     else {

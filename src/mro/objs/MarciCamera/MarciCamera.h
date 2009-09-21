@@ -1,7 +1,7 @@
 #ifndef MarciCamera_h
 #define MarciCamera_h
 
-#include "Camera.h"
+#include "PushFrameCamera.h"
 
 namespace Isis {
   namespace Mro {
@@ -25,8 +25,10 @@ namespace Isis {
      *            model correctly
      *   @history 2009-05-21 Steven Lambright - Fixed GeometricTilingHint for summed
      *            images
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-    class MarciCamera : public Isis::Camera {
+    class MarciCamera : public Isis::PushFrameCamera {
       public:
         // constructor
         MarciCamera (Isis::Pvl &lab);

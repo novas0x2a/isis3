@@ -2,8 +2,8 @@
 #define VikingCamera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/08 20:40:23 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/08/31 15:12:32 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -22,7 +22,7 @@
  *   http://www.usgs.gov/privacy.html.                                    
  */                                                                       
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Isis {
   /**                                                                       
@@ -46,8 +46,10 @@ namespace Isis {
    *                                          changes
    *   @history 2008-08-08 Steven Lambright Now using the new LoadCache(...)
    *            method instead of CreateCache(...).
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no
+   *           longer inherit directly from Camera
    */                                                                       
-  class VikingCamera : public Isis::Camera {
+  class VikingCamera : public Isis::FramingCamera {
     public:
       VikingCamera (Isis::Pvl &lab);
 

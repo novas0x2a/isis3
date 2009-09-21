@@ -13,18 +13,26 @@ enum which_special {NONE, NULLP, ALL} spixels;
 enum range_preserve {INSIDE,OUTSIDE} preserve;
 
 double minimum,maximum;
-bool masked = false;
+bool masked;
 
 void IsisMain() {
   // We will be processing by line
   ProcessByLine p;
 
+  masked= false;
+
   // Setup the input and output cubes
+  UserInterface &ui = Application::GetUserInterface();
+  
+  if (!ui.WasEntered("MASK"))
+    ui.PutFilename("MASK", ui.GetFilename("FROM"));
+
+  printf("MASK=%s", ui.GetFilename("MASK").c_str());
+
   p.SetInputCube("FROM");
   p.SetInputCube("MASK",OneBand);
   p.SetOutputCube ("TO");
 
-  UserInterface &ui = Application::GetUserInterface(); 
   
   //  Get min/max info
   minimum = VALID_MIN8;
@@ -89,9 +97,9 @@ void IsisMain() {
          else if (preserve == OUTSIDE && (mask[i] < minimum || mask[i] > maximum))
            outp[i] = inp[i];
          else {
-           outp[i] = NULL8;
-           masked = true;
-         }
+           outp[i] = NULL8; 
+           masked = true;          
+         }         
        }
      }  
 

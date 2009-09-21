@@ -1,7 +1,7 @@
 #ifndef CTXCamera_h
 #define CTXCamera_h
 
-#include "Camera.h"
+#include "LineScanCamera.h"
 
 namespace Isis {
   namespace Mro {
@@ -20,8 +20,10 @@ namespace Isis {
      *            change. Also, now using the new LoadCache(...) method instead of
      *            CreateCache(...).
      *   @history 2009-03-07 Debbie A. Cook Removed obsolute CameraDetectorMap methods
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-    class CTXCamera : public Camera {
+    class CTXCamera : public LineScanCamera {
       public:
         CTXCamera (Isis::Pvl &lab);
 

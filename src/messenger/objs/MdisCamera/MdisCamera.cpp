@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.9 $
- * $Date: 2009/01/22 00:23:03 $
+ * $Revision: 1.11 $
+ * $Date: 2009/08/31 15:12:30 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -46,7 +46,7 @@ namespace Isis {
      * 
      * @throws iException:User - when images are subframes or jailbars.
      */
-    MdisCamera::MdisCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    MdisCamera::MdisCamera (Isis::Pvl &lab) : Isis::FramingCamera(lab) {
 
       // Set up detector constants
       const int MdisWac(-236800);
@@ -92,21 +92,12 @@ namespace Isis {
       iString filterCode(fnCode);
       std::string ikernKey;
 
-#if defined(DEBUG)
-      cout << "Instrument Code:  " << NaifIkCode() << endl;
-      cout << "Filter Number:    " << filterNumber << endl;
-#endif
       // Fetch the frame translations from the instrument kernels
       ikernKey = "INS" + ikCode + "_REFERENCE_FRAME";
       iString baseFrame = GetString(ikernKey);
 
       ikernKey = "INS" + filterCode + "_FRAME";
       iString ikFrame = GetString(ikernKey);
-
-#if defined(DEBUG)
-      cout << "Reference Frame:   " << baseFrame << endl;
-      cout << "Instrument Frame: " << ikFrame << endl;
-#endif
 
       // Set up the camera info from ik/iak kernels
 
@@ -120,12 +111,6 @@ namespace Isis {
 // Removed by Jeff Anderson.  The refactor of the SPICE class
 // uses frames always so this is no longer needed
 //      LoadFrameMounting(baseFrame, ikFrame, false);
-
-#if defined(DEBUG)
-      cout << "Frames loaded...\n";
-      cout << "Focal Length:     " << FocalLength() << endl;
-      cout << "Pixel Pitch:      " << PixelPitch() << endl;
-#endif
 
       // Get the start time from labels as the starting image time plus half
       // the exposure duration (in <MS>) to get pointing attitude.
@@ -151,11 +136,6 @@ namespace Isis {
 
       ikernKey = "INS" + ikCode + "_BORESIGHT_LINE";
       double lineBoreSight = GetDouble(ikernKey);
-
-#if defined(DEBUG)
-      cout << "Sample Boresight: " << sampleBoreSight << endl;
-      cout << "Line   Boresight: " << lineBoreSight << endl;
-#endif
 
       //  Apply the boresight
       focalMap->SetDetectorOrigin(sampleBoreSight,lineBoreSight);
@@ -233,6 +213,14 @@ namespace Isis {
   }
 }
 
+/**
+ * This is the function that is called in order to instantiate a MdisCamera 
+ * object. 
+ * 
+ * @param lab Cube labels
+ * 
+ * @return Isis::Camera* MdisCamera
+ */
 extern "C" Isis::Camera *MdisCameraPlugin (Isis::Pvl &lab) {
   return new Isis::Messenger::MdisCamera(lab);
 }

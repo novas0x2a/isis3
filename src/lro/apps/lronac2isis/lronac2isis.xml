@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<application name="lrocnac2isis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+<application name="lronac2isis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
     <brief>
       Import an LROC NAC image as an Isis cube
     </brief>
 
     <description>
-        This program takes an image from the Mars Reconnaissance Orbiter Context Imager
+        This program takes an image from the Lunar Reconnaissance Orbiter Narrow Angle Camera
         and produces an Isis cube containing the image data.
     </description>
 
@@ -50,31 +50,6 @@
                     *.cub
                 </filter>
             </parameter>
-        </group>
-
-        <group name="Options">
-          <parameter name="PREFIX">
-            <type>integer</type>
-            <brief>Prefix Pixels</brief>
-            <description>
-                Prefix dark pixels to strip off and put in a BLOB table. The default value is computed.  This will compute
-                what is believed to be the number of suffix pixels based on data in the labels.  If you find that suffix pixels are 
-                being left on the edge of the image, adjust this parameter accordingly.
-            </description>
-            <minimum inclusive="yes">0</minimum>
-            <internalDefault>Computed</internalDefault>
-          </parameter>
-          <parameter name="SUFFIX">
-            <type>integer</type>
-            <brief>Suffix Pixels</brief>
-            <description>
-                Suffix dark pixels to strip off and put in a BLOB table.  The default value is computed.  This will compute
-                what is believed to be the number of suffix pixels based on data in the labels.  If you find that suffix pixels are 
-                being left on the edge of the image, adjust this parameter accordingly.
-            </description>
-            <minimum inclusive="yes">0</minimum>
-            <internalDefault>Computed</internalDefault>
-          </parameter>
         </group>
     </groups>
 </application>

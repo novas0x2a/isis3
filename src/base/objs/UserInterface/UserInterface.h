@@ -2,8 +2,8 @@
 #define UserInterface_h
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2009/01/07 17:20:48 $
+ * $Revision: 1.11 $
+ * $Date: 2009/08/17 21:49:56 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -88,9 +88,13 @@ namespace Isis {
  *                                      where if the history file is corrupt, it
  *                                      simply overwrites it with the new single
  *                                      valid entry.
- *  @history 2000-01-07 Steven Lambright - Changed unit test and error on
+ *  @history 2008-01-07 Steven Lambright - Changed unit test and error on
  *           invalid parameter history files to conform with a Filename class
  *           change where Expanded(...) always returns a full path.
+ *  @history 2009-08-17 Steven Lambright - Parameters are now more correctly
+ *           interpretted from argv resulting in fewer escape characters and
+ *           problems such as "  " (2 spaces) being interpretted properly. Array
+ *           parameter values support improved.
  *  @todo 2005-02-22 Jeff Anderson - add coded and implementation examples to
  *                                   class documentation
  */
@@ -144,15 +148,17 @@ namespace Isis {
       std::string GetInfoFileName();
 
     private:
-      Isis::PvlTokenizer p_cmdline; /**<This variable will contain the command
-                                        line broken into keyword-value pairs.*/
+      std::vector<char *> p_cmdline; /**<This variable will contain argv.*/
       int p_parentId;               /**<This is a status to indicate if the GUI
                                         is running or not.*/
-
 
       void LoadCommandLine (int argc, char *argv[]);
       void LoadBatchList(const std::string file);
       void LoadHistory(const std::string file);
+      void EvaluateOption(const std::string name, const std::string value);
+      void GetNextParameter(unsigned int &curPos,
+                        std::string &name, std::vector<std::string> &value);
+      std::vector<std::string> ReadArray(iString arrayString);
 
       //! Boolean value representing whether to abort or continue on error
       bool p_abortOnError;

@@ -134,4 +134,19 @@ namespace Isis {
   double PolygonSeeder::MinimumArea() {
     return p_minimumArea;
   }
+  
+  PvlGroup PolygonSeeder::PluginParameters(std::string grpName) {
+    PvlGroup pluginInfo(grpName);
+
+    PvlKeyword name("Name", p_algorithmName);
+    PvlKeyword minThickness("MinimumThickness", p_minimumThickness);
+    PvlKeyword minArea("MinimumArea", p_minimumArea);
+
+    pluginInfo.AddKeyword(name);
+    pluginInfo.AddKeyword(minThickness);
+    pluginInfo.AddKeyword(minArea);
+
+    return pluginInfo;
+  }
+
 }

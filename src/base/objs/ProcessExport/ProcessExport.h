@@ -2,8 +2,8 @@
 #define ProcessExport_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/12/17 17:27:38 $
+ * $Revision: 1.7 $
+ * $Date: 2009/07/27 17:54:55 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -57,7 +57,11 @@ namespace Isis {
  *                                                                        
  * @author 2003-03-31 Jeff Anderson                                   
  *                                                                        
- * @internal                                                              
+ * @internal  
+ *  @todo 2005-02-09 Stuart Sides - write documentation for CreateWorldFile
+ *                                  method
+ *  @todo 2005-02-09 Jeff Anderson - add coded example to class file and
+ *                                   implementation examples
  *  @history 2003-04-03 Jeff Anderson - Added unit test
  *  @history 2003-04-04 Jeff Anderson - Updated documentation for SetInputRange 
  *                                      methods
@@ -94,12 +98,8 @@ namespace Isis {
  *           float casting.
  * @history 2008-12-17 Steven Lambright - Changed SetOutputRange calls to use 
  *           constants (i.e. instead of 65535 VALID_MAX2 is used).  
- *  
- *  @todo Modify Class to allow export of RGB
- *  @todo 2005-02-09 Stuart Sides - write documentation for CreateWorldFile 
- *                                  method
- *  @todo 2005-02-09 Jeff Anderson - add coded example to class file and 
- *                                   implementation examples
+ * @history 2009-07-27 Steven Lambright - Piecewise stretch backs off to linear
+ *           if Median() == MINPCT or Median() == MAXPCT 
  */
   class ProcessExport : public Isis::Process {
 

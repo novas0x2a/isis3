@@ -153,12 +153,14 @@ void IsisMain() {
       
         ControlMeasure searchCM = inPoint[j];
       
+        // refresh pattern cube pointer to ensure it stays valid
+        Cube &patternCube = *cubeMgr.OpenCube(files.Filename(patternCM.CubeSerialNumber()));
         Cube &searchCube = *cubeMgr.OpenCube(files.Filename(searchCM.CubeSerialNumber()));
-      
+
         ar->SearchChip()->TackCube(searchCM.Sample(), searchCM.Line());
       
         try {
-          ar->SearchChip()->Load(searchCube,*(ar->PatternChip()));
+          ar->SearchChip()->Load(searchCube,*(ar->PatternChip()),patternCube);
       
           // If the measurements were correctly registered
           // Write them to the new ControlNet
@@ -293,6 +295,10 @@ void IsisMain() {
   for(int i = 0; i < arPvl.Groups(); i++) {
     Application::Log(arPvl.Group(i));
   }
+
+  // add the auto registration information to print.prt
+  PvlGroup autoRegTemplate = ar->RegTemplate(); 
+  Application::Log(autoRegTemplate); 
 
   outNet.Write(ui.GetFilename("TO"));
 

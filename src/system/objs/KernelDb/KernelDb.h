@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2009/05/12 20:11:20 $
+ * $Revision: 1.7 $
+ * $Date: 2009/07/28 21:01:18 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -40,7 +40,7 @@ namespace spiceInit {
     Smithed = 8
   };
   
-  inline kernelTypes kernelTypeEnum (const std::string type) {
+  inline kernelTypes kernelTypeEnum (const std::string &type) {
     Isis::iString strng = type;
     strng.ConvertWhiteSpace();
     strng.Compress();
@@ -50,7 +50,17 @@ namespace spiceInit {
     if (strng == "NADIR") return Nadir;
     if (strng == "RECONSTRUCTED") return Reconstructed;
     if (strng == "SMITHED") return Smithed;
+
     return (kernelTypes)0;
+  }
+
+  inline const char* kernelTypeEnum (const kernelTypes &type) {
+    if(type == Predicted) return "Predicted";
+    if(type == Nadir) return "Nadir";
+    if(type == Reconstructed) return "Reconstructed";
+    if(type == Smithed) return "Smithed";
+
+    return "Unknown";
   }
 };
 

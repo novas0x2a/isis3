@@ -1,4 +1,5 @@
 ControlPoint unitTest
+test PointTypeToString(): Ground
 Object = ControlPoint
   PointType = Ground
   PointId   = C151

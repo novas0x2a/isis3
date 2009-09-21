@@ -9,7 +9,7 @@ using namespace std;
 
 namespace Isis {
   namespace Odyssey {
-    ThemisIrCamera::ThemisIrCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    ThemisIrCamera::ThemisIrCamera (Isis::Pvl &lab) : Isis::LineScanCamera(lab) {
       // Set the detector size
       SetPixelPitch(0.05);
       SetFocalLength(203.9213);

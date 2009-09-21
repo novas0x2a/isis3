@@ -14,7 +14,7 @@ namespace Clementine {
    * @internal 
    *   @history 2009-01-16 Jeannie Walldren - Original Version 
    */
-  LwirCamera::LwirCamera (Pvl &lab) : Camera(lab) {
+  LwirCamera::LwirCamera (Pvl &lab) : FramingCamera(lab) {
 
     // Get the camera characteristics
     iString filter = (string)(lab.FindGroup("BandBin", Pvl::Traverse))["FilterName"];

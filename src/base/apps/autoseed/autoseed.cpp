@@ -4,7 +4,6 @@
 #include <sstream>
 
 #include "geos/util/GEOSException.h"
-
 #include "Process.h"
 #include "Pvl.h"
 #include "SerialNumberList.h"
@@ -56,7 +55,7 @@ void IsisMain() {
 
   // Create the control net to store the points in.
   ControlNet cnet;
-  cnet.SetType (ControlNet::ImageToImage);
+  cnet.SetType (ControlNet::ImageToGround);
   cnet.SetTarget (target);
   string networkId = ui.GetString("NETWORKID");
   cnet.SetNetworkId(networkId);
@@ -240,12 +239,6 @@ void IsisMain() {
     points[i] = NULL;
   }
 
-  delete proj;
-  proj = NULL;
-
-  delete seeder;
-  seeder = NULL;
-
   gMaps.clear();
 
   // Write the control network out
@@ -260,12 +253,15 @@ void IsisMain() {
     errorsfile.close();
   }
 
-  PvlGroup algorithm("Results");
-  algorithm += seedDef.FindKeyword("Name",Pvl::Traverse);
-  algorithm += seedDef.FindKeyword("MinimumThickness",Pvl::Traverse);
-  algorithm += seedDef.FindKeyword("MinimumArea",Pvl::Traverse);
-  algorithm += seedDef.FindKeyword("XSpacing",Pvl::Traverse);
-  algorithm += seedDef.FindKeyword("YSpacing",Pvl::Traverse);
-  Application::Log( algorithm );
+  // create SeedDef group and add to print.prt
+  PvlGroup pluginInfo = seeder->PluginParameters("SeedDefinition");
+  Application::Log(pluginInfo);
+
+  delete proj;
+  proj = NULL;
+
+  delete seeder;
+  seeder = NULL;
+
 }
 

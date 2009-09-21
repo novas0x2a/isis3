@@ -32,6 +32,20 @@ dog = Big
 Cat = (Big, Tabby) <Fish>
 
 key = ((a, b, c), ("Hubba Hubba", Bubba))
+
+
+Test SetUnits methods:
+
+  original condition of Keyword k :
+    k = (radius, circumference) <meters>
+
+  after k.SetUnits("circumference", "Fathoms") :
+    k = (radius <meters>, circumference <Fathoms>)
+
+  after k.SetUnits("TeraFathoms") :
+    k = (radius, circumference) <TeraFathoms>
+
+
 ----------------------------------------
 Testing cast operators
 string     = I'm being casted

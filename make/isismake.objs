@@ -5,21 +5,33 @@ PLUGINS      = $(strip $(wildcard *.plugin))
 LIBRARY      = lib$(shell basename $(CURDIR))
 ARCHIVELIB   = $(LIBRARY).a
 SHAREDLIB    = $(LIBRARY).$(SHAREDLIBEXT)
+PROTOS       = $(wildcard *.proto)
+PROTOSGEN    = $(wildcard *.pb.*)
+PROTOSOBJ    = $(wildcard *.pb.o)
+MOCINC       = $(wildcard *.h)
+MOCGEN	     = $(wildcard moc_*.cpp)
 
-.SUFFIXES:
+
+.SUFFIXES:			#eliminate default suffixes
 .SUFFIXES: .cpp .o
 .SUFFIXES: .xml .html
 .SUFFIXES: .a .so .dylib
+.SUFFIXES: .proto .pb.h .pb.cc
+.SUFFIXES: .cc .o
 
-object: $(OBJS)
+object: $(OBJS) $(PROTOS:%.proto=%.pb.o)
 
+.cpp.o: protos qtmoc
+	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) -c -o $@ $?
 
-.cpp.o :
+.cc.o: 
 	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) -c -o $@ $?
 
 #  Its not necessarily $(LIBRARY)!
 .a.so :
-	$(LDSHARED) $(ISISSHAREDFLAGS) $(ISISSHAREDON) -o $@ $? $(ISISSHAREDOFF)
+	$(LDSHARED) $(ISISSHAREDFLAGS) $(ISISSHAREDON) -o libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) $? $(ISISSHAREDOFF)
+	$(LN) -f libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT)
+	$(LN) -f libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
 
 #  Its not necessarily $(LIBRARY)!
 .a.dylib :
@@ -27,9 +39,11 @@ object: $(OBJS)
 	$(MKDIR) .objs && cd .objs && ar x ../$*.a;
 	$(LDSHARED) $(DYLIBFLAGS) $(ISISSHAREDON) -o $@ \
 	  -install_name $(CURDIR)/$@ $(DYLIBVERSION)  .objs/*.o $(ISISSHAREDOFF)
+	$(LN) -f libisis$(ISISLIBVERSION).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT)
+	$(LN) -f libisis$(ISISMAJOR).$(ISISMINOR).$(SHAREDLIBEXT) libisis$(ISISMAJOR).$(SHAREDLIBEXT)
 	$(RM) -rd .objs;
 
-incs: $(ROOTINCLUDES)
+incs: protos $(ROOTINCLUDES)
 
 $(ROOTINCLUDES): $(INCS)
 	cp -p ${@F} $(ISISROOT)/inc
@@ -45,12 +59,25 @@ install: object
 	  cp -p $(SHAREDLIB) $(ISISROOT)/lib; \
 	elif [ "$(OBJS)" != "" ]; \
 	then \
-	  ar $(ISISARFLAGS) -crs $(ISISROOT)/lib/libisis3.a $(OBJS); \
-	  $(RANLIB) $(ISISROOT)/lib/libisis3.a; \
-	fi
+	  ar $(ISISARFLAGS) -crs $(ISISROOT)/lib/libisis$(ISISLIBVERSION).a $(OBJS); \
+	  $(RANLIB) $(ISISROOT)/lib/libisis$(ISISLIBVERSION).a; \
+	fi					
 
 force: ;
 
+protos:	$(PROTOS:%.proto=%.pb.h) $(PROTOS:%.proto=%.pb.cc)
+
+%.pb.cc %.pb.h: %.proto
+	protoc -I$(<D) --cpp_out=$(<D) $^
+
+qtmoc: $(MOCINC:%.h=moc_%.cpp)
+
+moc_%.cpp: %.h		
+	if [ "$(filter-out ' ', $(shell grep -sIE -m1 'Q_OBJECT' $(<F)))" == "Q_OBJECT" ]; \
+	then \
+	  $(MOC) $(MOCDEFINES) -o $@ $(<F); \
+	fi
+	
 help:
 	echo "Isis Make Object Commands"
 	echo "------------------------ "
@@ -70,6 +97,7 @@ help:
 	echo "make test MODE=NOCLEAN        : Run test and print result, leave output" 
 	echo "make truthdata                : Runs the unitTest and creates <Objectname>.truth"
 	echo "make ostruthdata              : Runs the unitTest and creates OS specific truth"
+	echo "make protos                   : Builds the object of google protocol buffer(*.proto) files"
 
 html: force
 	mkdir -p docbuild
@@ -89,8 +117,8 @@ html: force
 	if [ "$(findstring LOUD,$(MODE))" = "LOUD" ]; \
 	then \
 	  echo "QUIET                  = NO"                           >> docbuild/ProgTester_temp.conf;   \
-	  echo "WARNINGS               = YES"                          >> docbuild/ProgTester_temp.conf;   \
-	  echo "WARN_IF_UNDOCUMENTED   = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	echo "WARNINGS               = YES"                          >> docbuild/ProgTester_temp.conf;   \
+	echo "WARN_IF_UNDOCUMENTED   = YES"                          >> docbuild/ProgTester_temp.conf;   \
 	  echo "WARN_IF_DOC_ERROR      = YES"                          >> docbuild/ProgTester_temp.conf;   \
 	  echo "WARN_NO_PARAMDOC       = YES"                          >> docbuild/ProgTester_temp.conf;   \
 	else \
@@ -105,20 +133,25 @@ html: force
 	-$(RM) -r docbuild
 	echo "View your documentation by opening the file html/index.html in a browser"
 
-clean:
-	-$(RM) $(OBJS) unitTest.o unitTest.output unitTest print.prt $(ARCHIVELIB) $(SHAREDLIB)
-	-$(RM) -rf html 
-	if [ "$(shell cat Makefile | grep cleanlocal | wc -l)" -ne 0 ]; \
+clean:  localclean
+	-$(RM) $(OBJS) $(PROTOSGEN) $(MOCGEN) unitTest.o unitTest print.prt $(ARCHIVELIB) $(SHAREDLIB)
+	-$(RM) -rf html
+
+localclean:
+	if [ "$(findstring cleanlocal,$(shell grep cleanlocal Makefile))" = "cleanlocal" ]; \
 	then \
-	  $(MAKE) cleanlocal; \
+	   $(MAKE) cleanlocal; \
 	fi
+
+clean_protos:
+	-$(RM) $(PROTOSGEN)
 
 sanitize: clean
 	-$(RM) tttt* junk.* TEMP*
 
 test:
 	$(ISISROOT)/scripts/unitTester ; \
-        temp=$$? ; \
+	temp=$$? ; \
 	if test $$temp -eq 0 ; \
 	then \
 	  echo "Ok"; \

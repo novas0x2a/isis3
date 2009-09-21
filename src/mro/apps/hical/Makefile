@@ -1,5 +1,7 @@
-SRCS = hical.cpp HiCalMatrix.cpp
+SRCS = hical.cpp HiCalConf.cpp NonLinearLSQ.cpp DriftCorrect.cpp
 OBJS = $(SRCS:%.cpp=%.o)
-BINS = $(shell basename `pwd`)
+BINS = hical
 
 include $(ISISROOT)/make/isismake.apps
+
+

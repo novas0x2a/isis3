@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.23 $
- * $Date: 2009/06/19 18:12:04 $
+ * $Revision: 1.30 $
+ * $Date: 2009/08/29 00:34:54 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -124,8 +124,26 @@ namespace Isis {
  *  @history 2009-06-18 Christopher Austin - Changes starting point skipping
  *           solution to a snap. Added fix for polygons that form
  *           self-intersecting polygons due to this first point snapping.
- *  @history 2009-06-19 Christopher Austin - Temporarily reverted for backport
- *           and fixed truthdata for SpiceRotation
+ *  @history 2009-06-19 Christopher Austin - Temporarily reverted for backport,
+ *           fixed truthdata for SpiceRotation, re-commited with all updates
+ *  @history 2009-07-01 Christopher Austin - Added Emission and Phase Angle
+ *           tolerences.
+ *  @history 2009-07-09 Christopher Austin - Fixed range error in FixPolePoly()
+ *           when no points cross, an overflow exception, as well as emission
+ *           and incidence handling of poles.
+ *  @history 2009-07-21 Christopher Austin - Added limb snapping along with
+ *           internal corner searching. Fixed lat/lon crossing when samp/line
+ *           does not cross. Removed the SetUniversalGround call in SetImage().
+ *           Limbs are now detected and handled using an ellipsoid shape model
+ *           if p_ellipsoid is true.
+ *  @history 2009-07-28 Christopher Austin - Changed qualitiy increment to
+ *           sample/line increment to remove unnecessary points from the
+ *           polygon.
+ *  @history 2009-08-05 Christopher Austin - Added pole meridian proper polygon
+ *           division.
+ *  @history 2009-08-20 Christopher Austin - Added meridian walking and subpixel
+ *  	     accuracy.
+ *  @history 2009-08-28 Christopher Austin - Fixed a memory bounds error.
  */
 
   class ImagePolygon : public Isis::Blob {
@@ -134,14 +152,43 @@ namespace Isis {
       ImagePolygon ();
       ~ImagePolygon ();
 
-      void Create (Cube &cube,int quality=1, int ss=1,int sl=1,int ns=0,int nl=0,
-                   int band=1);
+      void Create (Cube &cube, int sampinc=1, int lineinc=1,
+		   int ss=1,int sl=1,int ns=0,int nl=0, int band=1);
+
+      /**
+       * Set the maximum emission angle ( light refleted to camera ) 
+       * 
+       * @param emission The maximum valid emission angle 
+       */
+      void Emission (double emission) { p_emission = emission; }
+      /**
+       * Set the maximum incidence angle ( light contacting the planet ) 
+       * 
+       * @param incidence The maximum valid incidence angle 
+       */
+      void Incidence (double incidence) { p_incidence = incidence; }
+
+      /**
+       * If a limb is detected, use un ellipsoid shape model if true. If false, 
+       * use the default (spiceinit defined) shape model.
+       * 
+       * @param ellip True to use ellipsoid on limb images
+       */
+      void EllipsoidLimb (bool ellip) { p_ellipsoid = ellip; }
+
+      /**
+       * The subpixel accuracy to use. This accuracy is the number of binary steps to 
+       * take to find the subpixel accuracy. A higher number provided gives more 
+       * accurate results at the cost of runtime. 
+       *  
+       * ImagePolygon's constructor sets a default value of 50 
+       * 
+       * @param div The subpixel accuracy to use
+       */
+      void SubpixelAccuracy(int div) { p_subpixelAccuracy = div; }
 
       //!  Return a geos Multipolygon
       geos::geom::MultiPolygon *Polys () { return p_polygons; };
-
-      //!  Return name of polygon
-      std::string Name () { return p_name; };
 
     protected:
       void ReadData (std::fstream &is);
@@ -159,12 +206,21 @@ namespace Isis {
                                            geos::geom::Coordinate lastPoint,
                                            int recursionDepth=0);
       
-      double Distance(geos::geom::Coordinate *p1, geos::geom::Coordinate *p2);
+      double DistanceSquared(const geos::geom::Coordinate *p1, const geos::geom::Coordinate *p2);
 
       void MoveBackInsideImage(double &sample, double &line, double sinc, double linc);
       bool InsideImage(double sample, double line);
       void Fix360Poly ();
       void FixPolePoly(std::vector<geos::geom::Coordinate> *crossingPoints);
+
+      bool IsLimb();
+      geos::geom::Coordinate FindBestPoint(geos::geom::Coordinate *currentPoint,
+					   geos::geom::Coordinate newPoint,
+                                           geos::geom::Coordinate lastPoint);
+      geos::geom::Coordinate FixCornerSkip(geos::geom::Coordinate *currentPoint,
+					   geos::geom::Coordinate newPoint);
+
+      void FindSubpixel( std::vector<geos::geom::Coordinate> * points);
 
       Cube *p_cube;       //!< The cube provided
       bool p_isProjected; //!< True when the provided cube is projected
@@ -175,7 +231,6 @@ namespace Isis {
 
       geos::geom::MultiPolygon *p_polygons;  //!< The multipolygon of the image
 
-      std::string p_name;    //!< Name of Blob
       std::string p_polyStr; //!< The string representation of the polygon
 
       UniversalGroundMap *p_gMap; //!< The cube's ground map
@@ -185,7 +240,14 @@ namespace Isis {
       int p_cubeSamps;     //!< The number of samples in the cube
       int p_cubeLines;     //!< The number of lines in the cube
 
-      int p_quality; //!< The increment for walking along the edge of the polygon
+      int p_sampinc; //!< The increment for walking along the polygon in the sample direction
+      int p_lineinc; //!< The increment for walking along the polygon in the line direcction
+
+      double p_emission;  //!< The maximum emission angle to consider valid
+      double p_incidence; //!< The maximum incidence angle to consider valid
+      bool p_ellipsoid;   //!< Uses an ellipsoid if a limb is detected
+
+      int p_subpixelAccuracy; //!< The subpixel accuracy to use
 
   };
 };

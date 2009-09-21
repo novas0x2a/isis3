@@ -33,7 +33,9 @@
     <change name="Stuart Sides" date="2003-07-29">
       Modified filename parameters to be cube parameters where necessary
     </change>
-
+   <change name="Sharmila Prasad" date="2009-08-24">
+      Set Internal Default for "MASK" to be "FROM" 
+    </change>
   </history>
 
   <category>
@@ -65,7 +67,12 @@
          </brief>
          <description>
            Use this parameter to select the filename to be used as the mask.
+           If this parameter is not explicitly entered, it will default to the
+           same filename as FROM
          </description>
+        <internalDefault>
+          FROM
+        </internalDefault>
          <filter>
            *.cub
          </filter>

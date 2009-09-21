@@ -1,7 +1,7 @@
 #ifndef ThemisIrCamera_h
 #define ThemisIrCamera_h
 
-#include "Camera.h"
+#include "LineScanCamera.h"
 
 namespace Isis {
   namespace Odyssey {
@@ -25,8 +25,10 @@ namespace Isis {
      *            where the removal of a ~1% error in focal lenght and the
      *            improving the spectral band registration to better than
      *            1/20th of a pixel
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-    class ThemisIrCamera : public Isis::Camera {
+    class ThemisIrCamera : public Isis::LineScanCamera {
       public:
         // constructors
         ThemisIrCamera (Isis::Pvl &lab);

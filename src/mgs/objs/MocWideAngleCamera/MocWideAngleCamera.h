@@ -1,7 +1,7 @@
 #ifndef MocWideAngleCamera_h
 #define MocWideAngleCamera_h
 
-#include "Camera.h"
+#include "LineScanCamera.h"
 
 namespace Isis {
   namespace Mgs {
@@ -17,8 +17,10 @@ namespace Isis {
      *   @history 2008-11-07 Jeannie Walldren - Fixed documentation 
      *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute
      *          CameraDetectorMap methods
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */ 
-    class MocWideAngleCamera : public Isis::Camera {
+    class MocWideAngleCamera : public Isis::LineScanCamera {
       public:
         // constructors
         MocWideAngleCamera (Isis::Pvl &lab);

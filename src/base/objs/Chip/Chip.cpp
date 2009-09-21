@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2009/06/02 17:13:22 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2009/09/01 19:23:11 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -22,6 +22,8 @@
  */                                                                       
 
 #include <string>
+#include <vector>
+#include <algorithm>
 #include "Chip.h"
 #include "Cube.h"
 #include "iException.h"
@@ -30,9 +32,10 @@
 #include "Portal.h"
 #include "Interpolator.h"
 #include "LineManager.h"
+#include "Statistics.h"
 #include "PolygonTools.h"
 #include "geos/geom/Point.h"
-
+#include "tnt/tnt_array2d_utils.h"
 
 namespace Isis {
 
@@ -43,6 +46,21 @@ namespace Isis {
     Init(3,3);
   }
 
+
+  /**
+   * @brief Single value assignment operator
+   *  
+   * Sets the entire chip to a constant 
+   * 
+   * @param d Value to set the chip to
+   * 
+   * @return Chip& Reference to this chip
+   */
+  void Chip::SetAllValues(const double &d) {
+    for (unsigned int i = 0 ; i < p_buf.size() ; i++) {
+       fill(p_buf[i].begin(), p_buf[i].end(), d);
+    }
+  }
 
   /**
    * Construct a Chip with specified dimensions
@@ -65,7 +83,6 @@ namespace Isis {
   void Chip::Init (const int samples, const int lines) {
     SetSize(samples,lines);
     SetValidRange();
-    p_cube = NULL;
     p_clipPolygon = NULL;
   }
 
@@ -91,6 +108,18 @@ namespace Isis {
     p_affine.Identity();
     p_tackSample = ((samples - 1) / 2) + 1;
     p_tackLine = ((lines - 1) / 2) + 1;
+  }
+
+  bool Chip::IsInsideChip(double sample, double line) {    
+    double minSamp = p_cubeTackSample - ((p_chipSamples - 1) / 2); 
+    double maxSamp = p_cubeTackSample + ((p_chipSamples - 1) / 2);  
+    
+    double minLine = p_cubeTackLine - ((p_chipLines - 1) / 2); 
+    double maxLine = p_cubeTackLine + ((p_chipLines - 1) / 2); 
+
+    if (sample < minSamp || sample > maxSamp) return false;
+    if (line < minLine || line > maxLine) return false;
+    return true;
   }
 
 
@@ -135,10 +164,48 @@ namespace Isis {
 
     // Now go read the data from the cube into the chip
     Read(cube,band);
+
     // Store off the cube address in case someone wants to match
     // this chip
-    p_cube = &cube;
-    p_filename = p_cube->Filename();
+    p_filename = cube.Filename();
+  }
+
+  /**
+   * @brief Load a chip using an Affine transform as provided by caller 
+   *  
+   * This method will load data from a cube using an established Affine 
+   * transform as provided by the caller.  It is up to the caller to set up the 
+   * affine appropriately. 
+   *  
+   * For example, the first thing this method will do is set the chip tack point 
+   * to the transformed cube location by replacing the existing affine transform 
+   * with the one passed in and then calling SetChipPosition providing the chip 
+   * tack point as the argument.  This establishes which cube pixel is located 
+   * at the chip tack point. 
+   * 
+   * @param cube Cube to load the data from 
+   * @param affine Affine transform to set for chip load/operations
+   * @param band Band number to read data from
+   */
+  void Chip::Load(Cube &cube, const Affine &affine, const bool &keepPoly,
+                  const int band) {
+
+    //  Set the tackpoint center to the cube location
+    setTransform(affine);
+    SetChipPosition(TackSample(), TackLine());
+
+    //  Remove the clipping polygon if requested
+    if (!keepPoly) {
+      delete p_clipPolygon;
+      p_clipPolygon = 0;
+    }
+
+    // Now go read the data from the cube into the chip
+    Read(cube,band);
+
+    // Store off the cube address in case someone wants to match
+    // this chip
+    p_filename = cube.Filename();
   }
 
 
@@ -160,28 +227,21 @@ namespace Isis {
    * @throws Isis::iException::Programmer - Match chip cube is not a camera or
    *                                        map projection
    */
-  void Chip::Load (Cube &cube, Chip &match, const double scale, const int band) {
-    // If the match chip does not have a cube we can't do anything
-    if (match.p_cube == NULL) {
-      std::string msg = "Can not geom chip, ";
-      msg += "Match chip does not have an associated cube";
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
-
+  void Chip::Load (Cube &cube, Chip &match, Cube &matchChipCube, const double scale, const int band) {
     // See if the match cube has a camera or projection
     Camera *matchCam = NULL;
     Projection *matchProj = NULL;
     try {
-      matchCam = match.p_cube->Camera();
+      matchCam = matchChipCube.Camera();
     }
     catch (iException &error) {
       try {
-        matchProj = match.p_cube->Projection();
+        matchProj = matchChipCube.Projection();
         error.Clear();
       }
       catch (iException &error) {
         std::string msg = "Can not geom chip, ";
-        msg += "Match chip cube [" + match.p_cube->Filename();
+        msg += "Match chip cube [" + matchChipCube.Filename();
         msg += "] is not a camera or map projection";
         throw iException::Message(iException::User,msg,_FILEINFO_);
       }
@@ -200,7 +260,7 @@ namespace Isis {
       }
       catch (iException &error) {
         std:: string msg = "Can not geom chip, ";
-        msg += "chip cube [" + match.p_cube->Filename();
+        msg += "chip cube [" + matchChipCube.Filename();
         msg += "] is not a camera or map projection";
         throw iException::Message(iException::User,msg,_FILEINFO_);
       }
@@ -305,9 +365,7 @@ namespace Isis {
 
     // Store off the cube address in case someone wants to match
     // this chip
-    p_cube = &cube;
-    p_filename = p_cube->Filename();
-
+    p_filename = cube.Filename();
   }
 
 
@@ -433,15 +491,14 @@ namespace Isis {
         int thisLine = line + (oline - chipped.TackLine());
         if ((thisSamp < 1) || (thisLine < 1) || 
             (thisSamp > Samples()) || thisLine > Lines()) {
-          chipped(osamp,oline) = Isis::Null;
+          chipped.SetValue(osamp,oline, Isis::Null);
         }
         else {
-          chipped(osamp,oline) = (*this)(thisSamp,thisLine);
+          chipped.SetValue(osamp,oline, GetValue(thisSamp,thisLine));
         }
       }
     }
 
-    chipped.p_cube = p_cube;
     chipped.p_affine = p_affine;
     chipped.p_validMinimum = p_validMinimum;
     chipped.p_validMaximum = p_validMaximum;
@@ -452,16 +509,17 @@ namespace Isis {
   }
 
   /**
+   *  @brief Extract a subchip centered at the designated coordinate
+   *  
+   *  This method extracts a subchip that is centered at the given sample and
+   *  line coordinate.  All appropriate variables in the given chipped parameter
+   *  are set appropriately prior to return.
    * 
-   * 
-   * 
-   * @param samples 
-   * @param lines 
-   * @param samp 
-   * @param line 
-   * @param output 
+   * @param samp Center (tack) sample chip coordinate to extract subchip
+   * @param line Center (tack) line chip coordinate to extract subchip
+   * @param chipped Chip to load the subchip in and return to caller
    */
-  void Chip::Extract (int samp, int line, Chip &chipped){
+  void Chip::Extract (int samp, int line, Chip &chipped) {
     int samples = chipped.Samples(); 
     int lines = chipped.Lines();
     //chipped.Init(samples, lines);
@@ -474,15 +532,14 @@ namespace Isis {
         int thisLine = line + (oline - chipped.TackLine());
         if ((thisSamp < 1) || (thisLine < 1) || 
             (thisSamp > Samples()) || thisLine > Lines()) {
-          chipped(osamp,oline) = Isis::Null;
+          chipped.SetValue(osamp,oline, Isis::Null);
         }
         else {
-          chipped(osamp,oline) = (*this)(thisSamp,thisLine);
+          chipped.SetValue(osamp,oline,GetValue(thisSamp,thisLine));
         }
       }
     }
 
-    chipped.p_cube = p_cube;
     chipped.p_affine = p_affine;
     chipped.p_validMinimum = p_validMinimum;
     chipped.p_validMaximum = p_validMaximum;
@@ -490,6 +547,117 @@ namespace Isis {
     chipped.p_tackLine = chipped.TackLine() + TackLine() - line;
 
     return;
+  }
+
+
+  /**
+   * @brief Extract a subchip of this chip using an Affine transform 
+   *  
+   * This method will translate the data in this chip using an Affine transform 
+   * to the output chip as provided. Note that the Affine transformation is only
+   * applied within the confines of this chip.  No file I/O is performed. 
+   *  
+   * A proper Affine transform should not deviate too much from the identity as 
+   * the mapping operation may result in a NULL filled chip.  The operation of 
+   * this affine is added to the existing affine so that proper relationship to 
+   * the input cube (and any affine operations applied at load time) is 
+   * preserved.  This implies that the resulting affine should yield nearly 
+   * identical results when read directly from the cube. 
+   *  
+   * Bilinear interpolation is applied to surrounding transformed pixels to 
+   * provide each new output pixel. 
+   *  
+   * The chipped parameter will be updated to fully reflect the state of this 
+   * original chip.  The state of the chipped parameter dictates the size and 
+   * the tack sample and line coordinates.  Upon return, the corresponding cube 
+   * sample and line coordinate is updated to the tack sample and line chip 
+   * coordinate. 
+   *  
+   * As such, note that an identity affine transform will yield identical 
+   * results to the Chip::Extract method specifying the tack sample and line as 
+   * the location to extract. 
+   *  
+   * The following example demonstrates how to linearly shift a chip one pixel 
+   * right and one down. 
+   * @code 
+   *   Chip mychip(35,35);
+   *   Cube cube("mycube.cub");
+   *   mychip.TackCube(200.0,200.0);
+   *   mychip.Load(cube);
+   *  
+   *   Affine shift;
+   *   shift.Translate(-1.0,-1.0);
+   *  
+   *   Chip ochip(15,15);
+   *   mychip.Extract(ochip, shift);
+   * @endcode 
+   *  
+   * @param chipped  Input/output chip containing the transformed subchip
+   * @param affine   Affine transform to apply to extract subchip
+   */ 
+  void Chip::Extract (Chip &chipped, Affine &affine) {
+   // Create an interpolator and portal for interpolation
+    Interpolator interp(Interpolator::BiLinearType);
+    Portal port(interp.Samples(),interp.Lines(),Isis::Double,
+                interp.HotSample(),interp.HotLine());
+
+    int samples = chipped.Samples(); 
+    int lines = chipped.Lines();
+
+    for (int oline=1; oline<=lines; oline++) {
+      int thisLine = TackLine() + (oline - chipped.TackLine());
+      for (int osamp=1; osamp<=samples; osamp++) {
+        int thisSamp = TackSample() + (osamp - chipped.TackSample());
+        affine.Compute(thisSamp,thisLine);
+        double xp = affine.xp();
+        double yp = affine.yp();
+        port.SetPosition(xp, yp, 1);
+        for (int i = 0 ; i < port.size() ; i++) {
+          int csamp = port.Sample(i);
+          int cline = port.Line(i);
+          if ((csamp < 1) || (cline < 1) || 
+              (csamp > Samples()) || cline > Lines()) {
+            port[i] = Isis::Null;
+          }
+          else {
+            port[i] = GetValue(csamp,cline);
+          }
+        }
+        chipped.SetValue(osamp,oline,interp.Interpolate (xp, yp, port.DoubleBuffer()));
+      }
+    }
+
+    chipped.p_validMinimum = p_validMinimum;
+    chipped.p_validMaximum = p_validMaximum;
+    chipped.p_filename = p_filename;
+
+    // Update the affine
+    Affine::AMatrix taffine = p_affine.Forward() + 
+                              (affine.Forward() - Affine::getIdentity());
+
+    chipped.p_affine = Affine(taffine);
+    chipped.SetChipPosition(chipped.TackSample(), chipped.TackLine());
+    return;
+  }
+
+
+  /**
+   * Returns a statistics object of the current data in the chip. 
+   *  
+   * The caller takes ownership of the returned instance. 
+   * 
+   * @return Isis::Statistics* Statistics of the data in the chip
+   */
+  Isis::Statistics *Chip::Statistics() {
+    Isis::Statistics *stats = new Isis::Statistics();
+
+    stats->SetValidRange(p_validMinimum, p_validMaximum);
+    
+    for (int i = 0; i < p_chipSamples; i++) {
+      stats->AddData(&p_buf[i][0], p_chipLines);
+    }
+
+    return stats;
   }
 
 
@@ -558,7 +726,7 @@ namespace Isis {
     for (int i=1; i<=Lines(); i++) {
       line.SetLine(i);
       for (int j=1; j<=Samples(); j++) {
-        line[j-1] = (*this)(j,i);
+        line[j-1] = GetValue(j,i);
       }
       c.Write(line);
     }

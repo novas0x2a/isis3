@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2009/05/15 20:30:33 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/07/29 21:14:35 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -32,8 +32,7 @@
 #include <QCoreApplication>
 
 #include "Application.h"
-#include "UserInterface.h"
-#include "iException.h"
+#include "UserInterface.h" // this is an unnecessary include
 
 #ifndef APPLICATION
 #define APPLICATION IsisMain
@@ -92,6 +91,7 @@ std::map<std::string,void*> GuiHelpers() {
 #endif
 
 void APPLICATION ();
+
 void startMonitoringMemory();
 void stopMonitoringMemory();
 void SegmentationFault(int);
@@ -122,8 +122,8 @@ int main (int argc, char *argv[]) {
   return status;
 }
 
-void startMonitoringMemory() {
 #ifdef CWDEBUG
+void startMonitoringMemory() {
 #ifndef NOMEMCHECK
   MyMutex *mutex = new MyMutex();
   std::fstream *alloc_output = new std::fstream("/dev/null");
@@ -135,11 +135,10 @@ void startMonitoringMemory() {
   Debug( libcw_do.set_ostream(alloc_output, mutex) );
   atexit(stopMonitoringMemory);
 #endif
-#endif
 }
 
+
 void stopMonitoringMemory() {
-#ifdef CWDEBUG
 #ifndef NOMEMCHECK
   Debug(
     alloc_filter_ct alloc_filter;
@@ -159,11 +158,12 @@ void stopMonitoringMemory() {
     libcw_do.off()
   );
 #endif
-#endif
 }
 
+
 void SegmentationFault(int) {
-  std::vector<std::string> currentStack = Isis::iException::getCurrentStack();
+  std::vector<std::string> currentStack;
+  StackTrace::GetStackTrace(&currentStack);
 
   std::cerr << "Segmentation Fault" << std::endl;
   for(unsigned int i = 1; i < currentStack.size(); i++) {
@@ -174,7 +174,8 @@ void SegmentationFault(int) {
 }
 
 void Abort(int) {
-  std::vector<std::string> currentStack = Isis::iException::getCurrentStack();
+  std::vector<std::string> currentStack;
+  StackTrace::GetStackTrace(&currentStack);
 
   std::cerr << "Abort" << std::endl;
   for(unsigned int i = 1; i < currentStack.size(); i++) {
@@ -188,3 +189,5 @@ void Abort(int) {
 void InterruptSignal(int) {
   exit(1);
 }
+
+#endif

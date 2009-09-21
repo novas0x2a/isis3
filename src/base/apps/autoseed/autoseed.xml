@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="autoseed" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Creates a control network for a list of images
   </brief>
@@ -46,6 +47,13 @@
     <change name="Christopher Austin" date="2009-03-16">
       Fixed the progress objects.
     </change>
+    <change name="Travis Addair" date="2009-08-05">
+      Moved seed definition parameters to unique group, and encapsulated the 
+      group creation within the seeding objects.
+    </change>
+    <change name="Travis Addair" date="2009-08-11">
+      Added .def filter to the SEEDDEF parameter.
+    </change>
   </history>
 
   <groups>
@@ -79,7 +87,7 @@
           must contain a valid Autoseed plugin definition in PVL format.
         </description>
         <filter>
-          *.api
+          *.api *.def
         </filter>
       </parameter>
 

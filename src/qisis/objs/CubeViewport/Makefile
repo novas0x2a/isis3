@@ -1,13 +1,9 @@
-INCS = CubeViewport.h ViewportBuffer.h
-CPPS = CubeViewport.cpp ViewportBuffer.cpp
-SRCS = $(CPPS) moc_CubeViewport.cpp 
-#SRCS = $(CPPS) $(CPPS:%=moc_CubeViewport.cpp)
-OBJS = $(SRCS:%.cpp=%.o)
+INCS  := $(wildcard *.h)
+QOBJ  := $(shell grep -HIE -m1 'Q_OBJECT' $(INCS)) #get all header files with 'Q_OBJECT' Output=%.h:   QOBJECT
+QCOLN := $(filter-out Q_OBJECT, $(QOBJ))           #filter out 'Q_OBJECT from the Output
+QINC  := $(subst  :, , $(QCOLN))		   #substitute  ':' with ''
+CPPS  := $(filter-out moc_%.cpp, $(wildcard *.cpp))#all the non moc cpp files	  
+SRCS  := $(CPPS) $(QINC:%.h=moc_%.cpp) 
+OBJS  := $(SRCS:%.cpp=%.o) 
 
 include $(ISISROOT)/make/isismake.objs
-
-moc_CubeViewport.cpp: CubeViewport.h
-	$(MOC) $(MOCDEFINES) -o moc_CubeViewport.cpp CubeViewport.h
-
-cleanlocal:
-	-$(RM) $(wildcard moc_*.cpp) $(wildcard *.o)

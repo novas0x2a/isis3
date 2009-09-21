@@ -66,6 +66,8 @@ int main (int argc, char *argv[]) {
     QObject::connect(ftool,SIGNAL(cubesOpened(Isis::Cube &,Isis::Cube &)),
                      tieTool,SLOT(setFiles(Isis::Cube &,Isis::Cube &)));
 
+    QObject::connect(ftool,SIGNAL(newFiles()),tieTool,SLOT(clearFiles()));
+
     QObject::connect(mw, SIGNAL(closeWindow()), ftool, SLOT(exit()));
 
     mw->show();

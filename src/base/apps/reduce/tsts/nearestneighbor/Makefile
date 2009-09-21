@@ -6,5 +6,6 @@ commands:
 	$(APPNAME) from= $(INPUT)/isisTruth.cub \
 	  to= $(OUTPUT)/reduceTruth4.cub \
 	  algorithm=nearestneighbor \
+	  reduction_type=total \
 	  ons=4 \
 	  onl=3 > /dev/null;

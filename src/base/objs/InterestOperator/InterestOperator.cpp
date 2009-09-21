@@ -19,6 +19,8 @@ namespace Isis {
    * @see automaticRegistration.doc
    */
   InterestOperator::InterestOperator (Pvl &pvl) {
+    p_operator = pvl.FindGroup("Operator", Pvl::Traverse);
+
     p_operatorName = "";
     p_interestAmount = 0.0;
     p_worstInterest = 0.0;
@@ -182,5 +184,16 @@ namespace Isis {
    */
   int InterestOperator::Padding (){
     return 0;
+  }
+
+  /**
+   * This function returns the keywords that this object was 
+   * created from. 
+   * 
+   * @return PvlGroup The keywords this object used in 
+   *         initialization
+   */ 
+  PvlGroup InterestOperator::Operator() {
+    return p_operator;
   }
 }

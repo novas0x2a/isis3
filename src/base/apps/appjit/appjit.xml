@@ -32,6 +32,12 @@
     <change name="Debbie Cook" date="2009-01-10">
       Corrected error handling for master file
     </change>
+    <change name="Debbie Cook" date="2009-08-03">
+      Added new argument to LineScanCameraRotation 
+    </change>
+    <change name="Debbie Cook" date="2009-08-05">
+      Added alternate tolerance calculation
+    </change>
    </history>
 
   <groups>

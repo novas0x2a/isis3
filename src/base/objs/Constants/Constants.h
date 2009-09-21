@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.32 $
- * $Date: 2009/06/10 17:05:59 $
+ * $Revision: 1.36 $
+ * $Date: 2009/09/16 13:40:47 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -44,7 +44,7 @@ namespace Isis {
    *                                          documentation to .h file
    */
 
-  const std::string version("3.1.20 | 2009-06-10");
+  const std::string version("3.1.21 | 2009-09-16");
 
   const double E(2.7182818284590452354);   //!<The mathematical constant E
   const double PI(3.14159265358979323846); //!<The mathematical constant PI

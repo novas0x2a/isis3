@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="coreg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
        Subpixel registration of a pair of images
   </brief>
@@ -144,6 +145,9 @@
         to the Translation group, including min/max and standard deviation of 
         line/sample changes. Added the AutoReg statistics to be displayed as 
         well.
+    </change>
+    <change name="Travis Addair" date="2009-08-10">
+        Auto registration parameters are now placed into the print file.
     </change>
   </history>
 

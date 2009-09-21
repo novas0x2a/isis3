@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/12/17 15:53:37 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/06/17 18:12:06 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -61,7 +61,7 @@ void IsisMain() {
     // Run through file list and set its entries as input cubes
     for(int i = 0; i < (int)list.size(); i++) {
       CubeAttributeInput att(list[i]);
-      cubes.push_back( p.SetInputCube(list[i], att) );
+      cubes.push_back( p.SetInputCube(list[i], att, Isis::AllMatchOrOne) );
     }
     outCube = p.SetOutputCube("TO");
   }

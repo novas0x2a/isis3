@@ -30,7 +30,8 @@ namespace Qisis {
       "<b>Function:</b> Open a <i>images</i> \
        <p><b>Shortcut:</b>  Ctrl+O\n</p>";
     openAction()->setWhatsThis(whatsThis);
-
+    
+    saveAction()->setEnabled(false);
 
   }
 
@@ -39,63 +40,106 @@ namespace Qisis {
    * 
    * @author 2007-08-13 Tracie Sucharski
    * 
-   * @internal
+   * @internal 
+   * @history 2009-06-10  Tracie Sucharski - Added error checking and looping 
+   *                            when opening files.  Allow new files to be
+   *                            opened.
    * 
    */
   void QtieFileTool::open () {
 
 
+    //  If we've already opened files, clear before starting over
+    if (cubeViewportList()->size() > 0) {
+      closeAll();
+      emit newFiles();
+    }
+
+
+    QString baseFile,matchFile;
+    QString dir;
     QString filter = "Isis Cubes (*.cub);;";
     filter += "Detached labels (*.lbl);;";
     filter += "All (*)";
-    QString file = QFileDialog::getOpenFileName((QWidget*)parent(),
-                                                "Select basemap cube",
-                                                ".",
-                                                filter);
-    if (file.isEmpty()) return;
 
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-    // Find directory and save for use in file dialog for match cube
-    Isis::Filename baseFile(file.toStdString());
-
-    QString dir = baseFile.absolutePath();
-
-    //  Make sure base is projected
     Isis::Cube *baseCube = new Isis::Cube;
-    baseCube->Open(file.toStdString());
-    try {
-      baseCube->Projection();
-    } catch (Isis::iException &e) {
-      QString message = "Base must be projected";
-      QMessageBox::critical((QWidget *)parent(),"Error",message);
-      return;
+    while (!baseCube->IsOpen()) {
+      baseFile = QFileDialog::getOpenFileName((QWidget*)parent(),
+                                                  "Select basemap cube (projected)",
+                                                  ".",filter);
+      if (baseFile.isEmpty()) {
+        delete baseCube;
+        return;
+      }
+  
+      // Find directory and save for use in file dialog for match cube
+      Isis::Filename fname(baseFile.toStdString());
+      dir = fname.absolutePath();
+  
+      //  Make sure base is projected
+      try {
+        baseCube->Open(baseFile.toStdString());
+        try {
+          baseCube->Projection();
+        } catch (Isis::iException &e) {
+          baseCube->Close();
+          QString message = "Base must be projected";
+          QMessageBox::critical((QWidget *)parent(),"Error",message);
+          baseCube->Close();
+        }
+      } catch (Isis::iException &e) {
+        QString message = "Unable to open base cube";
+        QMessageBox::critical((QWidget *)parent(),"Error",message);
+      }
     }
     baseCube->Close();
 
-    emit fileSelected(file);
-    baseCube = (*(cubeViewportList()))[0]->cube();
-    QApplication::restoreOverrideCursor();
 
-    // Get match cube
-    file = QFileDialog::getOpenFileName((QWidget*)parent(),
-                                        "Select cube to tie to base",
-                                        dir,
-                                        filter);
-    if (file.isEmpty()) return;
-
-    QApplication::setOverrideCursor(Qt::WaitCursor);
-
-    //Make sure match is not projected
     Isis::Cube *matchCube = new Isis::Cube;
-    matchCube->Open(file.toStdString());
-    if (matchCube->Camera()->HasProjection()) {
-      QString message = "The match cube cannot be projected.";
-      QMessageBox::critical((QWidget *)parent(),"Error",message);
-      return;
+
+    while (!matchCube->IsOpen()) {
+      // Get match cube
+      matchFile = QFileDialog::getOpenFileName((QWidget*)parent(),
+                                          "Select cube to tie to base",
+                                          dir,filter);
+      if (matchFile.isEmpty()) {
+        delete baseCube;
+        delete matchCube;
+        (*(cubeViewportList()))[0]->close();
+        return;
+      }
+  
+      //Make sure match is not projected
+      try {
+        matchCube->Open(matchFile.toStdString());
+        try {
+  
+          if (matchCube->HasGroup("Mapping")) {
+            QString message = "The match cube cannot be a projected cube.";
+            QMessageBox::critical((QWidget *)parent(),"Error",message);
+            matchCube->Close();
+            continue;
+          }
+        } catch (Isis::iException &e) {
+          QString message = "Error reading match cube labels.";
+          QMessageBox::critical((QWidget *)parent(),"Error",message);
+          matchCube->Close();
+        }
+      } catch (Isis::iException &e) {
+        QString message = "Unable to open match cube";
+        QMessageBox::critical((QWidget *)parent(),"Error",message);
+      }
     }
     matchCube->Close();
 
-    emit fileSelected(file);
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    emit fileSelected(baseFile);
+    baseCube = (*(cubeViewportList()))[0]->cube();
+    QApplication::restoreOverrideCursor();
+
+
+    QApplication::setOverrideCursor(Qt::WaitCursor);
+    emit fileSelected(matchFile);
     matchCube = (*(cubeViewportList()))[1]->cube();
     emit cubesOpened(*baseCube,*matchCube);
     QApplication::restoreOverrideCursor();

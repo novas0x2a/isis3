@@ -6,5 +6,5 @@ commands:
 	$(APPNAME) from=$(INPUT)/blobTruth.cub \
 	  to=$(OUTPUT)/tabledump2.txt \
 	  delimit=OTHER \
-	  custom=\"!TEST!\" \
-	  name=\"HiRISE Calibration Image\" > /dev/null;
+	  custom="!TEST!" \
+	  name="HiRISE Calibration Image" > /dev/null;

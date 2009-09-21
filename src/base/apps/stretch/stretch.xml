@@ -105,7 +105,12 @@
     <change name="Jeannie Walldren" date="2008-01-09"> 
       Modified stretch parameters (except PAIRS) to accept string instead of 
       double so that special pixels may be set to other special pixel values. 
-    </change>  
+    </change>
+    <change name="Eric Hyer" date="2009-04-30">
+      Users can pass a file containing stretch pairs as well as inputing them
+      manually as before.  Also, the input side of stretch pairs can optionally
+      be percentages instead of dn values.
+    </change>
     </history>
 
   <groups>
@@ -117,7 +122,7 @@
           Input cube
         </brief>
         <description>
-	        Input cube to stretch
+          Input cube to stretch
         </description>
         <filter>
           *.cub
@@ -132,33 +137,78 @@
           Output stretched cube
         </brief>
         <description>
-	        The resultant stretched cube
+          The resultant stretched cube
         </description>
       </parameter>
     </group>
-
+    
     <group name="Stretch Parameters">
+      <parameter name="USEPERCENTAGES">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Percentage mode for pairs</brief>
+        <description>
+          If true the input side of the pairs are interpreted as percentages.
+          The dn value which is used is the dn value at the specified percentage
+          of the input cube's histogram
+        </description>
+      </parameter>
+      
+      <parameter name="READFILE">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Input pairs from file</brief>
+        <description>
+          Selects the method of pair data input.  If true then read pairs from a
+          file.  Otherwise read the stretch pairs from the "PAIRS" parameter
+        </description>
+        <inclusions>
+          <item>INPUTFILE</item>
+        </inclusions>
+        <exclusions>
+          <item>PAIRS</item>
+        </exclusions>
+      </parameter>
+      
       <parameter name="PAIRS">
         <type>string</type>
-        <brief>
-          Stretch pairs
-        </brief>
-
+        <brief>Stretch pairs manual input</brief>
         <description>
           A string must be entered in the form of
           <!--pre>
             input1:output1 input2:output2 ... inputN:outputN
           </pre-->
-          Where the input values are in ascending order (increasing). The is
+          Where the input values are in ascending order (increasing). There is
           no limit to the number of pairs although each pair must be separated
           by a space.  The stretch that is entered will be applied to all bands
           in the cube.  By default "No Stretch" is applied which allows users
           to remap only special pixels if desired.
         </description>
-
         <internalDefault>
           No Stretch
         </internalDefault>
+      </parameter>
+      
+      <parameter name="INPUTFILE">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>The file name where pairs are stored</brief>
+        <description>
+          Read pairs from this file instead of entering them manually.  Commented
+          lines are ignored and defined as beginning with a '#'.  Pairs must be
+          separated by white space which may be new lines.
+          <pre>
+            # example 1 of a file containing stretch pairs
+            0:0 1:10 15:255
+          </pre>
+          <pre>
+            # example 2 of a file containing stretch pairs
+            0:0
+            1:10
+            # this is a comment inside a file containing stretch pairs
+            15:255
+          </pre>
+        </description>
       </parameter>
 
       <parameter name="NULL">
@@ -166,13 +216,11 @@
         <brief>
           Replace NULL pixels with another special pixel value or a double value
         </brief>
-
         <description>
           Double or alternate special pixel value used to replace all NULL 
           special pixels.  For example all NULL pixels can be replaced with 
           -100.0.  By default, the NULL special pixels will be left unchanged.
         </description>
-
         <internalDefault>
           NULL
         </internalDefault>
@@ -183,7 +231,6 @@
         <brief>
           Replace LIS pixels with another special pixel value or a double value
         </brief>
-
         <description>
           Double or alternate special pixel value used to replace all LIS special pixels.  For example
           all LIS pixels can be replaced with 0.0.  By default, the LIS
@@ -200,13 +247,11 @@
         <brief>
           Replace LRS pixels with another special pixel value or a double value
         </brief>
-
         <description>
           Double or alternate special pixel value used to replace all LRS special pixels.  For example
           all LRS pixels can be replaced with 0.0.  By default, the LRS
           special pixels will be left unchanged.
         </description>
-
         <internalDefault>
           LRS
         </internalDefault>
@@ -217,7 +262,6 @@
         <brief>
           Replace HIS pixels with another special pixel value or a double value
         </brief>
-
         <description>
           Double or alternate special pixel value used to replace all HIS special pixels.  For example
           all HIS pixels can be replaced with 500.0.  By default, the HIS
@@ -234,18 +278,17 @@
         <brief>
           Replace HRS pixels with another special pixel value or a double value
         </brief>
-
         <description>
           Double or alternate special pixel value used to replace all HRS special pixels.  For example
           all HRS pixels can be replaced with 500.0.  By default, the HRS
           special pixels will be left unchanged.
         </description>
-
         <internalDefault>
           HRS
         </internalDefault>
       </parameter>
     </group>
+    
   </groups>
 
   <examples>

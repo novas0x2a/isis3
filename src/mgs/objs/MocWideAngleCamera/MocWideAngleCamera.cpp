@@ -16,7 +16,7 @@ namespace Isis {
      *          to MocLabels IsWideAngleRed() with MocLabels
      *          WideAngleRed().
      */
-    MocWideAngleCamera::MocWideAngleCamera (Isis::Pvl &lab) : Camera(lab) {
+    MocWideAngleCamera::MocWideAngleCamera (Isis::Pvl &lab) : LineScanCamera(lab) {
       // See if we have a moc camera
       MocLabels *moclab = new Isis::Mgs::MocLabels(lab);
       double lineRate = moclab->LineRate();

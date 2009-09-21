@@ -1,5 +1,5 @@
 #include "Isis.h"
-#include "Application.h"
+#include "Pipeline.h"
 
 using namespace std; 
 using namespace Isis;
@@ -8,47 +8,42 @@ void IsisMain() {
 
   // Open the input cube
   UserInterface &ui = Application::GetUserInterface();
-  Filename fname = ui.GetFilename("FROM");
-  string name = fname.Basename();
-  bool rmv = ui.GetBoolean("REMOVE");
+  Pipeline p("vikclean");
+  p.SetInputFile("FROM");
+  p.SetOutputFile("TO");
+  p.KeepTemporaryFiles(!ui.GetBoolean("REMOVE"));
 
   // Run viknosalt on the cube to remove the salt 
-  string inFile = ui.GetFilename("FROM");
-  string outFile = name + ".nosalt.cub";
-  string parameters = "FROM=" + inFile + " TO=" + outFile;
-  Isis::iApp ->Exec("viknosalt",parameters);
+  p.AddToPipeline("viknosalt");
+  p.Application("viknosalt").SetInputParameter("FROM", true);
+  p.Application("viknosalt").SetOutputParameter("TO", "nosalt");
 
   // Run vikfixtrx on the cube to remove the tracks
-  inFile = outFile;
-  outFile = name + ".fixtrx.cub";
-  parameters = "FROM=" + inFile + " TO=" + outFile;
-  Isis::iApp ->Exec("vikfixtrx", parameters);
-  if (rmv) remove(inFile.c_str());
+  p.AddToPipeline("vikfixtrx");
+  p.Application("vikfixtrx").SetInputParameter("FROM", true);
+  p.Application("vikfixtrx").SetOutputParameter("TO", "fixtrx");
 
   // Run findrx on the cube to find the nominal position of the reseaus
-  inFile = outFile;
-  parameters = "FROM=" + inFile;
-  Isis::iApp ->Exec("findrx",parameters);
+  p.AddToPipeline("findrx");
+  p.Application("findrx").SetInputParameter("FROM", true);
 
   // Run viknopepper on the cube to remove the pepper
-  outFile = name + ".nopepper.cub";
-  parameters = "FROM=" + inFile + " TO=" + outFile;
-  Isis::iApp ->Exec("viknopepper",parameters);
-  if (rmv) remove(inFile.c_str());
+  p.AddToPipeline("viknopepper");
+  p.Application("viknopepper").SetInputParameter("FROM", true);
+  p.Application("viknopepper").SetOutputParameter("TO", "nopepper");
 
   // Run remrx on the cube to remove the reseaus
-  inFile = outFile;
-  outFile = name + ".remrx.cub";
-  parameters = "FROM=" + inFile + " TO=" + outFile + " LDIM=" + 
-    iString(ui.GetInteger("LDIM")) + " SDIM=" + iString(ui.GetInteger("SDIM"));
-  Isis::iApp -> Exec("remrx",parameters);
-  if (rmv) remove(inFile.c_str());
+  p.AddToPipeline("remrx");
+  p.Application("remrx").SetInputParameter("FROM", true);
+  p.Application("remrx").SetOutputParameter("TO", "remrx");
+  p.Application("remrx").AddParameter("LDIM", "LDIM");
+  p.Application("remrx").AddParameter("SDIM", "SDIM");
 
   // Run vikfixfly on the cube
-  inFile = outFile;
-  outFile = ui.GetFilename("TO");
-  parameters = "FROM=" + inFile + " TO=" + outFile;
-  Isis::iApp ->Exec("viknobutter",parameters);
-  if (rmv) remove(inFile.c_str());       
+  p.AddToPipeline("viknobutter");
+  p.Application("viknobutter").SetInputParameter("FROM", true);
+  p.Application("viknobutter").SetOutputParameter("TO", "");
+
+  p.Run();
 }
 

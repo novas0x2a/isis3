@@ -819,10 +819,21 @@ namespace Qisis {
 
 
   /**
-   * Modify control point
+   * Modify control point 
+   *  
+   * @history 2009-09-15 Tracie Sucharski - Add error check for points 
+   *                       with no measures. 
    */
   void QnetTool::modifyPoint(Isis::ControlPoint *point) {
 
+    //  If no measures, print info and return
+    if (point->Size() == 0) {
+      QString message = "This point has no measures.";
+      QMessageBox::information((QWidget *)parent(),"Warning",message);
+      // update nav list to re-highlight old point
+      if (p_controlPoint != NULL) emit editPointChanged(p_controlPoint->Id());
+      return;
+    }
     p_controlPoint = point;
 
     //  If navTool modfify button pressed, p_leftFile needs to be reset
@@ -953,6 +964,7 @@ namespace Qisis {
     //  If p_leftCube is not null, delete before creating new one
     if (p_rightCube != NULL) delete p_rightCube;
     p_rightCube = new Isis::Cube();
+    //std::cout<<"QnetTool::p_rightCube = "<<p_rightCube<<std::endl;
     p_rightCube->Open(file);
 
     //  Update left measure of pointEditor

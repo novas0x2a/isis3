@@ -8,7 +8,7 @@
   <description>
     This program will perform the  level 1 processing sequence on a Viking 
     Orbiter PDS image, including the cleanup of salt and pepper noise, the removal of 
-    reseaus and tracks,  and the removal of butterflies from the image.
+    reseaus and tracks, and the removal of butterflies from the image.
   </description>
 
   <category>
@@ -33,6 +33,9 @@
     <change name="Elizabeth Miller" date="2006-05-16">
       Added example
     </change>
+    <change name="Travis Addair" date="2009-06-10">
+      Refactored application to use Pipelines
+    </change>
   </history>
 
   <groups>
@@ -44,8 +47,8 @@
           Input file to be cleaned
         </brief>
         <description>
-          The cube to be cleaned.  The cube will be ran through a series of filters to
-          remove salt and pepper noise, tracks and reseaus.
+          The cube to be cleaned.  The cube will be run through a series of 
+          filters to remove salt and pepper noise, tracks, and reseaus.
         </description>
         <filter>
           *.cub
@@ -59,7 +62,7 @@
           Output cube
         </brief>
         <description>
-          The resultant cube containing the cleaned data.
+          The resultant cube containing the clean data.
         </description>
         <filter>
           *.cub

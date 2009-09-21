@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2009/03/17 17:01:50 $
+ * $Revision: 1.8 $
+ * $Date: 2009/07/17 15:39:15 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -62,7 +62,7 @@ namespace Isis {
     int c;
     bool newlineFound = false;
   
-    TOP:
+    while(true) {
       newlineFound = SkipWhiteSpace (stream);
       c = stream.peek ();
       ValidateCharacter (c);
@@ -83,7 +83,7 @@ namespace Isis {
           tokens[tokens.size()-2] = t;
         }
         
-        goto TOP;
+        continue;
       }
   
       if (c == '/') {
@@ -106,7 +106,7 @@ namespace Isis {
             tokens[tokens.size()-2] = t;
           }
 
-          goto TOP;
+          continue;
         }
       }
   
@@ -129,7 +129,7 @@ namespace Isis {
       if (c != '=') {
         tokens.push_back (t);
         if (t.GetKeyUpper () == upTerminator) return;
-        goto TOP;
+        continue;
       }
   
       stream.ignore ();
@@ -153,7 +153,7 @@ namespace Isis {
           throw Isis::iException::Message(Isis::iException::Parse,message,_FILEINFO_);
         }
         tokens.push_back(t);
-        goto TOP;
+        continue;
       }
   
       if (c == '{') {
@@ -167,7 +167,7 @@ namespace Isis {
           throw Isis::iException::Message(Isis::iException::Parse,message,_FILEINFO_);
         }
         tokens.push_back(t);
-        goto TOP;
+        continue;
       }
   
       if (c == '"') {
@@ -181,7 +181,7 @@ namespace Isis {
         }
         t.AddValue(s);
         tokens.push_back(t);
-        goto TOP;
+        continue;
       }
   
       if (c == '\'') {
@@ -195,14 +195,15 @@ namespace Isis {
         }
         t.AddValue(s);
         tokens.push_back(t);
-        goto TOP;
+        continue;
       }
   
   
       s = ReadToken (stream);
       t.AddValue(s);
       tokens.push_back(t);
-      goto TOP;
+      continue;
+    }
   }
 
  /** 

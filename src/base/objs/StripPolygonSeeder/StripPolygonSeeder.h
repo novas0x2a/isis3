@@ -2,8 +2,8 @@
 #define StripPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2009/02/02 14:53:58 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2009/08/05 21:44:37 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -55,6 +55,8 @@ namespace Isis {
    *   @history 2008-11-25 Steven Lambright - Added error checking
    *   @history 2009-02-01 Steven Lambright - Fixed problem with calculating
    *            starting position in the top left corner of the polygon 
+   *   @history 2009-08-05 Travis Addair - Encapsulated group 
+   *            creation for seed definition group
    */                                                                       
   class StripPolygonSeeder : public PolygonSeeder {
     public:
@@ -65,6 +67,7 @@ namespace Isis {
 
       std::vector<geos::geom::Point*> Seed(const geos::geom::MultiPolygon *mp, 
                                      Projection *proj);
+      virtual PvlGroup PluginParameters(std::string grpName);
 
     protected:
       virtual void Parse(Pvl &pvl);
@@ -72,8 +75,6 @@ namespace Isis {
     private:
       double p_Xspacing; //!<The spacing in the x direction between points 
       double p_Yspacing; //!<The spacing in the y direction between points
-      double p_minThickness; //!< area / max(Xextent,Yextent)**2
-      double p_minArea; //!< Units are meters
   };
 };
 

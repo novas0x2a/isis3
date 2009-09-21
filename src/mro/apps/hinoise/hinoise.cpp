@@ -119,9 +119,10 @@ void IsisMain() {
         break;
       default:
         // this should really never happen unless histitch was ran!
-        string message = "Cube has invalid channel number!\nvalid channels are";
-        message += " 0 and 1\n\nIf this cube is the result of merging th";
-        message += "en\nit is too late for vertical destriping.";
+        string message = "Cube has invalid channel number!\n";
+              message += "valid channels are 0 and 1\n\n";
+              message += "If this cube is the result of merging then\n";
+              message += "it is too late for vertical destriping.";
         throw Isis::iException::Message(Isis::iException::User, message, _FILEINFO_);
     }
     for (int k = 0; k < 4; k++) {

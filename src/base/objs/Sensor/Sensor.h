@@ -2,8 +2,8 @@
 #define Sensor_h
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2009/05/26 01:47:06 $
+ * $Revision: 1.12 $
+ * $Date: 2009/07/10 00:43:14 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -114,6 +114,9 @@ namespace Isis {
  *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance from 1e-6 to 1e-12 for dist**2 (mm) 
  *  @history 2009-02-06 Debbie A. Cook - Changed the tolerance back to 1e-6 (mm)
  *  @history 2009-02-15 Debbie A. Cook - Added virtual Resolution method
+ *  @history 2009-06-30 Steven Lambright - Added IgnoreElevationModel and fixed
+ *           DemRadius
+ *  @history 2009-07-09 Debbie A. Cook - Corrected documentation on Resolution method
  *  
  */
   class Sensor : public Isis::Spice {
@@ -172,9 +175,10 @@ namespace Isis {
       double DemRadius ( double lat, double lon); //!<Return local radius from dem
       bool HasElevationModel () { return p_hasElevationModel; };
      /**
-      * Virtual method that returns the pixel resolution of the sensor in km/pix
+      * Virtual method that returns the pixel resolution of the sensor in meters/pix
       */
       virtual double Resolution() { return 1.0; };
+      void IgnoreElevationModel(bool ignore);
 
     protected:
       bool p_hasIntersection; /**<This indicates if the surface point or look

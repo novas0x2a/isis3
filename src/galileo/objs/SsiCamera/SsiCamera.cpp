@@ -11,7 +11,7 @@
 using namespace std;
 using namespace Isis;
 namespace Galileo {
-  SsiCamera::SsiCamera (Pvl &lab) : Camera(lab) {
+  SsiCamera::SsiCamera (Pvl &lab) : FramingCamera(lab) {
     // Get the camera characteristics
     double k1;
 

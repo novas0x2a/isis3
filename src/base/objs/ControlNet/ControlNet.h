@@ -2,8 +2,8 @@
 #define ControlNet_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2009/06/03 23:24:40 $
+ * $Revision: 1.10 $
+ * $Date: 2009/09/01 17:47:14 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -27,6 +27,10 @@
 #include "Camera.h"
 #include "SerialNumberList.h"
 #include "Progress.h"
+
+#include <QHash>
+#include <QVector>
+#include <QString>
 
 namespace Isis {
   /**
@@ -60,6 +64,13 @@ namespace Isis {
    *   @history 2009-06-03 Christopher Austin - Added p_invalid functionality
    *            along with forceBuild, as well as other small fixes including
    *            documentation.
+   *   @history 2009-07-13 Stacy Alley - The std::vector of
+   *            ControlPoints called 'p_points' was replaced with
+   *            a QVector of QString 'p_pointIds' in conjunction
+   *            with a QHash of <QString, ControlPoint> called
+   *            'p_pointsHash'. This was done to speed up the Add
+   *            method which was essentially slowing down the
+   *            reading or creation of Control Networks.
    *                              
    */
   class ControlNet {
@@ -154,10 +165,10 @@ namespace Isis {
        *  
        * @return The Control Point at the provided index
        */
-      ControlPoint &operator[](int index) { return p_points[index]; };
+      ControlPoint &operator[](int index) { return p_pointsHash[p_pointIds[index]]; };
 
       //! Return the number of control points in the network
-      int Size() const { return p_points.size(); };
+      int Size() const { return p_pointsHash.size(); };
       int NumValidPoints ();
 
       //! Return if the control point is invalid
@@ -205,7 +216,8 @@ namespace Isis {
       Isis::Camera *Camera(int index) { return p_cameraList[index]; };
 
     private:
-      std::vector<ControlPoint> p_points;  //!< Vector of ControlPoints
+      QVector<QString> p_pointIds;  //!< QVector of ControlPoint Ids
+      QHash <QString, ControlPoint> p_pointsHash; //!< Hash table of Control Points.
       std::string p_targetName;            //!< Name of the target
       std::string p_networkId;             //!< The Network Id
       std::string p_created;               //!< Creation Date

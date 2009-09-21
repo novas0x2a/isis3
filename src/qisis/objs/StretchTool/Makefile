@@ -1,30 +1,9 @@
-INCS = StretchTool.h BinaryStretch.h HistogramWidget.h LinearStretch.h ManualStretch.h QStretch.h SawtoothStretch.h
-CPPS = StretchTool.cpp BinaryStretch.cpp HistogramWidget.cpp LinearStretch.cpp ManualStretch.cpp SawtoothStretch.cpp
-SRCS = $(CPPS) $(CPPS:%=moc_%) moc_QStretch.cpp
-OBJS = $(SRCS:%.cpp=%.o)
+INCS  := $(wildcard *.h)
+QOBJ  := $(shell grep -HIE -m1 'Q_OBJECT' $(INCS)) #get all header files with 'Q_OBJECT' Output=%.h:   QOBJECT
+QCOLN := $(filter-out Q_OBJECT, $(QOBJ))           #filter out 'Q_OBJECT from the Output
+QINC  := $(subst  :, , $(QCOLN))		   #substitute  ':' with ''
+CPPS  := $(filter-out moc_%.cpp, $(wildcard *.cpp))#all the non moc cpp files	  
+SRCS  := $(CPPS) $(QINC:%.h=moc_%.cpp) 
+OBJS  := $(SRCS:%.cpp=%.o) 
 
 include $(ISISROOT)/make/isismake.objs
-
-moc_StretchTool.cpp: StretchTool.h
-	$(MOC) $(MOCDEFINES) -o moc_StretchTool.cpp StretchTool.h
-
-moc_BinaryStretch.cpp: BinaryStretch.h
-	$(MOC) $(MOCDEFINES) -o moc_BinaryStretch.cpp BinaryStretch.h
-
-moc_HistogramWidget.cpp: HistogramWidget.h
-	$(MOC) $(MOCDEFINES) -o moc_HistogramWidget.cpp HistogramWidget.h
-
-moc_LinearStretch.cpp: LinearStretch.h
-	$(MOC) $(MOCDEFINES) -o moc_LinearStretch.cpp LinearStretch.h
-
-moc_ManualStretch.cpp: ManualStretch.h
-	$(MOC) $(MOCDEFINES) -o moc_ManualStretch.cpp ManualStretch.h
-
-moc_QStretch.cpp: QStretch.h
-	$(MOC) $(MOCDEFINES) -o moc_QStretch.cpp QStretch.h
-
-moc_SawtoothStretch.cpp: SawtoothStretch.h
-	$(MOC) $(MOCDEFINES) -o moc_SawtoothStretch.cpp SawtoothStretch.h
-
-cleanlocal:
-	-$(RM) $(wildcard moc_*.cpp) $(wildcard *.o)

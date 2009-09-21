@@ -23,30 +23,37 @@
 <pre>
 Group = Mapping
   ProjectionName          = Equirectangular
-  PixelResolution         = 505.47754523 &lt;meters&gt;
-  MinPixelResolution      = 483.44899069799 &lt;meters&gt; 
-  MaxPixelResolution = 527.50609976589  &lt;meters&gt;
-  CenterLongitude =166.14855246
-  CenterLatitude = -13.60671289
-  MinimumLatitude = -21.49282793 
-  MaximumLatitude = -5.72059785
-  MinimumLongitude = 133.9068054
-  MaximumLongitude = 198.39029952
+  TargetName              = Moon
+  EquatorialRadius        = 2440000.0  &lt;meters&gt;   
+  PolarRadius             = 2440000.0 &lt;meters&gt;
+  LatitudeType            = Planetocentric
+  LongitudeDirection      = PositiveEast
+  LongitudeDomain         = 360
+  PixelResolution         = 505.3668 &lt;meters/pixel&gt;
+  Scale                   = 84.2676 &lt;pixels/degree&gt;
+  MinPixelResolution      = 483.45317995544 &lt;meters&gt;
+  MaxPixelResolution      = 527.28051834369 &lt;meters&gt;
+  CenterLongitude         = 165.9728
+  CenterLatitude          = -13.6612
+  MinimumLatitude         = -21.5164
+  MaximumLatitude         = -5.806
+  MinimumLongitude        = 133.7863
+  MaximumLongitude        = 198.1593
 
   # Actual Parameters without precision applied
-  PreciseCenterLongitude  = 166.14855245944
-  PreciseCenterLatitude   = -13.606712891325
-  PreciseMinimumLatitude  = -21.492827923654
-  PreciseMaximumLatitude  = -5.7205978589947
-  PreciseMinimumLongitude = 133.90680540876
-  PreciseMaximumLongitude = 198.39029951012
+  PreciseCenterLongitude  = 165.97281458717
+  PreciseCenterLatitude   = -13.661167089917
+  PreciseMinimumLatitude  = -21.516314016725
+  PreciseMaximumLatitude  = -5.806020163109
+  PreciseMinimumLongitude = 133.78639979231
+  PreciseMaximumLongitude = 198.15922938202
 End_Group
 End
  </pre>
   </description>
 
   <category>
-    <categoryItem>Mosaicking</categoryItem>
+    <categoryItem>Map Projection</categoryItem>
   </category>
 
   <history>
@@ -55,6 +62,15 @@ End
     </change>
     <change name="Kris Becker" date="2008-06-27">
       Removed references to CubeInfo due to refactor
+    </change>
+    <change name="Kris Becker" date="2009-08-13">
+        Added parameters  LATTYPE, LONDIR and LONDOM;  Now computes pixel Scale 
+        in pixels/degree;  added additional parameters to the output map file so 
+        it is more compliant with projection requirements based upon input 
+        parameters and established mapping group keywords.
+    </change>
+    <change name="Kris Becker" date="2009-09-18">
+        Added TargetName to output map file.
     </change>
 </history>
 
@@ -136,6 +152,102 @@ End
           parameter if you do not know the proper spelling/format required for 
           ISIS projections.
         </description>
+      </parameter>
+
+      <parameter name="LATTYPE">
+        <type>string</type>
+        <brief>
+          Latitude type
+        </brief>
+        <description>
+          The latitude type for the projection.  It can either be Planetocentric or Planetographic.
+           PLANETOCENTRIC is the default.
+        </description>
+        <default>
+          <item>PLANETOCENTRIC</item>
+        </default>
+        <list>
+          <option value="PLANETOCENTRIC">
+            <brief>
+              Planetocentric
+            </brief>
+            <description>
+              Sets the latitude type in the mapping template to Planetocentric.
+            </description>
+          </option>
+          <option value="PLANETOGRAPHIC">
+            <brief>
+              Planetographic
+            </brief>
+            <description>
+              Sets the latitude type in the mapping template to Planetographic.
+            </description>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="LONDIR">
+        <type>string</type>
+        <brief>
+          Longitude Direction
+        </brief>
+        <description>
+          The longitude direction for the projection.  It can have a direction of Positive East 
+          or Positive West.  POSITIVEEAST is the default.
+        </description>
+        <default>
+          <item>POSITIVEEAST</item>
+        </default>
+        <list>
+          <option value="POSITIVEEAST">
+            <brief>
+              PositiveEast Longitude Direction
+            </brief>
+            <description>
+              Sets the longitude direction in the mapping template to PositiveEast.
+            </description>
+          </option>
+          <option value="POSITIVEWEST">
+            <brief>
+              PositiveWest Longitude Direction
+            </brief>
+            <description>
+              Sets the longitude direction in the mapping template to PositiveWest.
+            </description>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="LONDOM">
+        <type>string</type>
+        <brief>
+          Longitude Domain
+        </brief>
+        <description>
+          The longitude domain for the projection.  It can either have a domain of 180 or 360.  
+          360 is the default.
+        </description>
+        <default>
+          <item>360</item>
+        </default>
+        <list>
+          <option value="360">
+            <brief>
+              0 to 360 Degree Longitude Domain
+            </brief>
+            <description>
+              Sets the longitude domain in the mapping template to 360 degrees.
+            </description>
+          </option>
+          <option value="180">
+            <brief>
+              -180 to 180 Degree Longitude Domain
+            </brief>
+            <description>
+              Sets the longitude domain in the mapping template to 180 degrees.
+            </description>
+          </option>
+        </list>
       </parameter>
         
       <parameter name="PRECISION">

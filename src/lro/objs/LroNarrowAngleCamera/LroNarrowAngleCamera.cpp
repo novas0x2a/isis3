@@ -3,7 +3,7 @@
 #include "iException.h"
 #include "LineScanCameraDetectorMap.h"
 #include "CameraFocalPlaneMap.h"
-#include "CameraDistortionMap.h"
+#include "LroNarrowAngleDistortionMap.h"
 #include "LineScanCameraGroundMap.h"
 #include "LineScanCameraSkyMap.h"
 
@@ -11,28 +11,27 @@ using namespace std;
 namespace Isis {
   namespace Lro {
     // constructors
-    LroNarrowAngleCamera::LroNarrowAngleCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    LroNarrowAngleCamera::LroNarrowAngleCamera (Isis::Pvl &lab) : Isis::LineScanCamera(lab) {
       // Set up the camera info from ik/iak kernels
       SetFocalLength();
       SetPixelPitch();
 
       // Get the start time from labels
       Isis::PvlGroup &inst = lab.FindGroup ("Instrument",Isis::Pvl::Traverse);
-      //string stime = inst["SpacecraftClockCount"];
-      //SpiceDouble etStart;
-      //scs2e_c (NaifSpkCode(),stime.c_str(),&etStart);
-
-      string stime = inst["StartTime"];
-      double time;
-      str2et_c(stime.c_str(), &time);
-      //CreateCache(time);
-      //SetEphemerisTime(time);
-      SpiceDouble etStart = time;
+      string stime = (string)inst["SpacecraftClockStartCount"];
+      SpiceDouble etStart;
+      if ( stime != "NULL") {
+          scs2e_c (NaifSclkCode(),stime.c_str(),&etStart);
+      }
+      else {
+          stime = (string)inst["StartTime"];
+          str2et_c(stime.c_str(), &etStart);
+      }
+      SetEphemerisTime(etStart);
 
       // Get other info from labels
       double csum = inst["SpatialSumming"];
       double lineRate = (double) inst["LineExposureDuration"] / 1000.0;
-//      lineRate *= csum;
       double ss = inst["SampleFirstPixel"];
       ss += 1.0;
 
@@ -56,8 +55,9 @@ namespace Isis {
       focalMap->SetDetectorOffset(0.0,0.0);
 
       // Setup distortion map
-      CameraDistortionMap *distMap = new CameraDistortionMap(this);
-      distMap->SetDistortion(NaifIkCode());
+      //LroNarrowAngleDistortionMap *distMap = new LroNarrowAngleDistortionMap(this);
+      //distMap->SetDistortion( NaifIkCode());
+      new CameraDistortionMap(this);
 
       // Setup the ground and sky map
       new LineScanCameraGroundMap(this);

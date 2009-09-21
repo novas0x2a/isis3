@@ -151,6 +151,46 @@ namespace Isis {
    *     </td>
    *   </tr>
    *   <tr>
+   *     <td>Cubic Spline using Hermite cubic polynomial</td>
+   *     <td>@a CubicHermite</td>
+   *     <td>2</td>
+   *     <td>
+   *       Cubic Spline interpolation using the Hermite cubic
+   *       polynomial (also called the unique Hermite
+   *       interpolating fundamental polynomial of degree 3).
+   *       This method requires the input of the slopes of the
+   *       tangent lines of the curve (i.e. velocities, or first
+   *       derivatives) at each of the data points.  This ensures
+   *       that the approximation has the same "shape" as the
+   *       curve at the known data points. This interpolation type
+   *       uses piecewise Hermite cubic polynomials for each
+   *       interval, (@a x<sub>0</sub>, @a x<sub>1</sub>), using
+   *       the known data points, (@a
+   *       x<sub>0</sub>,@a f(@a x<sub>0</sub>)) and
+   *       (@a x<sub>1</sub>,@a f(@a x<sub>1</sub>)), and their
+   *       derivatives,
+   *       @a f '(@a x<sub>0</sub>) and @a f '(@a
+   *       x<sub>1</sub>). The Hermite cubic polynomial is defined
+   *       @f[ H_3(x) = 
+   *       f(x_0)h_0(x)+f(x_1)h_1(x)
+   *       +f\prime(x_0)\hat{h}_0(x)+f\prime(x_1)\hat{h}_1(x)
+   *       @f]
+   *       where
+   *       @f$ h_k(x) = 
+   *       [1-2(x-x_k)L\prime_k(x_k)](L_k(x))^2
+   *       @f$
+   *       and
+   *       @f$ \hat{h}_k(x) = 
+   *       (x-x_k)(L_k(x))^2
+   *       @f$
+   *       for the kth-Lagrange coefficient polynomials of degree
+   *       n = 1,
+   *       @f$ L_0(x) = \frac{x- x_1}{x_0-x_1}@f$ and 
+   *       @f$ L_1(x) = \frac{x- x_0}{x_1-x_0}@f$.
+   *       
+   *     </td>
+   *   </tr>
+   *   <tr>
    *     <td>Akima</td>
    *     <td>@a Akima</td>
    *     <td>5</td>
@@ -180,8 +220,8 @@ namespace Isis {
    * are implemented by using the interpolations on the data set 
    * created with a NumericalApproximation object. The Lagrange polynomial,
    *       @f[ L(x) = 
-   *       \sum_{i \neq j } f(x_i) \frac{x - x_j}{x_i - x_j}
-   *       \mbox{ for } 0 \leq i < n
+   *       \sum_{k=0}^{n} \left(f(x_k) \prod_{i=0,i \neq k}^{n}
+   *            \frac{x- x_i}{x_k-x_i}\right)
    *       @f]
    * is used to determine formulas for numerical differentiation 
    * and integration.
@@ -653,6 +693,22 @@ namespace Isis {
    *            documentation.
    *   @history 2009-02-12 Jeannie Walldren - Fixed documentation
    *            to include weblinks.
+   *   @history 2009-07-17 Steven Lambright - Added algorithm include,
+   *            removed macro MAX
+   *   @history 2009-06-10 Jeannie Walldren - Added interpolation
+   *            type CubicHermite.  This involved modifying some
+   *            methods, as well as adding variable p_fprimeOfx
+   *            and methods AddCubicHermiteDeriv() and
+   *            EvaluateCubicHermite().  Added Contains() method.
+   *   @history 2009-07-02 Jeannie Walldren - Replaced Hermite
+   *            interpolation algorithm with simpler version and
+   *            added methods EvaluateCubicHermiteFirstDeriv and
+   *            EvaluateCubicHermiteSecDeriv
+   *   @history 2009-07-09 Debbie Cook - Finished Jeannie's
+   *            modifications.
+   *   @history 2009-08-03 Jeannie Walldren - Clean up code,
+   *            documentation and check in changes from
+   *            2009-06-10, 2009-07-02, 2009-07-09
    *  
    */                                                                       
 
@@ -668,6 +724,7 @@ namespace Isis {
                         CubicClamped,         //!< Cubic Spline interpolation with clamped boundary conditions.  
                         CubicNatPeriodic,     //!< Cubic Spline interpolation with periodic boundary conditions.
                         CubicNeighborhood,    //!< Cubic Spline interpolation using 4-pt Neighborhoods with natural boundary conditions.
+                        CubicHermite,         //!< Cubic Spline interpolation using the Hermite cubic polynomial.
                         Akima,                //!< Non-rounded Akima Spline interpolation with natural boundary conditions.  
                         AkimaPeriodic         //!< Non-rounded Akima Spline interpolation with periodic boundary conditions.  
       };
@@ -702,8 +759,9 @@ namespace Isis {
       *     <LI> CubicClamped       = 4
       *     <LI> CubicNatPeriodic   = 5
       *     <LI> CubicNeighborhood  = 6
-      *     <LI> Akima              = 7
-      *     <LI> AkimaPeriodic      = 8
+      *     <LI> CubicHermite       = 7
+      *     <LI> Akima              = 8
+      *     <LI> AkimaPeriodic      = 9
       *    </UL>
       * 
       * @return NumericalApproximation::InterpType Currently assigned
@@ -718,10 +776,14 @@ namespace Isis {
       void AddData(unsigned int n, double *x, double *y);
       void AddData(const vector <double> &x, const vector <double> &y) throw (iException &);
       void SetCubicClampedEndptDeriv(const double yp1, const double ypn) throw (iException &);
+      void AddCubicHermiteDeriv(unsigned int n, double *fprimeOfx) throw (iException &);
+      void AddCubicHermiteDeriv(const vector <double> &fprimeOfx) throw (iException &);
+      void AddCubicHermiteDeriv(const double fprimeOfx) throw (iException &);
 
       //ACCESSOR METHODS AFTER DATA IS ENTERED
       double DomainMinimum();
       double DomainMaximum();
+      bool Contains(double x);
      /**
       * Returns the number of the coordinates added to the data set.
       * 
@@ -744,6 +806,8 @@ namespace Isis {
       vector <double> Evaluate (const vector <double> &a, const ExtrapType &etype=ThrowError) throw (iException &);
       vector <double> PolynomialNevilleErrorEstimate() throw (iException &);
       vector <double> CubicClampedSecondDerivatives() throw (iException &);
+      double EvaluateCubicHermiteFirstDeriv(const double a);
+      double EvaluateCubicHermiteSecDeriv(const double a);
 
       // DIFFERENTIATION METHODS
       double GslFirstDerivative(const double a) throw (iException &);
@@ -798,6 +862,9 @@ namespace Isis {
       vector<double>    p_clampedSecondDerivs;              //!< List of second derivatives evaluated at p_x values.  This is only used for the @a CubicClamped interpolation type.
       // POLYNOMIAL NEVILLE VARIABLES
       vector <double>   p_polyNevError;                     //!< Estimate of error for interpolation evaluated at x.  This is only used for the @a PolynomialNeville interpolation type. 91 taken from AtmosModel.
+      // CUBIC HERMITE VARIABLES
+      vector<double>    p_fprimeOfx;                        //!< List of first derivatives corresponding to each x value in the data set (i.e. each value in p_x)
+
 
       // == PROTECTED METHODS
       // CREATING, DESTROYING OBJECT
@@ -819,9 +886,11 @@ namespace Isis {
       double          EvaluateCubicNeighborhood(const double a);
       vector <double> EvaluateCubicNeighborhood(const vector <double> &a, const ExtrapType &etype);
       double          EvaluateCubicClamped(const double a) throw (iException &);
+      double          EvaluateCubicHermite(const double a) throw (iException &);
       double          EvaluatePolynomialNeville(const double a) throw (iException &);
       vector <double> EvaluateForIntegration(const double a, const double b, 
                                                 const unsigned int n) throw (iException &);
+      int FindIntervalLowerIndex(const double a);
       // STANDARDIZE ERRORS
       void ReportException(iException::errType type, const string &method, 
                        const string &message, char *filesrc, 

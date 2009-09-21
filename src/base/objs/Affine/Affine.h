@@ -2,8 +2,8 @@
 #define Affine_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/10/29 23:36:13 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/07/24 20:54:22 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -24,6 +24,7 @@
 
 #include <vector>
 #include "tnt_array2d.h"
+#include "iException.h"
 
 namespace Isis {
 /**                                                                       
@@ -67,15 +68,22 @@ namespace Isis {
  *  @history 2008-10-29 Steven Lambright - Corrected usage of std::vector,
  *                      problem pointed out by "novas0x2a" (Support Forum
  *                      Member)
+ * @history 2009-07-24 Kris Becker Introduced the AMatrix typedef; added new 
+ *          constructor that accepts an AMatrix; added static method to return
+ *          an Affine identity matrix; added methods to retrieve forward and
+ *          inverse AMatrixs; added new method that inverts the matrix.
  * 
  */                                                                       
 
   class Affine {
     public:
+      typedef TNT::Array2D<double> AMatrix;
       Affine ();
+      Affine(const AMatrix &a);
       ~Affine ();
       void Solve (const double x[], const double y[], 
                   const double xp[], const double yp[], int n);
+      static AMatrix getIdentity();
       void Identity ();
       void Translate (double tx, double ty);
       void Rotate(double rot);
@@ -99,15 +107,22 @@ namespace Isis {
 
       std::vector<double> Coefficients( int var );
       std::vector<double> InverseCoefficients( int var );
+      //! Returns the forward Affine matrix
+      AMatrix Forward() const { return (p_matrix.copy()); }
+      //! Returns the inverse Affine matrix
+      AMatrix Inverse() const { return (p_invmat.copy()); }
 
     private:
-      TNT::Array2D<double> p_matrix;  //!< Affine forward matrix
-      TNT::Array2D<double> p_invmat;  //!< Affine inverse matrix
+      AMatrix p_matrix;   //!< Affine forward matrix
+      AMatrix p_invmat;   //!< Affine inverse matrix
 
       double p_x;         //!< x value of the (x,y) coordinate
       double p_y;         //!< y value of the (x,y) coordinate
       double p_xp;        //!< x' value of the (x',y') coordinate
       double p_yp;        //!< y' value of the (x',y') coordinate
+
+      void checkDims(const AMatrix &am) const throw (iException &);
+      AMatrix invert(const AMatrix &a) const throw (iException &);
   };
 };
 

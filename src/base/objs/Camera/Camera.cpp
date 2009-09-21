@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.18 $
- * $Date: 2009/05/21 21:11:25 $
+ * $Revision: 1.26 $
+ * $Date: 2009/08/19 22:13:03 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -158,7 +158,8 @@ namespace Isis {
             double x = p_distortionMap->UndistortedFocalPlaneX();
             double y = p_distortionMap->UndistortedFocalPlaneY();
             double z = p_distortionMap->UndistortedFocalPlaneZ();
-            return p_groundMap->SetFocalPlane(x,y,z);
+            p_hasIntersection =  p_groundMap->SetFocalPlane(x,y,z);
+            return p_hasIntersection;
           }
         }
       }
@@ -289,7 +290,7 @@ namespace Isis {
                                    const double radius) {
     // Convert lat/lon to undistorted focal plane x/y
     if (p_groundMap->SetGround(latitude,longitude,radius)) {
-      return RawFocalPlanetoImage();
+      return RawFocalPlanetoImage();  // sets p_hasIntersection
     }
 
     p_hasIntersection = false;
@@ -335,7 +336,7 @@ namespace Isis {
   }
 
  /**
-  * Returns the pixel resolution at the current position
+  * Returns the pixel resolution at the current position in m/pix
   *
   * @return double The pixel resolution
   */
@@ -1104,7 +1105,10 @@ namespace Isis {
   /**
    * Computes and returns the ground azimuth between the ground point and
    * another point of interest, such as the subspacecraft point or the
-   * subsolar point.
+   * subsolar point. The ground azimuth is the clockwise angle on the
+   * ground between a line drawn from the ground point to the North pole
+   * of the body and a line drawn from the ground point to the point of
+   * interest (such as the subsolar point or the subspacecraft point).
    *
    * @param glat The latitude of the ground point
    * @param glon The longitude of the ground point
@@ -1130,12 +1134,26 @@ namespace Isis {
     double ABsum = atan(tanabsum);
     double ABdif = atan(tanabdif);
     double A = ABsum + ABdif;
+    double B = ABsum - ABdif;
     double sinc = sin(c) * sin(a) / sin(A);
     c = asin(sinc);
-    double azimuth = A * 180.0 / Isis::PI + 90.0;
-    azimuth = 450.0 - azimuth;
-    if (azimuth > 360.0) {
-      azimuth = azimuth - 360.0;
+    double azimuthA = A * 180.0 / Isis::PI + 90.0;
+    double azimuthB = 90.0 - B * 180.0 / Isis::PI;
+    double azimuth = 0.0;
+    if ((glat > slat && glon > slon) ||
+        (glat < slat && glon > slon)) {
+      if (azimuthA < azimuthB) {
+        azimuth = 270.0 - azimuthA;
+      } else {
+        azimuth = 270.0 - azimuthB;
+      }
+    } else if ((glat < slat && glon < slon) ||
+        (glat > slat && glon < slon)) {
+      if (azimuthA < azimuthB) {
+        azimuth = 90.0 - azimuthA;
+      } else {
+        azimuth = 90.0 - azimuthB;
+      }
     }
     return azimuth;
   }
@@ -1285,9 +1303,25 @@ namespace Isis {
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
     }
 
+    // Set a position in the image so that the PixelResolution can be calculated
+    SetImage(p_alphaCube->BetaSamples()/2, p_alphaCube->BetaLines()/2);
+    double tol = PixelResolution()/100.;  //meters/pix/100.
+
+    if (tol < 0.) {
+      // Alternative calculation of ground resolution of a pixel/100
+      double altitudeMeters;
+      if (IsSky()) {  // Use the unit sphere as the target
+        altitudeMeters = 1.0;
+      }
+      else {
+        altitudeMeters = SpacecraftAltitude()*1000.;
+      }
+      tol = PixelPitch()*altitudeMeters/FocalLength()/100.;
+    }
+
     p_ignoreProjection = projIgnored;
 
-    Spice::CreateCache(etStart, etEnd, cacheSize);
+    Spice::CreateCache(etStart, etEnd, cacheSize, tol);
 
     SetEphemerisTime(etStart);
 

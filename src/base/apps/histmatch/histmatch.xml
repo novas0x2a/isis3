@@ -187,8 +187,7 @@
       </terminalInterface>
 
       <inputImages>
-        <image src="assets/image/FROMparameter.jpg" width="500" height="500"
-         alt="Histmatch input image">
+        <image src="assets/image/FROMparameter.jpg" width="500" height="500">
           <brief> Input image for histmatch</brief>
           <description>This is the input image for the histmatch example.
           </description>
@@ -196,16 +195,14 @@
           <parameterName>FROM</parameterName>
         </image>
 
-        <image src="assets/image/band1plot.jpg" width="500" height="500"
-         alt="Band 1 histogram">
+        <image src="assets/image/band1plot.jpg" width="500" height="500">
           <brief> Band 1 histogram</brief>
           <description>This is the input image's histogram.
           </description>
           <thumbnail caption="Input Peaks (Band 1) image" src="assets/thumb/band1plot.jpg" width="200" height="200" />
         </image>
 
-        <image src="assets/image/MATCHparameter.jpg" width="500" height="500"
-         alt="Match image for histmatch">
+        <image src="assets/image/MATCHparameter.jpg" width="500" height="500">
           <brief> Match image for histmatch</brief>
           <description>This is the match image for the histmatch example (i.e. the other input's histogram will be matched to this image's histogram).
           </description>
@@ -213,8 +210,7 @@
           <parameterName>MATCH</parameterName>
         </image>
 
-        <image src="assets/image/band6plot.jpg" width="500" height="500"
-         alt="Band 6 histogram">
+        <image src="assets/image/band6plot.jpg" width="500" height="500">
           <brief> Band 6 histogram</brief>
           <description>This is the input image's histogram.
           </description>
@@ -223,8 +219,7 @@
       </inputImages>
 
       <outputImages>
-        <image src="assets/image/CDFTOparameter.jpg" width="500" height="500"
-         alt="Output image for CDF matching">
+        <image src="assets/image/CDFTOparameter.jpg" width="500" height="500">
           <brief>Output image for CDF matching</brief>
           <description> This is the output image that results.
           </description>
@@ -232,8 +227,7 @@
           <parameterName>TO</parameterName>
         </image>
 
-        <image src="assets/image/cdfplot.jpg" width="500" height="500"
-         alt="CDF histogram">
+        <image src="assets/image/cdfplot.jpg" width="500" height="500">
           <brief>CDF histogram</brief>
           <description>This is the output image's histogram.
           </description>
@@ -244,8 +238,7 @@
 
       <guiInterfaces>
         <guiInterface>
-          <image src="assets/image/histmatchgui.jpg" width="500" height="500"
-           alt="Histmatch GUI">
+          <image src="assets/image/histmatchgui.jpg" width="500" height="500">
             <brief>Example Gui</brief>
             <description>Screenshot of GUI with parameters filled in to perform
 a histogram matching operation with the input images. </description>
@@ -270,8 +263,7 @@ a histogram matching operation with the input images. </description>
       </terminalInterface>
 
       <inputImages>
-        <image src="assets/image/FROMparameter.jpg" width="500" height="500"
-         alt="Input image">
+        <image src="assets/image/FROMparameter.jpg" width="500" height="500">
           <brief> Input image for histmatch</brief>
           <description>This is the input image for the histmatch example.
           </description>
@@ -279,16 +271,14 @@ a histogram matching operation with the input images. </description>
           <parameterName>FROM</parameterName>
         </image>
 
-        <image src="assets/image/band1plot.jpg" width="500" height="500"
-         alt="Band 1 histogram">
+        <image src="assets/image/band1plot.jpg" width="500" height="500">
           <brief> Band 1 histogram</brief>
           <description>This is the input image's histogram.
           </description>
           <thumbnail caption="Input Peaks (Band 1) image" src="assets/thumb/band1plot.jpg" width="200" height="200"  />
         </image>
 
-        <image src="assets/image/MATCHparameter.jpg" width="500" height="500"
-         alt="Match image for histmatch">
+        <image src="assets/image/MATCHparameter.jpg" width="500" height="500">
           <brief> Match image for histmatch</brief>
           <description>This is the match image for the histmatch example (i.e. the other input's histogram will be matched to this image's histogram).
           </description>
@@ -296,8 +286,7 @@ a histogram matching operation with the input images. </description>
           <parameterName>MATCH</parameterName>
         </image>
 
-        <image src="assets/image/band6plot.jpg" width="500" height="500" 
-         alt="Band 6 histogram">
+        <image src="assets/image/band6plot.jpg" width="500" height="500">
           <brief> Band 6 histogram</brief>
           <description>This is the input image's histogram.
           </description>
@@ -307,8 +296,7 @@ a histogram matching operation with the input images. </description>
       </inputImages>
 
       <outputImages>
-        <image src="assets/image/MODETOparameter.jpg"  width="500" height="500"
-         alt="Output image">
+        <image src="assets/image/MODETOparameter.jpg"  width="500" height="500">
           <brief>Output image for mode matching</brief>
           <description> This is the output image that results.
           </description>
@@ -316,8 +304,7 @@ a histogram matching operation with the input images. </description>
           <parameterName>TO</parameterName>
         </image>
 
-        <image src="assets/image/modeplot.jpg" width="500" height="500"
-         alt="Mode histogram">
+        <image src="assets/image/modeplot.jpg" width="500" height="500">
           <brief> Mode histogram</brief>
           <description>This is the output image's histogram.
           </description>

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2009/02/03 15:08:13 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2009/08/05 21:45:05 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -452,6 +452,24 @@ namespace Isis {
       iString msg = "Y Spacing must be greater that 0.0 [(" + iString(p_Yspacing) + "]"; 
       throw iException::Message(iException::User, msg, _FILEINFO_);
     }
+  }
+
+  PvlGroup GridPolygonSeeder::PluginParameters(std::string grpName) {
+    PvlGroup pluginInfo(grpName);
+
+    PvlKeyword name("Name", Algorithm());
+    PvlKeyword minThickness("MinimumThickness", MinimumThickness());
+    PvlKeyword minArea("MinimumArea", MinimumArea());
+    PvlKeyword xSpac("XSpacing", p_Xspacing);
+    PvlKeyword ySpac("YSpacing", p_Yspacing);
+
+    pluginInfo.AddKeyword(name);
+    pluginInfo.AddKeyword(minThickness);
+    pluginInfo.AddKeyword(minArea);
+    pluginInfo.AddKeyword(xSpac);
+    pluginInfo.AddKeyword(ySpac);
+
+    return pluginInfo;
   }
 
 }; // End of namespace Isis

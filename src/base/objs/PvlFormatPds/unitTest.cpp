@@ -57,7 +57,7 @@ int main () {
       key.SetFormat(pdsFormatter);
       cout << key << pdsFormatter->FormatEOL();
     }
-  
+
     {
       Isis::PvlKeyword key("skey", "string val","chars");
       cout << key << endl;
@@ -65,6 +65,27 @@ int main () {
       cout << key << pdsFormatter->FormatEOL();
     }
   
+    {
+      Isis::PvlKeyword key("sNAstring", "N/A");
+      cout << key << endl;
+      key.SetFormat(pdsFormatter);
+      cout << key << pdsFormatter->FormatEOL();
+    }
+
+    {
+      Isis::PvlKeyword key("sUNKquote", "\"UNK\"");
+      cout << key << endl;
+      key.SetFormat(pdsFormatter);
+      cout << key << pdsFormatter->FormatEOL();
+    }
+
+    {
+      Isis::PvlKeyword key("ssinglequote", "\'NA\'");
+      cout << key << endl;
+      key.SetFormat(pdsFormatter);
+      cout << key << pdsFormatter->FormatEOL();
+    }
+
     {
       Isis::PvlKeyword key("notinmap", "junk string");
       cout << key << endl;
@@ -216,6 +237,9 @@ int main () {
       Isis::PvlGroup grp("Group1");
       grp += Isis::PvlKeyword ("skey", "stringval");
       grp += Isis::PvlKeyword ("mystring", "string val");
+      grp += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      grp += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      grp += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       grp += Isis::PvlKeyword ("myint", 12345);
       grp += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       grp += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -232,6 +256,9 @@ int main () {
       Isis::PvlGroup grp("Group1");
       grp += Isis::PvlKeyword ("skey", "stringval");
       grp += Isis::PvlKeyword ("mystring", "string val");
+      grp += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      grp += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      grp += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       grp += Isis::PvlKeyword ("myint", 12345);
       grp += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       grp += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -241,6 +268,9 @@ int main () {
       Isis::PvlObject obj2("Object2");
       obj2 += Isis::PvlKeyword ("skey", "stringval");
       obj2 += Isis::PvlKeyword ("mystring", "string val");
+      obj2 += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      obj2 += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      obj2 += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       obj2 += Isis::PvlKeyword ("myint", 12345);
       obj2 += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       obj2 += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -248,6 +278,9 @@ int main () {
   
       obj += Isis::PvlKeyword ("skey", "stringval");
       obj += Isis::PvlKeyword ("mystring", "string val");
+      obj += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      obj += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      obj += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       obj += Isis::PvlKeyword ("myint", 12345);
       obj += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       obj += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -270,6 +303,9 @@ int main () {
       Isis::PvlGroup grp("Group1");
       grp += Isis::PvlKeyword ("skey", "stringval");
       grp += Isis::PvlKeyword ("mystring", "string val");
+      grp += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      grp += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      grp += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       grp += Isis::PvlKeyword ("myint", 12345);
       grp += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       grp += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -278,6 +314,9 @@ int main () {
       Isis::PvlObject obj2("Object2");
       obj2 += Isis::PvlKeyword ("skey", "stringval");
       obj2 += Isis::PvlKeyword ("mystring", "string val");
+      obj2 += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      obj2 += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      obj2 += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       obj2 += Isis::PvlKeyword ("myint", 12345);
       obj2 += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       obj2 += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -286,12 +325,18 @@ int main () {
   
       obj += Isis::PvlKeyword ("skey", "stringval");
       obj += Isis::PvlKeyword ("mystring", "string val");
+      obj += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      obj += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      obj += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       obj += Isis::PvlKeyword ("myint", 12345);
       obj += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       obj += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
   
       pvl += Isis::PvlKeyword ("skey", "stringval");
       pvl += Isis::PvlKeyword ("mystring", "string val");
+      pvl += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      pvl += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      pvl += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       pvl += Isis::PvlKeyword ("myint", 12345);
       pvl += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       pvl += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");
@@ -301,6 +346,9 @@ int main () {
       Isis::PvlGroup grp2("Group2");
       grp2 += Isis::PvlKeyword ("skey", "stringval");
       grp2 += Isis::PvlKeyword ("mystring", "string val");
+      grp2 += Isis::PvlKeyword ("sNULLstring", "NULL");  // should add quotes after format set
+      grp2 += Isis::PvlKeyword ("sUNKquote", "\"UNK\"");  // should not add more quotes
+      grp2 += Isis::PvlKeyword ("sNAsingle", "\'N/A\'");  // should not add more quotes
       grp2 += Isis::PvlKeyword ("myint", 12345);
       grp2 += Isis::PvlKeyword ("myfloat", 12345.67e+89);
       grp2 += Isis::PvlKeyword ("myarray", "(12345,\"a short string\",1.234)");

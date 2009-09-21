@@ -46,6 +46,9 @@
     <change name="Steven Lambright" date="2008-05-12">
       Removed references to CubeInfo 
     </change>
+    <change name="Travis Addair" date="2009-08-10">
+      Mapping group parameters are now placed into the print file.
+    </change>
 </history>
 
   <category>

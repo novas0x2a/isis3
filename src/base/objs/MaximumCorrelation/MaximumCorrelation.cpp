@@ -11,8 +11,8 @@ namespace Isis {
 
     for (int l=1; l<=pattern.Lines(); l++) {
       for (int s=1; s<=pattern.Samples(); s++) {
-        pdn[s-1] = pattern(s,l);
-        sdn[s-1] = subsearch(s,l);
+        pdn[s-1] = pattern.GetValue(s,l);
+        sdn[s-1] = subsearch.GetValue(s,l);
       }
       mv.AddData(&pdn[0],&sdn[0], pattern.Samples());
     }

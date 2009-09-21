@@ -31,7 +31,9 @@ namespace Qisis {
   * @author 2008-09-09 Tracie Sucharski 
   *  
   * @history 2008-11-19  Tracie Sucharski - Addition option to constructor 
-  *                          to allow mouse events on leftChipViewport. 
+  *                          to allow mouse events on leftChipViewport.
+  * @history 2009-06-10  Tracie Sucharski - Added new slot, clearFiles which 
+  *                          allow new files to be opened. 
   *
   */
   class QtieTool : public Qisis::Tool {
@@ -49,6 +51,7 @@ namespace Qisis {
 
     public slots:
       void setFiles(Isis::Cube &baseCube,Isis::Cube &matchCube);
+      void clearFiles();
       void createPoint(double lat,double lon);
       void modifyPoint(Isis::ControlPoint *point);
       void deletePoint(Isis::ControlPoint *point);

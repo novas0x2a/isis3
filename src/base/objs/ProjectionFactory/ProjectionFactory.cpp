@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/06/18 21:36:42 $
+ * $Revision: 1.9 $
+ * $Date: 2009/06/18 21:49:15 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -184,12 +184,23 @@ namespace Isis {
 
         // Convert upperleft coordinate to units of pixel
         // Truncate it to the nearest whole pixel (floor/ceil)
-        // Convert it back to meters
-        double sampleOffset = floor (minX / pixelResolution);
-        minX = sampleOffset * pixelResolution;
+        // Convert it back to meters.  But don't do this if
+        // the X/Y position is already close to a whole pixel because 
+        // the floor/ceil function could cause an extra pixel to be added
+        // just due to machine precision issues
+        if (fabs(fmod(minX,pixelResolution)) > 1.0e-6) {
+          if (pixelResolution - fabs(fmod(minX,pixelResolution)) > 1.0e-6) {
+            double sampleOffset = floor (minX / pixelResolution);
+            minX = sampleOffset * pixelResolution;
+          }
+        }
 
-        double lineOffset = -1.0 * ceil(maxY / pixelResolution);
-        maxY = -1.0 * lineOffset * pixelResolution;
+        if (fabs(fmod(maxY,pixelResolution)) > 1.0e-6) {
+          if (pixelResolution - fabs(fmod(maxY,pixelResolution)) > 1.0e-6) {
+            double lineOffset = -1.0 * ceil(maxY / pixelResolution);
+            maxY = -1.0 * lineOffset * pixelResolution;
+          }
+        }
 
         // Determine the number of samples and lines
         samples = (int) ((maxX - minX) / pixelResolution + 0.5);
@@ -425,12 +436,23 @@ namespace Isis {
 
       // Convert upperleft coordinate to units of pixel
       // Truncate it to the nearest whole pixel (floor/ceil)
-      // Convert it back to meters
-      double sampleOffset = floor (minX / pixelResolution);
-      minX = sampleOffset * pixelResolution;
+      // Convert it back to meters.  But don't do this if
+      // the X/Y position is already close to a whole pixel because 
+      // the floor/ceil function could cause an extra pixel to be added
+      // just due to machine precision issues
+      if (fabs(fmod(minX,pixelResolution)) > 1.0e-6) {
+        if (pixelResolution - fabs(fmod(minX,pixelResolution)) > 1.0e-6) {
+          double sampleOffset = floor (minX / pixelResolution);
+          minX = sampleOffset * pixelResolution;
+        }
+      }
 
-      double lineOffset = -1.0 * ceil(maxY / pixelResolution);
-      maxY = -1.0 * lineOffset * pixelResolution;
+      if (fabs(fmod(maxY,pixelResolution)) > 1.0e-6) {
+        if (pixelResolution - fabs(fmod(maxY,pixelResolution)) > 1.0e-6) {
+          double lineOffset = -1.0 * ceil(maxY / pixelResolution);
+          maxY = -1.0 * lineOffset * pixelResolution;
+        }
+      }
 
       // Determine the number of samples and lines
       samples = (int) ((maxX - minX) / pixelResolution + 0.5);

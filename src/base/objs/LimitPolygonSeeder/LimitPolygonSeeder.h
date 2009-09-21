@@ -2,8 +2,8 @@
 #define LimitPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/12/23 17:24:48 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/08/05 21:44:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -52,6 +52,8 @@ namespace Isis {
    *   @history 2008-11-25 Steven Lambright - Added error checking
    *   @history 2008-12-23 Steven Lambright - Fixed problem with finding points in
    *            polygons that caused this algorithm to miss some.
+   *   @history 2009-08-05 Travis Addair - Encapsulated group 
+   *            creation for seed definition group
    */                                                                       
   class LimitPolygonSeeder : public PolygonSeeder {
     public:
@@ -62,6 +64,7 @@ namespace Isis {
 
       std::vector<geos::geom::Point*> Seed(const geos::geom::MultiPolygon *mp, 
                                            Projection *proj);
+      virtual PvlGroup PluginParameters(std::string grpName);
 
     protected:
       virtual void Parse(Pvl &pvl);
@@ -70,8 +73,6 @@ namespace Isis {
       geos::geom::Geometry *GetMultiPolygon(double dMinX, double dMinY, 
                                             double dMaxX, double dMaxY, 
                                             const geos::geom::MultiPolygon &orig);
-      double p_minThickness; //!< area / max(Xextent,Yextent)**2
-      double p_minArea; //!< Units are meters
       int p_majorAxisPts; //!< Number of points to place on major axis
       int p_minorAxisPts; //!< Number of points to place on minor axis
   };

@@ -134,8 +134,7 @@
       </terminalInterface>
 
       <inputImages>
-        <image src="assets/image/FROMparameter.jpg" width="500" height="500"
-         alt="Input image">
+        <image src="assets/image/FROMparameter.jpg" width="500" height="500">
           <brief> Input image for histeq</brief>
           <description>This is band 6 of the input image for this example.
           </description>
@@ -143,8 +142,7 @@
           <parameterName>FROM</parameterName>
         </image>
 
-        <image src="assets/image/band6plot.jpg" width="500" height="500"
-         alt="Band 6 histogram">
+        <image src="assets/image/band6plot.jpg" width="500" height="500">
           <brief> Band 6 histogram</brief>
           <description>This is the input image's cumulative distribution for band 6.
           </description>
@@ -153,8 +151,7 @@
       </inputImages>
 
       <outputImages>
-        <image src="assets/image/TOparameter.jpg" width="500" height="500"
-         alt="Output image">
+        <image src="assets/image/TOparameter.jpg" width="500" height="500">
           <brief>Output image for histogram equalization</brief>
           <description> This is the output image that results.
           </description>
@@ -162,8 +159,7 @@
           <parameterName>TO</parameterName>
         </image>
 
-        <image src="assets/image/toplot.jpg" width="500" height="500"
-         alt="Resulting distribution">
+        <image src="assets/image/toplot.jpg" width="500" height="500">
           <brief>Resulting cumulative distribution</brief>
           <description>This is the output image's cumulative distribution.
           </description>
@@ -174,8 +170,7 @@
 
       <guiInterfaces>
         <guiInterface>
-          <image src="assets/image/histeqgui.jpg" width="500" height="500"
-           alt="histeq GUI">
+          <image src="assets/image/histeqgui.jpg" width="500" height="500">
             <brief>Example Gui</brief>
             <description>Screenshot of GUI with parameters filled in to perform
                          a histogram equalization operation with the input image. </description>

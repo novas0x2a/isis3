@@ -1,12 +1,16 @@
-#include "SpecialPixel.h"
 #include "BundleAdjust.h"
+
+#include <iomanip>
+
+#include "SpecialPixel.h"
 #include "BasisFunction.h"
 #include "LeastSquares.h"
 #include "CameraDetectorMap.h"
 #include "CameraDistortionMap.h"
 #include "ControlPoint.h"
 #include "SpicePosition.h"
-#include <iomanip>
+#include "SpicePosition.h"
+#include "Application.h"
 
 namespace Isis {
   BundleAdjust::BundleAdjust(const std::string &cnetFile,
@@ -85,6 +89,7 @@ namespace Isis {
       if (p_observationMode) delete p_onlist;
     }
   }
+
 
   void BundleAdjust::Init(Progress *progress) {
     // Get the cameras set up for all images
@@ -778,10 +783,10 @@ namespace Isis {
 
       double mudx = point[i].FocalPlaneMeasuredX();
 //      double cudx = point[i].FocalPlaneComputedX();
-      double cudx = lookC[0] * cam->FocalLength() / lookC[2];
+      double cudx = lookC[0] * fl / lookC[2];
       double mudy = point[i].FocalPlaneMeasuredY();
 //      double cudy = point[i].FocalPlaneComputedY();
-      double cudy = lookC[1] * cam->FocalLength() / lookC[2];
+      double cudy = lookC[1] * fl / lookC[2];
 
       double deltax = mudx - cudx;
       double deltay = mudy - cudy;

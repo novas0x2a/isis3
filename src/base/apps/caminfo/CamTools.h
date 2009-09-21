@@ -2,8 +2,8 @@
 #define CamTools_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $
- * $Date: 2009/06/23 16:51:24 $
+ * $Revision: 1.10 $
+ * $Date: 2009/08/25 01:37:55 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -120,6 +120,12 @@ struct DeleteObject {
    * @history 2009-05-29 Kris Becker - Added _pixinx parameter 
    * @history 2009-06-22 Kris Becker - Added hasLimb() method to check for the 
    *          presence of a planet limb; Added getProjGeometry() method.
+   * @history 2009-08-04 Christopher Austin - fixed ImagePolygon::Create call for 
+   *          the updated sampinc/lineinc implementation
+   * @history 2009-08-12 Kris Becker - Modified so that images that include 
+   *          poles are not converted to 180 domain when projected
+   * @history 2009-08-24 Kris Becker - Added ability to disable use of shape 
+   *          model when creating polygons that contains a limb
    */
 class BandGeometry {
 
@@ -132,6 +138,8 @@ class BandGeometry {
 
     void setPixInc(const int pixinc) { _pixinc = pixinc; }
     int getPixInc() const { return (_pixinc); }
+    void setMaxIncidence(const double maxinc) { _maxIncidence = maxinc; }
+    void setMaxEmission(const double maxema) { _maxEmission = maxema; }
     int size() const { return (_gBandList.size()); }
     bool isPointValid(const double &sample, const double &line, const Camera *camera = 0) const; 
     bool isBandIndependent() const { return (_isBandIndependent); }
@@ -210,6 +218,8 @@ class BandGeometry {
     int _nSamps;
     int _nBands;
     int _pixinc;
+    double _maxEmission;
+    double _maxIncidence;
     double _radius;
     bool _isBandIndependent;
     bool _hasCenterGeom;

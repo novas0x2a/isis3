@@ -3,170 +3,64 @@
 #include <string>
 #include <iomanip> 
 
-#include "Camera.h"
-#include "Process.h"
-#include "iException.h"
-#include "SpecialPixel.h"
 #include "Brick.h"
+#include "Camera.h"
+#include "CameraPointInfo.h"
+#include "iException.h"
 #include "iTime.h"
+#include "Progress.h"
+#include "SpecialPixel.h"
 
 using namespace std; 
 using namespace Isis;
 
 void IsisMain() {
-  // Use a regular Process
-  Process p;
-
-  // Open the input cube and initialize the camera
-  Cube *icube = p.SetInputCube("FROM");
-  Camera *cam = icube->Camera();
-
-  // See if the user entered a line/sample
   UserInterface &ui = Application::GetUserInterface();
+
+  // Set up CameraPointInfo and set file
+  CameraPointInfo campt;
+  campt.SetCube(ui.GetFilename("FROM"));
+
+  Progress prog;
+  prog.SetMaximumSteps(1);
+
+  // See if the user will allow outside locations
+  campt.AllowOutside(ui.GetBoolean("ALLOWOUTSIDE"));
+
+  // Depending on what type is selected, set values accordingly
+  PvlGroup *point = NULL;
   if (ui.GetString("TYPE") == "IMAGE") {
     double sample = 0.0;
-
-    if(ui.WasEntered("SAMPLE")) {
-      sample = ui.GetDouble("SAMPLE");
-    }
-    else {
-      sample = icube->Samples()/2.0;
-    }
-
     double line = 0.0;
-
-    if(ui.WasEntered("LINE")) {
+    if (ui.WasEntered("SAMPLE") && ui.WasEntered("LINE")) {
+      sample = ui.GetDouble("SAMPLE");
       line = ui.GetDouble("LINE");
+      point = campt.SetImage(sample, line);
     }
     else {
-      line = icube->Lines()/2.0;
-    }
-
-    cam->SetImage(sample,line);
+      if (ui.WasEntered("SAMPLE")) {
+        sample = ui.GetDouble("SAMPLE");
+        point = campt.SetSample(sample);
+      }
+      else if (ui.WasEntered("LINE")) {
+        line = ui.GetDouble("LINE");
+        point = campt.SetLine(line);
+      }
+      else {
+        point = campt.SetCenter();
+      }
+    }    
   }
   else {
     double lat = ui.GetDouble("LATITUDE");
     double lon = ui.GetDouble("LONGITUDE");
-    cam->SetUniversalGround(lat,lon);
-  }
+    point = campt.SetGround(lat,lon);
+  } 
+ 
+  prog.CheckStatus();
 
-  // See if we can proceed 
-  if (!cam->HasSurfaceIntersection()) {
-    string msg = "Requested position does not project in camera model";
-    throw iException::Message(iException::Camera,msg,_FILEINFO_);
-  }
-
-  if(!ui.GetBoolean("ALLOWOUTSIDE")) {
-    if(!cam->InCube()) {
-      string msg = "Requested position does not project in camera model";
-      throw iException::Message(iException::Camera,msg,_FILEINFO_);
-    }
-  }
-
-  // Create Brick on samp, line to get the dn value of the pixel
-  Brick b(3,3,1,icube->PixelType());
-
-  int intSamp = (int)(cam->Sample()+0.5);
-  int intLine = (int)(cam->Line()+0.5);
-  b.SetBasePosition(intSamp,intLine,1);
-  icube->Read(b);
-
-  // Declare arrays of body coords for later use
-  double pB[3], spB[3], sB[3];
-  string utc;
-  double ssplat,ssplon,sslat,sslon, pwlon, oglat;
-
-  // Create group with ground position
-  PvlGroup gp("GroundPoint"); 
-  {
-    gp += PvlKeyword("Filename",Filename(ui.GetFilename("FROM")).Expanded());
-    gp += PvlKeyword("Sample",cam->Sample());
-    gp += PvlKeyword("Line",cam->Line());
-    gp += PvlKeyword("PixelValue",PixelToString(b[0]));
-    gp += PvlKeyword("RightAscension",cam->RightAscension());
-    gp += PvlKeyword("Declination",cam->Declination());
-    gp += PvlKeyword("PlanetocentricLatitude",cam->UniversalLatitude());
-
-    // Convert lat to planetographic
-    double radii[3];
-    cam->Radii(radii);
-    oglat = Isis::Projection::ToPlanetographic(cam->UniversalLatitude(),
-                                               radii[0],radii[2]);
-    gp += PvlKeyword("PlanetographicLatitude",oglat);
-    gp += PvlKeyword("PositiveEastLongitude",cam->UniversalLongitude());
-
-    //Convert lon to positive west
-    pwlon = -cam->UniversalLongitude();
-    while (pwlon < 0.0) pwlon += 360.0;
-    gp += PvlKeyword("PositiveWestLongitude",pwlon);
-
-    cam->Coordinate(pB);
-    PvlKeyword coord("BodyFixedCoordinate");
-    coord.AddValue(pB[0],"km");
-    coord.AddValue(pB[1],"km");
-    coord.AddValue(pB[2],"km");
-    gp += coord;
-
-    gp += PvlKeyword("LocalRadius",cam->LocalRadius(),"m");
-    gp += PvlKeyword("SampleResolution",cam->SampleResolution(),"m");
-    gp += PvlKeyword("LineResolution",cam->LineResolution(),"m");
-
-    cam->InstrumentPosition(spB);
-    PvlKeyword spcoord("SpacecraftPosition");
-    spcoord.AddValue(spB[0],"km");
-    spcoord.AddValue(spB[1],"km");
-    spcoord.AddValue(spB[2],"km");
-    spcoord.AddComment("Spacecraft Information");
-    gp += spcoord;
-
-    gp += PvlKeyword("SpacecraftAzimuth",cam->SpacecraftAzimuth());
-    gp += PvlKeyword("SlantDistance",cam->SlantDistance(),"km");
-    gp += PvlKeyword("TargetCenterDistance",cam->TargetCenterDistance(),"km");
-    cam->SubSpacecraftPoint(ssplat,ssplon);
-    gp += PvlKeyword("SubSpacecraftLatitude",ssplat);
-    gp += PvlKeyword("SubSpacecraftLongitude",ssplon);
-    gp += PvlKeyword("SpacecraftAltitude",cam->SpacecraftAltitude(),"km");
-    gp += PvlKeyword("OffNadirAngle",cam->OffNadirAngle());
-    double subspcgrdaz;
-    subspcgrdaz = cam->GroundAzimuth(cam->UniversalLatitude(),cam->UniversalLongitude(),
-      ssplat,ssplon);
-    gp += PvlKeyword("SubSpacecraftGroundAzimuth",subspcgrdaz);
-
-    cam->SunPosition(sB);
-    PvlKeyword scoord("SunPosition");
-    scoord.AddValue(sB[0],"km");
-    scoord.AddValue(sB[1],"km");
-    scoord.AddValue(sB[2],"km");
-    scoord.AddComment("Sun Information");
-    gp += scoord;
-
-    gp += PvlKeyword("SubSolarAzimuth",cam->SunAzimuth());
-    gp += PvlKeyword("SolarDistance",cam->SolarDistance(),"AU");
-    cam->SubSolarPoint(sslat,sslon);
-    gp += PvlKeyword("SubSolarLatitude",sslat);
-    gp += PvlKeyword("SubSolarLongitude",sslon);
-    double subsolgrdaz;
-    subsolgrdaz = cam->GroundAzimuth(cam->UniversalLatitude(),cam->UniversalLongitude(),
-      sslat,sslon);
-    gp += PvlKeyword("SubSolarGroundAzimuth",subsolgrdaz);
-
-    PvlKeyword phase("Phase",cam->PhaseAngle());
-    phase.AddComment("Illumination and Other");
-    gp += phase;
-    gp += PvlKeyword("Incidence",cam->IncidenceAngle());
-    gp += PvlKeyword("Emission",cam->EmissionAngle());
-    gp += PvlKeyword("NorthAzimuth",cam->NorthAzimuth());
-
-    PvlKeyword et("EphemerisTime",cam->EphemerisTime(),"seconds");
-    et.AddComment("Time");
-    gp += et;    
-    iTime t(cam->EphemerisTime());
-    utc = t.UTC();
-    gp += PvlKeyword("UTC",utc);
-    gp += PvlKeyword("LocalSolarTime",cam->LocalSolarTime(),"hour");
-    gp += PvlKeyword("SolarLongitude",cam->SolarLongitude());
-  }
-  Application::Log(gp);
+  // Log it
+  Application::Log((*point));
 
   if (ui.WasEntered("TO")) {
     // Get user params from ui
@@ -178,7 +72,7 @@ void IsisMain() {
     if (ui.GetString("FORMAT") == "PVL") {
       Pvl temp;
       temp.SetTerminator("");
-      temp.AddGroup(gp);
+      temp.AddGroup((*point));
       if (append) {
         temp.Append(outFile);
       }
@@ -204,34 +98,34 @@ void IsisMain() {
       } 
 
       if(writeHeader) {
-        for(int i = 0; i < gp.Keywords(); i++) {
-          if(gp[i].Size() == 3) {
-            os << gp[i].Name() << "X," 
-               << gp[i].Name() << "Y," 
-               << gp[i].Name() << "Z";
+        for(int i = 0; i < (*point).Keywords(); i++) {
+          if((*point)[i].Size() == 3) {
+            os << (*point)[i].Name() << "X," 
+               << (*point)[i].Name() << "Y," 
+               << (*point)[i].Name() << "Z";
           }
           else {
-            os << gp[i].Name();
+            os << (*point)[i].Name();
           }
 
-          if(i < gp.Keywords()-1) {
+          if(i < point->Keywords()-1) {
             os << ",";
           }
         }
         os << endl;
       }
       
-      for(int i = 0; i < gp.Keywords(); i++) {
-        if(gp[i].Size() == 3) {
-          os << (string)gp[i][0] << "," 
-             << (string)gp[i][1] << "," 
-             << (string)gp[i][2];
+      for(int i = 0; i < (*point).Keywords(); i++) {
+        if((*point)[i].Size() == 3) {
+          os << (string)(*point)[i][0] << "," 
+             << (string)(*point)[i][1] << "," 
+             << (string)(*point)[i][2];
         }
         else {
-          os << (string)gp[i];
+          os << (string)(*point)[i];
         }
         
-        if(i < gp.Keywords()-1) {
+        if(i < (*point).Keywords()-1) {
           os << ",";
         }
       }
@@ -244,4 +138,7 @@ void IsisMain() {
       throw Isis::iException::Message(Isis::iException::User, msg, _FILEINFO_ );
     }
   }
+  delete point;
+  point = NULL;
+  prog.CheckStatus();
 }

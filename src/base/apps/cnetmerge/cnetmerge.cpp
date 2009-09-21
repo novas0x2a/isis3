@@ -5,6 +5,7 @@
 #include "FileList.h"
 #include "ControlNet.h"
 #include "Progress.h"
+#include "iTime.h"
 
 using namespace std;
 using namespace Isis;
@@ -58,12 +59,7 @@ void IsisMain() {
       string msg = "Inputs have the same Network Id of [";
       msg += cnet.NetworkId() + "] They are likely the same file.";
       throw iException::Message(iException::User,msg,_FILEINFO_);
-    }*/
-    else if ( cnet.Type() != currentnet.Type() ) {
-      string msg = "Inputs are not of the same Network Type. [";
-      msg += iString(cnet.Type()) + "] [" + iString(currentnet.Type()) + "]";
-      throw iException::Message(iException::User,msg,_FILEINFO_);
-    }
+    }*/    
 
     //ERROR Merge
     if ( ui.GetString("DUPLICATEPOINTS") == "ERROR" ) {

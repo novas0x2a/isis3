@@ -30,6 +30,8 @@ namespace Isis {
      * @history 2009-05-22 Debbie A. Cook - Cleaned up code and added iteration loop. Previous
      *          version only iterated twice, but results indicated more iterations were
      *          needed for better accuracy.
+     * @history 2009-08-21 Debbie A. Cook - Added test for data outside focal plane limits
+     *          plus 10% to avoid getting erroneous data projected on oblique images
      * 
      */
     class LoMediumDistortionMap : public CameraDistortionMap {
@@ -49,4 +51,5 @@ namespace Isis {
     };
   };
 };
+
 #endif

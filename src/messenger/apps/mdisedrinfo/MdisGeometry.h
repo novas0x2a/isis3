@@ -2,8 +2,8 @@
 #define MdisGeometry_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $
- * $Date: 2008/04/14 17:10:07 $
+ * $Revision: 1.7 $
+ * $Date: 2009/09/19 00:12:10 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -63,6 +63,7 @@ namespace Isis {
    *          SC_TARGET_POSITION_VECTOR and TARGET_CENTER_DISTANCE when target
    *          is anything but Sky (it was previously only computed when the
    *          center reference pixel intersected the target).
+   * @history 2009-09-18 Debbie A. Cook - corrected pxlscl and explen in MdisGeometry
    */
 class MdisGeometry {
     public:

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="hijitreg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
        Characterize HiRISE image jitter with co-registration
   </brief>
@@ -200,7 +201,9 @@
     <change name="Steven Koechle" date="2008-08-18">
 	Updated to work with Geos 3.0.0
     </change>
-
+    <change name="Travis Addair" date="2009-08-10">
+        Auto registration parameters are now placed into the print file.
+    </change>
   </history>
 
   <groups>

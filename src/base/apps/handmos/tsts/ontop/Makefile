@@ -5,7 +5,7 @@ include $(ISISROOT)/make/isismake.tsts
 commands:
 	$(APPNAME) from=$(INPUT)/isisTruth.cub \
 	  mosaic=$(OUTPUT)/handmosTruth1.cub \
-	  input=ontop \
+	  priority=ontop \
 	  outsample=1 \
 	  outline=2 \
 	  outband=1 \

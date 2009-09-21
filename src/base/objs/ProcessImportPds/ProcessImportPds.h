@@ -2,8 +2,8 @@
 #define ProcessImportPds_h
 /**
  * @file
- * $Revision: 1.17 $
- * $Date: 2008/08/11 16:32:50 $
+ * $Revision: 1.18 $
+ * $Date: 2009/07/16 18:13:59 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -159,6 +159,8 @@ namespace Isis {
   *  @history 2008-08-08 Steven Lambright - Fixed bug where the longitude
   *                          keywords could be incorrecty interpretted (minumum
   *                          longitude and maximum longitude are swapped).
+  *  @history 2009-07-16 Steven Lambright - Fixed bug where the longitude is
+  *                          misordered
   *  @todo 2005-02-09 Finish documentation-lots of holes with variable
   *                   definitions in .h file and .cpp methods, and  insert
   *                   implementation example

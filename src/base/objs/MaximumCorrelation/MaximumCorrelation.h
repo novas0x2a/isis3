@@ -2,8 +2,8 @@
 #define MaximumCorrelation_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/06/16 16:12:10 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -49,12 +49,14 @@ namespace Isis {
    */
   class MaximumCorrelation : public AutoReg {
     public:
-      MaximumCorrelation (Pvl &pvl) : AutoReg(pvl) {p_idealFit = 1.0;};
+      MaximumCorrelation (Pvl &pvl) : AutoReg(pvl) { };
       virtual ~MaximumCorrelation() {};
 
     protected:
       virtual double MatchAlgorithm (Chip &pattern, Chip &subsearch);
       virtual bool CompareFits(double fit1, double fit2);
+      virtual double IdealFit() const { return 1.0;};
+      virtual std::string AlgorithmName() const {return "MaximumCorrelation";};
 
   };
 };

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.23 $                                                             
- * $Date: 2009/05/27 22:11:14 $                                                                 
+ * $Revision: 1.24 $                                                             
+ * $Date: 2009/07/17 16:13:46 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -1709,9 +1709,9 @@ namespace Isis {
 
 
   bool PolygonTools::Equal( const double d1, const double d2 ) {
-
     const double cutoff = 1e15;
 
+    if(DecimalPlace(d1) != DecimalPlace(d2)) return false;
 
     int decimalPlace = DecimalPlace(d1);
     double factor = pow(10.0, (int)decimalPlace);
@@ -1724,8 +1724,6 @@ namespace Isis {
     // cast off the digits past the precision's place
     long long num1 = ((long long)(reducedNum * cutoff + round_offset));
 
-
-    decimalPlace = DecimalPlace(d2);
     factor = pow(10.0, (int)decimalPlace);
 
     // reduced num is in the form 0.nnnnnnnnnn...

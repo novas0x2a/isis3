@@ -11,7 +11,7 @@ using namespace std;
 namespace Isis {
   namespace Mgs {
     // constructors
-    MocNarrowAngleCamera::MocNarrowAngleCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    MocNarrowAngleCamera::MocNarrowAngleCamera (Isis::Pvl &lab) : Isis::LineScanCamera(lab) {
       // Set up the camera info from ik/iak kernels
 //      LoadEulerMounting();
       SetFocalLength();

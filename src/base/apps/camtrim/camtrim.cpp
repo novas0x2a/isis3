@@ -43,6 +43,10 @@ void IsisMain() {
     Pvl lab;
     lab.Read(ui.GetFilename("MAP"));
     proj = ProjectionFactory::Create(lab);
+
+    // add mapping to print.prt
+    PvlGroup mapping = proj->Mapping(); 
+    Application::Log(mapping); 
   }
   else {
     proj = NULL;

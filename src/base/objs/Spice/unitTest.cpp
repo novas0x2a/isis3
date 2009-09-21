@@ -180,7 +180,8 @@ cout << "Unit test for Isis::Spice" << endl;
 
   // Testing with cache
   cout << "Testing with cache ... " << endl;
-  spi.CreateCache(startTime+slope,endTime-slope,10);
+  double tol=.0022; //estimate resolution pixelPitch*alt/fl*1000.
+  spi.CreateCache(startTime+slope,endTime-slope,10,tol);
   for (int i=0; i<10; i++) {
     double t = startTime + (double) i * slope;
     spi.SetEphemerisTime(t);

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/12/17 17:27:37 $
+ * $Revision: 1.8 $
+ * $Date: 2009/07/27 17:54:55 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -394,6 +394,12 @@ namespace Isis {
 
         if (strType == "PIECEWISE") {
           p_inputMiddle[i] = hist->Median();
+
+          // If the median is the min or max, back off to linear
+          if(p_inputMiddle[i] == p_inputMinimum[i] || 
+             p_inputMiddle[i] == p_inputMaximum[i]) {
+            p_inputMiddle[i] = Isis::NULL8;
+          }
         }
 
         // Make sure the image isn't constant

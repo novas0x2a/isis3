@@ -9,7 +9,7 @@
 using namespace std;
 using namespace Isis;
 namespace Clementine {
-  UvvisCamera::UvvisCamera (Pvl &lab) : Camera(lab) {
+  UvvisCamera::UvvisCamera (Pvl &lab) : FramingCamera(lab) {
     // Get the camera characteristics
     SetFocalLength ();
     SetPixelPitch ();

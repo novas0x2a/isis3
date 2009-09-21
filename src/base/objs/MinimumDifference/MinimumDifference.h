@@ -2,8 +2,8 @@
 #define MinimumDifference_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1.1.1 $                                                             
- * $Date: 2006/10/31 23:18:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2009/06/16 16:12:40 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -66,7 +66,7 @@ namespace Isis {
        * @param pvl  A Pvl object that contains a valid automatic registration
        * definition
        */
-      MinimumDifference (Pvl &pvl) : AutoReg(pvl) {p_idealFit = 0.0;};
+      MinimumDifference (Pvl &pvl) : AutoReg(pvl) { };
 
       //! Destructor
       virtual ~MinimumDifference() {};
@@ -74,6 +74,8 @@ namespace Isis {
     protected:
       virtual double MatchAlgorithm (Chip &pattern, Chip &subsearch);
       virtual bool CompareFits(double fit1, double fit2);
+      virtual double IdealFit() const { return 0.0;};
+      virtual std::string AlgorithmName() const {return "MinimumDifference";};
 
   };
 };

@@ -20,7 +20,7 @@ namespace Isis {
     * @throws Isis::iException::User - The image does not appear to be a Marci 
     *             image
     */
-    MarciCamera::MarciCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    MarciCamera::MarciCamera (Isis::Pvl &lab) : Isis::PushFrameCamera(lab) {
       Isis::PvlGroup &inst = lab.FindGroup ("Instrument",Isis::Pvl::Traverse);
       // make sure it is a marci image
       if (inst["InstrumentId"][0] != "Marci") {

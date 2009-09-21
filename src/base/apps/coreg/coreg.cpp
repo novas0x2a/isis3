@@ -240,6 +240,9 @@ void IsisMain() {
     Application::Log(arPvl.Group(i));
   }
 
+  // add the auto registration information to print.prt
+  PvlGroup autoRegTemplate = ar->RegTemplate(); 
+  Application::Log(autoRegTemplate); 
 
   // If a TO parameter was specified, apply the average translation found to the
   // second input image

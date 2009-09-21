@@ -12,4 +12,12 @@ commands:
 	  emission=true \
 	  incidence=true \
 	  latitude=true \
-	  longitude=true > /dev/null;
+	  longitude=true \
+	  pixelresolution=true \
+	  lineresolution=true \
+	  sampleresolution=true \
+	  detectorresolution=true \
+	  northazimuth=true \
+	  sunazimuth=true \
+	  spacecraftazimuth=true \
+	  offnadirangle=true > /dev/null;

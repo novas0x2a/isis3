@@ -22,6 +22,8 @@ bool TryKernels(Cube *icube, Process &p,
                 Kernel iak, Kernel dem, 
                 Kernel exk);
 
+void GetUserEnteredKernel(const string &param, Kernel &kernel);
+
 void IsisMain() {
   // Open the input cube
   Process p;
@@ -49,7 +51,6 @@ void IsisMain() {
   }
 
   if (proj != NULL) {
-    delete proj;
     string msg = "Can not initialize SPICE for a map projected cube";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
@@ -110,36 +111,44 @@ void IsisMain() {
   }
 
   // Get user defined kernels and override ones already found
-  // NOTE: This is using GetAsString so that vars like $mgs can be used.
-  if (ui.WasEntered("LS"))    ui.GetAsString("LS", lk.kernels);
-  if (ui.WasEntered("PCK"))   ui.GetAsString("PCK", pck.kernels);
-  if (ui.WasEntered("TSPK"))  ui.GetAsString("TSPK", targetSpk.kernels);
-  if (ui.WasEntered("FK"))    ui.GetAsString("FK", fk.kernels);
-  if (ui.WasEntered("IK"))    ui.GetAsString("IK", ik.kernels);
-  if (ui.WasEntered("SCLK"))  ui.GetAsString("SCLK", sclk.kernels);
-  if (ui.WasEntered("SPK"))   ui.GetAsString("SPK", spk.kernels);
-  if (ui.WasEntered("IAK"))   ui.GetAsString("IAK", iak.kernels);
-  if (ui.WasEntered("EXTRA")) ui.GetAsString("EXTRA", exk.kernels);
+  GetUserEnteredKernel("LS", lk);
+  GetUserEnteredKernel("PCK", pck);
+  GetUserEnteredKernel("TSPK", targetSpk);
+  GetUserEnteredKernel("FK", fk);
+  GetUserEnteredKernel("IK", ik);
+  GetUserEnteredKernel("SCLK", sclk);
+  GetUserEnteredKernel("SPK", spk);
+  GetUserEnteredKernel("IAK", iak);
+  GetUserEnteredKernel("EXTRA", exk);
 
   // Get shape kernel
   if (ui.GetString ("SHAPE") == "USER") {
-    ui.GetAsString("MODEL", dem.kernels);
+    GetUserEnteredKernel("MODEL", dem);
   } else if (ui.GetString("SHAPE") == "SYSTEM") {
     dem = baseKernels.Dem(lab);
   }
 
   bool kernelSuccess = false;
-  if (ck.size() == 0 ) {
+
+  if (ck.size() == 0 && !ui.WasEntered("CK")) {
     throw iException::Message(iException::Camera, 
                               "No Camera Kernel found for the image ["+ui.GetFilename("FROM")
                               +"]", 
                               _FILEINFO_);
   }
+  else if(ui.WasEntered("CK")) {
+    // ck needs to be array size 1 and empty kernel objects
+    while(ck.size()) ck.pop();
+    ck.push(Kernel());
+  }
+
   while(ck.size() != 0 && !kernelSuccess) {
     Kernel realCkKernel = ck.top();
     ck.pop();
 
-    if (ui.WasEntered("CK"))   ui.GetAsString("CK", realCkKernel.kernels);
+    if (ui.WasEntered("CK")) {
+      ui.GetAsString("CK", realCkKernel.kernels);
+    }
 
     // Merge SpacecraftPointing and Frame into ck
     for (int i = 0; i < fk.size(); i++) {
@@ -152,11 +161,29 @@ void IsisMain() {
 
   if(!kernelSuccess) {
     throw iException::Message(iException::Camera, 
-                              "Unable to initialize camera model from group [Instrument]", 
+                              "Unable to initialize camera model", 
                               _FILEINFO_);
   }
 
   p.EndProcess();
+}
+
+/**
+ * If the user entered the parameter param, then 
+ * kernel is replaced by the user's values and 
+ * quality is reset to 0. 
+ * 
+ * @param param 
+ * @param kernel 
+ */
+void GetUserEnteredKernel(const string &param, Kernel &kernel) {
+  UserInterface &ui = Application::GetUserInterface();
+
+  if (ui.WasEntered(param))  {
+    kernel = Kernel();
+    // NOTE: This is using GetAsString so that vars like $mgs can be used.
+    ui.GetAsString(param, kernel.kernels);
+  }
 }
 
 bool TryKernels(Cube *icube, Process &p,
@@ -222,6 +249,15 @@ bool TryKernels(Cube *icube, Process &p,
   currentKernels.AddKeyword(iakKeyword, Pvl::Replace);
   currentKernels.AddKeyword(demKeyword, Pvl::Replace);
 
+  // report qualities
+  PvlKeyword spkQuality("InstrumentPositionQuality");
+  spkQuality.AddValue(spiceInit::kernelTypeEnum(spk.kernelType));
+  currentKernels.AddKeyword(spkQuality, Pvl::Replace);
+
+  PvlKeyword ckQuality("InstrumentPointingQuality");
+  ckQuality.AddValue(spiceInit::kernelTypeEnum(ck.kernelType));
+  currentKernels.AddKeyword(ckQuality, Pvl::Replace);
+
   if (!exkKeyword.IsNull()) {
     currentKernels.AddKeyword(exkKeyword, Pvl::Replace);
   }
@@ -271,6 +307,12 @@ bool TryKernels(Cube *icube, Process &p,
       cam = icube->Camera();
       Application::Log(currentKernels);
     } catch (iException &e) {
+      Pvl errPvl = e.PvlErrors();
+
+      if(errPvl.Groups() > 0) {
+        currentKernels += PvlKeyword("Error", errPvl.Group(errPvl.Groups()-1)["Message"][0]); 
+      }
+      
       Application::Log(currentKernels);
       icube->PutGroup(originalKernels);
       throw e;

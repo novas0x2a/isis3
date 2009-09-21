@@ -4,7 +4,6 @@
 #include "Camera.h"
 #include "ProjectionFactory.h"
 #include "ProcessRubberSheet.h"
-
 #include "iException.h"
 #include "cam2map.h"
 
@@ -294,6 +293,10 @@ void IsisMain() {
   // Warp the cube
   p.StartProcess(*transform, *interp);
   p.EndProcess();
+
+  // add mapping to print.prt
+  PvlGroup mapping = outmap->Mapping(); 
+  Application::Log(mapping); 
 
   // Cleanup
   delete outmap;

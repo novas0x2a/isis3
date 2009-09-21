@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: hicalbeta.xml,v 1.14 2008/11/18 06:59:48 kbecker Exp $ -->
+<!-- $Id: hicalbeta.xml,v 1.15 2009/09/15 21:56:44 kbecker Exp $ -->
 
 <application name="hicalbeta" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
@@ -14,7 +14,7 @@
         designation.  The radiometric calibration correction is performed on 
         each individual HiRISE channel file (EDR) correcting for drift,
         instrument offset, dark current, line-dependant gain,  gain, flat field
-        and finally, conversion to I/F reflectance.
+        and finally, conversion to I/F reflectance, DN/US or DNs.
     </p>
       <p>
           The calibration is carried out in a series of modules.  These modules 
@@ -40,11 +40,12 @@
           Zg = gain_v_line_correct(Zb) [GvL Parameters]
           Zgg = gain_correct(Zg)          [G]
           Za = Flat_field_correct(Zgg)  [A]
-          Ziof = I/F conversion(Za)
+          Zt = Temperature dependant gain correction (Za)
+          Ziof = I/F conversion(Zt)
 
   The correction is: 
 
-    oDN = (iDN - Zd(Zf) - Zz - Zb)/ScanExposureDuration  / Zg * Zgg * Za /  Ziof 
+    oDN = (iDN - Zd(Zf) - Zz - Zb)  / Zg * Zgg * Za * Zt /  Ziof 
       </PRE>
       <p>
            How these radiometric components are computed are governed by the 
@@ -136,6 +137,12 @@
         Clock calibration data based upon noise.  See the discussion on the Zz 
         module in this program documentation.
     </change>
+    <change name="Kris Becker" date="2009-09-15"> 
+        Change default for OPATH to output (TO) directory;  Removed the IOF 
+        parameter and replaced it with the UNITS parameter;  Added the Zt 
+        module which corrects temperature dependant gain previously in the Za 
+        module; updated documentation.
+    </change>
   </history>
 
   <category>
@@ -186,7 +193,7 @@
                 observing conditions of the image.
             </p>
             <p>
-                The file must contain a top level  <b>Hical</b> object.  WIthin 
+                The file must contain a top level  <b>Hical</b> object.  Within 
                 this object is numerous profiles.  The keywords that are 
                 contained in the Object section of the file are always used in 
                 every profile and can be superceded by any subsequent profile 
@@ -197,11 +204,11 @@
                 be used to textually replace the patterns surrounded by the {} 
                 in the <b>ProfileOptions</b>  keyword.  The kewords FILTER, CCD, 
                 CHANNEL, TDI and BIN are always generated after the initial 
-                module and label is loaded in.  After the initial profile is 
-                loaded the FROM file label is loaded using the 
+                module and label are loaded in.  After the initial profile is 
+                loaded, the FROM file label is loaded using the 
                 <b>LabelGroups</b> to determine which keywords are loaded.  Note 
                 that the groups must exist or an error is issued.  Other than 
-                that you an specify any defined keyword in the                   
+                that you can specify any defined keyword in the                   
                 <b>OptionsKeywords</b> to apply to profile names.  
             </p>
             <p>
@@ -214,22 +221,22 @@
             <p>
                 Matrices are currently multi-band ISIS cube files that contain
                 one line and up to 1024 samples.  There are expected to be
-                28 bands in each one of thes calibration matrices, one for each
+                28 bands in each one of these calibration matrices, one for each
                 CCD channel.  There are 14 different CCDs with 2 channels each
                 for a total of 28 channels.  (Note that channels are the basic
                 HiRISE image product where calibration is applied.)  There will
                 always be one line for these cubes since HiRISE detectors are
-                line scan instruments.  There will be a minimum of 128 (for
-                summing mode of 16) and a maximum of 1024 (summing mode of
-                1) samples in these cubes.  The content of these matrix files are
-                dependant upon summing mode and the time delay integration
-                (TDI) mode used during image acquisition.  TDI allows varying
-                number of line scans, in conjunction with exposure time, to pass
-                over the same point on the surface of Mars to increase the
-                signal-to-noise ration (SNR) as well as resolution.  There are 4
-                selectable modes of TDI:  128, 64, 32 and 8.  Coupled with 6
-                difference summing modes (1, 2, 3, 4, 8, and 16), there are at
-                least 24 calibration cubes per set of matrices.  These matrices
+                line scan instruments.  There will be a minimum of 64 (for
+                summing mode of 16) and a maximum of 1024 (summing mode of 1) 
+                samples in these cubes.  The content of these matrix files are 
+                dependant upon summing mode and the time delay integration (TDI) 
+                mode used during image acquisition.  TDI allows varying number 
+                of line scans, in conjunction with exposure time, to pass over 
+                the same point on the surface of Mars to increase the 
+                signal-to-noise ration (SNR) as well as resolution.  There are 4 
+                selectable modes of TDI:  128, 64, 32 and 8.  Coupled with 6 
+                difference summing modes (1, 2, 3, 4, 8, and 16), there are at 
+                most 24 calibration cubes per set of matrices.  These matrices 
                 are referenced as file paths of the form:
                 <PRE>
  A = $mro/calibration/matrices/A_TDI{TDI}_BIN{BIN}_????.cub
@@ -254,9 +261,9 @@
                 This allows us to create Profiles that pertain to particular
                 combinations of filter (RED, IR, BG), CCD (RED0-9, IR10/11,
                 or BG12/13), TDI (128, 64, 32, 8), BIN (1, 2, 3, 4, 8, 16)  or
-                CHANNEL (1 or 2).  These values are determined from the
-                content of the HiRISE label.  Combinations of profiles that are
-                added <i>after</i> the initial default are specified in the
+                CHANNEL (0 or 1).  These values are determined from the content
+                of the HiRISE label.  Combinations of profiles that are added
+                <i>after</i> the initial default are specified in the
                 <b>ProfileOptions</b> keyword.  Profile combinations can 
                 consist of any combination or use of these defined values.
                 These defined values are specified as or with the <b>Name</b>
@@ -290,26 +297,36 @@ Object = Hical
   DefaultProfile = "HiMatrices"
 
 /* If you want to rerun hical, you must set PropagateTables to True.  Use */
-/* this in conjuction with Debug::SkipPhase = True option for each module. */
+/* this in conjuction with Debug::SkipModule = True option for each module. */
   PropagateTables = False
 
 /* Define label groups that are loaded for each profile reference */
 /* Note all keywords in these groups become available to all profiles. */
 /* Thus, you can use them in the OptionKeywords and ProfileOptions keywords */
 /* to create very specialized profiles for special needs. */
+/* Specify the FPA reference temperature.  It is used in several modules so */
+/* it is specified at the top level */
+
   LabelGroups = ( "Dimensions", "Instrument", "Archive")
 
 /* These keywords are used in ProfileOptions mapping.  Note that order and */
 /* case matter!  WARNING:  You can easily break file lookups if these keys */
 /* are deleted or modified improperly!!! */
-  OptionKeywords = ("FILTER", "CCD", "CHANNEL", "TDI", "BIN", "ProductId", 
-                    "Program", "Module", "OPATH")
+  OptionKeywords = ("FILTER", "CCD", "CHANNEL", "TDI", "BIN", "ProductId",
+                    "Program", "Module", "OPATH", "CalOptions")
 
 /* Additional profile combinations and order load hierarchy.  These keywords */
-/* are defined when the LabelGroups are loaded. */
+/* are defined when the LabelGroups are loaded. */ 
+/* Kris Becker &amp; Eric Eliason updated 10/24/2008 */
+/* ProfileOptions value added: {Module}_{CalOptions} */
   ProfileOptions = ("{FILTER}", "TDI{TDI}", "BIN{BIN}", "TDI{TDI}/BIN{BIN}",
-                    "{FILTER}{CCD}_{CHANNEL}", 
-                    "{FILTER}{CCD}_{CHANNEL}/TDI{TDI}/BIN{BIN}", "Debug")
+                    "{FILTER}{CCD}_{CHANNEL}",
+                    "{FILTER}{CCD}_{CHANNEL}/TDI{TDI}/BIN{BIN}", "Debug",
+                    "{Module}_{CalOptions}")
+
+/* Specify the FPA reference temperature.  It is used in several modules so */
+/* it is specified at the top level */
+  FpaReferenceTemperature = 21.0
 
 /* This profile contains parameters pertinent to processing the buffer */
 /* pixels for subsequent using in the drift correction, Zd module */
@@ -318,8 +335,9 @@ Object = Hical
     Module = Zf
     ZfFirstSample = 5
     ZfLastSample = 11
+
     ZfFilterWidth = 201
-   ZfFilterIterations = 2
+    ZfFilterIterations = 2
   End_Group
 
 /* This profile contains parameters pertinent to processing drift correction */
@@ -327,25 +345,33 @@ Object = Hical
     Name = Zd
     Module = Zd
 
-  /* Turns Levenberg-Marquardt fitting off */
-    ZdSkipFit = True 
+  /* Uncomment to turn off non linear fitting of Zf data and pass it thru */
+    ZdSkipFit = True
+
+  /* Uncomment to use linear fitting of Zf data when non-linear fails */
+  /* Default is to pass thru filtered Zf data */
+  /* ZdOnFailUseLinear = True */
+
+  /* Minimum number of good lines (NLines - (TrimLines/Summing)) to fit */
+    ZdMinimumLines = 250
 
   /* Maximum  number of iterations for the algorithm to converge and */
   /* other limits */
-    MaximumIterations = 100 
+    MaximumIterations = 100
     MaximumLog        = 709.0
 
   /*  Convergence parameters for Levenberg-Marquardt algorithm */
-  /*  Equation is solved when |dx_i| &lt; AbsoluteError + RelativeError * |x_i| 
-  */ /*    where dx is the last step and x is the current step for each i-th */
+  /*  Equation is solved when |dx_i| &lt; AbsoluteError + RelativeError * |x_i| */
+  /*    where dx is the last step and x is the current step for each i-th */
   /*    value */
     AbsoluteError = 1.0E-4
     RelativeError = 1.0E-4
 
   /* Filtering of the guestimate buffer */
     GuessFilterWidth = 17
-    GuessFilterIterations = 1 
-     DumpModuleFile = "{OPATH}/{ProductId}_{Module}.log"
+    GuessFilterIterations = 1
+
+#    DumpModuleFile = "{ProductId}_{Module}.log"
   End_Group
 
 /* This profile contains parameters pertinent to processing the offset */
@@ -356,7 +382,20 @@ Object = Hical
 /* Set calibration parameters for hiclean operations.  Indexes are all 0-based */
     ZzFirstLine = 1
     ZzLastLine  = 19
-    DumpModuleFile = "{OPATH}/{ProductId}_{Module}.log"
+
+
+/* Reverse Clock trigger Statistics profiles */
+    ReverseClockStatistics = "$mro/calibration/matrices/beta/ReverseClockStatistics.????.conf"
+    RevLisTolerance = 1
+    RevHisTolerance = 1
+    RevNulTolerance = 1
+  End_Group
+
+/*  Skip reverse clock if the ReverseReadoutNoise is to large */
+/*  Profile added by Kris Becker &amp; Eric Eliason, 10/25/2008 */
+  Group = Profile
+    Name = Zz_ReverseReadoutNoise
+    Debug::SkipModule = True
   End_Group
 
 /* This profile contains parameters pertinent to processing dark current. */
@@ -368,16 +407,14 @@ Object = Hical
     Module = Zb
 
 /* Define the B matrix file reference */
-    B = "$mro/calibration/matrices/B_TDI{TDI}_BIN{BIN}_????.cub"
+    B = "$mro/calibration/matrices/beta/B_TDI{TDI}_BIN{BIN}_hicalbeta_????.cub"
     SkipLines        = 1
-    Slope            = "$mro/calibration/matrices/t_slope_????.csv"
-    Intercept        = "$mro/calibration/matrices/t_intercept_????.csv"
-    ReferenceTemperature = 21.0
+    Slope            = "$mro/calibration/matrices/beta/t_slope_CH{CHANNEL}_hicalbeta_????.csv"
+    Intercept        = "$mro/calibration/matrices/beta/t_intercept_CH{CHANNEL}_hicalbeta_????.csv"
 
     /* Do filtering? */
     ZbFilterWidth      = 3
     ZbFilterIterations = 1
-    DumpModuleFile = "{OPATH}/{ProductId}_{Module}.log"
   End_Group
 
 /* This profile contains parameters pertinent to processing gain correction. */
@@ -386,66 +423,88 @@ Object = Hical
     Name = Zg
     Module = Zg
 
+/*  As of 2008-06-25, this is the default */
+    Debug::SkipModule = True
+
     SkipLines            = 1
-    GainLineCoefficients = "$mro/calibration/matrices/line_correct_{BIN}_????.csv"
-    DumpModuleFile = "{OPATH}/{ProductId}_{Module}.log"
+/* Added "_hicalbeta" to filename as of 2008-04-02.  This is consistant with */
+/* naming convention used for the beta version of hical. */
+    GainLineCoefficients = "$mro/calibration/matrices/beta/line_correct_{BIN}_hicalbeta_????.csv"
   End_Group
 
 /* This profile contains parameters pertinent to processing gain correction. */
-/* Required label keywords: CpmmNumber, ChannelNumber, Lines */  
+/* Required label keywords: CpmmNumber, ChannelNumber, Lines */
   Group = Profile
     Name = Zgg
     Module = Zgg
 
 /* Define the G matrix file reference */
-    G = "$mro/calibration/matrices/G_TDI{TDI}_BIN{BIN}_????.cub"
+    G = "$mro/calibration/matrices/beta/G_TDI{TDI}_BIN{BIN}_hicalbeta_????.cub"
   End_Group
 
 /* This profile contains parameters pertinent to processing gain correction. */
-/* Required label keywords: CpmmNumber, ChannelNumber, Lines */  
+/* Required label keywords: CpmmNumber, ChannelNumber, Tdi, Lines */
   Group = Profile
     Name = Za
     Module = Za
 
+/* Applies a temperature correction factor to A matrix */
+/*** As of 2009-09-15 this parameter is implemented in the Zt module   ***/
+/***   It remains here for backward compatability for now.  It will be ***/
+/***   removed at some point in future releases.                       ***/
+    ZaFpaTemperatureFactor = 0.005
+
 /* Define the A matrix file reference */
-    A = "$mro/calibration/matrices/A_TDI{TDI}_BIN{BIN}_????.cub"
+     A = "$mro/calibration/matrices/beta/A_TDI{TDI}_BIN{BIN}_hicalbeta_????.cub"
+  End_Group
+
+/* This profile contains parameters pertinent to processing */
+/* temperature-dependant gain correction. */
+/* Required label keywords: CpmmNumber, ChannelNumber, Samples */
+  Group = Profile
+    Name = Zt
+    Module = Zt
+
+/ Define temperature-dependant gain correction CSV file */
+    FpaTemperatureFactorSkipLines = 4
+    FpaTemperatureFactorHeader = True
+    FpaTemperatureFactorFile = "$mro/calibration/matrices/beta/FpaTemperatureGain_BIN{BIN}.????.csv"
   End_Group
 
 /* This profile contains parameters pertinent to processing I/F conversion. */
-/*  Required label keywords: ScanExposureDuration */ 
+/*  Required label keywords: ScanExposureDuration */
   Group = Profile
     Name = Ziof
     Module = Ziof
 
-/*    Debug::SkipModule = True */
-
-/* I/F correction for tdi/bin - currently set at 1.0 for all tdi/bin */h
+/* I/F correction for tdi/bin - currently set at 1.0 for all tdi/bin */
 /* combinations. */
     ZiofBinFactor = 1.0
-  End_Group  
+  End_Group
 
 /* Here are the filter profiles.  All keywords that pertain to a filter set */
 /* should be specified here.  FilterGainCorrection are I/F corrections in */
-/* units of DN/s. */ 
+/* units of DN/s. */
   Group = Profile
     Name = RED
-    FilterGainCorrection = 175613029.0
+    FilterGainCorrection = 159423899.0
   End_Group
 
   Group = Profile
     Name = IR
-    FilterGainCorrection  =  58571990.0
+    FilterGainCorrection  =  58018177.0
   End_Group
 
   Group = Profile
     Name = BG
-    FilterGainCorrection  =  93575312.0
+    FilterGainCorrection  =  108811104.0
   End_Group
 
   Group = Profile
     Name = IR10_1
 #   LastGoodLine = 3100
   End_Group
+
 
   Group = Profile
     Name = Debug
@@ -461,6 +520,10 @@ Object = Hical
 
 /* Uncomment this line to write parameter history to the ProductId log */
    DumpHistoryFile = "{OPATH}/{ProductId}.{Program}.log"
+
+/* Uncomment this line to dump Module data for every module when using Debug */
+/* profiling. */
+#    DumpModuleFile = "{OPATH}/{ProductId}_{Module}.log"
   End_Group
 
 End_Object
@@ -1108,6 +1171,20 @@ End_Object
                     </TD>
                 </TR>
                 <TR>
+                    <TD>ZaFpaTemperatureFactor</TD>
+                    <TD>
+                        This parameter specifies the temperature dependant
+                        gain correction factor applied to the A matrix.
+                         <b>
+                             NOTE: As of 2009-09-15, this parameter is obsolete. 
+                             The temperature dependant gain is now being 
+                             maintained in a module all its own, the Zt module. 
+                             It will be removed in a future release but is 
+                             retained here for backwards compatability.
+                         </b>
+                    </TD>
+                </TR>
+                <TR>
                     <TD>A</TD>
                     <TD>
                         This the A matrix cube that is derived to remove the 
@@ -1116,11 +1193,66 @@ End_Object
                 </TR>
             </TABLE>
 
+            <br><h1 align="center">Zt Module Parameters</h1> </br>
+            <TABLE BORDER="1">
+                  <CAPTION> 
+                      This module contains parameters specific to temperature 
+                      dependant gain correction
+                    </CAPTION>
+                <TR>
+                  <TH>Parameter</TH>
+                  <TH>Description</TH>
+                </TR>
+                <TR>
+                   <TD>Name</TD>
+                   <TD>
+                     Must be set to Zt as it names this Profile Module.  The 
+                     program will fail without this Group/Name/Module.
+                   </TD>
+                </TR>
+                <TR>
+                    <TD>Module</TD>
+                    <TD>
+                        The name of the current processing module.   It is 
+                        intended to be used as an identifer.  Name is such a 
+                        generic name that it has the potential to be superceded 
+                        by some other profile loading operation (such as label 
+                        activities).
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>FpaTemperatureFactorSkipLines</TD>
+                    <TD>
+                        Number of comment lines at the top of the
+                        <i>FpaTemperatureFactorFile</i>.  If not provided, the
+                        default is no lines.  This does not include the header line.
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>FpaTemperatureFactorHeader</TD>
+                    <TD>
+                        True/False value indicates whether a header line exists 
+                        prior to data in the <i>FpaTemperatureFactorFile</i> CSV 
+                        file.
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>FpaTemperatureFactorFile</TD>
+                    <TD>
+                        This CSV file contains three columns of data that 
+                        specify the temperature dependant coefficient.  The 
+                        first column is the CCD (ex: RED2), the second column is 
+                        the coefficient for channel 0 and third contains the 
+                        coefficient for channel 1.
+                    </TD>
+                </TR>
+            </TABLE>
+
             <br><h1 align="center">Ziof Module Parameters</h1> </br>
             <TABLE BORDER="1">
                   <CAPTION> 
-                      This module computes parameters necessary to convert DNs 
-                      to I/O values.
+                      This module computes values necessary to convert DNs to 
+                      user selected calibration unit values.
                     </CAPTION>
                 <TR>
                   <TH>Parameter</TH>
@@ -1151,7 +1283,7 @@ End_Object
                     </TD>
                 </TR>
                 <TR>
-                    <TD>FilterGainCorrectionr</TD>
+                    <TD>FilterGainCorrection</TD>
                     <TD>
                         Specifies the filter dependant gain correction factor.  
                         Note that these values are found in the RED, BG, IR 
@@ -1199,19 +1331,37 @@ End_Object
               </p>
           </description>
         </parameter>
-        <parameter name="IOF">
-          <type>boolean</type>
-          <brief>
-            Convert data to I/F reflectance
-          </brief>
+        <parameter name="UNITS">
+          <type>string</type>
+          <default><item>IOF</item></default>
+          <brief>Desired output calibration units</brief>
           <description>
-              If selected, the output DNs will be in units of absolute
-              reflectance (I/F).  If not selected, DNs will be in units
-              of DNs/microsecond.
+              A feature which calculates the average on each channel and multiplies one side with
+              the ratio of the averages
           </description>
-            <default> 
-                <item>true</item> 
-            </default>
+         <list>
+            <option value="IOF">
+              <brief>Irradiance over flux</brief>
+              <description>
+                  Commonly referred to as "I over F", this option selects the 
+                  output calibration units as irradiance over flux.
+              </description>
+            </option>
+            <option value="DN/US">
+              <brief>Data number per microsecond</brief>
+              <description>
+                  This option selects the output calibration units to be data 
+                  number per microsecond.
+              </description>
+            </option>
+             <option value="DN">
+                 <brief>Data number</brief>
+                 <description>
+                     This option selects the output calibration units to be data 
+                     number.
+                 </description>
+             </option>
+         </list>
         </parameter>
         <parameter name="OPATH">
           <type>string</type>
@@ -1227,6 +1377,10 @@ End_Object
                   written when that option is invoked.   This option is 
                   automatically added and available to all profiles and is 
                   included in the output specifications of all log files.
+              </p>
+              <p>
+                  The default behavior is to place all log files in the same 
+                  directory as the output file specifed in the TO parameter.
               </p>
           </description>
         </parameter>

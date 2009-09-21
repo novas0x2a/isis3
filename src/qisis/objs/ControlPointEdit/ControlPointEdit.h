@@ -64,6 +64,7 @@ namespace Qisis {
       ControlPointEdit (QWidget *parent=0,bool allowLeftMouse=false);
       std::string templateFilename() { return p_templateFilename; };
       void setTemplateFile();
+      void allowLeftMouse (bool allowMouse);
   
     signals:
       void updateLeftView(double sample,double line);

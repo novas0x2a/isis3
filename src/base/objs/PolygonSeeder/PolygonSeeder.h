@@ -2,8 +2,8 @@
 #define PolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/19 22:33:15 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/08/05 21:44:12 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -43,8 +43,10 @@ namespace Isis {
    *
    * @author 2006-01-20 Stuart Sides 
    *  
-   * @history 2008-08-18 Christopher Austin - Upgraded to geos3.0.0, removed 
-   *          Chip.h include, fixed ifndef
+   * @history 2008-08-18 Christopher Austin - Upgraded to 
+   *          geos3.0.0, removed Chip.h include, fixed ifndef
+   * @history 2009-08-05 Travis Addair - Encapsulated group 
+   *          creation for seed definition group
    */
   class PolygonSeeder {
     public:
@@ -57,6 +59,8 @@ namespace Isis {
       std::string Name();
       double MinimumThickness();
       double MinimumArea();
+      inline std::string Algorithm() const { return p_algorithmName; } 
+      virtual PvlGroup PluginParameters(std::string grpName);
 
     protected:
       virtual void Parse(Pvl &pvl);

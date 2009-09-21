@@ -33,9 +33,10 @@ void IsisMain() {
   iString prefix(ui.GetString("PREFIX"));
   bool ignore = ui.GetBoolean("IGNORE");
 
-  //Sets up the list of serial numbers for
+  // Sets up the list of serial numbers for
   FileList inlist(ui.GetFilename("FROMLIST"));
-  vector<iString> innums;
+  set<iString> inListNums;
+  map<iString,int> netSerialNumCount;
   vector<iString> listedSerialNumbers;
   map< string, string > num2cube;
 
@@ -45,13 +46,11 @@ void IsisMain() {
     progress.CheckStatus();
   }
 
-  for(int i=0; i < (int)inlist.size(); i++) {
-    iString st = SerialNumber::Compose(inlist[i]);
-    innums.push_back(st);
-    //Used with nonListedSerialNumbers
-    listedSerialNumbers.push_back(st);
-    //Used as a SerialNumber to Cube index
-    num2cube[st] = inlist[i];
+  for(int index = 0; index < (int)inlist.size(); index ++) {
+    iString st = SerialNumber::Compose(inlist[index]);
+    inListNums.insert(st);
+    listedSerialNumbers.push_back(st);  // Used with nonListedSerialNumbers
+    num2cube[st] = inlist[index];  // Used as a SerialNumber to Cube index
     progress.CheckStatus();
   }
 
@@ -73,87 +72,79 @@ void IsisMain() {
     progress.CheckStatus();
   }
 
-  for(int i=0; i < innet.Size(); i++) {
-    if(ignore && innet[i].Ignore()) continue;
+  for(int cp = 0; cp < innet.Size(); cp ++) {
+    if(ignore && innet[cp].Ignore()) continue;
 
-    ControlPoint controlpt(innet[i]);
+    ControlPoint controlpt(innet[cp]);
 
-    //Checks for lat/Lon production
+    // Checks for lat/Lon production
     if( ui.GetBoolean("NOLATLON") ) {
-      for (int j=0; j < controlpt.Size(); j++) {
-        ControlMeasure cm = controlpt[j];
+      for (int cm = 0; cm < controlpt.Size(); cm ++) {
+        ControlMeasure controlms= controlpt[cm];
 
         // Make sure a cube is not checked twice
-        if ( !num2cube[cm.CubeSerialNumber()].empty()  &&
-             latlonchecked.find(cm.CubeSerialNumber()) == latlonchecked.end() ) {
-          latlonchecked.insert( cm.CubeSerialNumber() );
+        if ( !num2cube[controlms.CubeSerialNumber()].empty()  &&
+             latlonchecked.find(controlms.CubeSerialNumber()) == latlonchecked.end() ) {
+          latlonchecked.insert( controlms.CubeSerialNumber() );
 
-          Pvl pvl( num2cube[cm.CubeSerialNumber()] );
+          Pvl pvl( num2cube[controlms.CubeSerialNumber()] );
           Camera *camera( CameraFactory::Create( pvl ) );
           if (camera == NULL) {
             try {
               // Checking if the Projection can be made
               delete ProjectionFactory::Create( pvl );
             } catch ( iException &e ) {
-              noLatLonSerialNumbers.insert(cm.CubeSerialNumber());
-              noLatLonControlPoints[cm.CubeSerialNumber()].insert( controlpt.Id() );
+              noLatLonSerialNumbers.insert(controlms.CubeSerialNumber());
+              noLatLonControlPoints[controlms.CubeSerialNumber()].insert( controlpt.Id() );
               e.Clear();
             }
           }
-          else if(!camera->SetImage(cm.Sample(), cm.Line())) {
-            noLatLonSerialNumbers.insert(cm.CubeSerialNumber());
-            noLatLonControlPoints[cm.CubeSerialNumber()].insert( controlpt.Id() );
+          else if(!camera->SetImage(controlms.Sample(), controlms.Line())) {
+            noLatLonSerialNumbers.insert(controlms.CubeSerialNumber());
+            noLatLonControlPoints[controlms.CubeSerialNumber()].insert( controlpt.Id() );
           }
           delete camera;
         }
       }
     }
 
-    //Checks of the ControlPoint has only 1 Measure
+    // Checks of the ControlPoint has only 1 Measure
     if(controlpt.NumValidMeasures() == 1) {
       string sn = controlpt[0].CubeSerialNumber();
       singleMeasureSerialNumbers.insert(sn);
       singleMeasureControlPoints[sn].insert( controlpt.Id() );
     }
     else {
-      //Checks for duplicate Measures for the same SerialNumber
+      // Checks for duplicate Measures for the same SerialNumber
       vector<ControlMeasure> controlMeasures;
-      for(int j=0; j < controlpt.Size(); j++) {
-        if( ignore  &&  controlpt[j].Ignore() ) continue;
+      for(int cm = 0; cm < controlpt.Size(); cm ++) {
+        if( ignore  &&  controlpt[cm].Ignore() ) continue;
 
-        controlMeasures.push_back(controlpt[j]);
-        iString currentsn = controlpt[j].CubeSerialNumber();
+        controlMeasures.push_back(controlpt[cm]);
+        iString currentsn = controlpt[cm].CubeSerialNumber();
 
-        //Compares previous ControlMeasure SerialNumbers with the current
-        for(int k=controlMeasures.size()-1-1; k >= 0; k --) {
-          if( controlMeasures[k].CubeSerialNumber() == currentsn ) {
+        // Compares previous ControlMeasure SerialNumbers with the current
+        for(int pre_cm = controlMeasures.size()-1-1; pre_cm >= 0; pre_cm --) {
+          if( controlMeasures[pre_cm].CubeSerialNumber() == currentsn ) {
             duplicateSerialNumbers.insert(currentsn); //serial number duplication
             duplicateControlPoints[currentsn].insert( controlpt.Id() );
           }
         }
 
-        //Removes from the serial number list, cubes that are included in the cnet
-        vector<iString>::iterator measureIt = innums.begin();
-        while(measureIt != innums.end()) {
-          //Removes SerialNums that exist from the inlist
-          if(*measureIt == currentsn) {
-            innums.erase(measureIt);
-          }
-          else {
-            measureIt ++;
-          }
-        }
+        // Removes from the serial number list, cubes that are included in the cnet
+        inListNums.erase( currentsn );
+        netSerialNumCount[currentsn] ++;
 
-        //Records if the currentsnum is not in the input cube list
+        // Records if the currentsnum is not in the input cube list
         bool contains = false;
-        for(int l=0; l < (int)listedSerialNumbers.size()  &&  !contains; l++) {
-          if(currentsn == listedSerialNumbers[l]) {
+        for(int sn = 0; sn < (int)listedSerialNumbers.size()  &&  !contains; sn ++) {
+          if(currentsn == listedSerialNumbers[sn]) {
             contains = true;
           }
         }
         // Check if already added
-        for(int l=0; l < (int)nonListedSerialNumbers.size()  &&  !contains; l++) {
-          if(currentsn == nonListedSerialNumbers[l]) {
+        for(int sn = 0; sn < (int)nonListedSerialNumbers.size()  &&  !contains; sn ++) {
+          if(currentsn == nonListedSerialNumbers[sn]) {
             contains = true;
           }
         }
@@ -169,14 +160,14 @@ void IsisMain() {
   }
 
 
-  //Checks/detects islands
+  // Checks/detects islands
   set<string> index;
   map< string, set<string> > adjCubes = constructPointSets(index, innet);
   vector< set<string> > islands = findIslands(index, adjCubes);
 
-  //Output islands in the file-by-file format
-  // Islands that have no cubes listed in the input list will
-  // not be shown.
+  // Output islands in the file-by-file format
+  //  Islands that have no cubes listed in the input list will
+  //  not be shown.
   for(int i=0; i < (int)islands.size(); i++) {
     string name(Filename(prefix + "Island." + iString(i+1)).Expanded());
     ofstream out_stream;
@@ -202,7 +193,7 @@ void IsisMain() {
   }
 
 
-  //Output the results to screen and files accordingly
+  // Output the results to screen and files accordingly
 
   PvlGroup results("Results");
 
@@ -274,19 +265,21 @@ void IsisMain() {
     ss << Filename(name).Name() + "]" << endl;
   }
 
-  // At this point, innums is the list of cubes NOT included in the
-  // ControlNet, and innums are their those cube's serial numbers.
-  if(ui.GetBoolean("NOCONTROL") && innums.size() > 0) {
-    results.AddKeyword( PvlKeyword("NoControl",iString((BigInt)innums.size())) );
+  // At this point, inListNums is the list of cubes NOT included in the
+  //  ControlNet, and inListNums are their those cube's serial numbers.
+  if(ui.GetBoolean("NOCONTROL") && !inListNums.empty() ) {
+    results.AddKeyword( PvlKeyword("NoControl",iString((BigInt)inListNums.size())) );
 
     string name(Filename(prefix + "NoControl.txt").Expanded());
     ofstream out_stream;
     out_stream.open(name.c_str(), std::ios::out);
     out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
     
-    for(int sn=0; sn < (int)innums.size(); sn++) {
-      out_stream << innums[sn];
-      out_stream << "\t" << Filename(num2cube[innums[sn]]).Name();
+    for( set<iString>::iterator sn = inListNums.begin();
+         sn != inListNums.end();
+         sn ++) {
+      out_stream << (*sn);
+      out_stream << "\t" << Filename(num2cube[(*sn)]).Name();
       out_stream << "\n";
     }
     
@@ -294,7 +287,7 @@ void IsisMain() {
     
     ss << "----------------------------------------" \
           "----------------------------------------" << endl;
-    ss << "There are " << innums.size();
+    ss << "There are " << inListNums.size();
     ss << " cubes in the input list [" << Filename(ui.GetFilename("FROMLIST")).Name();
     ss << "] which do not exist or are ignored in the Control Network [";
     ss << Filename(ui.GetFilename("CNET")).Name() << "]" << endl;
@@ -302,8 +295,8 @@ void IsisMain() {
   }
 
   // In addition, nonListedSerialNumbers should be the SerialNumbers of
-  // ControlMeasures in the ControlNet that do not have a correlating
-  // cube in the input list.
+  //  ControlMeasures in the ControlNet that do not have a correlating
+  //  cube in the input list.
   if(ui.GetBoolean("NOCUBE")  &&  nonListedSerialNumbers.size() > 0) {
     results.AddKeyword(
       PvlKeyword("NoCube",iString((BigInt)nonListedSerialNumbers.size())) );
@@ -394,12 +387,12 @@ vector< set<string> > findIslands(set<string> &index,
     set<string>::iterator first = index.begin();
     str_stack.push(*first);
 
-    //Depth search
+    // Depth search
     while(true) {
       index.erase(str_stack.top());
       connectedSet.insert(str_stack.top());
             
-      //Find the first connected unvisited node
+      // Find the first connected unvisited node
       std::string nextNode = "";
       set<string> neighbors = adjCubes[str_stack.top()];
       for (set<string>::iterator i = neighbors.begin(); i != neighbors.end(); i++) {
@@ -410,11 +403,11 @@ vector< set<string> > findIslands(set<string> &index,
       }
             
       if (nextNode != "") {
-        //Push the unvisited node
+        // Push the unvisited node
         str_stack.push(nextNode);
       }
       else {
-        //Pop the visited node
+        // Pop the visited node
         str_stack.pop();
 
         if (str_stack.size() == 0) break;

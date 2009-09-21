@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/08/08 20:04:49 $
+ * $Revision: 1.5 $
+ * $Date: 2009/08/31 15:12:28 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -42,6 +42,8 @@ namespace Isis {
    *  @history 2008-08-08 Steven Lambright Made the unit test work with a Sensor
    *           change. Also, now using the new LoadCache(...) method instead of
    *           CreateCache(...).
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+   *            inherit directly from Camera
    */
   class IdealCamera : public Isis::Camera {
     public:
@@ -50,6 +52,19 @@ namespace Isis {
 
       // Destroys the HiriseCamera object
       ~IdealCamera ();
+
+      /**
+       * Returns the type of camera that was created.
+       * 
+       * @return CameraType
+       */
+      virtual CameraType GetCameraType() const {
+        if(p_framing) return Framing;
+        return LineScan;
+      }
+
+    private:
+      bool p_framing; //!< true if framing camera
   };
 };
 

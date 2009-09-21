@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2009/04/06 15:23:26 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2009/08/07 22:08:29 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -61,6 +61,9 @@ namespace Isis {
      * @history 2008-02-05 Tracie Sucharski, Replaced unitVector files with 
      *                         Rick McCloskey's code to calculate look
      *                         direction.
+     * @history 2009-08-06 Tracie Sucharski, Bug in unit vector change made 
+     *                         on 2008-02-05, had the incorrect boresight for
+     *                         VIS Hires.
      */
     void VimsGroundMap::Init(Pvl &lab) {
 
@@ -104,15 +107,12 @@ namespace Isis {
         }
         else {
           p_xPixSize = p_yPixSize = 0.00051/3.0;
-          p_xBore = p_yBore = 31;
-          p_camSampOffset = 3 * (sampOffset - 1) + p_swathWidth;
-          p_camLineOffset = 3 * (lineOffset - 1) + p_swathLength;
-          /*p_camLineOffset = 3 * (lineOffset - 1) + swathLength - 6;*/
-          /*p_camLineOffset = 93 - (3 * (lineOffset - 1)) - swathLength;*/
-          /*  This is in range of 450 (top) to -537 (boresight at 0).  */
-          /*  The unit Vector file is in the range 94 to -98 (boresight at 0).  */
-          /*  Change to 0 to 191 range for indexing into uv file.   */
-          /*p_camLineOffset = p_camLineOffset + 94;*/
+          p_xBore = p_yBore = 94;
+          //New as of 2009-08-04 per Dyer Lytle's email
+          // Old Values:p_camSampOffset = 3 * (sampOffset - 1) + p_swathWidth;
+          //            p_camLineOffset = 3 * (lineOffset - 1) + p_swathLength;
+          p_camSampOffset = (3 * (sampOffset + p_swathWidth/2)) - p_swathWidth/2;
+          p_camLineOffset = (3 * (lineOffset + p_swathLength/2)) - p_swathLength/2;
         }
       }
       else if (p_channel == "IR") {
@@ -129,8 +129,6 @@ namespace Isis {
           p_yBore = 31;
           p_camSampOffset = 2* ((sampOffset-1) + ((p_swathWidth - 1)/4));
           p_camLineOffset = lineOffset - 1;
-          /*  camSampOffset = 2 * (sampOffset - 1);   SHIFT TOO FAR TO RIGHT    */
-          /*sampOffset = sampOffset * 2;*/
         }
         if (sampMode == "NYQUIST") {
           string msg = "Cannot process NYQUIST(undersampled) mode ";

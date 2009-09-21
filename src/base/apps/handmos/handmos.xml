@@ -38,6 +38,9 @@
     <change name="Steven Lambright" date="2008-05-06">
       Expanded upon position parameters
     </change>
+    <change name="Eric Hyer" date="2009-06-11">
+      Parameter "INPUT" now called "PRIORITY" to be consistent with the mapmos app
+    </change>
   </history>
 
   <oldName>
@@ -77,7 +80,7 @@
         </filter>
       </parameter>
 
-      <parameter name="INPUT">
+      <parameter name="PRIORITY">
         <type>string</type>
         <default>
           <item>ONTOP</item>

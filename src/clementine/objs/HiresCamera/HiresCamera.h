@@ -1,7 +1,7 @@
 #ifndef HiresCamera_h
 #define HiresCamera_h
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Clementine { 
   /**                                                                       
@@ -14,8 +14,10 @@ namespace Clementine {
    * @author  2009-01-16 Tracie Sucharski
    *
    * @internal
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+   *            inherit directly from Camera
    */
-  class HiresCamera : public Isis::Camera {
+  class HiresCamera : public Isis::FramingCamera {
     public:
       HiresCamera (Isis::Pvl &lab);
       ~HiresCamera () {};      

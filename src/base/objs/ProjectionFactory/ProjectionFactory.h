@@ -2,8 +2,8 @@
 #define ProjectionFactory_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/06/18 21:36:42 $
+ * $Revision: 1.5 $
+ * $Date: 2009/06/18 21:24:00 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -61,6 +61,9 @@ namespace Isis {
   *                                          methods, added units to Scale and PixelResolution
   *                                          keywords
   *   @history 2008-06-18 Steven Koechle - Fixed Documentation Error
+  *   @history 2009-06-18 Jeff Anderson - Modified the CreateForCube method to
+  *   make sure extra pixels were not included in the image size due to
+  *   machine precision roundoff problems.
   *
   */
   class ProjectionFactory {

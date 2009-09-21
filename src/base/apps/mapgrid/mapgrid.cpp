@@ -180,6 +180,10 @@ void IsisMain() {
   }
 
   os << "</ogr:FeatureCollection>" << endl;
+
+  // add mapping to print.prt
+  PvlGroup projMapping = proj->Mapping(); 
+  Application::Log(projMapping); 
 }
 
 /**

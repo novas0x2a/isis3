@@ -282,7 +282,11 @@ void IsisMain() {
 
           MultivariateStatistics mstats;
           for (int line = 1 ; line <= fchip.Lines() ; line++) {
-            mstats.AddData(&fchip(1,line), &pchip(1,line),fchip.Samples());
+            for(int sample = 1; sample < fchip.Samples(); sample++) {
+              double fchipValue = fchip.GetValue(sample,line);
+              double pchipValue = pchip.GetValue(sample,line);
+              mstats.AddData(&fchipValue, &pchipValue, 1);
+            }
           }
 
 //  Get regression and correlation values
@@ -350,6 +354,10 @@ void IsisMain() {
   }
 
   Application::Log(results);
+
+  // add the auto registration information to print.prt
+  PvlGroup autoRegTemplate = ar->RegTemplate(); 
+  Application::Log(autoRegTemplate); 
 
   return;
 }

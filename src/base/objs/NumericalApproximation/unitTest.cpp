@@ -32,6 +32,13 @@ inline vector <double> f(vector <double> x) {
 }
 //first derivative of the function f (above) to test differentiation
 inline double fstderiv(double x) { return 3*x*x + 2*x + 1; }
+inline vector <double> fstderiv(vector <double> x) { 
+  vector <double> y(x.size()); 
+  for(unsigned int i=0;i<x.size();i++){
+    y[i]=fstderiv(x[i]);
+  } 
+  return y; 
+}
 //second derivative of the function f (above) to test differentiation
 inline double scndderiv(double x) { return 6*x + 2; }
 //anitderivative of the function f (above) to test integration
@@ -59,7 +66,7 @@ int main (int argc, char *argv[]) {
     cout << "Valid interpolation types include: " << endl;
     cout << "type \t name \t\t   minpoints" << endl;
     NumericalApproximation interp;
-    for(int i = 0; i < 9; i++) {
+    for(int i = 0; i < 10; i++) {
       interp.SetInterpType(NumericalApproximation::InterpType(i));
       cout << interp.InterpolationType() << "\t" << interp.Name() << "\t";
       if(interp.Name().length() < 16){ 
@@ -69,7 +76,7 @@ int main (int argc, char *argv[]) {
       cout << interp.MinPoints() << endl;
     }
     cout << "EXCEPTIONS:" << endl;
-    try{ interp.SetInterpType(NumericalApproximation::InterpType(10));}
+    try{ interp.SetInterpType(NumericalApproximation::InterpType(11));}
     catch(iException e){ e.Report(); }
     cout << "\t************************************************" << endl;
   
@@ -79,8 +86,9 @@ int main (int argc, char *argv[]) {
     NumericalApproximation interp1;                                                // CubicNatural by default
     NumericalApproximation interp2(interp1);                                       // CubicNatural by copy
     NumericalApproximation interp3 = interp1;                                      // CubicNatural by assignment operator
-    NumericalApproximation interp4(NumericalApproximation::CubicClamped);          // CubicClamped by parameter
-    NumericalApproximation interp5(x,y,NumericalApproximation::PolynomialNeville); // PolynomialNeville by parameter
+    NumericalApproximation interp4(NumericalApproximation::CubicClamped);          // CubicClamped by interpType parameter
+    NumericalApproximation interp5(x,y,NumericalApproximation::PolynomialNeville); // PolynomialNeville by x,y,interpType parameters
+    NumericalApproximation interp6(x,y,NumericalApproximation::CubicHermite);      // CubicHermite by x,y,interpType parameters
                         
     // Check properties of objects created
     cout << "object \t type \t name" << endl;
@@ -89,6 +97,7 @@ int main (int argc, char *argv[]) {
     cout << "interp3  "  << interp3.InterpolationType() << " \t " << interp3.Name() << endl;
     cout << "interp4  "  << interp4.InterpolationType() << " \t " << interp4.Name() << endl;
     cout << "interp5  "  << interp5.InterpolationType() << " \t " << interp5.Name() << endl;
+    cout << "interp6  "  << interp6.InterpolationType() << " \t " << interp6.Name() << endl;
     cout << endl;
     cout << "EXCEPTIONS:" << endl;
     try{// SIZE OF X IS NOT EQUAL TO THE SIZE OF Y
@@ -112,7 +121,13 @@ int main (int argc, char *argv[]) {
       // by vectors containing irregularly spaced points
     interp3.AddData(x,y);
     interp4.AddData(x,y);
-    // interp5 already contains data from constructor
+    // interp5 and interp6 already contain data from constructors
+
+    // Test Contains() method
+    for(double d = 0.0; d < 0.05; d+=.01) {
+      cout << "d = " << d << " is an x element of dataset? " << interp1.Contains(d) << endl;
+    }
+    cout << endl;
 
     // Setting interpolation...
     interp3.SetInterpType(NumericalApproximation::CubicNeighborhood);
@@ -162,13 +177,21 @@ int main (int argc, char *argv[]) {
     }catch(iException e){ e.Report(); }
     interp5.Reset(NumericalApproximation::PolynomialNeville);
     interp5.AddData(x,y);
+
+      // Test CubicHermite exceptions
+    try{ //  DATA SET SIZE DOESN'T MATCH NUMBER OF DERIVATIVES ADDED
+      interp6.AddCubicHermiteDeriv(fstderiv(3));
+    }catch(iException e){ e.Report(); }
+    interp6.Reset();
+    interp6.AddData(x,y);
+    interp6.AddCubicHermiteDeriv(fstderiv(x));
     cout << "\t************************************************" << endl;
     cout << endl;
   //------------------------------------------------------------
     // Evaluating the interpolations
     cout << endl;
     cout << "2) Dataset Interpolation:  " << endl;
-    vector <double> points,interppts1,interppts2,interppts3,interppts4,interppts5;
+    vector <double> points,interppts1,interppts2,interppts3,interppts4,interppts5,interppts6;
     for(double p = .05; p < .8; p+=.1) {
       points.push_back(p);
       //Evaluate individual points
@@ -179,16 +202,23 @@ int main (int argc, char *argv[]) {
     interppts3 = interp3.Evaluate(points); //  neighbor, irreg
     interppts4 = interp4.Evaluate(points); //  clamped, irreg
     interppts5 = interp5.Evaluate(points); //  neville, irreg
+    interppts6 = interp6.Evaluate(points); //  hermite, irreg
     cout << "Evaluated points:" << endl;
-      cout << "x \t y \t\t c-nat-regular \t c-nat-irreg \t c-neigh \t c-clamped \t p-neville" << endl;
+      cout << "x \t y \t\t c-nat-regular \t c-nat-irreg \t c-neigh \t c-clamped \t p-neville \t c-hermite" << endl;
     for(unsigned int i = 0; i<interppts2.size(); i++) {
-      cout << points[i] << " \t" << f(points[i]) << " \t " << interppts1[i] << " \t " << interppts2[i] << " \t " << interppts3[i] << " \t " << interppts4[i] << " \t " << interppts5[i] << endl;
+      cout << points[i] << " \t" << f(points[i]) << " \t " 
+           << interppts1[i] << " \t " 
+           << interppts2[i] << " \t " 
+           << interppts3[i] << " \t " 
+           << interppts4[i] << " \t " 
+           << interppts5[i] << " \t " 
+           << interppts6[i] << endl;
     }
     vector <double> error = interp5.PolynomialNevilleErrorEstimate();
     cout << "Errors: (difference from y-value)" << endl;
-    cout << "x \tc-nat-regular\tc-nat-irreg\tc-neigh\t\tc-clamped\tp-neville-trueErr\tp-neville-estimErr" << endl;
+    cout << "x \tc-nat-regular\tc-nat-irreg\tc-neigh\t\tc-clamped\tp-neville-trueErr\tp-neville-estimErr\tc-herm" << endl;
     for(unsigned int i = 0; i<interppts2.size(); i++) {
-      cout << points[i] << " \t" << interppts1[i]-f(points[i]) << "\t";
+      cout << points[i] << "\t" << interppts1[i]-f(points[i]) << "\t";
       if(interppts1[i]-f(points[i]) == 0) cout << "\t";
       cout << interppts2[i]-f(points[i]) << "\t";
       if(interppts2[i]-f(points[i]) == 0) cout << "\t";
@@ -198,7 +228,8 @@ int main (int argc, char *argv[]) {
       if(interppts4[i]-f(points[i]) == 0) cout << "\t";
       cout << interppts5[i]-f(points[i]) << "\t\t";
       if(interppts5[i]-f(points[i]) == 0) cout << "\t";
-      cout << error[i] << endl;
+      cout << error[i] << "\t\t";
+      cout << interppts6[i]-f(points[i]) << endl;
     }
     cout << endl;
     cout << "3) Dataset Extrapolation: " << endl;

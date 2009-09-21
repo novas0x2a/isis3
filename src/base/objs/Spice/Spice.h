@@ -2,8 +2,8 @@
 #define Spice_h
 /**
  * @file
- * $Revision: 1.13 $
- * $Date: 2009/03/23 19:14:22 $
+ * $Revision: 1.17 $
+ * $Date: 2009/08/21 20:25:52 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   intellectual property information,user agreements, and related information.
@@ -138,6 +138,13 @@ namespace Isis {
  *  @history 2009-03-18 Tracie Sucharski - Cleaned up some unnecessary,obsolete code.  Make sure the
  *                                    table is used if the kernel names follow the "Table" keyword value, due to change
  *                                    made to spiceinit to retain kernel names if the spice is written to blob.
+ *  @history 2009-06-18 Debbie A. Cook - Modified to downsize instrument rotation table when loading cache
+ *  @history 2009-07-01 Debbie A. Cook - Modified to downsize body rotation, and sun position tables when loading cache
+ *  @history 2009-08-03 Debbie A. Cook - Added tolerance argument to method
+ *                                       CreateCache to allow downsizing of
+ *                                       instrument position Spice table.
+ *  @history 2009-08-21 Kris Becker - Moved the NAIF code methods to public
+ *                                    scope.
  *                                    
  *                                    
  */
@@ -156,6 +163,8 @@ namespace Isis {
       double TargetCenterDistance() const;
       double SolarLongitude();
       void InstrumentVelocity( double v[3] ) const;
+      //! Sets flag to allow downsizing of kernels
+//      void AllowDownsizing( bool allow) const { p_allowDownsizing = allow; };
 
      /**
       * Returns the ephemeris time in seconds which was used to obtain the
@@ -168,8 +177,8 @@ namespace Isis {
       void Radii (double r[3]) const;
 
       void CreateCache (const double startTime, const double endTime,
-                        const int size);
-      void CreateCache (const double time);
+                        const int size, double tol);
+      void CreateCache (const double time, double tol);
       inline double CacheStartTime () const { return p_startTime; };
       inline double CacheEndTime () const { return p_endTime; };
 
@@ -197,6 +206,12 @@ namespace Isis {
 
       bool HasKernels(Isis::Pvl &lab);
 
+      SpiceInt NaifBodyCode () const;
+      SpiceInt NaifSpkCode () const;
+      SpiceInt NaifCkCode () const;
+      SpiceInt NaifIkCode () const;
+      SpiceInt NaifSclkCode () const;
+
     protected:
       // Leave these protected so that inheriting classes don't
       // have to convert between double and spicedouble
@@ -216,11 +231,6 @@ namespace Isis {
                                   classes.*/
       SpiceDouble p_radii[3]; //!<The radii of the target in kilometers
 
-      SpiceInt NaifBodyCode () const;
-      SpiceInt NaifSpkCode () const;
-      SpiceInt NaifCkCode () const;
-      SpiceInt NaifIkCode () const;
-      SpiceInt NaifSclkCode () const;
 
     private:
       void Load(Isis::PvlKeyword &key);
@@ -245,6 +255,7 @@ namespace Isis {
       SpiceRotation *p_bodyRotation;
 
       bool p_keepKernelsLoaded;
+      bool p_allowDownsizing;
 
       // Constants
       SpiceInt p_bodyCode;

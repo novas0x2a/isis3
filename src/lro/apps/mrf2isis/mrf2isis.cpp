@@ -103,6 +103,40 @@ void IsisMain ()
     outcube->PutGroup(otherLabels.FindGroup("Archive"));
     outcube->PutGroup(otherLabels.FindGroup("Instrument"));
     outcube->PutGroup(otherLabels.FindGroup("ImageInfo"));
+  
+    // Make sure the ScaledPixelHeight and ScaledPixelWidth are the same
+    PvlGroup &instGrp(otherLabels.FindGroup("Instrument", Pvl::Traverse));
+    double pheight = instGrp["ScaledPixelHeight"];
+    double pwidth = instGrp["ScaledPixelWidth"];
+    if (pheight != pwidth) {
+      string msg = "Input file [" + inFile.Expanded() + "] does not have valid " +
+                   "ScaledPixelHeight and ScaledPixelWidth values. These values " +
+		   "must be equivalent or the image is considered to be invalid.";
+      throw iException::Message(iException::Io,msg, _FILEINFO_);
+    }
+
+    // Set the frequency based on the InstrumentModeId. This has to
+    // be done manually, because the frequency information was not
+    // put in the PDS labels.
+    if (!(instGrp.HasKeyword("Frequency"))) {
+      string instmodeid = instGrp["InstrumentModeId"];
+      double frequency;
+      if (instmodeid.compare(0,10,"BASELINE_S") == 0 || 
+          instmodeid.compare(0,6,"ZOOM_S") == 0) {
+        frequency = 2379305000.0;
+      } else { // BASELINE_X or ZOOM_X
+        frequency = 7140000000.0;
+      }
+      instGrp.AddKeyword(PvlKeyword("Frequency",frequency));
+      outcube->PutGroup(instGrp);
+    }
+    PvlGroup kerns("Kernels");
+    if (id.compare(0,5,"CHAN1") == 0 || id.compare(0,3,"CH1") == 0) {
+      kerns += PvlKeyword("NaifFrameCode",-86001);
+    } else { // LRO
+      kerns += PvlKeyword("NaifFrameCode",-85700);
+    }
+    outcube->PutGroup(kerns);
   }
 
   p.EndProcess ();

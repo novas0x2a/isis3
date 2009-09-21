@@ -1,9 +1,11 @@
 #include <iostream>
 #include <iomanip>
+
 #include "LoMediumDistortionMap.h"
 #include "CameraFocalPlaneMap.h"
 
 using namespace std;
+
 namespace Isis {
   namespace Lo {
     /** Constructor for LunarOrbiterMediumDistortionMap class
@@ -98,7 +100,8 @@ namespace Isis {
       p_focalPlaneX = dx;
       p_focalPlaneY = dy;
 
-      //      if (fabs(dx) > 33.  ||  fabs(dy) > 30) return false;
+      // maximum x is about 38.045 and maximum y is about 31.899... add 10%
+      if (fabs(dx) > 41.85  ||  fabs(dy) > 35.09) return false;
 
       p_camera->FocalPlaneMap()->SetFocalPlane(dx, dy);
       double ds = p_camera->FocalPlaneMap()->DetectorSample();
@@ -178,7 +181,8 @@ namespace Isis {
       p_undistortedFocalPlaneX = ux*signFactor;
       p_undistortedFocalPlaneY = uy*signFactor;
 
-      //      if (fabs(ux) > 33.  ||  fabs(uy) > 30.) return false;
+      // Test for data outside of image (image bounds plus 10%)
+      if (fabs(ux) > 41.85  ||  fabs(uy) > 35.09) return false;
 
       // Set sRef needed for lo medium distortion algorithm
       double sRef = 5000.;

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.27 $
- * $Date: 2008/08/11 16:32:50 $
+ * $Revision: 1.28 $
+ * $Date: 2009/07/16 18:13:58 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -706,6 +706,21 @@ namespace Isis {
     if (p_maximumLongitude != Isis::NULL8) {
       mapGroup += Isis::PvlKeyword("MaximumLongitude", p_maximumLongitude);
     }
+
+    // if both longitudes exist, verify they are ordered correctly
+    if (p_minimumLongitude != Isis::NULL8 && p_maximumLongitude != Isis::NULL8) {
+      if(p_maximumLongitude <= p_minimumLongitude) {
+        if(p_longitudeDomain == 180) {
+          mapGroup["MinimumLongitude"] = -180;
+          mapGroup["MaximumLongitude"] =  180;
+        }
+        else {
+          mapGroup["MinimumLongitude"] = 0;
+          mapGroup["MaximumLongitude"] = 360;
+        }
+      }
+    }
+
     mapGroup += Isis::PvlKeyword("PixelResolution", p_pixelResolution, "meters/pixel");
     mapGroup += Isis::PvlKeyword("Scale", p_scaleFactor, "pixels/degree");
     mapGroup += Isis::PvlKeyword("UpperLeftCornerX", p_upperLeftX, "meters");

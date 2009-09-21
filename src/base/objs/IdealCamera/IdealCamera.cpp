@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/08/08 20:04:49 $
+ * $Revision: 1.10 $
+ * $Date: 2009/08/31 15:12:28 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -127,6 +127,7 @@ namespace Isis {
     // Create correct camera type
     Isis::iString type = (std::string) inst["InstrumentType"];
     if (type.UpCase() == "FRAMING") {
+      p_framing = true;
       new CameraDetectorMap(this);
       CameraFocalPlaneMap *fmap = new CameraFocalPlaneMap(this,0);
       fmap->SetDetectorOrigin(sampleDetectors/2.0+0.5,
@@ -139,6 +140,7 @@ namespace Isis {
       LoadCache();
     }
     else if (type.UpCase() == "LINESCAN") {
+      p_framing = false;
       new LineScanCameraDetectorMap(this,et,exposureDuration);
       CameraFocalPlaneMap *fmap = new CameraFocalPlaneMap(this,0);
       fmap->SetDetectorOrigin(sampleDetectors/2.0+0.5,

@@ -15,6 +15,6 @@ commands:
 	$(APPNAME) from= $(OUTPUT)/reduceTruth3.cub \
           to= $(OUTPUT)/reduceTruth6.cub \
           algorithm=average \
-          ons=50 \
+	  ons=50 \
           onl=50 > /dev/null;
 	catlab from=$(OUTPUT)/reduceTruth6.cub > $(OUTPUT)/labels6.txt;

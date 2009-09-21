@@ -240,6 +240,9 @@ Step 8b. Conversion to Reflectance
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Christopher Austin" date="2009-06-11">
+      Fixed a segmentation fault.
+    </change>
   </history>
 
   <groups>

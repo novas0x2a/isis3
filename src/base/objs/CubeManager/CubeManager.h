@@ -87,7 +87,7 @@ namespace Isis {
        * CubeManager. The last "maxCubes" opened cubes are guaranteed to be 
        * valid as long as one of the CleanCubes(...) are not called.
        * 
-       * @param maxCubes 
+       * @param numCubes Maximum number of open cubes 
        */
       void SetNumOpenCubes(unsigned int numCubes) { p_minimumCubes = numCubes; }
 

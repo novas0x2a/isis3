@@ -4,6 +4,8 @@
 #include "CameraDistortionMap.h"
 #include "CameraDetectorMap.h"
 #include "iString.h"
+#include "PvlObject.h"
+#include "ControlMeasure.h"
 
 namespace Isis {
   //! Construct a control point
@@ -15,10 +17,10 @@ namespace Isis {
     SetHeld(false);
   }
 
-  /** 
-   * Construct a control point with given Id 
-   *  
-   * @param id Control Point Id 
+  /**
+   * Construct a control point with given Id
+   *
+   * @param id Control Point Id
    */
   ControlPoint::ControlPoint (const std::string &id) : p_invalid(false) {
     SetId(id);
@@ -31,14 +33,14 @@ namespace Isis {
  /**
   * Loads the PvlObject into a ControlPoint
   *
-  * @param p PvlObject containing ControlPoint information 
-  * @param forceBuild Forces invalid Control Measures to be added to this Control 
+  * @param p PvlObject containing ControlPoint information
+  * @param forceBuild Forces invalid Control Measures to be added to this Control
   *                   Point
   *
   * @throws Isis::iException::User - Invalid Point Type
   * @throws Isis::iException::User - Unable to add ControlMeasure to ControlPoint
-  *  
-  * @history 2008-06-18  Tracie Sucharski/Jeannie Walldren, Fixed bug with 
+  *
+  * @history 2008-06-18  Tracie Sucharski/Jeannie Walldren, Fixed bug with
   *                              checking for "True" vs "true", change to
   *                              lower case for comparison.
   */
@@ -120,8 +122,8 @@ namespace Isis {
  /**
   * Add a measurement to the control point
   *
-  * @param measure The ControlMeasure to add 
-  * @param forceBuild Forces the Control Measure to be added reguardless of 
+  * @param measure The ControlMeasure to add
+  * @param forceBuild Forces the Control Measure to be added reguardless of
   *                   validity
   */
   void ControlPoint::Add(const ControlMeasure &measure, bool forceBuild) {
@@ -133,7 +135,7 @@ namespace Isis {
         }
         else {
           std::string msg = "The SerialNumber [";
-          msg += measure.CubeSerialNumber() + "] is not unique, another ControlMeasure shares this SerialNumber"; 
+          msg += measure.CubeSerialNumber() + "] is not unique, another ControlMeasure shares this SerialNumber";
           throw iException::Message(iException::Programmer,msg,_FILEINFO_);
         }
       }
@@ -167,7 +169,7 @@ namespace Isis {
    *  Return the measurement for the given serial number
    *
    *  @param serialNumber The serial number
-   *  
+   *
    *  @return The ControlMeasure corresponding to the give serial number
    */
   ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) {
@@ -186,7 +188,7 @@ namespace Isis {
    *  Return the measurement for the given serial number
    *
    *  @param serialNumber The serial number
-   *  
+   *
    *  @return The ControlMeasure corresponding to the give serial number
    */
   const ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) const{
@@ -216,6 +218,36 @@ namespace Isis {
     return false;
 
   }
+  
+  
+  /**
+   *  Obtain a string representation of a given PointType
+   *
+   *  @param type PointType to get a string representation of
+   *
+   *  @returns A string representation of type
+   *
+   *  @throws iException::Programmer When unable to translate type
+   */
+  const std::string ControlPoint::PointTypeToString(ControlPoint::PointType
+      type) const {
+    std::string str = "";
+    switch (type)
+    {
+      case Ground:
+        str = "Ground";
+        break;
+      case Tie:
+        str = "Tie";
+        break;
+      default:
+        str = "Unable to translate PointType inside PointTypeToString";
+        throw iException::Message(iException::Programmer, str, _FILEINFO_);
+    }
+    
+    return str;    
+  }
+  
 
   /**
    * Set the ground coordinate of a control point
@@ -285,14 +317,11 @@ namespace Isis {
     }
 
     // Or return the first measured ControlMeasure
-//    for (unsigned int i=0; i<p_measures.size(); i++) {
-//      if (p_measures[i].IsMeasured()) return i;
-//    }
+    for (unsigned int i=0; i<p_measures.size(); i++) {
+      if (p_measures[i].IsMeasured()) return i;
+    }
 
-//    std::string msg = "There are no Measured ControlMeasures in the ControlPoint [" + Id() + "]";
-//    throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-
-    std::string msg = "There is no Reference ControlMeasure in the ControlPoint [" + Id() + "]";
+    std::string msg = "There are no Measured ControlMeasures in the ControlPoint [" + Id() + "]";
     throw iException::Message(iException::Programmer,msg,_FILEINFO_);
   }
 
@@ -300,10 +329,10 @@ namespace Isis {
    * This method computes the apriori lat/lon for a point.  It computes this
    * by determining the average lat/lon of all the measures.  Note that this
    * does not change held, ignored, or ground points.  Also, it does not
-   * use unmeasured or ignored measures when computing the lat/lon. 
-   *  
-   * @history 2008-06-18  Tracie Sucharski/Jeannie Walldren, Changed error 
-   *                               messages for Held/Ground points. 
+   * use unmeasured or ignored measures when computing the lat/lon.
+   *
+   * @history 2008-06-18  Tracie Sucharski/Jeannie Walldren, Changed error
+   *                               messages for Held/Ground points.
    */
   void ControlPoint::ComputeApriori() {
     // Should we ignore the point altogether?
@@ -332,6 +361,8 @@ namespace Isis {
         msg += "requires lat/lon/radius";
         throw iException::Message(iException::User,msg,_FILEINFO_);
       }
+      // Don't return until after the FocalPlaneMeasures have been set
+      //      return;
     }
 
     double lat = 0.0;
@@ -370,6 +401,10 @@ namespace Isis {
           m.SetMeasuredEphemerisTime(cam->EphemerisTime());
         }
         else {
+          // JAA: Don't stop if we know the lat/lon.  The SetImage may fail
+          // but the FocalPlane measures have been set
+          if (Type() == ControlPoint::Ground || Held()) continue;
+
           // TODO: What do we do
           std::string msg = "Cannot compute lat/lon for control point [" +
             Id() + "], measure [" + m.CubeSerialNumber() + "]";
@@ -380,16 +415,16 @@ namespace Isis {
       }
     }
 
+    // Don't update the lat/lon for held or ground points
+    if (Held()) return;
+    if (Type() == ControlPoint::Ground) return;
+
     // Did we have any measures?
     if (goodMeasures == 0) {
       std::string msg = "ControlPoint [" + Id() + "] has no measures which ";
       msg += "project to latitude/longitude";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
-
-    // Don't update the lat/lon for held or ground points
-    if (Held()) return;
-    if (Type() == ControlPoint::Ground) return;
 
     // Compute the averages
     lat = lat / goodMeasures;
@@ -402,10 +437,10 @@ namespace Isis {
 
 
   /**
-   * This method computes the errors for a point. 
-   *  
-   * @history 2008-07-17  Tracie Sucharski,  Added ptid and measure serial 
-   *                            number to the unable to map to surface error. 
+   * This method computes the errors for a point.
+   *
+   * @history 2008-07-17  Tracie Sucharski,  Added ptid and measure serial
+   *                            number to the unable to map to surface error.
    */
 
   void ControlPoint::ComputeErrors() {
@@ -423,78 +458,64 @@ namespace Isis {
 
       // TODO:  Should we use crater diameter?
       Camera *cam = m.Camera();
-      if (cam->SetImage(m.Sample(),m.Line())) {
-        // Map the lat/lon/radius of the control point through the Spice of the
-        // measurement sample/line to get the computed sample/line.  This must be
-        // done manually because the camera will compute a new time for line scanners,
-        // instead of using the measured time.
-        // First compute the look vector in body-fixed coordinates
-        double pB[3];   
-        latrec_c(rad/1000., lon * Isis::PI / 180.0, lat * Isis::PI / 180.0, pB);
-        std::vector<double> lookB(3);
-        SpiceRotation *bodyRot = m.Camera()->BodyRotation();
-        std::vector<double> sB(3);
-        sB = bodyRot->ReferenceVector(m.Camera()->InstrumentPosition()->Coordinate());
-        for (int ic=0; ic<3; ic++)  lookB[ic]  =  pB[ic] - sB[ic];
-        // Rotate the look vector to camera coordinates
-        std::vector<double> lookC(3);
-        std::vector<double> lookJ(3);
-        lookJ = bodyRot->J2000Vector( lookB );
-        lookC = m.Camera()->InstrumentRotation()->ReferenceVector( lookJ );
-        // Scale to undistorted focal plane coordinates
-        double scale = m.Camera()->FocalLength() / lookC[2];
-        double cudx = lookC[0] * scale;
-        double cudy = lookC[1] * scale;
-        // Map to distorted focal plane coordinates
-        CameraDistortionMap *distmap = m.Camera()->DistortionMap();
-        distmap->SetUndistortedFocalPlane(cudx, cudy);
-        double cfpX = distmap->FocalPlaneX();
-        double cfpY = distmap->FocalPlaneY();
-        // Map to detector
-        CameraFocalPlaneMap *fpmap = m.Camera()->FocalPlaneMap();
-        if (fpmap->SetFocalPlane(cfpX, cfpY)) {
-          double cds = fpmap->DetectorSample();
-          double cdl = fpmap->DetectorLine();
-          // Map to parent sample/line
-          CameraDetectorMap *cdmap = m.Camera()->DetectorMap();
-          if (cdmap->SetDetector(cds, cdl)) {
-            double cps = cdmap->ParentSample();
-            double cpl = cdmap->ParentLine();
-            double sampError = m.Sample() - cps;
-            double lineError = m.Line() - cpl;
-            m.SetError(sampError,lineError);
-            if (cam->SetUniversalGround(lat,lon,rad) ) {
-              sampError = m.Sample() - cam->Sample();
-              lineError = m.Line() - cam->Line();
-            }
-            m.SetFocalPlaneComputed(cfpX,cfpY);
-            m.SetComputedEphemerisTime(cam->EphemerisTime());
-          }
-          else {
-            std::string msg = "Unable to set detector for ControlPoint [" +
-                          Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
-                          "]";
-            throw iException::Message(iException::User,msg,_FILEINFO_);
-//            m.SetError(999.0,999.0);
-          }
-        }
-        else {
-          std::string msg = "Unable to set focal plane for ControlPoint [" +
-                            Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
-                            "]";
-          throw iException::Message(iException::User,msg,_FILEINFO_);
-//          m.SetError(999.0,999.0);
-        }
+      cam->SetImage(m.Sample(),m.Line());
+      // Map the lat/lon/radius of the control point through the Spice of the
+      // measurement sample/line to get the computed sample/line.  This must be
+      // done manually because the camera will compute a new time for line scanners,
+      // instead of using the measured time.
+      // First compute the look vector in body-fixed coordinates
+      double pB[3];
+      latrec_c(rad/1000., lon * Isis::PI / 180.0, lat * Isis::PI / 180.0, pB);
+      std::vector<double> lookB(3);
+      SpiceRotation *bodyRot = m.Camera()->BodyRotation();
+      std::vector<double> sB(3);
+      sB = bodyRot->ReferenceVector(m.Camera()->InstrumentPosition()->Coordinate());
+      for (int ic=0; ic<3; ic++)  lookB[ic]  =  pB[ic] - sB[ic];
+      // TODO: Probably need to a back of the planet test here
+
+      // Rotate the look vector to camera coordinates
+      std::vector<double> lookC(3);
+      std::vector<double> lookJ(3);
+      lookJ = bodyRot->J2000Vector( lookB );
+      lookC = m.Camera()->InstrumentRotation()->ReferenceVector( lookJ );
+      // Scale to undistorted focal plane coordinates...
+      // Make sure to get the directional fl value from DistortionMap
+      double scale = m.Camera()->DistortionMap()->UndistortedFocalPlaneZ() / lookC[2];
+      double cudx = lookC[0] * scale;
+      double cudy = lookC[1] * scale;
+      m.SetFocalPlaneComputed(cudx,cudy);
+
+      // Now things get tricky.  We want to produce errors in pixels not mm
+      // but some of the camera maps could fail.  One that won't is the
+      // FocalPlaneMap which takes x/y to detector s/l.  We will bypass the
+      // distortion map and have an residuals in undistorted pixels.
+
+      CameraFocalPlaneMap *fpmap = m.Camera()->FocalPlaneMap();
+      if (!fpmap->SetFocalPlane(m.FocalPlaneComputedX(), m.FocalPlaneComputedY())) {
+        std::string msg = "Sanity check #1 for ControlPoint [" +
+                      Id() + "], ControlMeasure [" + m.CubeSerialNumber() + "]";
+        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        // This error shouldn't happen but check anyways
       }
-      else {
-        std::string msg = "Unable to map measurement to surface, ControlPoint [" +
-                          Id() + "], ControlMeasure [" + m.CubeSerialNumber() +
-                          "]";
-        throw iException::Message(iException::User,msg,_FILEINFO_);
-        // TODO: What should we do?
-//         m.SetError(999.0,999.0);
-        // m.SetFocalPlaneComputed(?,?);
+      double cuSamp = fpmap->DetectorSample();
+      double cuLine = fpmap->DetectorLine();
+
+      if (!fpmap->SetFocalPlane(m.FocalPlaneMeasuredX(), m.FocalPlaneMeasuredY())) {
+        std::string msg = "Sanity check #2 for ControlPoint [" +
+                      Id() + "], ControlMeasure [" + m.CubeSerialNumber() + "]";
+        throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        // This error shouldn't happen but check anyways
       }
+      double muSamp = fpmap->DetectorSample();
+      double muLine = fpmap->DetectorLine();
+
+      // The units are in detector sample/lines.  We will apply the instrument
+      // summing mode to get close to real pixels.  Note however we are in
+      // undistorted pixels
+      CameraDetectorMap *cdmap = m.Camera()->DetectorMap();
+      double sampError = (muSamp - cuSamp) / cdmap->SampleScaleFactor();
+      double lineError = (muLine - cuLine) / cdmap->LineScaleFactor();
+      m.SetError(sampError,lineError);
     }
     return;
   }
@@ -541,10 +562,10 @@ namespace Isis {
   }
 
 
-  /** 
-   * Returns the number of non-ignored control measures 
-   *  
-   * @return Number of valid control measures 
+  /**
+   * Returns the number of non-ignored control measures
+   *
+   * @return Number of valid control measures
    */
   int ControlPoint::NumValidMeasures() {
     int size = 0;

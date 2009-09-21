@@ -27,7 +27,7 @@ void IsisMain ()
 {
   const string caminfo_program = "caminfo";
   const string caminfo_version = "2.2";
-  const string caminfo_revision = "$Revision: 1.18 $";
+  const string caminfo_revision = "$Revision: 1.19 $";
   string caminfo_runtime = iTime::CurrentGMT();
 
   Process p;
@@ -175,6 +175,8 @@ void IsisMain ()
     int pixinc = ui.GetInteger("PIXINC");
     if (pixinc <= 0) pixinc = 100;
     bandGeom.setPixInc(pixinc);
+    bandGeom.setMaxIncidence(ui.GetDouble("MAXINCIDENCE"));
+    bandGeom.setMaxEmission(ui.GetDouble("MAXEMISSION"));
     bandGeom.collect(*cam, *icube, doGeometry, doPolygon);
 
 

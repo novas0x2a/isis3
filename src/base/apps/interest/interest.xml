@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="interest" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Applies an interest operator to the measurments of a control network
   </brief>
@@ -34,6 +35,9 @@
     </change>
     <change name="Steven Koechle" date="2009-04-24">
       If a control measure fails SetUniversalGround it is now ignored.
+    </change>
+    <change name="Travis Addair" date="2009-08-11">
+      Interest operator parameters are now placed into the print file.
     </change>
 </history>
 

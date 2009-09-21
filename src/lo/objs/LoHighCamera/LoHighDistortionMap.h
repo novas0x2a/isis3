@@ -1,3 +1,6 @@
+#ifndef LoHighDistortionMap_h
+#define LoHighDistortionMap_h
+
 /**
  *  @file
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
@@ -16,9 +19,6 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.
  */
-
-#ifndef LoHighDistortionMap_h
-#define LoHighDistortionMap_h
 
 #include <vector>
 #include "CameraDistortionMap.h"

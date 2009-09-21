@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2009/06/02 17:13:22 $                                                                 
+ * $Revision: 1.12 $                                                             
+ * $Date: 2009/09/01 19:23:12 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -33,6 +33,7 @@
 
 namespace Isis {
   class Cube;
+  class Statistics;
 
   /**                                                   
    * @brief A small chip of data used for pattern matching                                                                                                                                              
@@ -60,6 +61,20 @@ namespace Isis {
    *   @history 2009-06-02  Stacy Alley, Added a check in the
    *            SetSize() method to make sure the given samples
    *            and lines are not equal to or less than zero.
+   *   @history 2009-08-19  Kris Becker  Added new Extract method that applies
+   *            an Affine transform to the extract a portion of the chip; added
+   *            an assigment operator that sets the entire chip to a single
+   *            value for convenience;  added a getter that returns a const
+   *            reference to the internal Affine transform of this chip.
+   *   @history 2009-08-20  Steven Lambright, Removed local cube pointer and
+   *            parenthesis operator
+   *   @history 2009-08-20  Travis Addair, Added Statistics method
+   *   @history 2009-08-28 Kris Becker - Added new Affine setter method to
+   *            establish a new Affine transform to the chip; added another Load
+   *            method that uses a new Affine transform to load a chip from a
+   *            cube.
+   *   @history 2009-09-01  Travis Addair, Added valid Min/Max
+   *            pixel value functionality for Statistics method
    * 
    * @see AutoReg
    * @see AutoRegFactory
@@ -72,6 +87,8 @@ namespace Isis {
 
       void SetSize (const int samples, const int lines);
 
+      bool IsInsideChip(double sample, double line);
+
       //! Return the number of samples in the chip
       inline int Samples () const { return p_chipSamples; };
 
@@ -81,6 +98,19 @@ namespace Isis {
       //! Returns the expanded filename of the cube from
       //! which this chip was chipped.
       inline std::string Filename() const { return p_filename; };
+
+      void SetAllValues(const double &d);
+
+      /**
+       * This sets a value in the chip
+       * 
+       * @param sample  Sample position to load (1-based)
+       * @param line    Line position to load (1-based)
+       * @param value   Value to set
+       */
+      void SetValue(int sample, int line, const double &value) {
+        p_buf[line-1][sample-1] = value;
+      }
 
       /**
        * Loads a Chip with a value.  For example, 
@@ -93,7 +123,7 @@ namespace Isis {
        * @param sample    Sample position to load (1-based)
        * @param line      Line position to load (1-based)
        */
-      inline double &operator()(int sample,int line) {
+      inline double GetValue(int sample,int line) {
         return p_buf[line-1][sample-1];
       }
 
@@ -106,7 +136,7 @@ namespace Isis {
        * @param sample    Sample position to get (1-based)
        * @param line      Line position to get (1-based)
        */
-      inline const double &operator()(int sample,int line) const {
+      inline const double GetValue(int sample,int line) const {
         return p_buf[line-1][sample-1];
       }
 
@@ -130,16 +160,10 @@ namespace Isis {
 
       void Load(Cube &cube, const double rotation=0.0, const double scale=1.0,
                 const int band=1);
-      void Load(Cube &cube, Chip &match, const double scale=1.0,
+      void Load(Cube &cube, Chip &match, Cube &matchChipCube, 
+                const double scale=1.0, const int band=1);
+      void Load(Cube &cube, const Affine &affine, const bool &keepPoly = true,
                 const int band=1);
-
-      void ReLoad(const double rotation=0.0, const double scale=1.0,
-                  const int band=1) {
-        Load(*p_cube,rotation,scale,band);
-      };
-      void ReLoad(Chip &match, const double scale=1.0, const int band=1) {
-        Load(*p_cube,match,scale,band);
-      };
 
       void SetChipPosition (const double sample, const double line);
 
@@ -163,7 +187,7 @@ namespace Isis {
       bool IsValid(double percentage);
 
       inline bool IsValid(int sample, int line) {
-        double value = (*this)(sample,line);
+        double value = GetValue(sample,line);
         if (value < p_validMinimum) return false;
         if (value > p_validMaximum) return false;
         return true;
@@ -171,9 +195,45 @@ namespace Isis {
 
       Chip Extract (int samples, int lines, int samp, int line);
       void Extract (int samp, int line, Chip &output);
+      Isis::Statistics *Statistics();
+      void Extract (Chip &output, Affine &affine);
       void Write (const std::string &filename);
 
       void SetClipPolygon (const geos::geom::MultiPolygon &clipPolygon);
+
+      /**
+       * @brief Returns the Affine transformation of chip-to-cube indices
+       *  
+       * This method returns the affine transform used to load a chip from the
+       * same area as a match cube.  It also is used to track the tack point 
+       * line and sample translations from the chip indices to the absolute cube 
+       * coordiates. 
+       * 
+       * @return const Affine& Transform map from chip coordinates to cube 
+       *         coordinates
+       */
+      const Affine &getTransform() const { return (p_affine); }
+
+      /**
+       * @brief Sets the internal Affine transform to new translation 
+       *  
+       * Provides the ability to establish a new affine transformation without 
+       * overhead of, say, loading the chip with a new translation. 
+       *  
+       * The caller also has the option to specify the disposition of an 
+       * established polygon. 
+       * 
+       * @param affine   New affine tranform to set for this chip
+       * @param keepPoly Should an existing polygon clipper be kept?
+       */
+      void setTransform(const Affine &affine, const bool &keepPoly = true) {
+        p_affine = affine;
+        if (!keepPoly) {
+          delete p_clipPolygon;
+          p_clipPolygon = 0;
+        }
+        return;
+      }
 
     private:
       void Init (const int samples, const int lines);
@@ -185,7 +245,6 @@ namespace Isis {
       int p_tackSample;           //!< Middle sample of the chip
       int p_tackLine;             //!< Middle line of the chip
 
-      Cube *p_cube;               //!< cube associated with chip after load
       double p_cubeTackSample;    //!< cube sample at the chip tack 
       double p_cubeTackLine;      //!< cube line at the chip tack
 

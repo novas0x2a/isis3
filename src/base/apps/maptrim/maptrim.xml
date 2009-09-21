@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="maptrim" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Trim edges of a map projected image
   </brief>
@@ -39,6 +40,13 @@
     </change>
     <change name="Christopher Austin" date="2009-01-27">
       Fixed parameter names
+    </change>
+    <change name="Travis Addair" date="2009-08-10">
+      Mapping group parameters are now placed into the print file.
+    </change>
+    <change name="Mackenzie Boyd" date="2009-08-12">
+      Modified call to crop to handle from and to parameters with spaces in 
+      directories.
     </change>
   </history>
 

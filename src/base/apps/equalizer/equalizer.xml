@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="equalizer" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
       Tone matches cubes prior to mosaicking
   </brief>
@@ -29,11 +30,11 @@
       </p>
 
       <p>
-        While equalizing, the user can think of adjusting the brightness and/or contrast of the cubes. 
+        Prior to equalizing, the user can choose whether to adjust the brightness and/or contrast of the cubes. 
         The default is to adjust both, however, if the brightness (average) of all the cubes is the same,
         then simply adjusting the contrast may suffice.   Likewise, if the standard deviation of all the 
-        cubes is similar, then a contast adjustment is not necessary.  Adjusting for contrast only implies
-        the BASE values will be held to zero.  Similarly, adjust for brightness implies the MULT values
+        cubes is similar, then a contrast adjustment is not necessary.  Adjusting for contrast only implies
+        the offsets (BASE values) will be held to zero.  Similarly, adjust for brightness implies the gains (MULT values)
         will be held to one.
       </p>
 
@@ -42,13 +43,23 @@
           least squares computations with N unknowns, where N is the number of cubes to be equalized.
           The overlaps, M, between all the cubes are computed and in some cases M &lt; N.  This implies
           an underdetermined system.  The program will report an error if this occurs.  You can hold one or
-          more cubes to alleviate this problem.  Holding a cube forces MULT and BASE to 1.0 and 0.0 
+          more cubes to alleviate this problem.  Holding a cube forces MULT and BASE to 1.0 and 0.0, 
           respectively. 
       </p>
 
       <p>
          If the APPLY option is selected, the equalized cubes will be named the same as the input cubes
          with the addition of a '.equ' prior to the '.cub' extension.
+      </p>
+
+      <p>
+          For the sake of efficiency, the user may choose to set the "sampling percent" to a value
+          less than its default of 100.0.  By doing so, the program will likely perform its
+          statistic gathering noticeably faster, but at a potential loss of accuracy in the
+          results.  It should also be noted that the user runs the risk of encountering an error
+          if by decreasing the sampling percent, the amount of valid data in their calculated
+          overlaps is less than the minimum set in the MINCOUNT field (default value of 1000).
+          Sampling percent must be a decimal between 0.0 (exclusive) and 100.0 (inclusive).
       </p>
   </description>
 
@@ -95,6 +106,26 @@
       information, and moved error checking on number of bands and projection 
       parameters to be done prior to statistic gathering    
     </change>
+    <change name="Travis Addair" date="2009-06-24">
+      Refactored for use with the new OverlapNormalization class, thus removing
+      the option to use the broken PCA contrast mode; the PVL output has been
+      modified to print all normalization information for a cube in one group
+      with OverlapStatistics information coming last in the file; added an
+      option to decrease the percentage of lines sampled in statistic gathering
+    </change>
+    <change name="Travis Addair" date="2009-07-17">
+      Added a TOLIST parameter, allowing the user to specify a unique output 
+      file name and location for each input file.  The default is now to 
+      place each output file in the same directory as its input file, not in 
+      the current working directory.
+    </change> 
+     <change name="Travis Addair" date="2009-07-30">
+      Added functionality allowing the user to run the program applying 
+      corrections based off of previously gathered statistics obtained from 
+      the program's output PVL file.  The output PVL has also been changed 
+      from "PVL" to "OUTSTATS".  Results will now be placed into the print 
+      file.
+     </change>
   </history>
 
   <groups>
@@ -111,25 +142,9 @@
           </description>
         </parameter>
 
-      <parameter name="TO">
-        <type>filename</type>
-        <fileMode>output</fileMode>
-        <brief>
-             Text file containing thorough equalization related statistics
-        </brief>
-        <description>
-             This file will contain the statistics of all of the overlapping areas 
-             in every band along with the computed equalizing factors 
-             (BASE and MULT).  Specifying this output file is optional.  
-        </description>
-        <internalDefault>None</internalDefault>
-        <filter>
-          *.txt *.lis *.lst
-        </filter>
-      </parameter>
-
         <parameter name="HOLDLIST">
             <type>filename</type>
+            <fileMode>input</fileMode>
             <brief>
                 List of filenames to hold 
             </brief>
@@ -145,25 +160,136 @@
             </filter>
         </parameter>  
 
-        <parameter name="APPLY">
-            <type>boolean</type>
-            <brief>
-                Apply correction to the cubes
-            </brief>
-            <description>
-                This option allows the user to decide whether they want to do the 
-                equalization calculations only, or do the calculations and apply the 
-                correction to the images.  If the APPLY option is not selected, you must
-                specify a TO file.  If it is selected you can still optionally specify a TO file and
-                the MULT/BASE values will be applied to each input cube.  The output cubes
-                will be named the same with the exception of ".equ" extension (e.g. "foobar.cub"
-                becomes "foobar.equ.cub").
-            </description>
-             <default><item>TRUE</item></default>
+        <parameter name="TOLIST">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>
+            The list of the equalized cubes to be created
+          </brief>
+          <description>
+            This list of output files should contain a file to correspond to each 
+            input file.  The output files will be written to the exact location 
+            with the exact name specified unless it happens to be identical to 
+            that of its corresponding input file, in which case an error will be 
+            thrown.  If this file is not specified, but the APPLY option is 
+            still selected, the output cubes will be placed in the directory of
+            its input file, and named the same with the exception of ".equ" 
+            extension (e.g. "foobar.cub" becomes foobar.equ.cub").
+          </description>
+          <internalDefault>Automatic</internalDefault>
+        </parameter>
+
+        <parameter name="OUTSTATS">
+          <type>filename</type>
+          <fileMode>output</fileMode>
+          <brief>
+               Output text file containing thorough equalization related 
+               statistics
+          </brief>
+          <description>
+               This file will contain the statistics of all of the overlapping areas 
+               in every band along with the computed equalizing factors 
+               (BASE and MULT).  Specifying this output file is optional.  
+          </description>
+          <internalDefault>None</internalDefault>
+          <filter>
+            *.txt *.pvl *.lis *.lst
+          </filter>
+        </parameter>
+
+        <parameter name="INSTATS">
+          <type>filename</type>
+          <fileMode>input</fileMode>
+          <brief>
+               Input text file containing thorough equalization related 
+               statistics, used for applying correction
+          </brief>
+          <description>
+               This file will contain the statistics of all of the overlapping areas 
+               in every band along with the computed equalizing factors 
+               (BASE and MULT).  Specifying this output file is optional.  
+          </description>
+          <internalDefault>None</internalDefault>
+          <filter>
+            *.txt *.pvl *.lis *.lst
+          </filter>
         </parameter>
     </group>
 
-    <group name="LeastSquaresOptions">                           
+    <group name="ProcessingOptions">                           
+        <parameter name="PROCESS">
+            <type>string</type>
+            <brief>
+               Calculate statistics, apply correction, or do both 
+            </brief>
+            <description>
+                This option allows the user to decide whether they want to do the 
+                equalization calculations and then go on to apply correction 
+                afterwards, apply correction to the images off of previously 
+                gathered statistics, or do the calculations but not apply 
+                correction.  If the APPLY option is not selected, you must 
+                specify an OUTSTATS file.  If it is selected you can still 
+                optionally specify an OUTSTATS file and the MULT/BASE values 
+                will be applied to each input cube.  The names and locations of 
+                the output cubes are specified by the TOLIST file.  
+            </description>
+            <default><item>BOTH</item></default>
+            <list>
+                <option value="BOTH">
+                    <brief>
+                       Calculate statistics and apply correction 
+                    </brief>
+                    <description>
+                        This option will calculate statistics on the images, 
+                        then apply correction off of those results. 
+                    </description>
+                    <exclusions>
+                        <item>INSTATS</item>
+                    </exclusions>
+                </option>
+                <option value="CALCULATE">
+                    <brief>
+                        Calculate statistics only
+                    </brief>
+                    <description>
+                        This option will calculate statistics on the images and 
+                        print them to an output PVL file, but not correct them.
+                    </description>
+                    <inclusions>
+                        <item>OUTSTATS</item>
+                    </inclusions>
+                    <exclusions>
+                        <item>TOLIST</item>
+                        <item>INSTATS</item>
+                    </exclusions>
+                </option>
+                <option value="APPLY">
+                    <brief>
+                        Apply correction only
+                    </brief>
+                    <description>
+                        This option will use previously generated statistics to 
+                        apply correction to the images.
+                    </description>
+                    <inclusions>
+                        <item>TOLIST</item>
+                        <item>INSTATS</item>
+                    </inclusions>
+                    <exclusions>
+                        <item>HOLDLIST</item>
+                        <item>OUTSTATS</item>
+                        <item>ADJUST</item>
+                        <item>MINCOUNT</item>
+                        <item>WEIGHT</item>
+                        <item>PERCENT</item>
+                    </exclusions>
+                </option>
+                               
+            </list>
+        </parameter>
+    </group>
+
+    <group name="CalculationOptions">                           
         <parameter name="ADJUST">
             <type>string</type>
             <brief>
@@ -171,10 +297,9 @@
             </brief>
             <description>
                 Choose the fit option to select the algorithm to use to
-                adjust the pixel values.  The CONTRAST mode will equalize
-                using only a multiplier (the base will be set to 0.0), and 
-                the BRIGHTNESS mode will equalize using only a base 
-                (the multiplier will be set to 1.0).  The BOTH option will equalize
+                adjust the pixel values.  The BRIGHTNESS mode will equalize using only a offset/base 
+                (the gain/multiplier will be set to 1.0), and the CONTRAST mode will equalize
+                using only a gain/multiplier (the offset/base will be set to 0.0).  The BOTH option will equalize
                 using both a base and a multiplier.  In most cases this 
                 option will give you the best results.
             </description>
@@ -189,17 +314,6 @@
                         both the brightness and contrast of the images.
                     </description>
                 </option>
-                <option value="CONTRAST">
-                    <brief>
-                        Adjust the Contrast of the images only
-                    </brief>
-                    <description>
-                        This option will use an algorithm that only equalizes
-                        the contrast of the images.  This option should only
-                        be used if the brightness of the images are already
-                        close.
-                    </description>
-                </option>
                 <option value="BRIGHTNESS">
                     <brief>
                         Adjust the Brightness of the images only
@@ -210,51 +324,21 @@
                         used only if the variance/standard deviation of the
                         images is close.
                     </description>
-                    <exclusions>
-                        <item>CMODE</item>
-                    </exclusions>
                 </option>
-            </list>
-        </parameter>
-         <parameter name="CMODE">
-            <type>string</type>
-            <brief>
-               The constrast mode to use for the equalization
-            </brief>
-            <description>
-                The input images can be mosaicked together using one of two contrast  
-                modes, principal component analysis or standard deviation.  
-                The pricipal component analysis mode fits pixels using the slope 
-                of a line of best fit of brightness between the cubes, and the 
-                standard deviation mode fits pixels using the ratio of the 
-                standard deviations of the brightness values in each cube.
-                This option only effects the computation of the MULT.
-            </description>
-            <default><item>SD</item></default>
-            <list>
-                <option value="SD">
+                <option value="CONTRAST">
                     <brief>
-                      Standard Deviation Fit Mode
+                        Adjust the Contrast of the images only
                     </brief>
                     <description>
-                       Calculates the contrast adjustment  using the ratio of the standard 
-                       deviations of the brightness values in each cube.
+                        This option will use an algorithm that only equalizes
+                        the contrast of the images.  This option should only
+                        be used if the brightness of the images are already
+                        close.
                     </description>
-                </option>
-                <option value="PCA">
-                    <brief>
-                      Principal Component Analysis Fit Mode
-                    </brief>
-                    <description>
-                       Calculates the contrast adjustment using the slope of a line of best fit 
-                       of the brightness values between the two cubes.              
-                    </description>
-                </option>
+                </option>                
             </list>
         </parameter>
-    </group>
 
-    <group name="OverlapOptions">
         <parameter name="MINCOUNT">
             <type>integer</type>
             <brief>
@@ -269,18 +353,32 @@
             <default><item>1000</item></default>
         </parameter>
 
+        <parameter name = "WEIGHT">
+            <type>boolean</type>
+            <brief>
+                Weight overlaps
+            </brief>
+            <description>
+                This option allows the user to decide whether they want to weight the least squares solution based on how 
+                large the overlap area is, or if they want no weighting at all.
+            </description>
+            <default><item>FALSE</item></default>
+        </parameter>
 
-    <parameter name = "WEIGHT">
-        <type>boolean</type>
-        <brief>
-            Weight overlaps
-        </brief>
-        <description>
-            This option allows the user to decide whether they want to weight the least squares solution based on how 
-            large the overlap area is, or if they want no weighting at all.
-        </description>
-        <default><item>FALSE</item></default>
-    </parameter>
+        <parameter name="PERCENT">
+            <type>double</type>
+            <brief>
+                Percentage of the lines to consider when gathering overall cube
+                statistics and overlap statistics
+            </brief>
+            <description>
+                The percentage of lines in each area to consider in the process
+                by line solutions to finding overall cube statistics and
+                overlap statistics.  This value must be a decimal between
+                0.0 (exclusive) and 100.0 (inclusive).
+            </description>
+            <default><item>100.0</item></default>
+        </parameter>
     </group>
   </groups>
 
@@ -289,7 +387,7 @@
       <brief> Io Images Equalized </brief>
       <description>
         This example shows the use of the equalizer application.  The defaults are adjusting both the 
-        brightness and contrast in the Standard Deviation Fit Mode (SD).
+        gain and offset in the Standard Deviation Fit Mode (SD).
       </description>
       <terminalInterface>
         <commandLine> fromlist= ../FromList.lst holdlist= ../HoldList.lst

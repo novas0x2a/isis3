@@ -2,8 +2,8 @@
 #define PvlKeyword_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/10/01 01:12:19 $
+ * $Revision: 1.10 $
+ * $Date: 2009/09/11 17:24:06 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -62,6 +62,10 @@ namespace Isis {
  *  @history 2008-09-30 Christopher Austin - replaced all std::endl in the <<
  *           operator as well as WriteWithWrap() with PvlFormat.FormatEOL(), and
  *           formatted wraps accordingly
+ *  @history 2009-08-18 Eric Hyer - Added both SetUnits methods and ASSERT macro
+ *  @history 2009-09-09 Steven Lambright - Removed ASSERT macro, fixed
+ *           formatting of error in SetUnits, and fixed text wrapping when a
+ *           single array element needed split up into multiple lines.
  */                                                                       
   class PvlSequence;
   class PvlFormat;
@@ -93,6 +97,10 @@ namespace Isis {
       bool IsNamed(const std::string &name) const { return StringEqual(name,Name()); };
       
       void SetValue(const Isis::iString value, const std::string unit="");
+      
+      void SetUnits(const iString & units);
+      void SetUnits(const iString & value, const iString & units);
+      
       PvlKeyword& operator=(const Isis::iString value);
   
       void AddValue(const Isis::iString value, const std::string unit="");

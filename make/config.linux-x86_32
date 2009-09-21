@@ -12,7 +12,7 @@ ISISCPPFLAGS += -DGMM_USES_SUPERLU
 ifeq ($(findstring DEBUG, $(MODE)),DEBUG)
   ISISCPPFLAGS += -g 
   ISISCPPFLAGS += -O0
-  ISISCPPFLAGS += -DCWDEBUG -DLIBCWD_THREAD_SAFE -D_REENTRANT -pthread
+  ISISCPPFLAGS += -DCWDEBUG -DLIBCWD_THREAD_SAFE -D_REENTRANT
 
   ifeq ($(findstring NOMEMCHECK, $(MODE)),NOMEMCHECK)
     ISISCPPFLAGS += -DNOMEMCHECK
@@ -35,7 +35,7 @@ ISISSTATIC  = -Wl,-Bstatic
 ISISDYNAMIC = -Wl,-Bdynamic
 
 ifeq ($(findstring DEBUG, $(MODE)),DEBUG)
-  ISISSYSLIBS += -lcwd_r
+  ISISSYSLIBS += -lcwd_r -pthread
 endif
 
 #---------------------------------------------------------------------------
@@ -51,7 +51,7 @@ ISISARFLAGS     =
 #---------------------------------------------------------------------------
 ISIS3SYSINC ?= /usr/include
 ISIS3SYSLIB ?= /usr/lib
-ISIS3LOCAL  ?= /usgs/pkgs/local
+ISIS3LOCAL  ?= /usgs/pkgs/local/isis$(ISISVERSION)
 
 #---------------------------------------------------------------------------
 # Set up for cwd
@@ -148,6 +148,13 @@ SUPERLULIBDIR = -L$(ISIS3LOCAL)/lib
 SUPERLULIB    = -lsuperlu_3.0 -lblas -lgfortran
 
 #---------------------------------------------------------------------------
+# Set up for Google Protocol Buffers (ProtoBuf)
+#---------------------------------------------------------------------------
+PROTOBUFINCDIR = 
+PROTOBUFLIBDIR = -L$(ISIS3LOCAL)/lib
+PROTOBUFLIB    = -lprotobuf
+
+#---------------------------------------------------------------------------
 #  Define the third party distribution libraries (patterns)
 #---------------------------------------------------------------------------
 
@@ -159,6 +166,7 @@ THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtSql.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtGui.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtCore.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libqwt.so*"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libprotobuf.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libxerces-c.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libgsl*.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libgeos-*.so"
@@ -173,6 +181,7 @@ THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libmysqlclient_r.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libssl.so*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libcrypto.so*"
 THIRDPARTYLIBS    += "/lib/libreadline.so*"
+
 
 #  Plugins
 THIRDPARTYPLUGINS += "$(ISIS3LOCAL)/plugins/"

@@ -470,7 +470,7 @@ namespace Qisis {
     p_leftChip->Load(*p_leftCube);
 
     // Dump into left chipViewport
-    p_leftView->setChip(p_leftChip);
+    p_leftView->setChip(p_leftChip,p_leftCube);
 
   }
 
@@ -489,7 +489,12 @@ namespace Qisis {
    *   @history 2008-15-2008  Jeannie Walldren - Added error
    *            string to Isis::iException::Message before
    *            creating QMessageBox
-   *  
+   *   @history 2009-09-14  Tracie Sucharski - Call geomChip to make
+   *                           sure left chip is initialized in the
+   *                           ChipViewport.  This was done for the changes
+   *                           made to the Chip class and the ChipViewport
+   *                           class where the Cube info is no longer stored.
+ *  
    */
   void ControlPointEdit::setRightMeasure(Isis::ControlMeasure *rightMeasure,
                                   Isis::Cube *rightCube,std::string pointId) {
@@ -517,11 +522,11 @@ namespace Qisis {
     }
     else {
       try {
-        p_rightChip->Load(*p_rightCube,*p_leftChip);
+        p_rightChip->Load(*p_rightCube,*p_leftChip,*p_leftCube);
 
       } 
       catch (Isis::iException &e) {
-        e.Message(Isis::iException::User,"Geom failed.", _FILEINFO_);
+        e.Message(Isis::iException::User,"Geom failed.",_FILEINFO_);
         QString message = e.Errors().c_str();
         e.Clear ();
         QMessageBox::information((QWidget *)parent(),"Error",message);
@@ -533,7 +538,9 @@ namespace Qisis {
     }
 
     // Dump into left chipViewport
-    p_rightView->setChip(p_rightChip);
+    p_rightView->setChip(p_rightChip,p_rightCube);
+    updateRightGeom();
+    //p_rightView->geomChip(p_leftChip,p_leftCube);
 
   }
 
@@ -639,7 +646,7 @@ namespace Qisis {
 
     p_autoRegFact->SearchChip()->TackCube(
                  p_rightMeasure->Sample(),p_rightMeasure->Line());
-    p_autoRegFact->SearchChip()->Load(*p_rightCube,*(p_autoRegFact->PatternChip()));
+    p_autoRegFact->SearchChip()->Load(*p_rightCube,*(p_autoRegFact->PatternChip()),*p_leftCube);
 
     if (p_autoRegFact->Register() != 0) {
       try{
@@ -730,11 +737,11 @@ namespace Qisis {
 
     if (p_geomIt) {
       try {
-        p_rightView->geomChip(p_leftChip);
+        p_rightView->geomChip(p_leftChip,p_leftCube);
 
       } 
       catch (Isis::iException &e) {
-        e.Message(Isis::iException::User,"Geom failed.", _FILEINFO_);
+        e.Message(Isis::iException::User,"Geom failed.",_FILEINFO_);
         QString message = e.Errors().c_str();
         e.Clear ();
         QMessageBox::information((QWidget *)parent(),"Error",message);
@@ -793,11 +800,11 @@ namespace Qisis {
     p_geomIt = true;
 
     try {
-      p_rightView->geomChip(p_leftChip);
+      p_rightView->geomChip(p_leftChip,p_leftCube);
 
     } 
     catch (Isis::iException &e) {
-      e.Message(Isis::iException::User,"Geom failed.", _FILEINFO_);
+      e.Message(Isis::iException::User,"Geom failed.",_FILEINFO_);
       QString message = e.Errors().c_str();
       e.Clear ();
       QMessageBox::information((QWidget *)parent(),"Error",message);
@@ -976,6 +983,19 @@ namespace Qisis {
       QMessageBox::information((QWidget *)parent(),"Error",message);
     }
   }
+
+
+  /**
+   * Set the option that allows mouse movements in the left ChipViewport.
+   *  
+   * @author Tracie Sucharski 
+   * @internal
+   */
+  void ControlPointEdit::allowLeftMouse(bool allowMouse) {
+    p_allowLeftMouse = allowMouse;
+  }
+
+
 
 
   /**

@@ -2,8 +2,8 @@
 #define Polygontools_h
 /**
  * @file
- * $Revision: 1.22 $
- * $Date: 2009/05/27 22:11:14 $
+ * $Revision: 1.23 $
+ * $Date: 2009/07/17 16:13:46 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -115,6 +115,8 @@ namespace Isis {
  *            type of cases.
  *   @history 2009-01-28 Steven Lambright - Fixed bug in Operate(...) method
  *            when reducing precision
+ *   @history 2009-06-09 Steven Lambright - Added a check to Equal(double,double). This
+ *            never caused a problem but could have.
  */                                                                       
 
   class PolygonTools {
@@ -149,8 +151,8 @@ namespace Isis {
       //Return the thickness of a polygon
       static double Thickness( const geos::geom::MultiPolygon *mpolygon );
 
-      static geos::geom::Geometry *Intersect(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom1);
-      static geos::geom::Geometry *Difference(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom1);
+      static geos::geom::Geometry *Intersect(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom2);
+      static geos::geom::Geometry *Difference(const geos::geom::Geometry *geom1, const geos::geom::Geometry *geom2);
 
       static geos::geom::MultiPolygon* MakeMultiPolygon (const geos::geom::Geometry *geom);
       

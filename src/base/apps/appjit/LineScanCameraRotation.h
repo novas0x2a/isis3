@@ -2,8 +2,8 @@
 #define LineScanCameraRotation_h
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/12/20 05:39:20 $
+ * $Revision: 1.2 $
+ * $Date: 2009/08/04 00:08:10 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -88,12 +88,14 @@ namespace Isis {
    *                        not be affected by the change.
    *  @history 2008-12-12  Debbie A. Cook Added parameters for updated pitch rate and yaw
    *                        and related methods
+   *  @history 2009-07-31  Debbie A. Cook Added new argument, tol, for call to CreateCache
+   *                        method of Spice class
    */
   class LineScanCameraRotation : public Isis::SpiceRotation {
     public:
       //! Constructors
 //      LineScanCameraRotation( int frameCode, SpiceRotation *crot, SpiceRotation *prot, SpicePosition *spos );
-      LineScanCameraRotation( int frameCode,  Isis::Pvl &lab, std::vector<double> timeCache);
+      LineScanCameraRotation( int frameCode,  Isis::Pvl &lab, std::vector<double> timeCache, double tol);
 
       //! Destructor
 //      virtual ~LineScanCameraRotation() { };

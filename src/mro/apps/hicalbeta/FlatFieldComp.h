@@ -2,9 +2,9 @@
 #define FlatFieldComp_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $
- * $Date: 2008/06/13 22:28:55 $
- * $Id: FlatFieldComp.h,v 1.3 2008/06/13 22:28:55 kbecker Exp $
+ * $Revision: 1.4 $
+ * $Date: 2009/09/15 21:56:44 $
+ * $Id: FlatFieldComp.h,v 1.4 2009/09/15 21:56:44 kbecker Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -40,14 +40,16 @@
 namespace Isis {
 
   /**
-   * @brief Computes a flat field correction for each sample (column)
+   * @brief Za Module - Computes flat field correction for each sample (column)
    * 
-   * This class computes the HiRISE flat field correction component using a 
-   * combination of the A matrix and temperature profiles.
+   * This class computes the HiRISE flat field correction component using the A
+   * matrix.
    * 
    * @ingroup Utility
    * 
-   * @author 2008-03-04 Kris Becker
+   * @author 2008-03-04 Kris Becker 
+   * @history 2009-09-14 Kris Becker Removed temperature components and placed 
+   *          them in the Zt (TempGainCorrect) module.
    */
   class FlatFieldComp : public Component {
 
@@ -62,7 +64,7 @@ namespace Isis {
       virtual ~FlatFieldComp() { }
 
       /** 
-       * @brief Return statistics for filtered - raw Buffer
+       * @brief Return statistics A matrix corection
        * 
        * @return const Statistics&  Statistics class with all stats
        */
@@ -70,8 +72,6 @@ namespace Isis {
 
     private:
       std::string _amatrix;
-      double _refTemp;        // Reference temperature
-      double _fpaFactor;      // Temperature factor
       Statistics _stats;      // Stats Results
 
       void init(const HiCalConf &conf) {
@@ -85,23 +85,8 @@ namespace Isis {
         _history.add("LoadMatrix(A[" + _amatrix +
                     "],Band[" + ToString(conf.getMatrixBand(prof)) + "])");
 
-        //  Get temperature parameters
-        _refTemp = ConfKey(prof, "FpaReferenceTemperature", 21.0);
-        _fpaFactor = ConfKey(prof,"ZaFpaTemperatureFactor", 0.0);
-
-        double fpa_py_temp = ToDouble(prof("FpaPositiveYTemperature"));
-        double fpa_my_temp = ToDouble(prof("FpaNegativeYTemperature"));
-
-        double FPA_temp = (fpa_py_temp+fpa_my_temp) / 2.0;
-        double baseT = 1.0 + (_fpaFactor * (FPA_temp - _refTemp));
-
-        _history.add("FpaAdjustment(FpaTemperatureFactor[" + 
-                     ToString(_fpaFactor) + "],Adjustment[" + ToString(baseT) +
-                     "])");
-
         _stats.Reset();
         for ( int i = 0 ; i < _data.dim() ; i++ ) {
-          _data[i] *= baseT;
           _stats.AddData(_data[i]);
         }
 

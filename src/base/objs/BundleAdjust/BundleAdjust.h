@@ -2,8 +2,8 @@
 #define BundleAdjust_h
 /**
  * @file
- * $Revision: 1.18 $
- * $Date: 2009/03/07 17:31:56 $
+ * $Revision: 1.19 $
+ * $Date: 2009/08/14 05:14:31 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -53,6 +53,8 @@
  *   @history 2009-02-15 Debbie A. Cook Corrected focal length to include its sign and removed obsolete calls to X/Y
  *                          direction methods.  Also modified PointPartial to use lat/lon/radius from the point 
  *                          instead of the camera.
+ *   @history 2009-08-13 Debbie A. Cook Corrected calculations of cudx and cudy so that they use the signed focal length
+ *                          also
  */
 
 #include "ControlNet.h"

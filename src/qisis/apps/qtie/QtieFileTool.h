@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/12/03 19:30:19 $
+ * $Revision: 1.2 $
+ * $Date: 2009/06/10 20:16:11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -45,7 +45,9 @@ namespace Qisis {
  *
  * @author 2007-08-09 Tracie Sucharski, adapted from QnetFileTool
  *
- * @internal
+ * @internal 
+ * @history 2009-06-10 Tracie Sucharski - Added new signal for opening new 
+ *                        files.
  *
  */
 
@@ -54,6 +56,7 @@ namespace Qisis {
 
     signals:
       void cubesOpened(Isis::Cube &baseCube,Isis::Cube &matchCube);
+      void newFiles();
 
     public:
       QtieFileTool (QWidget *parent);

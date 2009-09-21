@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/06/25 19:08:02 $
+ * $Revision: 1.5 $
+ * $Date: 2009/09/01 17:53:05 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -21,6 +21,11 @@
  */
 
 #include "ControlMeasure.h"
+#include "SpecialPixel.h"
+#include "Camera.h"
+#include "Application.h"
+#include "iTime.h"
+
 
 namespace Isis {
   //! Create a control point measurement
@@ -142,21 +147,88 @@ namespace Isis {
     return p;
   }
 
+
   //! Return error magnitude
   double ControlMeasure::ErrorMagnitude() const {
     double dist = (p_lineError * p_lineError) + (p_sampleError * p_sampleError);
     return sqrt(dist);
   }
+  
+  
+  //! Set date/time the coordinate was last changed to the current date/time
+  void ControlMeasure::SetDateTime() {
+    p_dateTime = iTime::CurrentLocalTime();
+  };
+ 
+  
+  //! Set chooser name to a user who last changed the coordinate
+  void ControlMeasure::SetChooserName() {
+    p_chooserName = Application::UserName();
+  };
 
+  
   //! Set the focal plane x/y for the measured line/sample
   void ControlMeasure::SetFocalPlaneMeasured(double x, double y) {
     p_focalPlaneMeasuredX = x;
     p_focalPlaneMeasuredY = y;
   }
 
+
   //! Set the focal plane x/y for the computed (apriori) lat/lon
   void ControlMeasure::SetFocalPlaneComputed(double x, double y) {
     p_focalPlaneComputedX = x;
     p_focalPlaneComputedY = y;
   }
+  
+
+  //! One Getter to rule them all
+  const double ControlMeasure::GetMeasureData(QString data) const {
+    if (data == "ZScoreMin")
+      return p_zScoreMin;
+    else if (data == "ZScoreMax")
+      return p_zScoreMax;
+    else if (data == "SampleError")
+      return p_sampleError;
+    else if (data == "LineError")
+      return p_lineError;
+    else if (data == "ErrorMagnitude")
+      return ErrorMagnitude();
+    else if (data == "Type")
+      return p_measureType;
+    else if (data == "IsMeasured")
+      return IsMeasured();
+    else if (data == "IsValidated")
+      return IsValidated();
+    else if (data == "Ignore")
+      return p_ignore;
+    else if (data == "GoodnessOfFit")
+      return p_goodnessOfFit;
+    else
+    {
+      std::string msg = data.toStdString();
+      msg += " passed to GetMeasureData but is invalid";
+      throw Isis::iException::Message(Isis::iException::Programmer, msg,
+                                      _FILEINFO_);
+    }
+  }
+
+  
+  //! Returns a list of all valid options to pass to GetMeasureData
+  const QVector< QString > ControlMeasure::GetMeasureDataNames() const {
+    QVector< QString > names;
+    
+    names.push_back("ZScoreMin");
+    names.push_back("ZScoreMax");
+    names.push_back("SampleError");
+    names.push_back("LineError");
+    names.push_back("ErrorMagnitude");
+    names.push_back("Type");
+    names.push_back("IsMeasured");
+    names.push_back("IsValidated");
+    names.push_back("Ignore");
+    names.push_back("GoodnessOfFit");
+    
+    return names;
+  }
+  
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- $Id: mdiscal.xml,v 1.14 2009/05/11 18:59:07 slambright Exp $ -->
+<!-- $Id: mdiscal.xml,v 1.15 2009/09/04 17:59:06 mboyd Exp $ -->
 
 <application name="mdiscal" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
@@ -441,6 +441,9 @@ in the SOLAR directory.
         Corrected inclusion of dark current model file to SourceProductId when 
         applicable; bumped the version number to 3.
     </change>
+    <change name="Mackenzie Boyd" date="2009-09-03">
+        Added parameter to the usage of reduce to accomidate changes to reduce.
+    </change> 
   </history>
 
   <groups>

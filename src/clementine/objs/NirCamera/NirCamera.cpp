@@ -9,7 +9,7 @@
 using namespace std;
 using namespace Isis;
 namespace Clementine {
-  NirCamera::NirCamera (Pvl &lab) : Camera(lab) {
+  NirCamera::NirCamera (Pvl &lab) : FramingCamera(lab) {
 
     // Get the camera characteristics
     iString filter = (string)(lab.FindGroup("BandBin", Pvl::Traverse))["FilterName"];

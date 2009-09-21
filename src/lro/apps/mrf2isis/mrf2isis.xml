@@ -17,6 +17,18 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo 
     </change>
+    <change name="Janet Barrett" date="2009-07-08">
+      Added a check to make sure the ScaledPixelHeight and
+      ScaledPixelWidth are equal; hard code the frequency
+      value in the labels based on the instrument mode id -
+      this is done because the PDS labels are lacking in
+      this information; add Kernels group to the labels
+    </change>
+    <change name="Janet Barrett" date="2009-08-26">
+      Added a check to see if the Frequency keyword exists
+      in the labels. If it doesn't exist, then mrf2isis
+      will put a Frequency keyword in the labels.
+    </change>
   </history>
 
   <category>

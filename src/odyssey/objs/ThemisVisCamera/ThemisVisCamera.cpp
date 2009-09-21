@@ -18,7 +18,7 @@ namespace Isis {
     * @throws Isis::iException::User - The image does not appear to be a Themis
     *                                  VIS image
     */
-    ThemisVisCamera::ThemisVisCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    ThemisVisCamera::ThemisVisCamera (Isis::Pvl &lab) : Isis::PushFrameCamera(lab) {
       // Set up the camera characteristics
       // LoadFrameMounting("M01_SPACECRAFT","M01_THEMIS_VIS");
       SetFocalLength(203.9);

@@ -3,13 +3,14 @@
 #include "BundleAdjust.h"
 #include "Table.h"
 #include "iException.h"
+#include "CubeAttribute.h"
+#include "iTime.h"
 
 using namespace std;
 using namespace Isis;
 
 void IsisMain() {
-  Process p;
-
+  
   // Get the control network and image list
   UserInterface &ui = Application::GetUserInterface();
   std::string cnetFile = ui.GetFilename("CNET");
@@ -84,20 +85,20 @@ void IsisMain() {
     if (ui.GetBoolean("UPDATE")) {
 
       for (int i=0; i<b->Images(); i++) {
-        Cube c;
-        c.Open(b->Filename(i),"rw");
-
+        Process p;
+        CubeAttributeInput inAtt;
+        Cube *c = p.SetInputCube(b->Filename(i), inAtt, ReadWrite);
         //check for existing polygon, if exists delete it
-        if (c.Label()->HasObject("Polygon")) {
-          c.Label()->DeleteObject("Polygon");
+        if (c->Label()->HasObject("Polygon")) {
+          c->Label()->DeleteObject("Polygon");
         }
 
         //check for CameraStatistics Table, if exists, delete
-        for (int iobj=0; iobj<c.Label()->Objects(); iobj++) {
-          PvlObject obj = c.Label()->Object(iobj);
+        for (int iobj=0; iobj<c->Label()->Objects(); iobj++) {
+          PvlObject obj = c->Label()->Object(iobj);
           if (obj.Name() != "Table") continue;
           if (obj["Name"][0] != iString("CameraStatistics")) continue;
-          c.Label()->DeleteObject(iobj);
+          c->Label()->DeleteObject(iobj);
           break;
         }
 
@@ -108,9 +109,9 @@ void IsisMain() {
         cmatrix.Label().AddComment(jigComment);
         Table spvector = b->SpVector(i);
         spvector.Label().AddComment(jigComment);
-        c.Write(cmatrix);
-        c.Write(spvector);
-        c.Close();
+        c->Write(cmatrix);
+        c->Write(spvector);
+        p.WriteHistory(*c);
       }
       gp += PvlKeyword("Status", "Camera pointing updated");
     }

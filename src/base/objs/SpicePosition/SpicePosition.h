@@ -2,8 +2,8 @@
 #define SpicePosition_h
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2008/06/26 18:05:18 $
+ * $Revision: 1.13 $
+ * $Date: 2009/08/27 18:40:25 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -46,7 +46,11 @@ namespace Isis {
    * <p>
    * An important functionality of this class is the ability to cache the
    * positions so they do not have to be constantly read from the NAIF kernels.
-   * Onced the data is cached the NAIF kernels can be unloaded too.
+   * Onced the data is cached the NAIF kernels can be unloaded too. 
+   *  
+   * @code 
+   *  
+   * @endcode 
    *
    * @ingroup SpiceInstrumentsAndCameras
    *
@@ -66,7 +70,8 @@ namespace Isis {
    *                      in BundleAdjust
    *  @history 2008-01-10 Debbie A. Cook The function was changed from Parabola to Poly1D. New methods
    *                      GetBaseTime and SetOverrideBaseTime were added
-   *  @history 2008-02-07 Jean Walldren  Poly1D was changed to PolynomialUnivariate
+   *  @history 2008-02-07 Jeannie Walldren  Poly1D was changed to
+   *                      PolynomialUnivariate
    *  @history 2008-02-10 Debbie A. Cook Removed the (-1.) in case A of DPolynomial since it was
    *                      not actually part of the position derivation but how it was being applied
    *                      in BundleAdjust.
@@ -75,6 +80,17 @@ namespace Isis {
    *                      and p_hasVelocity; also added methods Velocity() and HasVelocity()
    *                      to support miniRF.
    *  @history 2008-06-26 Debbie A. Cook Replaced Naif error handling calls with Isis NaifStatus
+   *  @history 2009-08-03 Jeannie Walldren - Added methods
+   *                      ReloadCache( table ), HermiteIndices(),
+   *                      Memcache2HermiteCache() to allow for
+   *                      downsized instrument position tables in
+   *                      labels of Isis cubes and added methods
+   *                      SetEphemerisTimeSpice(),
+   *                      SetEphemerisTimeHermiteCache(), and
+   *                      SetEphemerisTimeMemcache() to make
+   *                      software more readable.
+   *  @history 2009-08-14 Debbie A. Cook - Corrected loop counter in HermiteIndices
+   *  @history 2009-08-27 Jeannie Walldren - Added documentation.
    */
   class SpicePosition {
     public:
@@ -112,6 +128,7 @@ namespace Isis {
       void LoadCache(Table &table);
       void ReloadCache( Isis::PolynomialUnivariate &function1,Isis::PolynomialUnivariate &function2,
                       Isis::PolynomialUnivariate &function3);
+      void ReloadCache(Table &table);
 
       Table Cache(const std::string &tableName);
 
@@ -139,6 +156,22 @@ namespace Isis {
 
       std::vector<double> CoordinatePartial( SpicePosition::PartialType partialVar);
 
+
+      //??? jw
+      /**
+       * This enum defines indicates the status of the object
+       */
+      enum Source { Spice,      //!< Object is reading directly from the kernels
+                    Memcache,   //!< Object is reading from cached table
+                    HermiteCache //!< Object is reading from splined table
+      };
+      void Memcache2HermiteCache(double tolerance);
+    protected:
+      void SetEphemerisTimeMemcache();
+      void SetEphemerisTimeHermiteCache();
+      void SetEphemerisTimeSpice();
+      std::vector<int> HermiteIndices(double tol, std::vector <int> indexList);
+
     private:
       int p_targetCode;                   //!< target body code
       int p_observerCode;                 //!< observer body code
@@ -150,12 +183,12 @@ namespace Isis {
       std::vector<double> p_coordinate;   //!< J2000 position at time et
       std::vector<double> p_velocity;     //!< J2000 velocity at time et
 
-      bool p_cached;                      //!< Do we have a cache?
+      Source p_source;                    //!< Enumerated value for the location of the SPK information used
       std::vector<double> p_cacheTime;    //!< iTime for corresponding position
       std::vector<std::vector<double> > p_cache;         //!< Cached positions
       std::vector<std::vector<double> > p_cacheVelocity; //!< Cached velocities
-      std::vector<double> p_coefficients[3];
-      double p_baseTime;                         //!< Base time used in fit equations
+      std::vector<double> p_coefficients[3];             //!< Coefficients of polynomials
+      double p_baseTime;                  //!< Base time used in fit equations
       bool p_noOverride;                  //!< Flag to compute base time;
       double p_overrideBaseTime;          //!< Value set by caller to override computed base time
       bool p_hasVelocity;                 //!< Flag to indicate velocity is available

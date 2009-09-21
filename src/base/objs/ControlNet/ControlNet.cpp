@@ -2,6 +2,7 @@
 #include "SpecialPixel.h"
 #include "iException.h"
 #include "CameraFactory.h"
+#include "iTime.h"
 
 namespace Isis {
   //!Creates an empty ControlNet object
@@ -39,19 +40,13 @@ namespace Isis {
   *             have unique Id"
   */
   void ControlNet::Add (const ControlPoint &point, bool forceBuild) {
-    for (int i=0; i<Size(); i++) {
-      if (p_points[i].Id() == point.Id()) {
-        if( forceBuild ) {
-          p_invalid |= true;
-          break;
-        }
-        else {
-          std::string msg = "ControlPoint must have unique Id";
-          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-        }
-      }
+    if(p_pointsHash.contains(QString::fromStdString(point.Id()))) {
+      std::string msg = "ControlPoint must have unique Id";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    } else {
+      p_pointsHash.insert(QString::fromStdString(point.Id()), point);
+      p_pointIds.push_back(QString::fromStdString(point.Id()));
     }
-    p_points.push_back(point);
   }
 
 
@@ -64,25 +59,24 @@ namespace Isis {
   *             the given index number"
   */
   void ControlNet::Delete (int index) {
-    if (index >= (int)p_points.size() || index < 0) {
+    if (index >= (int)p_pointsHash.size() || index < 0) {
       std::string msg = "There is no ControlPoint at the given index number";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
     else {
       // See if removing this point qualifies for a re-check of validity
       bool check = false;
-      if( p_invalid && (*(p_points.begin()+index)).Invalid() ) check = true;
+      if( p_invalid && p_pointsHash[p_pointIds[index]].Invalid()) check = true;
 
-      p_points.erase(p_points.begin()+index);
+      p_pointsHash.remove(p_pointIds[index]);
+      p_pointIds.remove(index);
 
       // Check validity if needed
       if( check ) {
         p_invalid = false;
         for (int i=0; i<Size() && !p_invalid; i++) {
-          for (int j=i+1; j<Size() && !p_invalid; j++) {
-            if (p_points[i].Id() == p_points[j].Id()) {
+          if(p_pointsHash.contains(QString::fromStdString(p_pointsHash[p_pointIds[i]].Id()))) {
               p_invalid = true;
-            }
           }
         }
       }
@@ -101,16 +95,28 @@ namespace Isis {
   *                                  ControlNet"
   */
   void ControlNet::Delete (const std::string &id) {
-    for (int i=0; i<(int)p_points.size(); i++) {
-      if (p_points[i].Id() == id) {
-        p_points.erase(p_points.begin()+i);
-        return;
-      }
+    // If the QHash contains the point with this id, then
+    // remove it from p_pointsHash.
+    if(p_pointsHash.contains(QString::fromStdString(id))) {
+      p_pointsHash.remove(QString::fromStdString(id));
+    } else {
+       // If a match was not found, throw an error
+      std::string msg = "A ControlPoint matching the id [" + id
+        + "] was not found in the ControlNet";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
     }
-    // If a match was not found, throw an error
-    std::string msg = "A ControlPoint matching the id [" + id
-      + "] was not found in the ControlNet";
-    throw iException::Message(iException::User,msg,_FILEINFO_);
+
+    // If the QVector contains the point with this id, then
+    // remove it from p_pointIds.
+    if(p_pointIds.contains(QString::fromStdString(id))) {
+      p_pointIds.remove(p_pointIds.indexOf(QString::fromStdString(id)));
+    }else {
+       // If a match was not found, throw an error
+      std::string msg = "A ControlPoint matching the id [" + id
+        + "] was not found in the ControlNet";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
+    }
+    
   }
 
 
@@ -234,8 +240,8 @@ namespace Isis {
     net += PvlKeyword("LastModified", p_modified);
     net += PvlKeyword("Description", p_description);
 
-    for (int i=0; i<(int)p_points.size(); i++) {
-      PvlObject cp = p_points[i].CreatePvlObject();
+    for (int i=0; i<(int)p_pointsHash.size(); i++) {
+      PvlObject cp = p_pointsHash[p_pointIds[i]].CreatePvlObject();
       net.AddObject(cp);
     }
     p.AddObject(net);
@@ -264,14 +270,12 @@ namespace Isis {
   *                                  ControlNet"
   */
   ControlPoint *ControlNet::Find(const std::string &id) {
-    for (int i=0; i<(int)p_points.size(); i++) {
-      if (p_points[i].Id() == id) {
-        return &p_points[i];
-      }
+    if(!p_pointIds.contains(QString::fromStdString(id))) {
+      std::string msg = "A ControlPoint matching the id [" + id
+        + "] was not found in the ControlNet";
+      throw iException::Message(iException::User,msg,_FILEINFO_);
     }
-    std::string msg = "A ControlPoint matching the id [" + id
-      + "] was not found in the ControlNet";
-    throw iException::Message(iException::User,msg,_FILEINFO_);
+    return &p_pointsHash.find(QString::fromStdString(id)).value();
   }
 
 
@@ -284,10 +288,8 @@ namespace Isis {
    * @return <B>bool</B> If the ControlPoint id was found 
    */
   bool ControlNet::Exists( ControlPoint &point ) {
-    for (int i=0; i<(int)p_points.size(); i++) {
-      if (p_points[i].Id() == point.Id()) {
-        return true;
-      }
+    if(p_pointsHash.contains(QString::fromStdString(point.Id()))) {
+      return true;
     }
     return false;
   }
@@ -311,15 +313,15 @@ namespace Isis {
     ControlPoint *savePoint=NULL;
     double dist;
     double minDist=99999.;
-    for (int i=0; i<(int)p_points.size(); i++) {
-      for (int j=0; j<p_points[i].Size(); j++) {
-        if (p_points[i][j].CubeSerialNumber() != serialNumber) continue;
+    for (int i=0; i < (int)p_pointsHash.size(); i++) {
+      for (int j=0; j < p_pointsHash[p_pointIds[i]].Size(); j++) {
+        if (p_pointsHash[p_pointIds[i]][j].CubeSerialNumber() != serialNumber) continue;
         //Find closest line sample & return that controlpoint
-        dist = fabs(sample - p_points[i][j].Sample()) +
-               fabs(line - p_points[i][j].Line());
+        dist = fabs(sample - p_pointsHash[p_pointIds[i]][j].Sample()) +
+               fabs(line - p_pointsHash[p_pointIds[i]][j].Line());
         if (dist < minDist) {
           minDist = dist;
-          savePoint = &p_points[i];
+          savePoint = &p_pointsHash[p_pointIds[i]];
         }
       }
     }
@@ -332,8 +334,8 @@ namespace Isis {
    */
   void ControlNet::ComputeApriori() {
     // TODO:  Make sure the cameras have been initialized
-    for (int i=0; i<(int)p_points.size(); i++) {
-      p_points[i].ComputeApriori();
+    for (int i=0; i<(int)p_pointsHash.size(); i++) {
+      p_pointsHash[p_pointIds[i]].ComputeApriori();
     }
   }
 
@@ -343,8 +345,8 @@ namespace Isis {
    */
   void ControlNet::ComputeErrors() {
     // TODO:  Make sure the cameras have been initialized
-    for (int i=0; i<(int)p_points.size(); i++) {
-      p_points[i].ComputeErrors();
+    for (int i=0; i<(int)p_pointsHash.size(); i++) {
+      p_pointsHash[p_pointIds[i]].ComputeErrors();
     }
   }
 
@@ -356,8 +358,8 @@ namespace Isis {
   double ControlNet::MaximumError() {
     // TODO:  Make sure the cameras have been initialized
     double maxError = 0.0;
-    for (int i=0; i<(int)p_points.size(); i++) {
-      double error = p_points[i].MaximumError();
+    for (int i=0; i<(int)p_pointsHash.size(); i++) {
+      double error = p_pointsHash[p_pointIds[i]].MaximumError();
       if (error > maxError) maxError = error;
     }
     return maxError;
@@ -372,9 +374,9 @@ namespace Isis {
     // TODO:  Make sure the cameras have been initialized
     double avgError = 0.0;
     int count = 0;
-    for (int i=0; i<(int)p_points.size(); i++) {
-      if (p_points[i].Ignore()) continue;
-      avgError += p_points[i].AverageError();
+    for (int i=0; i<(int)p_pointsHash.size(); i++) {
+      if (p_pointsHash[p_pointIds[i]].Ignore()) continue;
+      avgError += p_pointsHash[p_pointIds[i]].AverageError();
       count++;
     }
     if (count == 0) return avgError;
@@ -435,15 +437,15 @@ namespace Isis {
 
     // Loop through all measures and set the camera
     for (int p=0; p<Size(); p++) {
-      for (int m=0; m<p_points[p].Size(); m++) {
-        if (p_points[p][m].Ignore()) continue;
-        std::string serialNumber = p_points[p][m].CubeSerialNumber();
+      for (int m=0; m<p_pointsHash[p_pointIds[p]].Size(); m++) {
+        if (p_pointsHash[p_pointIds[p]][m].Ignore()) continue;
+        std::string serialNumber = p_pointsHash[p_pointIds[p]][m].CubeSerialNumber();
         if (list.HasSerialNumber(serialNumber)) {
-          p_points[p][m].SetCamera(p_cameraMap[serialNumber]);
+          p_pointsHash[p_pointIds[p]][m].SetCamera(p_cameraMap[serialNumber]);
         }
         else {
-          std::string msg = "Control point [" + p_points[p].Id() + "], ";
-          msg += "measure [" + p_points[p][m].CubeSerialNumber() + "] ";
+          std::string msg = "Control point [" + p_pointsHash[p_pointIds[p]].Id() + "], ";
+          msg += "measure [" + p_pointsHash[p_pointIds[p]][m].CubeSerialNumber() + "] ";
           msg += "does not have a cube with a matching serial number";
           throw Isis::iException::Message(iException::User,msg,_FILEINFO_);
           // TODO: DO we allow to continue or not?
@@ -461,7 +463,7 @@ namespace Isis {
   int ControlNet::NumValidPoints() {
     int size = 0;
     for(int cp = 0; cp < Size(); cp ++) {
-      if(!p_points[cp].Ignore()) size ++;
+      if(!p_pointsHash[p_pointIds[cp]].Ignore()) size ++;
     }
     return size;
   }

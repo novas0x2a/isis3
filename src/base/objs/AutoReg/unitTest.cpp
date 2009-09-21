@@ -148,7 +148,7 @@ int main () {
   cout << "------------------------------" << endl;
   for (int line=1; line<=p_ar->SearchChip()->Lines(); line++) {
     for (int samp=1; samp<=p_ar->SearchChip()->Samples(); samp++) {
-      (*p_ar->SearchChip())(samp,line) = Isis::Null;
+      p_ar->SearchChip()->SetValue(samp,line,Isis::Null);
     }
   }
   DoRegister();

@@ -17,8 +17,8 @@ namespace Isis {
         double pixels[chip.Lines()];
         int n=0;
         for (int j=0; j<chip.Lines(); j++) {
-          if (!IsSpecial(chip(i+1,j+1))){
-            pixels[n] = chip(i+1,j+1);
+          if (!IsSpecial(chip.GetValue(i+1,j+1))){
+            pixels[n] = chip.GetValue(i+1,j+1);
             n++;
             }
         }

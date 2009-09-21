@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2009/06/03 23:21:19 $
+ * $Revision: 1.14 $
+ * $Date: 2009/09/08 17:38:17 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -25,9 +25,13 @@
 #define ControlPoint_h
 
 #include <vector>
+#include <string>
 #include "ControlMeasure.h"
 
 namespace Isis {
+  
+  class PvlObject;
+  
   /**
    * @brief A single control point
    *
@@ -62,7 +66,20 @@ namespace Isis {
    *                   without changing time and improved error messages.
    *   @history 2009-06-03 Christopher Austin, Added the p_invalid functionality
    *            along with forceBuild, fixed documentation errors.
-   *  
+   *   @history 2009-06-22 Jeff Anderson, Modified ComputeAprior
+   *            method to correctly handle ground and held points.
+   *            Previosuly it would throw an error if the lat/lon
+   *            of a measure could not be computed.  Also, modify
+   *            the ComputeErrors method to not abort any longer
+   *            if a control point lat/lon could not be projected
+   *            back to a image line/sample.
+   *   @history 2009-08-13 Debbie A. Cook Corrected calculation of
+   *            scale used to get the undistorted focal plane
+   *            coordinates to use the signed focal length (Z) from
+   *            the CameraDistortionMap,
+   *   @history 2009-08-21 Christopher Austin, Put the default return of
+   *            ReferenceIndex() back as the first Measured measure.
+   *
    */
   class ControlPoint {
     public:
@@ -76,37 +93,37 @@ namespace Isis {
 
       PvlObject CreatePvlObject();
 
-      /** 
-       * Sets the Id of the control point 
-       *  
-       * @param id Control Point Id 
+      /**
+       * Sets the Id of the control point
+       *
+       * @param id Control Point Id
        */
       void SetId(const std::string &id) { p_id = id; };
 
-      /** 
-       * Return the Id of the control point 
-       *  
-       * @return Control Point Id 
+      /**
+       * Return the Id of the control point
+       *
+       * @return Control Point Id
        */
       std::string Id() const { return p_id; };
 
       void Add(const ControlMeasure &measure, bool forceBuild=false);
       void Delete(int index);
 
-      /** 
-       * Return the ith measurement of the control point 
-       *  
+      /**
+       * Return the ith measurement of the control point
+       *
        * @param index Control Measure index
-       *  
-       * @return The Control Measure at the provided index 
+       *
+       * @return The Control Measure at the provided index
        */
       ControlMeasure &operator[](int index) { return p_measures[index]; };
 
-      /** 
-       * Return the ith measurement of the control point 
-       *  
+      /**
+       * Return the ith measurement of the control point
+       *
        * @param index Control Measure index
-       *  
+       *
        * @return The Control Measure at the provided index
        */
       const ControlMeasure &operator[](int index) const { return p_measures[index]; };
@@ -124,9 +141,9 @@ namespace Isis {
       int Size () const { return p_measures.size(); };
       int NumValidMeasures ();
 
-      /** 
-       * Set whether to ignore or use control point 
-       *  
+      /**
+       * Set whether to ignore or use control point
+       *
        * @param ignore True to ignore this Control Point, False to un-ignore
        */
       void SetIgnore(bool ignore) { p_ignore = ignore; };
@@ -137,9 +154,9 @@ namespace Isis {
       //! Return if the control point is invalid
       bool Invalid() const { return p_invalid; }
 
-      /** 
+      /**
        * Set the control point as held to its lat/lon
-       *  
+       *
        * @param held True to hold this Control Point, False to release
        */
       void SetHeld(bool held) { p_held = held; };
@@ -148,7 +165,7 @@ namespace Isis {
       bool Held() const { return p_held; };
 
       /**
-       * A control point can have one of two types, either Ground or Tie. 
+       * A control point can have one of two types, either Ground or Tie.
        */
       enum PointType {
         /**
@@ -165,18 +182,20 @@ namespace Isis {
          * necessarily correct and is subject to change.  This is the most
          * common type of control point.
          */
-        Tie 
+        Tie
         };
 
-      /** 
-       * Change the type of the control point 
-       *  
-       * @param type The type for this Control Point 
+      /**
+       * Change the type of the control point
+       *
+       * @param type The type for this Control Point
        */
       void SetType (PointType type) { p_type = type; };
 
       //! Return the type of the point
       PointType Type () const { return p_type; };
+      
+      const std::string PointTypeToString(PointType type) const;
 
       void SetUniversalGround (double lat, double lon, double radius);
 

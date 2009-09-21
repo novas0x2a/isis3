@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/05/26 01:47:06 $
+ * $Revision: 1.15 $
+ * $Date: 2009/06/30 21:53:32 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -42,6 +42,10 @@ namespace Isis {
   Sensor::Sensor (Isis::Pvl &lab) : Isis::Spice(lab) {
     // Assume no shape model
     p_hasElevationModel = false;
+    p_demProj = NULL;
+    p_demCube = NULL;
+    p_interp = NULL;
+    p_portal = NULL;
     string demCube = "";
 
     // Do we have one
@@ -74,10 +78,38 @@ namespace Isis {
 
   //! Destroys the Sensor
   Sensor::~Sensor () {
-    if (p_hasElevationModel) {
+    if(p_demProj) {
       delete p_demProj;
-      delete p_portal;
+      p_demProj = NULL;
+    }
+
+    // we do not have ownership of p_demCube
+    p_demCube = NULL;
+
+    if(p_interp) {
       delete p_interp;
+      p_interp = NULL;
+    }
+
+    if(p_portal) {
+      delete p_portal;
+      p_portal = NULL;
+    }
+  }
+
+  /**
+   * This allows you to ignore the elevation model
+   * 
+   * @param ignore True for no elevation model
+   */
+  void Sensor::IgnoreElevationModel(bool ignore) {
+    // if we have an elevation model and are not ignoring it,
+    //   set p_hasElevationModel to true
+    if(p_demProj && !ignore) {
+      p_hasElevationModel = true;
+    }
+    else {
+      p_hasElevationModel = false;
     }
   }
 
@@ -190,8 +222,6 @@ namespace Isis {
           double tolerance = Resolution()/100.0;
           if (dist < tolerance) done = true;
         }
-//        if (dist < 0.000001) done = true;
-        //        if (dist < 0.000000000001) done = true;
        it++;
 
       }
@@ -555,22 +585,24 @@ namespace Isis {
 
   /** Grab the radius from the dem if we have one
    */
-    double Sensor::DemRadius(double lat, double lon) {
-     p_demProj->SetUniversalGround(lat,lon);
-     if (!p_demProj->IsGood()  ||  !p_hasElevationModel ) {
-       return Isis::Null;
-     }
+  double Sensor::DemRadius(double lat, double lon) {  
+    if(!p_hasElevationModel) return Isis::Null;
+    
+    p_demProj->SetUniversalGround(lat,lon);
+    if (!p_demProj->IsGood()) {
+      return Isis::Null;
+    }
 
-     p_portal->SetPosition(p_demProj->WorldX(),p_demProj->WorldY(),1);
-     p_demCube->Read(*p_portal);
+    p_portal->SetPosition(p_demProj->WorldX(),p_demProj->WorldY(),1);
+    p_demCube->Read(*p_portal);
 
-     double radius = p_interp->Interpolate(p_demProj->WorldX(),p_demProj->WorldY(),
+    double radius = p_interp->Interpolate(p_demProj->WorldX(),p_demProj->WorldY(),
                                       p_portal->DoubleBuffer());
-     if (Isis::IsSpecial(radius)) {
-       return Isis::Null;
-     }
+    if (Isis::IsSpecial(radius)) {
+      return Isis::Null;
+    }
 
-     return radius / 1000.0;
-   }
+    return radius / 1000.0;
+  }
 
 }

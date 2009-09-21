@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2009/04/29 17:00:34 $
+ * $Revision: 1.9 $
+ * $Date: 2009/07/16 21:14:56 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include "Stretch.h"
+#include "Histogram.h"
 #include "iString.h"
 #include "SpecialPixel.h"
 #include "iException.h"
@@ -53,7 +54,7 @@ namespace Isis {
   *
   * @param output Output value when the input is mapped
   *
-  * @throws Isis::iException::Programmer - input pairs must be in descending
+  * @throws Isis::iException::Programmer - input pairs must be in ascending
   *                                        order
   */
   void Stretch::AddPair (const double input, const double output) {
@@ -68,70 +69,7 @@ namespace Isis {
     p_output.push_back(output);
     p_pairs++;
   }
-
- /**
-  * Sets the mapping for NULL pixels. If not called the NULL pixels will be
-  * mapped to NULL. Otherwise you can map NULLs to any double value.
-  * For example, SetNull(0.0).
-  *
-  * @param value Value to map input NULLs
-  */
-  void Stretch::SetNull (const double value) {
-    p_null = value;
-  }
-
- /**
-  * Sets the mapping for LIS pixels. If not called the LIS pixels will be mapped
-  * to LIS. Otherwise you can map LIS to any double value. For example,
-  * SetLis(0.0).
-  *
-  * @param value Value to map input LIS
-  */
-  void Stretch::SetLis (const double value) {
-    p_lis = value;
-  }
-
- /**
-  * Sets the mapping for LRS pixels. If not called the LRS pixels will be mapped
-  * to LRS. Otherwise you can map LRS to any double value. For example,
-  * SetLrs(0.0).
-  *
-  * @param value Value to map input LRS
-  */
-  void Stretch::SetLrs (const double value) {
-    p_lrs = value;
-  }
-
- /**
-  * Sets the mapping for HIS pixels. If not called the HIS pixels will be mapped
-  * to HIS. Otherwise you can map HIS to any double value. For example,
-  * SetHis(255.0).
-  *
-  * @param value Value to map input HIS
-  */
-  void Stretch::SetHis (const double value) {
-    p_his = value;
-  }
-
- /**
-  * Sets the mapping for HRS pixels. If not called the HRS pixels will be mapped
-  * to HRS. Otherwise you can map HRS to any double value. For example,
-  * SetHrs(255.0).
-  *
-  * @param value Value to map input HRS
-  */
-  void Stretch::SetHrs (const double value) {
-    p_hrs = value;
-  }
-
-  void Stretch::SetMinimum (const double value) {
-    p_minimum = value;
-  }
-
-  void Stretch::SetMaximum (const double value) {
-    p_maximum = value;
-  }
-
+  
  /**
   * Maps an input value to an output value based on the stretch pairs and/or
   * special pixel mappings.
@@ -203,7 +141,42 @@ namespace Isis {
     double slope = (p_output[end] - p_output[start]) / (p_input[end] - p_input[start]);
     return slope * (value - p_input[end]) + p_output[end];
   }
-
+  
+  /**
+  * Given a string containing stretch pairs for example "0:0 50:0 100:255 255:255"
+  * evaluate the first pair and return a pair of doubles where first is the first
+  * input and second is the first output
+  * @param pairs A string containing stretch pairs for example
+  *              "0:0 50:0 100:255 255:255"
+  *
+  * @throws Isis::iException::User - invalid stretch pair
+  *
+  * @return std::pair of doubles where first is the first input and
+  *         second is the first output
+  */
+  std::pair<double, double> Stretch::NextPair(Isis::iString &pairs) {
+    std::pair<double, double> io;
+    
+    // do input side
+    Isis::iString temp = pairs.Token(":");
+    temp.Trim(" \t\r\n\v\f");
+    io.first = temp.ToDouble();
+    
+    // do output side but first check for empty string
+    if (pairs.length() == 0) {
+      throw Isis::iException::Message(Isis::iException::User, "Invalid stretch pairs [" +
+            pairs + "]", _FILEINFO_);
+    }
+    pairs.TrimHead(" \t\r\n\v\f");
+    temp = pairs.Token(" \t\r\n\v\f");
+    io.second = temp.ToDouble();
+    
+    // trim so p will return empty if it should
+    pairs.TrimHead(" \t\r\n\v\f");
+    
+    return io;
+  }
+ 
  /**
   * Parses a string of the form "i1:o1 i2:o2...iN:oN" where each i:o
   * represents an input:output pair. Therefore, the user can enter a string in
@@ -215,64 +188,91 @@ namespace Isis {
   *
   * @throws Isis::iException::User - invalid stretch pair
   */
-  void Stretch::Parse (const std::string &pairs) {
+  void Stretch::Parse(const std::string &pairs)
+  {
     // Zero out the stretch arrays
     p_input.clear();
     p_output.clear();
     p_pairs = 0;
-
-    // Create some working strings for parsing
+    
     Isis::iString p(pairs);
-    Isis::iString temp;
-    double input,output;
+    std::pair<double, double> pear;
 
-    // Trim leading whitespace and then loop extracting pairs from
-    // a string of the form "i1:o1 i2:o2...iN:oN"
     p.TrimHead(" \t\r\n\v\f");
-    while (p.length() > 0) {
-      // Get the input value before the :
-      temp = p.Token(":");
-      // Remove leading and trailing whitespace
-      temp.Trim(" \t\r\n\v\f");
-      // Convert to a double or fail
-      try {
-        input = temp.ToDouble();
+    try {
+      while (p.size() > 0) {
+        pear = Stretch::NextPair(p);
+        Stretch::AddPair(pear.first, pear.second);
       }
-      catch (Isis::iException &e) {
-        throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs ["+pairs+"]",_FILEINFO_);
-      }
+    }
+    
+    catch (Isis::iException &e) {
+      throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs ["+pairs+"]",_FILEINFO_);
+    }
+  }
+  
+ /**
+  * Parses a string of the form "i1:o1 i2:o2...iN:oN" where each i:o
+  * represents an input:output pair where the input is a percentage.  Using
+  * the Histogram an appropriate dn value will be calculated for each input
+  * percentage. Therefore, the user can enter a string in this form and this
+  * method will parse the string and load the stretch pairs into the object
+  * via AddPairs.
+  *
+  * @param pairs A string containing stretch pairs for example
+  *              "0:0 50:0 100:255"
+  *
+  * @throws Isis::iException::User - invalid stretch pair
+  */
+  void Stretch::Parse(const std::string &pairs, const Isis::Histogram *hist)
+  {
+    // Zero out the stretch arrays
+    p_input.clear();
+    p_output.clear();
+    p_pairs = 0;
+    
+    Isis::iString p(pairs);
+    std::pair<double, double> pear;
+    
+    // need to save the input dn values in order to
+    // to detect collisions
+    std::vector<double> converted;
 
-      // Trim leading blanks
-      p.TrimHead(" \t\r\n\v\f");
-      // Make sure there is something to convert
-      if (p.length() == 0) {
-        throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs ["+pairs+"]",_FILEINFO_);
+    p.TrimHead(" \t\r\n\v\f");
+    try {
+      while (p.size() > 0) {
+        pear = Stretch::NextPair(p);
+        pear.first = hist->Percent(pear.first);
+        
+        // test for collision!
+        // if collision occurs then ignore this pair and move on
+        // to next pair
+        bool collision = false;
+        unsigned int k = 0;
+        while (!collision && k < converted.size()) {
+          if (pear.first == converted[k]) {
+            collision = true;
+          }
+          else {
+            k++;
+          }
+        }
+        if (!collision) {
+          Stretch::AddPair(pear.first, pear.second);
+          converted.push_back(pear.first);
+        }
       }
-      // Get the output value before the next set of whitespace
-      temp = p.Token(" \t\r\n\v\f");
-      // Convert to a double or fail
-      try {
-        output = temp.ToDouble();
-      }
-      catch (Isis::iException &e) {
-        throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs ["+pairs+"]",_FILEINFO_);
-      }
-
-      // Push them on the stretch pair stack
-      try {
-        Stretch::AddPair(input,output);
-      }
-      catch (Isis::iException &e) {
-        throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs ["+pairs+"]",_FILEINFO_);
-      }
-
-      // Trim leading whitespace and loop for the next pair
-      p.TrimHead(" \t\r\n\v\f");
+    }
+    
+    catch (Isis::iException &e) {
+      throw Isis::iException::Message(Isis::iException::User,"Invalid stretch pairs [" +
+          pairs + "]", _FILEINFO_);
     }
   }
 
+
   /**
-   * Converts stretch pair to a string);
+   * Converts stretch pair to a string
    *
    * @return string The stretch pair as a string
    */
@@ -289,29 +289,31 @@ namespace Isis {
 
  /**
   * Returns the value of the input side of the stretch pair at the specified
-  * index. If the index number is larger than the number of stretch pairs, the
-  * method returns -1
+  * index. If the index number is out of bounds, then the method returns -1
   *
   * @param index The index number to retrieve the input stretch pair value from
   *
   * @return double The input side of the stretch pair at the specified index
   */
   double Stretch::Input (int index) const {
-    if (index+1 > p_pairs) return -1;
+    if (index >= p_pairs || index < 0) {
+      return -1;
+    }
     return p_input[index];
   }
 
  /**
   * Returns the value of the output side of the stretch pair at the specified
-  * index. If the index number is larger than the number of stretch pairs, the
-  * method returns -1
+  * index. If the index number is out of bounds, then the method returns -1.
   *
   * @param index The index number to retieve the output stretch pair value from
   *
   * @return double The output side of the stretch pair at the specified index
   */
   double Stretch::Output (int index) const {
-    if (index+1 > p_pairs) return -1;
+    if (index >= p_pairs || index < 0) {
+      return -1;
+    }
     return p_output[index];
   }
 
@@ -391,7 +393,7 @@ namespace Isis {
     grp->AddKeyword(outputs);
     pvl.AddGroup(*grp);
   }
-
+  
   /**
    * Copies the stretch pairs from another Stretch object, but maintains special 
    * pixel values 

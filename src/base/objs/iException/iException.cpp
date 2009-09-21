@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2008/12/15 18:43:51 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2009/07/29 21:16:39 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -22,7 +22,9 @@
  */                                                                       
 
 #include "IsisDebug.h"
+
 #include <sstream>
+
 #include "iException.h"
 #include "iString.h"
 #include "Pvl.h"
@@ -161,6 +163,7 @@ namespace Isis {
 
   void iException::Shutdown() {
     if(p_exception) {
+      ASSERT_PTR(p_exception);
       delete p_exception;
       p_exception = NULL;
     }
@@ -305,7 +308,8 @@ namespace Isis {
     stackTraceInfo.filename = "N/A";
     stackTraceInfo.lineNumber = 0;
 
-    std::vector<std::string> theStack = getCurrentStack();
+    std::vector<std::string> theStack;
+    StackTrace::GetStackTrace(&theStack);
     stackTraceInfo.message = "\n";
 
     for(unsigned int i = 1; i < theStack.size(); i++) {
@@ -315,41 +319,6 @@ namespace Isis {
     if(theStack.size() != 0) {
       p_list.push_back(stackTraceInfo);
     }
-  }
-  
-  std::vector<std::string> iException::getCurrentStack() {
-    std::vector<std::string> message;
-#ifdef CWDEBUG
-    std::string currElement;
-    const int MAX_STACK_DEPTH = 1024;
-    void *stackTrace[MAX_STACK_DEPTH];
-    int stackSize = backtrace(stackTrace, MAX_STACK_DEPTH);
-  
-    for (int stackEl = 2; stackEl < stackSize; stackEl ++) {
-      void *addr = stackTrace[stackEl];
-  
-      libcwd::location_ct addrInfo(addr);
-      std::string demangled_name;
-      libcwd::demangle_symbol(addrInfo.mangled_function_name(), demangled_name);
-  
-      currElement = ">> ";
-      if (addrInfo.is_known()) {
-        currElement += 
-        std::string(addrInfo.file()) +
-        std::string(":") +
-        Isis::iString((BigInt)addrInfo.line()) +
-        std::string(" --- ") + 
-        demangled_name;
-      }
-      else {
-        currElement += "?????:0 --- " + demangled_name;
-      }
-  
-      message.push_back(currElement);
-    }
-#endif
-
-    return message;
   }
 }
 

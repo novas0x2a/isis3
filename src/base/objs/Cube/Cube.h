@@ -2,8 +2,8 @@
 #define Cube_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.15 $                                                             
- * $Date: 2008/12/17 20:31:55 $                                                                 
+ * $Revision: 1.16 $                                                             
+ * $Date: 2009/06/30 19:41:19 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -102,6 +102,8 @@ namespace Isis {
  *   @history 2008-12-15 Steven Koechle - Added a method to delete blobs from a
  *            cube
  *   @history 2008-12-17 Steven Koechle - BlobDelete method was broken, fixed
+ *   @history 2009-06-30 Steven Lambright - Added "HasProjection" for uniform
+ *            projection existance test
  * 
 */
   class Cube {
@@ -256,6 +258,8 @@ namespace Isis {
 
       void SetVirtualBands (const std::vector<std::string> &vbands);
       int PhysicalBand (const int virtualBand) const;
+
+      bool HasProjection();
 
       Isis::Camera *Camera();
       Isis::Projection *Projection();

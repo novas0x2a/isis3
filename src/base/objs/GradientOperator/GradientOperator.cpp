@@ -18,14 +18,14 @@ namespace Isis {
 
     while (width > 1 && height > 1) {
       for (int i=1; i<=width; i++) {
-        pix1 = chip(i+offset, 1+offset);
-        pix2 = chip(width-i+1+offset, height+offset);
+        pix1 = chip.GetValue(i+offset, 1+offset);
+        pix2 = chip.GetValue(width-i+1+offset, height+offset);
         if (InRange(pix1) && InRange(pix2)) gradient+=std::abs(pix1 - pix2);
       }
 
       for (int i=2; i<height; i++) {
-        pix1 = chip(1+offset, i+offset);
-        pix2 = chip(width+offset, height-i+1+offset);
+        pix1 = chip.GetValue(1+offset, i+offset);
+        pix2 = chip.GetValue(width+offset, height-i+1+offset);
         if (InRange(pix1) && InRange(pix2)) gradient+=std::abs(pix1 - pix2);
       }
 

@@ -20,7 +20,11 @@ namespace Qisis {
     p_tempView = NULL;
     p_cross = true;
     p_circle = false;
-
+    p_chip = NULL;
+    p_chipCube = NULL;
+    p_matchChip = NULL;
+    p_matchChipCube = NULL;
+    p_image = NULL;
   }
 
 
@@ -33,9 +37,18 @@ namespace Qisis {
   }
 
 
-  void ChipViewport::setChip (Isis::Chip *chip) {
+  /**
+   * Set the chip for this ChipViewport
+   *
+   * @author Tracie Sucharski
+   * @internal
+   *   @history 2009-14-2009  Tracie Sucharski - Make sure the p_image is clear
+   *                             before allocating new.
+   */
+
+  void ChipViewport::setChip (Isis::Chip *chip, Isis::Cube *chipCube) {
     // Is the chip usable?
-    if (chip == NULL) {
+    if (chip == NULL || chipCube == NULL) {
       throw Isis::iException::Message(Isis::iException::Programmer,
                                       "Can not view NULL chip pointer",
                                       _FILEINFO_);
@@ -45,6 +58,8 @@ namespace Qisis {
     p_rotation = 0;
 
     p_chip = chip;
+    p_chipCube = chipCube;
+    if (p_image != NULL) delete p_image;
     p_image = new QImage(chip->Samples(),chip->Lines(),QImage::Format_RGB32);
 
     autoStretch();
@@ -66,7 +81,7 @@ namespace Qisis {
     Isis::Statistics stats;
     for (int line=1; line<p_chip->Lines(); line++) {
       for (int samp=1; samp<p_chip->Samples(); samp++) {
-        double value = (*p_chip)(samp,line);
+        double value = p_chip->GetValue(samp,line);
         stats.AddData(&value,1);
       }
     }
@@ -74,7 +89,7 @@ namespace Qisis {
     Isis::Histogram hist(stats.BestMinimum(),stats.BestMaximum());
     for (int line=1; line<=p_chip->Lines(); line++) {
       for (int samp=1; samp<=p_chip->Samples(); samp++) {
-        double value = (*p_chip)(samp,line);
+        double value = p_chip->GetValue(samp,line);
         hist.AddData(&value,1);
       }
     }
@@ -99,7 +114,7 @@ namespace Qisis {
       QRgb *rgb = (QRgb *) p_image->scanLine(y);
       int r,g,b;
       for (int x=0; x<p_chip->Samples(); x++) {
-        r = g = b = (int) p_gray.stretch.Map((*p_chip)(x+1,y+1));
+        r = g = b = (int) p_gray.stretch.Map(p_chip->GetValue(x+1,y+1));
         rgb[x] =  qRgb(r,g,b);
       }
     }
@@ -331,11 +346,12 @@ namespace Qisis {
 
 
   //!<  Slot to geom chip
-  void ChipViewport::geomChip (Isis::Chip *matchChip) {
+  void ChipViewport::geomChip (Isis::Chip *matchChip, Isis::Cube *matchChipCube) {
 
     p_geomIt = true;
     p_matchChip = matchChip;
-    p_chip->ReLoad(*matchChip);
+    p_matchChipCube = matchChipCube;
+    p_chip->Load(*p_chipCube,*matchChip,*matchChipCube);
 //    p_chip->ReLoad(*matchChip,p_zoomFactor);
 
      //  TODO:   ??? Can these be added to paintEvent method ???
@@ -347,7 +363,7 @@ namespace Qisis {
   void ChipViewport::nogeomChip () {
 
     p_geomIt = false;
-    p_chip->ReLoad(p_rotation,p_zoomFactor);
+    p_chip->Load(*p_chipCube,p_rotation,p_zoomFactor);
 
     //  TODO:   ??? Can these be added to paintEvent method ???
     autoStretch();
@@ -364,7 +380,7 @@ namespace Qisis {
   void ChipViewport::rotateChip(int rotation) {
 
     p_rotation = -rotation;
-    p_chip->ReLoad(-rotation,p_zoomFactor);
+    p_chip->Load(*p_chipCube,-rotation,p_zoomFactor);
 
     //  TODO:   ??? Can these be added to paintEvent method ???
     autoStretch();
@@ -394,11 +410,11 @@ namespace Qisis {
         throw Isis::iException::Message(Isis::iException::User,
                                         "Invalid match chip",_FILEINFO_);
       }
-      p_chip->ReLoad(*p_matchChip);
+      p_chip->Load(*p_chipCube,*p_matchChip,*p_matchChipCube);
 //      p_chip->ReLoad(*p_matchChip,p_zoomFactor);
     }
     else {
-      p_chip->ReLoad(p_rotation,p_zoomFactor);
+      p_chip->Load(*p_chipCube,p_rotation,p_zoomFactor);
     }
 
 

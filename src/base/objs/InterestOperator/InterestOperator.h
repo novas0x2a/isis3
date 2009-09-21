@@ -2,8 +2,8 @@
 #define InterestOperator_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/08/19 22:37:41 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2009/08/12 01:01:51 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -25,6 +25,7 @@
 
 #include <string>
 #include <vector>
+#include "PvlGroup.h"
 
 #include "geos/geom/MultiPolygon.h"
 
@@ -57,7 +58,11 @@ namespace Isis {
    *            Changed from accepting one delta to accepting a
    *            deltaSamp and a deltaLine.  
    *   @history 2008-06-18 Stuart Sides - Fixed doc error
-   *   @history 2008-08-19 Steven Koechle - Updated to work with Geos3.0.0
+   *   @history 2008-08-19 Steven Koechle - Updated to work with
+   *            Geos3.0.0
+   *   @history 2009-08-11 Travis Addair - Added functionality
+   *            allowing it and all its subclasses to return the
+   *            pvl group that they were initialized from
    */
   class InterestOperator {
     public:
@@ -88,6 +93,7 @@ namespace Isis {
       void AddGroup(Isis::PvlObject &obj);
       double WorstInterest() {return p_worstInterest;}
       void SetClipPolygon (const geos::geom::MultiPolygon &clipPolygon);
+      Isis::PvlGroup Operator();
 
     protected:
       void Parse(Pvl &pvl);
@@ -99,6 +105,8 @@ namespace Isis {
       virtual int Padding();
 
       geos::geom::MultiPolygon *p_clipPolygon; //!< clipping polygon set by SetClipPolygon (line,samp)
+
+      Isis::PvlGroup p_operator; //!<Operator group that created this projection
 
     private:
       double p_cubeSample, p_cubeLine;

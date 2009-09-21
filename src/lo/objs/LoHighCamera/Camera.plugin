@@ -13,4 +13,3 @@ Group = LunarOrbiter5/HighResolutionCamera
   Library = LoHighCamera
   Routine = LoHighCameraPlugin
 EndGroup
- 

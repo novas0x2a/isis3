@@ -71,7 +71,14 @@ void IsisMain() {
 
     // Create the master rotation to be corrected 
     int frameCode = cam->InstrumentRotation()->Frame();
-    LineScanCameraRotation crot(frameCode, *(cube.Label()), cam->InstrumentRotation()->GetCacheTime() );
+    cam->SetImage(int(cube.Samples()/2), int(cube.Lines()/2) );
+    double tol = cam->PixelResolution();
+
+    if (tol < 0.) {
+      // Alternative calculation of .01*ground resolution of a pixel
+      tol = cam->PixelPitch()*cam->SpacecraftAltitude()/cam->FocalLength()/1000./100.;
+    }
+    LineScanCameraRotation crot(frameCode, *(cube.Label()), cam->InstrumentRotation()->GetFullCacheTime(), tol );
     crot.SetPolynomialDegree(ui.GetInteger("DEGREE"));
     crot.SetAxes(1, 2, 3);
     if (ui.WasEntered("PITCHRATE")) crot.ResetPitchRate(ui.GetDouble("PITCHRATE"));
@@ -81,7 +88,7 @@ void IsisMain() {
     double timeScale = crot.GetTimeScale();
     double fl = cam->FocalLength();
     double pixpitch = cam->PixelPitch();
-    std::vector<double> cacheTime = cam->InstrumentRotation()->GetCacheTime();
+    std::vector<double> cacheTime = cam->InstrumentRotation()->GetFullCacheTime();
 
     // Get the jitter in pixels, compute jitter angles, and fit a polynomial to each angle
     PixelOffset jitter(ui.GetFilename("JITTERFILE"), fl, pixpitch, baseTime, timeScale, degree);

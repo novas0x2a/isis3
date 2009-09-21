@@ -1,4 +1,4 @@
-//  $Id: hicalbeta.cpp,v 1.13 2008/11/18 06:59:48 kbecker Exp $
+//  $Id: hicalbeta.cpp,v 1.14 2009/09/15 21:56:44 kbecker Exp $
 #include "Isis.h"
 
 #include <cstdio>
@@ -27,6 +27,7 @@
 #include "DarkSubtractComp.h"
 #include "GainVLineComp.h"
 #include "FlatFieldComp.h"
+#include "TempGainCorrect.h"
 
 
 using namespace Isis;
@@ -55,8 +56,8 @@ void calibrate(Buffer &in, Buffer &out) {
   const HiVector &Zg    = calVars->get("Zg");
   const HiVector &Zgg   = calVars->get("Zgg");
   const HiVector &Za    = calVars->get("Za");
-  const HiVector &Ziof  = calVars->get("Ziof");
-  const double   sed    = (calVars->get("ScanExposureDuration"))[0];
+  const HiVector &Zt    = calVars->get("Zt");
+  double Ziof           = calVars->get("Ziof")[0];
 
   //  Set current line (index)
   int line(in.Line()-1);
@@ -72,9 +73,9 @@ void calibrate(Buffer &in, Buffer &out) {
     }
     else {
       double hdn;
-      hdn = (in[i] - Zd[line] - Zz[i] - Zb[i]) / sed; // Drift, Offset, Dark
-      hdn = hdn / Zg[line] * Zgg[i] * Za[i];    // GainVLine, Gain, FlatField
-      out[i] = hdn / Ziof[0];                   // I/F
+      hdn = (in[i] - Zd[line] - Zz[i] - Zb[i]); // Drift, Offset, Dark
+      hdn = hdn / Zg[line] * Zgg[i] * Za[i] * Zt[i];  // GainVLine, Gain, FlatField, TempGain
+      out[i] = hdn / Ziof;                   // I/F or DN or DN/US
     }
   }
   return;
@@ -84,8 +85,8 @@ void calibrate(Buffer &in, Buffer &out) {
 void IsisMain(){
 
   const std::string hical_program = "hicalbeta";
-  const std::string hical_version = "3.4";
-  const std::string hical_revision = "$Revision: 1.13 $";
+  const std::string hical_version = "3.5";
+  const std::string hical_revision = "$Revision: 1.14 $";
   const std::string hical_runtime = Application::DateTime();
 
   UserInterface &ui = Application::GetUserInterface();
@@ -121,11 +122,12 @@ void IsisMain(){
       hiconf.add("OPATH",ui.GetAsString("OPATH"));
     }
     else {
-      hiconf.add("OPATH",".");
+      //  Set default to output directory
+      hiconf.add("OPATH", Filename(ocube->Filename()).Path());
     }
 
 //  Do I/F output DN conversions
-    bool doIOF = ui.GetBoolean("IOF");
+    string units = ui.GetString("UNITS");
 
     //  Allocate the calibration list
     calVars = new MatrixList;
@@ -293,6 +295,26 @@ void IsisMain(){
       ZaHist.add("Debug::SkipModule invoked!");
     }
 
+////////////////////////////////////////////////////////////////////
+//  FlatField (Z_t)  Temperature-dependant gain correction
+    procStep = "Zt module";
+    hiconf.selectProfile("Zt"); 
+    hiprof =  hiconf.getMatrixProfile();
+    HiHistory ZtHist;
+    ZtHist.add("Profile["+ hiprof.Name()+"]");
+    if ( !SkipModule(hiprof) ) {
+      TempGainCorrect tcorr(hiconf);
+      calVars->add("Zt", tcorr.ref());
+      ZtHist = tcorr.History();
+      if ( hiprof.exists("DumpModuleFile") ) {
+        tcorr.Dump(hiconf.getMatrixSource("DumpModuleFile",hiprof));
+      }
+    }
+    else {
+      calVars->add("Zt", HiVector(nsamps, 1.0));
+      ZtHist.add("Debug::SkipModule invoked!");
+    }
+
 
 ////////////////////////////////////////////////////////////////////
 //  I/FCorrect (Z_iof) Conversion to I/F
@@ -303,8 +325,9 @@ void IsisMain(){
     HiHistory ZiofHist;
     ZiofHist.add("Profile["+ hiprof.Name()+"]");
     if ( !SkipModule(hiprof) ) {
-      if ( doIOF ) {
-  //  Add solar I/F correction parameters
+      double sed = ToDouble(hiprof("ScanExposureDuration"));  // units = us
+      if ( IsEqual(units, "IOF") ) {
+        //  Add solar I/F correction parameters
         double au = hiconf.sunDistanceAU();
         ZiofHist.add("SunDist[" + ToString(au) + " (AU)]");
         double suncorr =  1.5 / au;
@@ -315,26 +338,33 @@ void IsisMain(){
 
         double zgain = ToDouble(hiprof("FilterGainCorrection"));
         ZiofHist.add("FilterGainCorrection[" + ToString(zgain) + "]");
-
-        double ziof = (zbin * zgain) * (suncorr * 1.e-6); 
+        ZiofHist.add("ScanExposureDuration[" + ToString(sed) + "]");
+        double ziof = (zbin * zgain) * (sed * 1.0e-6)  * suncorr; 
 
         calVars->add("Ziof", HiVector(1, ziof));
         ZiofHist.add("I/F_Factor[" + ToString(ziof) + "]");
         ZiofHist.add("Units[I/F Reflectance]");
-        calVars->add("ScanExposureDuration", 
-                 HiVector(1,ToDouble(hiprof("ScanExposureDuration"))));
+      }
+      else if (  IsEqual(units, "DN/US") ) {
+        // Ziof is a divisor in calibration equation
+        double ziof = sed;
+        calVars->add("Ziof", HiVector(1, ziof));
+        ZiofHist.add("ScanExposureDuration[" + ToString(sed) + "]");
+        ZiofHist.add("DN/US_Factor[" + ToString(ziof) + "]");
+        ZiofHist.add("Units[DNs/microsecond]");
       }
       else {
-        calVars->add("Ziof", HiVector(1, 1.0));
-        calVars->add("ScanExposureDuration", HiVector(1, 1.0));
-        ZiofHist.add("I/F conversion not selected by user");
-        ZiofHist.add("Units[DNs/microsecond]");
+        // Units are already in DN
+        double ziof = 1.0;
+        calVars->add("Ziof", HiVector(1, ziof));
+        ZiofHist.add("DN_Factor[" + ToString(ziof) + "]");
+        ZiofHist.add("Units[DN]");
       }
     }
     else {
       calVars->add("Ziof", HiVector(1,1.0));
-      calVars->add("ScanExposureDuration", HiVector(1, 1.0));
       ZiofHist.add("Debug::SkipModule invoked!");
+      ZiofHist.add("Units[Unknown]");
     }
 
     //  Reset the profile selection to default
@@ -373,9 +403,9 @@ void IsisMain(){
         ofile << "TO:       " << ocube->Filename()  << endl;
         ofile << "CONF:     " << conf_file  << endl << endl;
 
-        ofile << "/* Hicalbeta application equation */" << endl
-              << "/* hdn = (idn - Zd(Zf) - Zz - Zb)/ScanExposureDuration */"
-              << endl << "/* odn = hdn / Zg * Zgg * Za / Ziof */" 
+        ofile << "/* " << hical_program << " application equation */" << endl
+              << "/* hdn = (idn - Zd(Zf) - Zz - Zb) */"
+              << endl << "/* odn = hdn / Zg * Zgg * Za * Zt / Ziof */" 
               << endl << endl;
 
         ofile << "****** PARAMETER GENERATION HISTORY *******" << endl;
@@ -386,6 +416,7 @@ void IsisMain(){
         ofile << "\nZg   = " << ZgHist << endl;
         ofile << "\nZgg  = " << ZggHist << endl;
         ofile << "\nZa   = " << ZaHist << endl;
+        ofile << "\nZt   = " << ZtHist << endl;
         ofile << "\nZiof = " << ZiofHist << endl;
 
         ofile.close();
@@ -406,9 +437,9 @@ void IsisMain(){
     rcal += PvlKeyword("Revision",hical_revision);
 
     PvlKeyword key("Conf", conf_file);
-    key.AddCommentWrapped("/* Hicalbeta application equation */");
-    key.AddComment("/* hdn = (idn - Zd(Zf) - Zz - Zb)/ScanExposureDuration */");
-    key.AddComment("/* odn = hdn / Zg * Zgg * Za / Ziof */");
+    key.AddCommentWrapped("/* " + hical_program + " application equation */");
+    key.AddComment("/* hdn = (idn - Zd(Zf) - Zz - Zb) */");
+    key.AddComment("/* odn = hdn / Zg * Zgg * Za * Zt / Ziof */");
     rcal += key;
 
     //  Record parameter generation history.  Controllable in configuration

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2009/04/06 15:23:27 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/08/07 22:08:33 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -47,6 +47,9 @@ namespace Isis {
      * @history 2008-06-18 Steven Lambright Fixed documentation 
      * @history 2009-04-06 Steven Lambright Fixed problem that caused double 
      *          deletion of sky map / ground map.
+     * @history 2009-08-06 Tracie Sucharski, Bug in unit vector change made 
+     *                         on 2008-02-05, had the incorrect boresight for
+     *                         VIS Hires.
      *
      */
     class VimsGroundMap : public CameraGroundMap {

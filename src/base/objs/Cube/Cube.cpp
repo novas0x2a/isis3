@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.17 $                                                             
- * $Date: 2008/12/17 20:31:55 $                                                                 
+ * $Revision: 1.18 $                                                             
+ * $Date: 2009/06/30 19:41:18 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -919,6 +919,18 @@ namespace Isis {
       p_camera = CameraFactory::Create(*Label());
     }
     return p_camera;
+  }
+
+  /**
+   * Returns true if the labels of the cube appear to have a valid mapping 
+   * group. This returning true does not guarantee that the cube can project or 
+   * that the Projection() method will succeed. 
+   * 
+   * 
+   * @return bool True if the file should have a valid projection
+   */
+  bool Cube::HasProjection() {
+    return Label()->FindObject("IsisCube").HasGroup("Mapping");
   }
 
   /**

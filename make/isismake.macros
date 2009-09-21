@@ -15,6 +15,13 @@ HOST_ARCH = $(shell uname -s)
 HOST_MACH = $(shell uname -m)
 HOST_PROC = $(shell uname -p)
 
+empty:=
+space:=$(empty) $(empty)
+
+ifeq  ($(findstring $(space),$(HOST_PROC)),$(space))
+    HOST_PROC = unknown
+endif
+
 ifeq ($(HOST_ARCH),SunOS)
   include $(ISISROOT)/make/config.solaris
 endif
@@ -32,15 +39,6 @@ ifndef ISISCPPFLAGS
 endif
 
 #---------------------------------------------------------------------------
-#  Set up ISIS versioning
-#---------------------------------------------------------------------------
-ISISMAJOR        = 3
-ISISMINOR        = 1
-ISISMINORMINOR   = 20
-ISISVERSION      = $(ISISMAJOR).$(ISISMINOR).$(ISISMINORMINOR)
-ISISRELEASE      = REL_0_0
-
-#---------------------------------------------------------------------------
 #  Set up some basic commands
 #---------------------------------------------------------------------------
 CXX            ?= g++
@@ -49,7 +47,6 @@ LDSHARED       ?= $(CXX)
 MOC            ?= moc
 UIC            ?= uic
 XALAN          ?= Xalan
-
 LS             ?= /bin/ls
 RM             ?= /bin/rm -f
 CP             ?= /bin/cp
@@ -68,6 +65,8 @@ RSYNC          ?= rsync
 SED            ?= sed
 DATE           ?= /bin/date
 PRINTF         ?= /usr/bin/printf
+ECHO           ?= /bin/echo
+CUT            ?= /usr/bin/cut
 
 #  Third party library/plugin install tool
 INSTALL3P         =  $(RSYNC)
@@ -86,12 +85,23 @@ else
 endif
 
 #---------------------------------------------------------------------------
+#  Set up ISIS versioning
+#---------------------------------------------------------------------------
+ISISVERSIONFULL  = $(shell $(GREP) version $(ISISROOT)/src/base/objs/Constants/Constants.h | $(CUT) -d"(" -f2 | $(CUT) -d")" -f1)
+ISISMAJOR        = $(shell $(ECHO) $(ISISVERSIONFULL) | $(CUT) -d"." -f1)
+ISISMINOR        = $(shell $(ECHO) $(ISISVERSIONFULL) | $(CUT) -d"." -f2)
+ISISMINORMINOR   = $(shell $(ECHO) $(ISISVERSIONFULL) | $(CUT) -d"." -f3 | cut -d" " -f1)
+ISISVERSION      = $(ISISMAJOR).$(ISISMINOR).$(ISISMINORMINOR)
+ISISLIBVERSION   = $(shell echo $(ISISMAJOR).$(ISISMINOR).$(ISISMINORMINOR) | sed 's/[a-z].*$$//')
+ISISRELEASE      = REL_0_0
+
+#---------------------------------------------------------------------------
 # Set up the Isis include and library directories
 #---------------------------------------------------------------------------
 SHAREDEXT ?= so
 ISISINCDIR = -I$(ISISROOT)/inc 
 ISISLIBDIR = -L$(ISISROOT)/lib 
-ISISLIB    = -lisis3
+ISISLIB    = -lisis$(ISISLIBVERSION)
 
 #---------------------------------------------------------------------------
 # Set up for the required elements in Isis makes
@@ -111,6 +121,7 @@ ALLINCDIRS += $(GEOSINCDIR)
 ALLINCDIRS += $(GSLINCDIR)
 ALLINCDIRS += $(GMMINCDIR)
 ALLINCDIRS += $(SUPERLUINCDIR)
+ALLINCDIRS += $(PROTOBUFINCDIR)
 
 ALLLIBDIRS  = -L. 
 ALLLIBDIRS += $(XTRALIBDIRS)
@@ -125,20 +136,23 @@ ALLLIBDIRS += $(GEOSLIBDIR)
 ALLLIBDIRS += $(GSLLIBDIR)
 ALLLIBDIRS += $(GMMLIBDIR)
 ALLLIBDIRS += $(SUPERLULIBDIR)
+ALLLIBDIRS += $(PROTOBUFLIBDIR)
 
 ALLLIBS  = $(ISISLIB) 
 ifeq ($(findstring STATIC, $(MODE)),STATIC)
   ALLLIBS = $(ISISSTATIC) $(ISISLIB) $(ISISDYNAMIC)
 endif
+ALLLIBS += $(ISISSYSLIBS)
 ALLLIBS += $(XTRALIBS)
 ALLLIBS += $(QTLIB) 
 ALLLIBS += $(QWTLIB) 
 ALLLIBS += $(XERCESLIB)
 ALLLIBS += $(NAIFLIB) 
-ALLLIBS += $(ISISSYSLIBS) 
 ALLLIBS += $(TNTLIB)
 ALLLIBS += $(JAMALIB)
 ALLLIBS += $(GEOSLIB)
 ALLLIBS += $(GSLLIB)
 ALLLIBS += $(GMMLIB)
 ALLLIBS += $(SUPERLULIB)
+ALLLIBS += $(PROTOBUFLIB)
+

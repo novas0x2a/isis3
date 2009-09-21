@@ -9,12 +9,6 @@ using namespace std;
 using namespace Isis;
 
 // Which pixel types to filter
-bool filterNull;
-bool filterLis;
-bool filterLrs;
-bool filterHis;
-bool filterHrs;
-bool propagate;
 int bands;
 double low ;
 double high;
@@ -26,12 +20,18 @@ void IsisMain() {
   //Set up ProcessBySpectra
   ProcessBySpectra p;
 
-  // Obtain input and output cubes
-  p.SetInputCube("FROM");
-  p.SetOutputCube("TO");
-
-  // Find out which special pixels are to be filtered
+  //Obtain input cube, get bands dimension from input cube and user input number bands
+  Cube *icube = p.SetInputCube("FROM");
+  int cubeBands = icube->Bands();
   UserInterface &ui = Application::GetUserInterface();
+  bands = ui.GetInteger("BANDS");
+
+  //Check for cases of too many bands
+  if (bands >= (2 * cubeBands)) {
+    iString msg = "Parameter bands [" + iString(bands) + "] exceeds maximum allowable size "
+      + "of [" + iString((cubeBands * 2) - 1) + "] for cube [" + icube->Filename() + "]";
+    throw iException::Message(iException::User,msg, _FILEINFO_);
+  }
  
   //Set the Boxcar Parameters
   low = -DBL_MAX;
@@ -44,25 +44,28 @@ void IsisMain() {
     high = ui.GetDouble("HIGH");
   }
  
-  bands = ui.GetInteger("BANDS");
+  //Obtain output cube
+  p.SetOutputCube("TO");
+
   //Start the filter method
   p.StartProcess(Filter);
   p.EndProcess();
   
 }
 
-//Function to loop through the bands, and determine the
-//average value of the pixels around each valid pixel, writing that
-//average to the output at the pixel index
+/**
+ * Function to loop through the bands, and determine the average
+ * value of the pixels around each valid pixel, writing that
+ * average to the output at the pixel index
+ */
 void Filter (Buffer &in, Buffer &out) {
-  Isis::QuickFilter *filter = new Isis::QuickFilter(in.size(), bands, 1);
+  QuickFilter *filter = new QuickFilter(in.size(), bands, 1);
   filter->SetMinMax(low, high);
   filter->AddLine(in.DoubleBuffer());
 
- for (int i=0; i < in.size(); i++) {
-   out[i] = in[i] - filter->Average(i);
- }
- delete filter;
- 
+  for (int i=0; i < in.size(); i++) {
+    out[i] = in[i] - filter->Average(i);
+  }
+  delete filter;
+  filter = NULL;
 }
-

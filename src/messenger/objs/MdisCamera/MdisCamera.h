@@ -2,8 +2,8 @@
 #define MdisCamera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $
- * $Date: 2009/01/22 00:23:03 $
+ * $Revision: 1.9 $
+ * $Date: 2009/08/31 15:12:30 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -21,7 +21,7 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.                                    
  */                                                                       
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Isis {
   namespace Messenger {
@@ -59,11 +59,17 @@ namespace Isis {
      *   @history 2009-01-21 Kris Becker Added a new implementation of the MDIS
      *            NAC distortion model contributed by Scott Turner and Lillian
      *            Nguyen at JHU/APL.
+     *   @history 2009-06-11 Steven Lambright - Documentation fixes
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-    class MdisCamera : public Camera {
+    class MdisCamera : public FramingCamera {
       public:
         MdisCamera (Isis::Pvl &lab);
 
+        /**
+         * This destroys the MdisCamera object
+         */
         ~MdisCamera () {};
     };
   };

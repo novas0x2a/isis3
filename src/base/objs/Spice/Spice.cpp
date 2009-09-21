@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.15 $
- * $Date: 2009/03/23 19:14:21 $
+ * $Revision: 1.20 $
+ * $Date: 2009/08/04 00:15:39 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -59,6 +59,7 @@ namespace Isis {
     p_endTime = 0.0;
     p_cacheSize = 0;
     p_et = -DBL_MAX;
+    p_allowDownsizing = false;
 
     // Get the kernel group and load main kernels
     Isis::PvlGroup kernels = lab.FindGroup("Kernels",Isis::Pvl::Traverse);
@@ -201,6 +202,12 @@ namespace Isis {
     //  Table option, so we don't need to check for Table under the old
     //  keywords.
 
+    if(kernels["InstrumentPointing"].Size() == 0) {
+      throw iException::Message(iException::Camera, 
+                                "No camera pointing available", 
+                                _FILEINFO_);
+    }
+
     //  2009-03-18  Tracie Sucharski - Removed test for old keywords, any files
     // with the old keywords should be re-run through spiceinit.
     if (iString((std::string)kernels["InstrumentPointing"]).UpCase() == "NADIR") {
@@ -212,12 +219,16 @@ namespace Isis {
       p_instrumentRotation->LoadCache(t);
     }
 
+    if(kernels["InstrumentPosition"].Size() == 0) {
+      throw iException::Message(iException::Camera, 
+                                "No instrument position available", 
+                                _FILEINFO_);
+    }
+
     if (iString((std::string)kernels["InstrumentPosition"]).UpCase() == "TABLE") {
       Table t("InstrumentPosition",lab.Filename());
       p_instrumentPosition->LoadCache(t);
     }
-
-
 
     NaifStatus::CheckErrors();
   }
@@ -231,7 +242,7 @@ namespace Isis {
       if (key[i] == "") continue;
       if (iString(key[i]).UpCase() == "NULL") break;
       if (iString(key[i]).UpCase() == "NADIR") break;
-      if (iString(key[i]).UpCase() == "TABLE") break;
+      if (iString(key[i]).UpCase() == "TABLE") continue;
       Isis::Filename file(key[i]);
       if (!file.exists()) {
         string msg = "Spice file does not exist [" + file.Expanded() + "]";
@@ -283,7 +294,7 @@ namespace Isis {
   *
   * @throws Isis::iException::Programmer
   */
-  void Spice::CreateCache (double startTime, double endTime, int cacheSize) {
+  void Spice::CreateCache (double startTime, double endTime, int cacheSize, double tol) {
     NaifStatus::CheckErrors();
 
     // Check for errors
@@ -310,22 +321,40 @@ namespace Isis {
     double avgTime = (startTime + endTime) / 2.0;
     ComputeSolarLongitude(avgTime);
 
+    // Check for a valid tolerance.  If not set to MRO HiRise pixel resolution/100 (0.003) since it has the
+    // highest resolution of supported missions
+//    double tolerance = tol;
+/*
+    if (tol < 0.) {                                                                                           
+      p_instrumentPosition->SetEphemerisTime ( (startTime-p_startTimePadding + endTime+p_endTimePadding) / 2.)
+      std::vector<double> s = p_instrumentPosition->Coordinate();                                             
+      double alt = sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);                                                   
+      tolerance = .003;                                                                                       
+      std::cout<<"In Spice with tolerance = "<<tol<<std::endl;                                                
+    }                                                                                                         
+*/
+
     // Cache everything
     if (!p_bodyRotation->IsCached()) {
-      p_bodyRotation->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, cacheSize);
+      int bodyRotationCacheSize = cacheSize;
+      if (cacheSize > 2) bodyRotationCacheSize = 2;
+      p_bodyRotation->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, bodyRotationCacheSize);
     }
 
-    if (!p_instrumentRotation->IsCached()) {
+    if (p_instrumentRotation->GetSource() < SpiceRotation::Memcache) {
+      if (cacheSize > 3) p_instrumentRotation->MinimizeCache( SpiceRotation::Yes );
       p_instrumentRotation->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, cacheSize);
     }
 
     if (!p_instrumentPosition->IsCached()) {
       p_instrumentPosition->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, cacheSize);
+      if (cacheSize > 3) p_instrumentPosition->Memcache2HermiteCache(tol);
     }
 
-    // TODO: Investigate if sun cache size can be set to one or two.
     if (!p_sunPosition->IsCached()) {
-      p_sunPosition->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, cacheSize);
+      int sunPositionCacheSize = cacheSize;
+      if (cacheSize > 2) sunPositionCacheSize = 2;
+      p_sunPosition->LoadCache(startTime-p_startTimePadding, endTime+p_endTimePadding, sunPositionCacheSize);
     }
 
     // Save the time and cache size
@@ -351,8 +380,8 @@ namespace Isis {
   *
   * @param time Ephemeris time to cache
   */
-  void Spice::CreateCache (double time) {
-    CreateCache(time,time,1);
+  void Spice::CreateCache (double time, double tol) {
+    CreateCache(time,time,1,tol);
   }
 
  /**

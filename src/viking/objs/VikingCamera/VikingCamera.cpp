@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/10/22 23:45:01 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/08/31 15:12:32 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -42,7 +42,7 @@ namespace Isis {
   *
   * @throws Isis::iException::User - The file does not appear to be a viking image
   */
-  VikingCamera::VikingCamera (Pvl &lab) : Camera(lab) {
+  VikingCamera::VikingCamera (Pvl &lab) : FramingCamera(lab) {
     // Set the pixel pitch
     SetPixelPitch (1.0 / 85.0);
 

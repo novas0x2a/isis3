@@ -113,5 +113,8 @@
     <change name="Tracie Sucharski" date="2008-01-20">
         Correct user documentation in qtie.xml.
     </change>
+    <change name="Tracie Sucharski" date="2009-06-10">
+        Added error checking when opening files and allow new files to be opened.
+    </change>
   </history>
 </application>

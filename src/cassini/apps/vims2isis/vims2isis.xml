@@ -44,8 +44,15 @@
         <change name="Steven Lambright" date="2008-07-14">
           Added support for more raw data
         </change>
-    </history>
-
+        <change name="Steven Lambright" date="2009-06-24">
+          If sideplane data is present it is now stored in the output cubes
+          for calibration. More keywords are now propagated.
+        </change>
+        <change name="Steven Lambright" date="2009-08-21">
+          Saturation values are now set when present and if IR or VIS
+          was turned off then files will not be imported for those channels. 
+        </change>
+      </history>
     <category>
         <missionItem>Cassini</missionItem>
     </category>

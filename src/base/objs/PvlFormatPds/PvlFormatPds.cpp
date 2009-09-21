@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/09/19 23:04:05 $
+ * $Revision: 1.10 $
+ * $Date: 2009/09/15 21:13:25 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -133,7 +133,12 @@ namespace Isis {
   * Returns the keyword value formatted as a "PDS" string
   * 
   * @param keyword The PvlKeyword to be formatted
-  * @param num Use the ith value of the keyword
+  * @param num Use the ith value of the keyword 
+  * @internal 
+  *   @history 2009-09-15 Jeannie Walldren - Moved the call to AddQuotes()
+  *                                          inside the else-statement since
+  *                                          the if portion of the code already
+  *                                          adds quotes automatically
   */
   std::string PvlFormatPds::FormatString (const PvlKeyword &keyword, int num) {
 
@@ -154,9 +159,9 @@ namespace Isis {
     }
     else {
       val += keyword[num];
+      val = AddQuotes (val);
     }
 
-    val = AddQuotes (val);
 
     // If it is an array start it off with a paren
     if ((keyword.Size() > 1) && (num == 0)) {
@@ -324,6 +329,11 @@ namespace Isis {
   * 
   * @param keyword The PvlKeyword to be formatted
   * @param num Use the ith value of the keyword
+  * @internal 
+  *   @history 2009-09-15 Jeannie Walldren - Moved the call to AddQuotes()
+  *                                          inside the else-statement since
+  *                                          the if portion of the code already
+  *                                          adds quotes automatically
   */
   std::string PvlFormatPds::FormatUnknown (const PvlKeyword &keyword, int num) {
 
@@ -344,9 +354,9 @@ namespace Isis {
     }
     else {
       val += keyword[num];
+      val = PvlFormat::AddQuotes (val);
     }
 
-    val = PvlFormat::AddQuotes (val);
 
     // If it is an array start it off with a paren
     if ((keyword.Size() > 1) && (num == 0)) {
@@ -665,7 +675,11 @@ namespace Isis {
   * Put quotes around the value of a keyword of type string according to PDS
   * standards. All keywords identified as "string" are quoted for PDS labels.
   * 
-  * @param value The value of a PvlKeyword to be formatted.
+  * @param value The value of a PvlKeyword to be formatted. 
+  * @internal 
+  *   @history 2009-09-15 Jeannie Walldren - Added case to skip add quotes if
+  *                                          the first character of the
+  *                                          string is " or '
   */
   std::string PvlFormatPds::AddQuotes (const std::string value) {
 
@@ -683,6 +697,14 @@ namespace Isis {
     // Turn the quoting back off if this value looks like a sequence
     // In this case the internal values should already be quoted.
     if (val[0] == '(') {
+      singleQuoteValue = false;
+      quoteValue = false;
+    }
+    else if (val[0] == '"') {
+      singleQuoteValue = false;
+      quoteValue = false;
+    }
+    else if (val[0] == '\'') {
       singleQuoteValue = false;
       quoteValue = false;
     }

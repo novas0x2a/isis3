@@ -27,19 +27,19 @@ using namespace PIRL;
 // have a vectors of 200 columns when processing in the column direction
 // (100 samples x 2 bands).  Likewise, the vectors will have 400 rows when
 // processing in the line direction (200 lines x 2 bands)
-static vector<StaticStats> st;
-static vector<int> band;
-static vector<int> element;
-static vector<double> median;
-static vector<double> average;
-static vector<double> normalizer;
-static int rowcol;                    // how many rows or cols per band
-static bool normalizeUsingAverage;    // mult/sub using average or median?
+vector<StaticStats> st;
+vector<int> band;
+vector<int> element;
+vector<double> median;
+vector<double> average;
+vector<double> normalizer;
+int rowcol;                    // how many rows or cols per band
+bool normalizeUsingAverage;    // mult/sub using average or median?
 
 // Size of the cube
-static int totalLines;
-static int totalSamples;
-static int totalBands;
+int totalLines;
+int totalSamples;
+int totalBands;
 
 string direction;
 

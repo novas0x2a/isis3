@@ -25,8 +25,8 @@ namespace Isis {
         for(int y = 2; y <= height-1; y++){
           for(int x = 2; x <= width-1; x++){
             // If either pixel is special ignore difference
-            if (InRange(chip(x,y)) && InRange(chip(x+offX,y+offY))){
-              interest += std::pow(chip(x,y) - chip(x+offX,y+offY),2);
+            if (InRange(chip.GetValue(x,y)) && InRange(chip.GetValue(x+offX,y+offY))){
+              interest += std::pow(chip.GetValue(x,y) - chip.GetValue(x+offX,y+offY),2);
             }
           }
         }

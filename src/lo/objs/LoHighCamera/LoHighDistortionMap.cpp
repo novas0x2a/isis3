@@ -1,6 +1,7 @@
 #include "LoHighDistortionMap.h"
 
 using namespace std;
+
 namespace Isis {
   namespace Lo {
     /** Constructor for LunarOrbiterHighDistortionMap class

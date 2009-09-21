@@ -13,4 +13,3 @@ Group = LunarOrbiter5/MediumResolutionCamera
   Library = LoMediumCamera
   Routine = LoMediumCameraPlugin
 EndGroup
- 

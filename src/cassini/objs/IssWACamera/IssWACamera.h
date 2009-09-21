@@ -1,8 +1,8 @@
-// $Id: IssWACamera.h,v 1.6 2009/01/22 22:43:28 kbecker Exp $
+// $Id: IssWACamera.h,v 1.7 2009/08/31 15:12:29 slambright Exp $
 #ifndef IssWACamera_h
 #define IssWACamera_h
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Cassini { 
   /**                                                                       
@@ -26,9 +26,10 @@ namespace Cassini {
    *            hierarchy to convert to detector coordinates.  This is
    *            essentially a 180 degree rotation.  The frame definition is
    *            actually contained in the IAK.
- 
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+   *            inherit directly from Camera
    */
-  class IssWACamera : public Isis::Camera {
+  class IssWACamera : public Isis::FramingCamera {
     public:
       IssWACamera (Isis::Pvl &lab);
       ~IssWACamera () {};      

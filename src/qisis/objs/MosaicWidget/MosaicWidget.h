@@ -7,7 +7,7 @@
 #include <QGraphicsView>
 #include <QGraphicsScene>
 
-class QLabel;
+#include <QLabel>
 class QToolButton;
 
 #include "MosaicTreeWidget.h"

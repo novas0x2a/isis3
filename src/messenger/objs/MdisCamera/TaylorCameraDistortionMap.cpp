@@ -1,4 +1,5 @@
-/**
+/** 
+ * @file 
  * This class describes a geometric distortion model which is
  * approximated by a third-order Taylor series expansion.
  *
@@ -191,7 +192,12 @@ namespace Isis {
 
   /**
    * Compute distorted focal plane dx,dy given an undistorted focal plane ux,uy.
-   * This describes the third order Taylor approximation to the distortion model.
+   * This describes the third order Taylor approximation to the distortion model. 
+   *  
+   * @param ux Undistored x 
+   * @param uy Undistored y 
+   * @param dx Result distorted x 
+   * @param dy Result distorted y  
    */
   void TaylorCameraDistortionMap::DistortionFunction(double ux, double uy, double* dx, double* dy) {
 
@@ -220,7 +226,14 @@ namespace Isis {
   /**
    * Jacobian of the distortion function. The Jacobian was computed
    * algebraically from the function described in the DistortionFunction
-   * method.
+   * method. 
+   *  
+   * @param x   
+   * @param y   
+   * @param Jxx 
+   * @param Jxy 
+   * @param Jyx 
+   * @param Jyy 
    */
   void TaylorCameraDistortionMap::DistortionFunctionJacobian(double x, double y, double* Jxx, double* Jxy, double* Jyx, double* Jyy) {
 

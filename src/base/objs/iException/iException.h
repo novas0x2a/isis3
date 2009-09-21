@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.10 $                                                             
- * $Date: 2008/12/15 18:43:52 $                                                                 
+ * $Revision: 1.11 $                                                             
+ * $Date: 2009/07/29 21:16:39 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -57,6 +57,8 @@ namespace Isis {
    *            out by "novus0x2a" (Support Board Member)
    *   @history 2008-12-15 Steven Lambright - iException::what no longer returns
    *            deleted memory.
+   *   @history 2009-07-29 Steven Lambright - Stack trace calculations moved to
+   *            IsisDebug.h
    */
   class iException : public std::exception {
     public:
@@ -85,7 +87,6 @@ namespace Isis {
       std::string Errors();
       bool IsPvlFormat();
       static void Clear ();
-      static std::vector<std::string> getCurrentStack();
       ~iException() throw ();
 
     private:

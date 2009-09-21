@@ -464,6 +464,10 @@ void IsisMain() {
     r.StartProcess(*transform, *interp);
     r.EndProcess();
 
+    // add mapping to print.prt
+    PvlGroup mapping = outmap->Mapping(); 
+    Application::Log(mapping); 
+
     //Clean up
     delete latCube;
     delete lonCube;

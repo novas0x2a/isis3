@@ -1,11 +1,12 @@
-#include <cmath>
 #include "Isis.h"
+#include "AlphaCube.h"
+#include "iException.h"
 #include "iString.h"
+#include "LineManager.h"
 #include "ProcessByLine.h"
 #include "SpecialPixel.h"
-#include "LineManager.h"
-#include "iException.h"
-#include "AlphaCube.h"
+
+#include <cmath>
 
 using namespace std;
 using namespace Isis;
@@ -13,7 +14,7 @@ using namespace Isis;
 void average (Buffer &out);
 void nearest (Buffer &out);
 
-Cube cube;
+Cube * cube;
 LineManager *in;
 double sscale,lscale;
 double vper;
@@ -28,20 +29,27 @@ std::vector<string> bands;
 void IsisMain() {
   // We will be processing by line
   ProcessByLine p;
+  cube = new Cube;
+
+  // To propogate labels, set input cube,
+  // this cube will be cleared after output cube is set.
+  p.SetInputCube("FROM");
 
   // Setup the input and output cubes
   UserInterface &ui = Application::GetUserInterface();
-  string from = ui.GetFilename ("FROM");
   replaceMode = ui.GetAsString("VPER_REPLACE");
-  p.SetInputCube("FROM");
   CubeAttributeInput cai(ui.GetAsString("FROM"));
   bands = cai.Bands();
-  cube.Open (from);
-  ins = cube.Samples();
-  inl = cube.Lines();
+
+  string from = ui.GetFilename ("FROM");
+  cube->Open(from);
+
+  ins = cube->Samples();
+  inl = cube->Lines();
   inb = bands.size();
+
   if (inb == 0) {
-    inb = cube.Bands();
+    inb = cube->Bands();
     for (int i = 1; i<=inb; i++) {
       bands.push_back((iString)i);
     }
@@ -70,11 +78,20 @@ void IsisMain() {
   }
 
   //  Allocate output file
-  Cube *ocube = p.SetOutputCube ("TO",ons,onl,inb);
-  p.ClearInputCubes();
+  Cube *ocube = NULL;
+  try {
+    ocube = p.SetOutputCube ("TO",ons,onl,inb);
+    // Our processing routine only needs 1
+    // the original set was for info about the cube only
+    p.ClearInputCubes();
+  } catch (iException &e) {
+    // If there is a problem, catch it and close the cube so it isn't open next time around
+    cube->Close();
+    throw e;
+  }
 
   //  Create all necessary buffers
-  in = new LineManager (cube);
+  in = new LineManager (*cube);
 
   // Start the processing
   line = 1.0;
@@ -84,7 +101,7 @@ void IsisMain() {
   if (alg == "NEAREST") p.StartProcess(nearest);
   
   try {
-    PvlGroup &mapgroup = cube.Label()->FindGroup("Mapping", Pvl::Traverse);
+    PvlGroup &mapgroup = cube->Label()->FindGroup("Mapping", Pvl::Traverse);
     
     if(sscale != lscale) {
       ocube->DeleteGroup("Mapping");
@@ -103,16 +120,16 @@ void IsisMain() {
   catch(iException &e) {
     e.Clear();
     // Update alphacube group
-    AlphaCube alpha(cube.Samples(), cube.Lines(),
+    AlphaCube alpha(cube->Samples(), cube->Lines(),
                     ocube->Samples(), ocube->Lines(),
-                    0.5, 0.5, cube.Samples()+0.5, cube.Lines()+0.5);
+                    0.5, 0.5, cube->Samples()+0.5, cube->Lines()+0.5);
     alpha.UpdateGroup(*ocube->Label());
   }
       
   // Cleanup
   p.EndProcess();
   delete in;
-  cube.Close();
+  cube->Close();
 }
 
 // Line processing routine for averaging algorithm
@@ -146,7 +163,7 @@ void average (Buffer &out) {
   while (iline <= rline) {
     if ((int)iline <= inl) {
       in->SetLine(iline,(iString::ToInteger(bands[sb])));
-      cube.Read(*in);
+      cube->Read(*in);
     }
     int isamp = 1;
     for (int osamp=0; osamp<out.size(); osamp++) {
@@ -177,7 +194,7 @@ void average (Buffer &out) {
 
   if (iline <= inl) {
     in->SetLine(iline,(iString::ToInteger(bands[sb])));
-    cube.Read(*in);
+    cube->Read(*in);
   }
   double ldel = (double)iline - rline;
   double ldel2 = 1.0 - ldel;
@@ -256,7 +273,7 @@ void average (Buffer &out) {
 void nearest (Buffer &out) {
   int readLine = (int)(line + 0.5);
   in->SetLine(readLine,(iString::ToInteger(bands[sb])));
-  cube.Read(*in);
+  cube->Read(*in);
 
   //  Scale down buffer
   for (int osamp=0; osamp<ons; osamp++) {

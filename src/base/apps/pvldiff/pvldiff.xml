@@ -14,6 +14,10 @@
     <change name="Steven Lambright" date="2007-08-10">
       Original version
     </change>
+    <change name="Travis Addair" date="2009-07-31">
+      Added capabilities for unique tolerances and ignore keys for individual 
+      array elements within keywords
+    </change>
   </history>
 
   <category>

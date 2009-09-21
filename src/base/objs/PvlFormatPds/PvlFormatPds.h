@@ -2,8 +2,8 @@
 #define PvlFormatPds_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/10/01 01:09:56 $
+ * $Revision: 1.6 $
+ * $Date: 2009/09/15 21:13:25 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -49,6 +49,11 @@ namespace Isis {
  *                                    These changes bring us more in line with
  *                                    PDS compliancy.
  * @history 2008-09-30 Christopher Austin - added FormatEOL() 
+ * @history 2009-09-15 Jeannie Walldren - Fixed bug where code was adding 2
+ *                                        sets of quotes to N/A when formatting
+ *                                        value.  These changes were made in
+ *                                        AddQuotes(), FormatString() and
+ *                                        FormatUnknown() methods.
  */
 
   class PvlFormatPds : public PvlFormat {

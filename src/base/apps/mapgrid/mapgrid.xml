@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="mapgrid" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Draws a grid of Latitude/Longitude lines for a projection
   </brief>
@@ -39,6 +40,9 @@
     </change>  
     <change name="Steven Lambright" date="2007-07-17">
       Fixed bug with include files.
+    </change>
+    <change name="Travis Addair" date="2009-08-10">
+      Mapping group parameters are now placed into the print file.
     </change>
    </history>
 

@@ -10,7 +10,6 @@
 #include "UserInterface.h"
 #include "Filename.h"
 #include "iException.h"
-#include "iException.h"
 #include "iTime.h"
 #include "Preference.h"
 #include "iString.h"
@@ -125,6 +124,10 @@ void TranslateLabels (Filename in, Cube *ocube) {
   }
   else {
     inst += PvlKeyword("EncodingFormat",(string) pdsLab.FindObject("Image")["EncodingType"]);
+  }
+
+  if (((string)inst["InstrumentId"]) == "HIRES") {
+    inst += PvlKeyword("MCPGainModeID", (string)pdsLab["MCP_Gain_Mode_ID"], "");
   }
 
   ocube->PutGroup(inst);

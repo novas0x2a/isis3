@@ -328,6 +328,14 @@ End
          to a Sinusoidal projection to determine area which requires an equal 
          area projection, such as Sinusoidal.)
      </change>
+      <change name="Kris Becker" date="2009-07-08">
+          Added the MAXEMISSION and MAXINCIDENCE limit parameters to better
+          control limb and terminator polygon generation.
+      </change>
+      <change name="Kris Becker" date="2009-08-24">
+          Allow disabling of shape model use when constructing polygons that 
+          contain limbs.
+      </change>
   </history>
 
   <category>
@@ -562,21 +570,68 @@ GisFootprint<br/>
             </p>
         </description>
       </parameter>
-      <parameter name="PIXINC">
-        <type>integer</type>
-        <brief>
-          Polygon pixel increment
-        </brief>
-        <description>
-          Specifies the number of pixels skip around the perimiter of the image 
-          to compute the polygon footprint.  Note that currently, an increment 
-          of 1 will not work for pushframe instruments such as THEMIS-VIS.  A 
-          default of 0 will cause caminfo to aribitrarily set it to 100.
-        </description>
-        <default><item>0</item></default>
-      </parameter>
-
       </group>
+
+      <group name="Polygon Options">
+          <parameter name="PIXINC">
+            <type>integer</type>
+            <brief>
+              Polygon pixel increment
+            </brief>
+            <description>
+              Specifies the number of pixels skip around the perimiter of the image 
+              to compute the polygon footprint.  Note that currently, an increment 
+              of 1 will not work for pushframe instruments such as THEMIS-VIS.  A 
+              default of 0 will cause caminfo to aribitrarily set it to 100.
+            </description>
+            <default><item>0</item></default>
+          </parameter>
+
+          <parameter name="MAXEMISSION">
+            <type>double</type>
+            <brief>
+              Maximum emission angle to include in polygon
+            </brief>
+            <description>
+                <p>
+                    Specifies the maximum emission angle that a polygon point is 
+                    allowed to have.  This limit is useful for eliminating limb data 
+                    that cause numerous ragged spikes.  Limb data will generally 
+                    result in odd polygon footprints as the geometry becomes 
+                    unstable at the limb due to obliqueness particularly when using 
+                    a DEM for the shape model (see spiceinit).  This parameter 
+                    restricts the emission angle to create better behaved poygons at 
+                    the limb while sacrificing some (very oblique) data.
+                </p>
+                <p>
+                    Note the images spiceinit'ed with a DEM, the emission angle 
+                    may need to shorted.  The DEM at the limb will also cause 
+                    additional spiking.
+                </p>
+                <p>
+                    The default value assumes no DEM is assocaited wth movie.
+                </p>
+            </description>
+            <default><item>89.5</item></default>
+          </parameter>
+
+          <parameter name="MAXINCIDENCE">
+            <type>double</type>
+            <brief>
+              Maximum incidence angle to include in polygon
+            </brief>
+            <description>
+                Specifies the maximum incidence angle that a polygon point is 
+                allowed to have.  This limit is useful for eliminating 
+                terminator data that may will typically be lost in photometric 
+                corrections.  This parameter restricts the incidence angle to 
+                create more data relevant polygons at the terminator while 
+                sacrificing some (non-photometric) data.
+            </description>
+            <default><item>120.0</item></default>
+          </parameter>
+          </group>
+
 
       <group name="SPICE Option">
         <parameter name="SPICE">

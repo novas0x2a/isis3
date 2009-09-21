@@ -9,7 +9,7 @@ SetImage (sample, line): 1
 NorthAzimuth: 269.544
 SunAzimuth: 168.17
 SpacecraftAzimuth: 184.591
-OffNadirAngle: 44.4224
+OffNadirAngle: 44.4229
 
 SetUniversalGround(lat, lon): 1
 SetRightAscensionDeclination(ra, dec): 1
@@ -18,14 +18,14 @@ IsBandIndependent called...
 ReferenceBand: 0
 HasReferenceBand: 0
 SetBand called, band: 7
-Sample: 408.126
-Line: 962.452
+Sample: 408.127
+Line: 962.454
 GroundRange: 0
 IntersectsLongitudeDomain: 0
-PixelResolution: 628.044
-LineResolution: 628.044
-SampleResolution: 628.044
-DetectorResolution: 157.011
+PixelResolution: 628.048
+LineResolution: 628.048
+SampleResolution: 628.048
+DetectorResolution: 157.012
 LowestImageResolution: 2047.19
 HighestImageResolution: 429.526
 Calling BasicMapping (pvl)...
@@ -175,7 +175,7 @@ Group = Mapping
   MaximumLatitude    = 34.449775120271
   MinimumLongitude   = 218.13667853438
   MaximumLongitude   = 237.62560286587
-  PixelResolution    = 429.52630797739
+  PixelResolution    = 429.52631512848
   ProjectionName     = Sinusoidal
 End_Group
 End

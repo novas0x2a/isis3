@@ -34,7 +34,7 @@ void IsisMain() {
   // placed ontop of the mosaic or beneath it 
   ui = Application::GetUserInterface();
   MosaicPriority priority;
-  if (ui.GetString("INPUT") == "BENEATH") {
+  if (ui.GetString("PRIORITY") == "BENEATH") {
     priority = mosaic;
   }
   else {

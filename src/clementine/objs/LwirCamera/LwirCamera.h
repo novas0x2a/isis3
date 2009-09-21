@@ -1,7 +1,7 @@
 #ifndef LwirCamera_h
 #define LwirCamera_h
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Clementine { 
   /**                                                                       
@@ -16,8 +16,10 @@ namespace Clementine {
    *
    * @internal
    *   @history 2009-01-16 Jeannie Walldren - Original Version
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+   *            inherit directly from Camera
    */
-  class LwirCamera : public Isis::Camera {
+  class LwirCamera : public Isis::FramingCamera {
     public:
       LwirCamera (Isis::Pvl &lab);
       ~LwirCamera () {};      

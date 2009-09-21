@@ -1,4 +1,5 @@
 #include "Isis.h"
+
 #include "ProcessByLine.h"
 #include "LineManager.h"
 #include "ProjectionFactory.h"
@@ -41,14 +42,14 @@ void IsisMain() {
 		throw iException::Message(iException::User,msg,_FILEINFO_);
 	}
 
-  // Crop image if necessary
   string mode = ui.GetString("MODE");
+
   if(mode != "TRIM") {
     smallestLine = smallestSample = INT_MAX; 
     biggestLine = biggestSample = -INT_MAX; 
 
     ProcessByLine p;
-    p.SetInputCube("FROM");
+    p.SetInputCube("FROM");                        
     p.StartProcess(getSize);
     p.EndProcess();
     
@@ -57,12 +58,12 @@ void IsisMain() {
 
     // Run external crop
     string cropParams = "";
-    cropParams += "from= " + ui.GetFilename("FROM");
+    cropParams += "from=\"" + ui.GetFilename("FROM") + "\"";
     if(mode == "CROP") {
-      cropParams += " to= " + ui.GetAsString("TO") + " ";
+      cropParams += " to=\"" + ui.GetAsString("TO") + "\"";
     }
     else {
-      cropParams += " to= TEMPORARYcropped.cub ";
+      cropParams += " to=TEMPORARYcropped.cub ";
     }
     
     cropParams += " sample= "   + iString(smallestSample);
@@ -80,19 +81,20 @@ void IsisMain() {
     }
     if(mode == "BOTH") {
       delete proj;
+      proj = NULL;
       Pvl pvl("TEMPORARYcropped.cub");
       proj = ProjectionFactory::CreateFromCube(pvl);
     }
   }
 
-  // Trim image if necessasry
-  if(mode != "CROP") {
-    ProcessByLine p;
+  // Trim image if necessary
+  if(mode != "CROP") { 
+    ProcessByLine p; 
     CubeAttributeInput att;
     if(mode == "BOTH") {
       p.SetInputCube("TEMPORARYcropped.cub", att); 
     }
-    else {
+    else { //if its trim
       p.SetInputCube("FROM");
     }
     p.SetOutputCube("TO"); 
@@ -100,25 +102,13 @@ void IsisMain() {
     p.EndProcess();
     if(mode == "BOTH") remove("TEMPORARYcropped.cub");
   }
-  delete proj;
-}
 
-// Line processing routine
-void trim(Buffer &in, Buffer &out) {
-  // Loop for each pixel in the line.  Find lat/lon of pixel, if outside
-  // of range, set to NULL.
-  double lat,lon;
-  for (int i = 0; i < in.size(); i++) {
-    proj->SetWorld ((double)in.Sample(i),(double)in.Line(i));
-    lat = proj->Latitude();
-    lon = proj->Longitude();
-    if (lat < slat || lat > elat || lon < slon || lon > elon) {
-      out[i] = NULL8;
-    }
-    else {
-      out[i] = in[i];
-    }
-  }
+  // Add mapping to print.prt
+  PvlGroup mapping = proj->Mapping(); 
+  Application::Log(mapping); 
+
+  delete proj;
+  proj = NULL;
 }
 
 // Size up the cropped area in terms of lines and samples
@@ -149,3 +139,22 @@ void getSize(Buffer &in) {
     }
   }
 }
+
+// Line processing routine
+void trim(Buffer &in, Buffer &out) {
+  // Loop for each pixel in the line.  Find lat/lon of pixel, if outside
+  // of range, set to NULL.
+  double lat,lon;
+  for (int i = 0; i < in.size(); i++) {
+    proj->SetWorld ((double)in.Sample(i),(double)in.Line(i));
+    lat = proj->Latitude();
+    lon = proj->Longitude();
+    if (lat < slat || lat > elat || lon < slon || lon > elon) {
+      out[i] = Isis::Null;
+    }
+    else {
+      out[i] = in[i];
+    }
+  }
+}
+

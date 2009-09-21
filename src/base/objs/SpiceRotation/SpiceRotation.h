@@ -2,8 +2,8 @@
 #define SpiceRotation_h
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/01/27 03:30:36 $
+ * $Revision: 1.14 $
+ * $Date: 2009/07/25 00:24:20 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -86,6 +86,12 @@ namespace Isis {
    *                        so they are available to inheriting classes.
    *  @history 2008-12-12  Debbie A. Cook Added method to return frame code
    *  @history 2009-01-26  Debbie A. Cook Added wrap of 3rd camera angle when crossing +-180
+   *  @history 2009-04-21  Debbie A. Cook Added methods MinimizeCache and LoadTimeCache, variable p_minimizeCache, and
+   *                        enum constants DownsizeStatus
+   *  @history 2009-06-29  Debbie A. Cook Fixed memory overwrite problem in LoadTimeCache when reading a type 3 ck
+   *  @history 2009-07-24  Debbie A. Cook Removed downsizing for Nadir instrument pointing tables (LoadTimeCache) so that
+   *                        radar instruments will work.  Current downsizing code requires sclk and radar has no sclk.
+   *  @todo Downsize using Hermite cubic spline and allow Nadir tables to be downsized again.
    */
   class SpiceRotation {
     public:
@@ -108,9 +114,11 @@ not have refchg_c, but only the f2c'd refchg.c.*/
        * The rotation can come from one of 3 places for an Isis cube:  Cache,
        * Naif Spice kernels, or Nadir computations.
        */
-      enum Source { Memcache, Spice, Nadir };
+      enum Source { Spice, Nadir, Memcache, Function};
 
       enum PartialType {WRT_RightAscension,WRT_Declination,WRT_Twist};
+
+      enum DownsizeStatus {Yes,Done,No};
 
       void SetEphemerisTime(double et);
 
@@ -123,6 +131,9 @@ not have refchg_c, but only the f2c'd refchg.c.*/
 
       std::vector<double> ReferenceVector( const std::vector<double>& jVec );
 
+      //! Set the downsize status
+      void MinimizeCache ( DownsizeStatus status) { p_minimizeCache = status; };
+
       void LoadCache (double startTime, double endTime, int size);
 
       void LoadCache (double time);
@@ -133,6 +144,8 @@ not have refchg_c, but only the f2c'd refchg.c.*/
                       Isis::PolynomialUnivariate &function3);
 
       Table Cache(const std::string &tableName);
+
+      void LoadTimeCache();
 
       std::vector<double> Angles( int axis3, int axis2, int axis1 );
 
@@ -174,7 +187,7 @@ not have refchg_c, but only the f2c'd refchg.c.*/
                                              PartialType partialVar, int coeffIndex);
       double WrapAngle (double compareAngle, double angle);
       void SetAxes ( int axis1, int axis2, int axis3);
-      std::vector<double> GetCacheTime () { return p_cacheTime; };
+      std::vector<double> GetFullCacheTime ();
 
   protected:
     std::vector<double> p_cacheTime;  //!< iTime for corresponding rotation
@@ -214,6 +227,10 @@ not have refchg_c, but only the f2c'd refchg.c.*/
       bool p_noOverride;                //!< Flag to compute base time;
       double p_overrideBaseTime;        //!< Value set by caller to override computed base time
       double p_overrideTimeScale;       //!< Value set by caller to override computed time scale
+      DownsizeStatus p_minimizeCache;   //!< Status of downsizing the cache (set to No to ignore)
+      double p_fullCacheStartTime;      //!< Initial requested starting time of cache
+      double p_fullCacheEndTime;        //!< Initial requested ending time of cache
+      int p_fullCacheSize;              //!< Initial requested cache size
   };
 };
 

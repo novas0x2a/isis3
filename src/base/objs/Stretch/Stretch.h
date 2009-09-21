@@ -2,8 +2,8 @@
 #define Stretch_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2009/04/29 17:00:34 $
+ * $Revision: 1.7 $
+ * $Date: 2009/07/16 21:14:39 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -25,6 +25,7 @@
 #include <vector>
 #include <string>
 #include "Pvl.h"
+#include "Histogram.h"
 
 namespace Isis {
 /**                                                                       
@@ -61,7 +62,17 @@ namespace Isis {
  *                                       methods
  *  @history 2008-11-12 Steven Lambright - Changed search algorithm into a
  *                                 binary search replacing a linear search.
- * 
+ *  @history 2009-04-30 Eric Hyer - One line setters now implemented in header file instead of cpp
+ *                                - Modified parse method
+ *                                    - added abstraction by letting NextPair handle low level details
+ *                                - created second Parse method for handling pairs where the input side
+ *                                  is a perentage
+ *                                - created private NextPair method
+ *                                - Fixed Input and Output getters to check both sides of boundry condition
+ *                                  for valid data
+ *  @history 2009-07-16 Eric Hyer - Fixed bug introduced in AddPair by my last commit
+ *                                - Renamed variable pair to avoid potential conflict with std::pair
+ *
  */
   class Stretch {
     private:
@@ -81,6 +92,8 @@ namespace Isis {
                          (default HRS)*/
       double p_minimum; //!<By default this value is set to p_lrs
       double p_maximum; //!<By default this value is set to p_hrs
+      
+      std::pair<double, double> NextPair(Isis::iString &pairs);
   
     public:
       Stretch ();
@@ -90,13 +103,53 @@ namespace Isis {
   
       void AddPair (const double input, const double output);
       
-      void SetNull (const double value);
-      void SetLis (const double value);
-      void SetLrs (const double value);
-      void SetHis (const double value);
-      void SetHrs (const double value);
-      void SetMinimum (const double value);
-      void SetMaximum (const double value);
+     /**
+      * Sets the mapping for NULL pixels. If not called the NULL pixels will be
+      * mapped to NULL. Otherwise you can map NULLs to any double value.
+      * For example, SetNull(0.0).
+      *
+      * @param value Value to map input NULLs
+      */
+      void SetNull (const double value) { p_null = value; }
+      
+     /**
+      * Sets the mapping for LIS pixels. If not called the LIS pixels will be mapped
+      * to LIS. Otherwise you can map LIS to any double value. For example,
+      * SetLis(0.0).
+      *
+      * @param value Value to map input LIS
+      */
+      void SetLis (const double value) { p_lis = value; }
+
+     /**
+      * Sets the mapping for LRS pixels. If not called the LRS pixels will be mapped
+      * to LRS. Otherwise you can map LRS to any double value. For example,
+      * SetLrs(0.0).
+      *
+      * @param value Value to map input LRS
+      */
+      void SetLrs (const double value) { p_lrs = value; }
+
+     /**
+      * Sets the mapping for HIS pixels. If not called the HIS pixels will be mapped
+      * to HIS. Otherwise you can map HIS to any double value. For example,
+      * SetHis(255.0).
+      *
+      * @param value Value to map input HIS
+      */
+      void SetHis (const double value) { p_his = value; }
+
+     /**
+      * Sets the mapping for HRS pixels. If not called the HRS pixels will be mapped
+      * to HRS. Otherwise you can map HRS to any double value. For example,
+      * SetHrs(255.0).
+      *
+      * @param value Value to map input HRS
+      */
+      void SetHrs (const double value) { p_hrs = value; }
+
+      void SetMinimum (const double value) { p_minimum = value; }
+      void SetMaximum (const double value) { p_maximum = value; }
 
       void Load(Pvl &pvl, std::string &grpName);
       void Save(Pvl &pvl, std::string &grpName);
@@ -105,7 +158,9 @@ namespace Isis {
   
       double Map (const double value) const;
   
-      void Parse (const std::string &pairs);
+      void Parse(const std::string &pairs);
+      void Parse(const std::string &pairs, const Isis::Histogram *hist);
+      
       std::string Text () const;
 
       //! Returns the number of stretch pairs
@@ -116,7 +171,7 @@ namespace Isis {
 
       //! Clears the stretch pairs
       void ClearPairs() { p_pairs = 0; p_input.clear(); p_output.clear(); };
-
+      
       void CopyPairs(const Stretch &other);
   };
 };

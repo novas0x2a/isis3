@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.19 $                                                             
- * $Date: 2009/06/05 19:14:48 $                                                                 
+ * $Revision: 1.26 $                                                             
+ * $Date: 2009/08/31 15:11:48 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -33,6 +33,7 @@ namespace Isis {
   class CameraDistortionMap;
   class CameraGroundMap;
   class CameraSkyMap;
+
 /**                                                                       
  * @author ??? Jeff Anderson
  * 
@@ -76,6 +77,14 @@ namespace Isis {
  *   @history 2008-09-10 Steven Lambright - Added the geometric tiling methods
  *            in order to optimize push frame cameras and prevent corruption of
  *            data when running cam2map with push frame cameras
+ *   @history 2008-11-13 Janet Barrett - Added the GroundAzimuth method. This
+ *            method computes and returns the ground azimuth between the ground
+ *            point and another point of interest, such as the subspacecraft
+ *            point or the subsolar point. The ground azimuth is the clockwise
+ *            angle on the ground between a line drawn from the ground point to
+ *            the North pole of the body and a line drawn from the ground point
+ *            to the point of interest (such as the subsolar point or the
+ *            subspacecraft point).
  *   @history 2009-01-05 Steven Lambright - Added InCube method
  *   @history 2009-03-02 Steven Lambright - This class now keeps track of the
  *            current child band, has added error checks, and now hopefully
@@ -87,6 +96,25 @@ namespace Isis {
  *   @history 2009-05-22 Debbie A. Cook - Added Resolution method for Sensor (parent) virtual
  *   @history 2009-06-05 Mackenzie Boyd - Updated samson
  *            truthdata
+ *   @history 2009-07-08 Janet Barrett - Added RadarGroundMap and RadarSlantRangeMap
+ *            as friends to this class so that they have access to the SetFocalLength
+ *            method. The Radar instrument does not have a focal length and these
+ *            classes need to be able to change the focal length value each time the
+ *            slant range changes. This insures that the detector resolution always
+ *            comes out to the pixel width/height for the Radar instrument.
+ *   @history 2009-07-09 Debbie A. Cook - Set p_hasIntersection in SetImage if
+ *            successful instead of just returning the bool to that other methods
+ *            will know a ground point was successfully set.
+ *   @history 2009-08-03 Debbie A. Cook - Added computation of
+ *            tolerance to support change in Spice class for
+ *            supporting downsizing of Spice tables
+ *   @history 2009-08-14 Debbie A. Cook - Corrected alternate tolerance
+ *   @history 2009-08-17 Debbie A. Cook - Added default tolerance for sky images
+ *   @history 2009-08-19 Janet Barrett - Fixed the GroundAzimuth method so that it
+ *            checks the quadrant that the subspacecraft or subsolar point lies in
+ *            to calculate the correct azimuth value.
+ *   @history 2009-08-28 Steven Lambright - Added GetCameraType method and 
+ *            returned enumeration value
  */
 
   class Camera : public Isis::Sensor {
@@ -331,6 +359,21 @@ namespace Isis {
 
       bool InCube();
 
+      enum CameraType {
+        Framing, 
+        PushFrame, 
+        LineScan,
+        Radar,
+        Point
+      };
+
+      /**
+       * Returns the type of camera that was created.
+       * 
+       * @return CameraType
+       */
+      virtual CameraType GetCameraType() const = 0;
+
     protected:
 
      /**
@@ -351,6 +394,13 @@ namespace Isis {
       void SetPixelPitch ();
 
       void SetGeometricTilingHint(int startSize = 128, int endSize = 8);
+
+      // These 2 classes need to be friends of the Camera class because
+      // of the way Radar works - there is no set focal length for the
+      // instrument, so the focal length needs to be set each time the
+      // slant range changes.
+      friend class RadarGroundMap;
+      friend class RadarSlantRangeMap;
 
     private:
       double p_focalLength;  //!<The focal length, in units of millimeters

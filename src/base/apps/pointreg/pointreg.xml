@@ -91,6 +91,9 @@
       because it is leaving more cubes in memory instead of opening
       and closing them each time.
     </change>
+    <change name="Travis Addair" date="2009-08-10">
+        Auto registration parameters are now placed into the print file.
+    </change>
   </history>
 
   <groups>

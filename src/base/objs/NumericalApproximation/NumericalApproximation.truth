@@ -12,10 +12,11 @@ type 	 name 		   minpoints
 4	cspline-clamped		3
 5	cspline-periodic	2
 6	cspline-neighborhood	4
-7	akima			5
-8	akima-periodic		5
+7	cspline-Hermite		2
+8	akima			5
+9	akima-periodic		5
 EXCEPTIONS:
-**PROGRAMMER ERROR** SetInterpType() - Invalid argument. Unknown interpolation type: 10
+**PROGRAMMER ERROR** SetInterpType() - Invalid argument. Unknown interpolation type: 11
 	************************************************
 
 Test constructors: 
@@ -25,6 +26,7 @@ interp2  3 	 cspline-natural
 interp3  3 	 cspline-natural
 interp4  4 	 cspline-clamped
 interp5  2 	 polynomial-Neville's
+interp6  7 	 cspline-Hermite
 
 EXCEPTIONS:
 **PROGRAMMER ERROR** NumericalApproximation() - Unable to construct an object using the given vectors and interpolation type
@@ -32,6 +34,12 @@ EXCEPTIONS:
 	************************************************
 
 Add data, set properties:  
+d = 0 is an x element of dataset? 1
+d = 0.01 is an x element of dataset? 0
+d = 0.02 is an x element of dataset? 0
+d = 0.03 is an x element of dataset? 0
+d = 0.04 is an x element of dataset? 1
+
 description 					 size 	 domain
 cspline-natural, regularly spaced		 21 	[0, 0.8]
 cspline-natural, irregularly spaced		 21 	[0, 0.8]
@@ -62,25 +70,25 @@ EXCEPTIONS:
 
 2) Dataset Interpolation:  
 Evaluated points:
-x 	 y 		 c-nat-regular 	 c-nat-irreg 	 c-neigh 	 c-clamped 	 p-neville
-0.05 	0.052625 	 0.0525871 	 0.0528784 	 0.0529363 	 0.052625 	 0.052625
-0.15 	0.175875 	 0.175873 	 0.175905 	 0.175647 	 0.175875 	 0.175875
-0.25 	0.328125 	 0.328125 	 0.328125 	 0.32802 	 0.328125 	 0.328125
-0.35 	0.515375 	 0.515375 	 0.515375 	 0.515329 	 0.515375 	 0.515375
-0.45 	0.743625 	 0.743625 	 0.743625 	 0.743474 	 0.743625 	 0.743625
-0.55 	1.01887 	 1.01888 	 1.01887 	 1.01867 	 1.01887 	 1.01888
-0.65 	1.34712 	 1.34712 	 1.34712 	 1.34697 	 1.34712 	 1.34713
-0.75 	1.73437 	 1.73425 	 1.73424 	 1.73407 	 1.73438 	 1.73438
+x 	 y 		 c-nat-regular 	 c-nat-irreg 	 c-neigh 	 c-clamped 	 p-neville 	 c-hermite
+0.05 	0.052625 	 0.0525871 	 0.0528784 	 0.0529363 	 0.052625 	 0.052625 	 0.052625
+0.15 	0.175875 	 0.175873 	 0.175905 	 0.175647 	 0.175875 	 0.175875 	 0.175875
+0.25 	0.328125 	 0.328125 	 0.328125 	 0.32802 	 0.328125 	 0.328125 	 0.328125
+0.35 	0.515375 	 0.515375 	 0.515375 	 0.515329 	 0.515375 	 0.515375 	 0.515375
+0.45 	0.743625 	 0.743625 	 0.743625 	 0.743474 	 0.743625 	 0.743625 	 0.743625
+0.55 	1.01887 	 1.01888 	 1.01887 	 1.01867 	 1.01887 	 1.01888 	 1.01887
+0.65 	1.34712 	 1.34712 	 1.34712 	 1.34697 	 1.34712 	 1.34713 	 1.34712
+0.75 	1.73437 	 1.73425 	 1.73424 	 1.73407 	 1.73438 	 1.73438 	 1.73437
 Errors: (difference from y-value)
-x 	c-nat-regular	c-nat-irreg	c-neigh		c-clamped	p-neville-trueErr	p-neville-estimErr
-0.05 	-3.79165e-05	0.000253378	0.00031133	-6.93889e-18	-1.7107e-10		-8.06534e-11
-0.15 	-1.50265e-06	2.9835e-05	-0.00022794	0		-1.04902e-12		-4.10234e-13
-0.25 	5.23612e-08	-3.65474e-07	-0.000105006	0		9.82547e-15		2.78089e-15
-0.35 	1.82955e-09	-2.65526e-09	-4.63289e-05	1.11022e-16	0			5.22482e-18
-0.45 	6.98432e-09	-5.86827e-09	-0.000151105	0		3.33067e-16		-6.89075e-17
-0.55 	1.78058e-07	-9.69423e-08	-0.0002096	0		7.10543e-15		-4.58751e-15
-0.65 	-5.10901e-06	-1.30783e-06	-0.00015885	0		6.75016e-14		-1.11913e-13
-0.75 	-0.000128916	-0.000133122	-0.000302098	6.66134e-16	2.71994e-11		-1.8922e-10
+x 	c-nat-regular	c-nat-irreg	c-neigh		c-clamped	p-neville-trueErr	p-neville-estimErr	c-herm
+0.05	-3.79165e-05	0.000253378	0.00031133	-6.93889e-18	-1.7107e-10		-8.06534e-11		0
+0.15	-1.50265e-06	2.9835e-05	-0.00022794	0		-1.04902e-12		-4.10234e-13		2.77556e-17
+0.25	5.23612e-08	-3.65474e-07	-0.000105006	0		9.82547e-15		2.78089e-15		0
+0.35	1.82955e-09	-2.65526e-09	-4.63289e-05	1.11022e-16	0			5.22482e-18		1.11022e-16
+0.45	6.98432e-09	-5.86827e-09	-0.000151105	0		3.33067e-16		-6.89075e-17		-1.11022e-16
+0.55	1.78058e-07	-9.69423e-08	-0.0002096	0		7.10543e-15		-4.58751e-15		0
+0.65	-5.10901e-06	-1.30783e-06	-0.00015885	0		6.75016e-14		-1.11913e-13		-2.22045e-16
+0.75	-0.000128916	-0.000133122	-0.000302098	6.66134e-16	2.71994e-11		-1.8922e-10		0
 
 3) Dataset Extrapolation: 
    Notice: Clamped cubic spline accurate if extrapolating cubic function.

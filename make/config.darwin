@@ -47,7 +47,7 @@ ISISDYNAMIC =
 RANLIB          = /usr/bin/ranlib
 SHAREDLIBEXT    = dylib
 DYLIBVERSION    = -compatibility_version $(ISISMAJOR).$(ISISMINOR) \
-                  -current_version $(ISISVERSION)
+                  -current_version $(ISISLIBVERSION)
 DYLIBFLAGS      = -dynamiclib -flat_namespace  -single_module \
                   -undefined suppress
 ISISSHAREDFLAGS = -bundle -flat_namespace -dynamic -undefined suppress 
@@ -59,7 +59,7 @@ ISISARFLAGS     =
 #  3rd party directory root
 #---------------------------------------------------------------------------
 ISIS3OPT       ?= /opt/local
-ISIS3LOCAL     ?= /usgs/pkgs/local
+ISIS3LOCAL     ?= /usgs/pkgs/local/isis$(ISISVERSION)
 
 #---------------------------------------------------------------------------
 # Set up for cwd
@@ -99,7 +99,7 @@ QTLIBDIR = -L$(QTDIR)/lib
 ISISCPPFLAGS += $(QTDARWINFLAGS)
 QTFRAMEWORKS = -framework Carbon -framework AppKit
 QTLIB        = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore \
-		$(QTFRAMEWORKS)
+                $(QTFRAMEWORKS)
 
 QTOPENGL     = -framework OpenGL -framework AGL
 
@@ -180,6 +180,13 @@ else
 endif
 
 #---------------------------------------------------------------------------
+# Set up for Google Protocol Buffers (ProtoBuf)
+#---------------------------------------------------------------------------
+PROTOBUFINCDIR = 
+PROTOBUFLIBDIR = -L$(ISIS3LOCAL)/lib
+PROTOBUFLIB    = -lprotobuf
+
+#---------------------------------------------------------------------------
 #  Define the third party distribution libraries (patterns)
 #---------------------------------------------------------------------------
 
@@ -193,6 +200,7 @@ THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtCore.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libqwt.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libcspice*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libsuperlu_3.0.dylib"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libprotobuf*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libiconv*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libxerces-c*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgsl*.dylib"

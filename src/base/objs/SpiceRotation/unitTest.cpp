@@ -203,8 +203,8 @@ int main (int argc, char *argv[]) {
 
    cout << "Source = " << linrot.GetSource() << endl;
 
-   for (int i=0; i<10; i++) {
-     double t = startTime + (double) i * slope;
+   for (int i=0; i<2; i++) {
+     double t = startTime + (double) i * (endTime - startTime);
      linrot.SetEphemerisTime(t);
      vector<double> CJ = linrot.Matrix();
      cout << "Time           = " << linrot.EphemerisTime() << endl;

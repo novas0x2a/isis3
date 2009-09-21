@@ -49,7 +49,7 @@ void MakeCompletion(const string &appName) {
 
   if(appName.compare("isisui") == 0) {
     string binPath = Filename("$ISISROOT/bin").Expanded();
-    cout << "complete isisui 'n@*@F:" << binPath << "/@'";
+    cout << "complete isisui 'n@*@F:" << binPath << "/@'; ";
     return;
   }
 

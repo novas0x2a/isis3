@@ -2,8 +2,8 @@
 #define PvlObject_h
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2008/10/01 01:14:27 $
+ * $Revision: 1.12 $
+ * $Date: 2009/08/18 00:01:54 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -22,6 +22,7 @@
  *   http://www.usgs.gov/privacy.html.
  */                                                                     
 
+#include <algorithm>
 #include "PvlContainer.h"
 #include "PvlGroup.h"
 

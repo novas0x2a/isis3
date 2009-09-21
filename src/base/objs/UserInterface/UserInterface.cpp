@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2009/01/07 17:20:48 $                                                                 
+ * $Revision: 1.14 $                                                             
+ * $Date: 2009/08/18 18:16:12 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -18,10 +18,11 @@
  *   the Privacy &amp; Disclaimers page on the Isis website,              
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.                                    
- */                                                                       
+ */
 
 #include <sstream>
 #include <vector>
+
 #include "UserInterface.h"
 #include "iException.h"
 #include "Filename.h"
@@ -53,6 +54,7 @@ namespace Isis {
     p_errList = "";
     p_saveFile = "";
     p_abortOnError = true;
+    p_parentId = 0;
 
     // Make sure the user has a .Isis and .Isis/history directory
     Isis::Filename setup("$HOME/.Isis");
@@ -99,327 +101,542 @@ namespace Isis {
     // The program will be interactive if it has no arguments or
     // if it has the name unitTest
     p_progName = argv[0];
-    Isis::iString progName (argv[0]);
-    Isis::Filename file(progName);
+    Isis::Filename file(p_progName);
     if ((argc == 1) && (file.Name() != "unitTest")) {
       p_interactive = true;
     }
 
-    // Convert the command line arguments into a stream
-    stringstream ss;
-    for (int i=1; i<argc; i++) {
-      ss << argv[i] << " ";
-    }
-
-    // Tokenize the stream
-    try {
-      p_cmdline.Load (ss);
-    } catch (Isis::iException &e) {
-      throw Isis::iException::Message(Isis::iException::User,"Invalid command line",_FILEINFO_);
+    p_cmdline.clear();
+    for(int i = 0; i < argc; i++) {
+      p_cmdline.push_back(argv[i]);
     }
 
     // Check for special tokens (those beginning with a dash)
-    p_parentId = 0;
-    string log = "";
-    bool verbose = false;
-    string loadHistory = "";
-    vector<Isis::PvlToken> t = p_cmdline.GetTokenList ();
+    vector<string> options;
+    options.push_back("-GUI");
+    options.push_back("-NOGUI");
+    options.push_back("-BATCHLIST");
+    options.push_back("-LAST");
+    options.push_back("-RESTORE");
+    options.push_back("-WEBHELP");
+    options.push_back("-HELP");
+    options.push_back("-ERRLIST");
+    options.push_back("-ONERROR");
+    options.push_back("-SAVE");
+    options.push_back("-INFO");
+    options.push_back("-PREFERENCE");
+    options.push_back("-LOG");
+    options.push_back("-VERBOSE");
+    options.push_back("-PID");
 
-    vector<string> opts;
-    opts.push_back("-GUI");
-    opts.push_back("-NOGUI");
-    opts.push_back("-BATCHLIST");
-    opts.push_back("-LAST");
-    opts.push_back("-RESTORE");
-    opts.push_back("-WEBHELP");
-    opts.push_back("-HELP");
-    opts.push_back("-ERRLIST");
-    opts.push_back("-ONERROR");
-    opts.push_back("-SAVE");
-    opts.push_back("-INFO");
-    opts.push_back("-PREFERENCE");
-    opts.push_back("-LOG");
-    opts.push_back("-VERBOSE");
-    opts.push_back("-PID");
+    bool usedDashLast = false;
 
-    for (int i=0; i<(int)t.size(); i++) {
-      string tok = t[i].GetKeyUpper();
-      if (tok[0] != '-') continue;
-      else {
-        int match = 0;
-        int index = -1;
-        for (int j=0; j<(int)opts.size(); j++) {
-          int compare = opts[j].find(tok);
-          if (compare == 0) {
-            match++; 
-            index = j;
-          }
-        }
-        // The input parameter does not match any of the reserve parameters!!
-        if (index < 0) {
-          string msg = "Invalid Reserve Parameter Option [" + tok + "]. Choices are: ";
-          // Make sure not to show -PID as an option (its the last char in the vector)
-          for (int t=0; t<(int)opts.size()-2; t++) {
-            msg += opts[t] + ",";
-          }
-          msg += opts[opts.size()-2];
+    for (unsigned int currArgument = 1; currArgument < (unsigned)argc; currArgument ++) {
+      string paramName;
+      vector<string> paramValue;
+
+      GetNextParameter(currArgument, paramName, paramValue);
+
+      // we now have a name,value pair
+      if(paramName[0] == '-') {
+        paramName = ((iString)paramName).UpCase();
+
+        if(paramValue.size() > 1) {
+          string msg = "Invalid value for reserve parameter [" + 
+            paramName + "]";
           throw iException::Message(iException::User,msg,_FILEINFO_);
         }
-        // The input parameter is ambiguous
-        else if (match > 1) {
-          string msg = "Ambiguous Reserve Parameter [" + tok + "]. Please clarify.";
-          throw iException::Message(iException::User,msg,_FILEINFO_);
-        }
-        // Assign the closest parameter name to the token
-        else tok = opts[index];
-      }
 
-      if (tok == "-GUI") {
-        p_interactive = true;
-      } else if (tok == "-NOGUI") {
-        p_interactive = false;
-      } else if (tok == "-BATCHLIST") {
-        LoadBatchList(t[i].GetValue());
-      } else if (tok == "-LAST") {
-        loadHistory = "last";
-      } else if (tok == "-RESTORE") {
-        loadHistory = t[i].GetValue();
-      } else if (tok == "-WEBHELP") {
-        // Make netscape a user preference
-        Isis::PvlGroup &pref = Isis::Preference::Preferences().FindGroup("UserInterface");
-        string command = pref["GuiHelpBrowser"];
-        command += " $ISISROOT/doc/Application/presentation/Tabbed/";
-        command += file.Name() + "/" + file.Name() + ".html";
-        Isis::System(command);
-        exit(0);
-      } else if (tok == "-INFO") {
-        p_info = true;
-        // check for filename and set value
-        if (t[i].ValueSize() >0) {
-          p_infoFileName = t[i].GetValue();
-        }else{
-          p_infoFileName = "";
-        }
+        // We have an option (not a parameter)...
+        int matchOption = -1;
         
-      } else if (tok == "-HELP") {
-        if (t[i].ValueSize() == 0) {
-          Pvl params;
-          params.SetTerminator("");
-          for (int k=0; k<NumGroups(); k++) {
-            for (int j=0; j<NumParams(k); j++) {
-              if (ParamListSize(k,j) == 0) {
-                params += PvlKeyword(ParamName(k,j), ParamDefault(k,j)); 
-              } else {
-                PvlKeyword key(ParamName(k,j));
-                string def = ParamDefault(k,j);
-                for (int l=0; l<ParamListSize(k,j); l++) {
-                  if (ParamListValue(k,j,l) == def) key.AddValue("*" + def);
-                  else key.AddValue(ParamListValue(k,j,l));
-                }
-                params += key;
-              }
+        for (int option = 0; option < (int)options.size(); option++) {
+          // If our option starts with the parameter name so far, this is it
+          if(options[option].find(paramName) == 0) {
+            if(matchOption >= 0) {
+              string msg = "Ambiguous Reserve Parameter [" + 
+                paramName + "]. Please clarify.";
+              throw iException::Message(iException::User,msg,_FILEINFO_);
             }
-          }
-          cout << params;
-        } else {
-          Pvl param;
-          param.SetTerminator("");
-          string key = t[i].GetValueUpper();
-          for (int k=0; k<NumGroups(); k++) {
-            for (int j=0; j<NumParams(k); j++) {
-              if (ParamName(k,j) == key) {
-                param += PvlKeyword("ParameterName",key);
-                param += PvlKeyword("Brief",ParamBrief(k,j));
-                param += PvlKeyword("Type",ParamType(k,j));               
-                if (PixelType(k,j) != "") {
-                  param += PvlKeyword("PixelType",PixelType(k,j));
-                }
-                if (ParamInternalDefault(k,j) != "") {
-                  param += PvlKeyword("InternalDefault",
-                                      ParamInternalDefault(k,j));
-                } else param += PvlKeyword("Default",ParamDefault(k,j));
-                if (ParamMinimum(k,j) != "") {
-                  if (ParamMinimumInclusive(k,j) =="YES") {
-                    param += PvlKeyword("GreaterThanOrEqual",ParamMinimum(k,j));
-                  } else {
-                    param += PvlKeyword("GreaterThan",ParamMinimum(k,j));
-                  }
-                }
-                if (ParamMaximum(k,j) != "") {
-                  if (ParamMaximumInclusive(k,j) =="YES") {
-                    param += PvlKeyword("LessThanOrEqual",ParamMaximum(k,j));
-                  } else {
-                    param += PvlKeyword("LessThan",ParamMaximum(k,j));
-                  }
-                }
-                if (ParamLessThanSize(k,j) > 0) {
-                  PvlKeyword key("LessThan");
-                  for (int l=0; l<ParamLessThanSize(k,j); l++) {
-                    key.AddValue(ParamLessThan(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamLessThanOrEqualSize(k,j) > 0) {
-                  PvlKeyword key("LessThanOrEqual");
-                  for (int l=0; l<ParamLessThanOrEqualSize(k,j); l++) {
-                    key.AddValue(ParamLessThanOrEqual(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamNotEqualSize(k,j) > 0) {
-                  PvlKeyword key("NotEqual");
-                  for (int l=0; l<ParamNotEqualSize(k,j); l++) {
-                    key.AddValue(ParamNotEqual(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamGreaterThanSize(k,j) > 0) {
-                  PvlKeyword key("GreaterThan");
-                  for (int l=0; l<ParamGreaterThanSize(k,j); l++) {
-                    key.AddValue(ParamGreaterThan(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamGreaterThanOrEqualSize(k,j) > 0) {
-                  PvlKeyword key("GreaterThanOrEqual");
-                  for (int l=0; l<ParamGreaterThanOrEqualSize(k,j); l++) {
-                    key.AddValue(ParamGreaterThanOrEqual(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamIncludeSize(k,j) >0) {
-                  PvlKeyword key("Inclusions");
-                  for (int l=0; l<ParamIncludeSize(k,j); l++) {
-                    key.AddValue(ParamInclude(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamExcludeSize(k,j) >0) {
-                  PvlKeyword key("Exclusions");
-                  for (int l=0; l<ParamExcludeSize(k,j); l++) {
-                    key.AddValue(ParamExclude(k,j,l));
-                  }
-                  param += key;
-                }
-                if (ParamOdd(k,j) != "") {
-                  param +=PvlKeyword("Odd",ParamOdd(k,j));
-                }
-                if (ParamListSize(k,j) != 0) {
-                  for (int l=0; l<ParamListSize(k,j); l++) {
-                    PvlGroup grp(ParamListValue(k,j,l));
-                    grp += PvlKeyword("Brief",ParamListBrief(k,j,l));
-                    if (ParamListIncludeSize(k,j,l) != 0) {
-                      PvlKeyword include("Inclusions");
-                      for (int m=0; m<ParamListIncludeSize(k,j,l); m++) {
-                        include.AddValue(ParamListInclude(k,j,l,m));
-                      }
-                      grp += include;
-                    }
-                    if (ParamListExcludeSize(k,j,l) != 0) {
-                      PvlKeyword exclude("Exclusions");
-                      for (int m=0; m<ParamListExcludeSize(k,j,l); m++) {
-                        exclude.AddValue(ParamListExclude(k,j,l,m));
-                      }
-                      grp += exclude;
-                    }
-                    param.AddGroup(grp);
-                  }
-                }
-                cout << param;
-              }
-            }
+
+            matchOption = option;
           }
         }
-        exit(0);
-      } else if (tok == "-PID") {
-        p_parentId = Isis::iString(t[i].GetValue()).ToInteger();
-      } else if (tok == "-ERRLIST") {
-        p_errList = t[i].GetValue();
-        if (Filename(p_errList).Exists()) {
-          remove(p_errList.c_str());
+
+        if(matchOption < 0) {
+          string msg = "Invalid Reserve Parameter Option [" + 
+            paramName + "]. Choices are ";
+
+          iString msgOptions;
+          for (int option = 0; option < (int)options.size()-1; option++) {
+            // Make sure not to show -PID as an option
+            if(options[option].compare("-PID") != 0) {
+              continue;
+            }
+
+            if(!options.empty()) {
+              msgOptions += ",";
+            }
+
+            msgOptions += options[option];
+          }
+
+          msg += " [" + msgOptions + "]";
+
+          throw iException::Message(iException::User, msg, _FILEINFO_);
         }
-      } else if (tok == "-ONERROR") {
-        if (t[i].GetValueUpper() == "CONTINUE") p_abortOnError = false;
-        else if (t[i].GetValueUpper() == "ABORT") continue;
-        else {
-          string msg = "[" + t[i].GetValueUpper() + 
-                       "] is an invalid value for -ONERROR, options are ABORT or CONTINUE";
-          throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+
+        paramName = options[matchOption];
+
+        if(paramName == "-LAST") {
+          usedDashLast = true;
         }
-      } else if (tok == "-SAVE") {
-        if (t[i].ValueSize() == 0) p_saveFile = ProgramName() + ".par";
-        else p_saveFile = t[i].GetValue();
-      } else if (tok == "-PREFERENCE") {
-        Preference &p = Preference::Preferences();
-        p.Load(t[i].GetValue());
-      } else if (tok == "-LOG") {
-        if (t[i].ValueSize() == 0) log = "print.prt";
-        else log = t[i].GetValue();
-      } else if (tok == "-VERBOSE") {
-        verbose = true;
+
+        iString realValue = "";
+
+        if(paramValue.size()) realValue = paramValue[0];
+
+        EvaluateOption(paramName, realValue);
+        continue;
       }
-    }
 
-
-    // Can't have a parent id and the gui
-    if (p_parentId > 0 && p_interactive) {
-      string msg = "-GUI and -PID are incompatible arguments";
-      throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
+      try {
+        Clear(paramName);
+        PutAsString(paramName, paramValue);
+      } 
+      catch (Isis::iException &e) {
+        throw Isis::iException::Message(Isis::iException::User,"Invalid command line",_FILEINFO_);
+      }
     }
 
     // Can't use the batchlist with the gui, save, last or restore option
-    if (BatchListSize() != 0 && (p_interactive || loadHistory != "" 
+    if (BatchListSize() != 0 && (p_interactive || usedDashLast 
                                  || p_saveFile != "")) {
       string msg = "-BATCHLIST cannot be used with -GUI, -SAVE, -RESTORE, ";
       msg += "or -LAST";
       throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
     }
-
+  
     // Must use batchlist if using errorlist or onerror=continue
     if ((BatchListSize() == 0) && (!p_abortOnError || p_errList != "")) {
       string msg = "-ERRLIST and -ONERROR=continue cannot be used without ";
       msg += " the -BATCHLIST option";
       throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
     }
+  }
 
-    // Now load the log, so it isn't overriden by the preference file if
-    // it was also set
-    Preference &p = Preference::Preferences();
-    if (log != "") {
-      PvlGroup &grp = p.FindGroup("SessionLog", Isis::Pvl::Traverse);
-      grp["Filename"].SetValue(log);
-      grp["FileOutput"].SetValue("On");
-    }
-    if (verbose) {
-      PvlGroup &grp = p.FindGroup("SessionLog", Isis::Pvl::Traverse);
-      grp["TerminalOutput"].SetValue("On");
-    }
 
-    if (loadHistory != "") {
-      if (loadHistory == "last") {
-        PvlGroup &grp = p.FindGroup("UserInterface", Isis::Pvl::Traverse);
-        loadHistory = grp["HistoryPath"][0] + "/" + file.Name() + ".par"; 
+  /**
+   * This gets the next parameter in the list of arguments. curPos will be changed
+   * to be the end of the current argument (still needs incremented to get the 
+   * next argument). 
+   * 
+   * @param curPos End of previous argument
+   * @param name Resulting parameter name
+   * @param value Resulting array of parameter values (usually just 1 element)
+   */
+  void UserInterface::GetNextParameter(unsigned int &curPos, std::string &name, 
+                                       std::vector<std::string> &value) {
+    iString paramName = p_cmdline[curPos];
+    iString paramValue = "";
+
+    // we need to split name and value, they can either be in 1, 2 or 3 arguments, 
+    //   try to see if "=" is end of argument to distinguish. Some options have no 
+    //   "=" and they are value-less (-gui for example).
+    if(paramName.find("=") == string::npos) {
+      // This looks value-less, but lets make sure
+      //   the next argument is not an equals sign by
+      //   itself
+      if(curPos < p_cmdline.size()-2) {
+        if(string(p_cmdline[curPos+1]).compare("=") == 0) {
+          paramValue = p_cmdline[curPos+2];
+
+          // increment extra to skip 2 elements next time around
+          curPos += 2;
+        }
       }
-      LoadHistory(loadHistory);
+    }
+    // = is end of parameter, next item must be value
+    else if(paramName.find("=") == paramName.size()-1) {
+      paramName = paramName.substr(0, paramName.size()-1);
+
+      if(curPos+1 < p_cmdline.size()) {
+        paramValue = p_cmdline[curPos+1];
+      }
+
+      // increment extra to skip next element next time around
+      curPos ++;
+    }
+    // we found "=" in the middle
+    else if(paramName.find("=") != 0) {
+      string parameterLiteral = p_cmdline[curPos];
+      paramName = parameterLiteral.substr(0, parameterLiteral.find("="));
+      paramValue = parameterLiteral.substr(parameterLiteral.find("=")+1);
+    }
+    // We found "=" at the beginning - did we find "appname param =value" ?
+    else {
+      // parameters can not start with "="
+      string msg = "Unknown parameter [" + string(p_cmdline[curPos]) + "]";
+      throw iException::Message(iException::User, msg, _FILEINFO_);
     }
 
-    // Load the normal tokens into the appdata class and ignore any
-    // special tokens
-    if (BatchListSize() == 0) {
-      for (int i=0; i<(int)t.size(); i++) {
-        try {
-          string tok = t[i].GetKey();
-          if (tok[0] == '-') continue;
-          Clear(t[i].GetKey());
-          PutAsString(t[i].GetKey(),t[i].ValueVector());
-        } catch (Isis::iException &e) {
-          throw Isis::iException::Message(Isis::iException::User,"Invalid command line",_FILEINFO_);
+    name = paramName;
+    value.clear();
+
+    // read arrays out of paramValue
+    paramValue = paramValue.Trim(" ");
+
+    if(paramValue.length() > 0 && paramValue[0] != '(') {
+      // We dont have an array... if they escaped
+      //  an open paren, undo their escape
+
+      // escape: \( result: (
+      if(paramValue.length() > 1 && paramValue.substr(0, 2).compare("\\(") == 0) {
+        paramValue = paramValue.substr(1);
+      }
+      // escape: \\( result: \(
+      else if(paramValue.length() > 2 && paramValue.substr(0, 4).compare("\\\\(") == 0) {
+        paramValue = paramValue.substr(1);
+      }
+
+      value.push_back(paramValue);
+    }
+    else if(paramValue.length()) {
+      // We have an array...
+      value = ReadArray(paramValue);
+    }
+  }
+
+
+  /**
+   * This interprets an array value from the command line.
+   * 
+   * @param arrayString Parameter value containing an array of 
+   *   format (a,b,c) 
+   * 
+   * @return std::vector<std::string> Values in the array string
+   */
+  std::vector<std::string> UserInterface::ReadArray(iString arrayString) {
+    std::vector<std::string> values;
+
+    bool inDoubleQuotes = false;
+    bool inSingleQuotes = false;
+    bool arrayClosed = false;
+    iString currElement = "";
+
+    for(unsigned int strPos = 0; strPos < arrayString.size(); strPos++) {
+      if(strPos == 0) {
+        if(arrayString[strPos] != '(') {
+          string msg = "Invalid array format [" + arrayString + "]";
+          throw iException::Message(iException::User, msg, _FILEINFO_);
+        }
+
+        continue;
+      }
+
+      // take literally anything that is escaped and not quoted
+      if(arrayString[strPos] == '\\' && strPos+1 < arrayString.size() &&
+         !inDoubleQuotes && !inSingleQuotes) {
+        currElement += arrayString[strPos+1];
+        strPos ++;
+        continue;
+      }
+      // ends in a backslash??
+      else if(arrayString[strPos] == '\\' && !(inDoubleQuotes || inSingleQuotes)) {
+        string msg = "Invalid array format [" + arrayString + "]";
+        throw iException::Message(iException::User, msg, _FILEINFO_);
+      }
+
+      // not in quoted part of string
+      if(!inDoubleQuotes && !inSingleQuotes) {
+        if(arrayClosed) {
+          string msg = "Invalid array format [" + arrayString + "]";
+          throw iException::Message(iException::User, msg, _FILEINFO_);
+        }
+
+        if(arrayString[strPos] == '"') {
+          inDoubleQuotes = true;
+        }
+        else if(arrayString[strPos] == '\'') {
+          inSingleQuotes = true;
+        }
+        else if(arrayString[strPos] == ',' ) {
+          values.push_back(currElement);
+          currElement = "";
+        }
+        else if(arrayString[strPos] == ')') {
+          values.push_back(currElement);
+          currElement = "";
+          arrayClosed = true;
+        }
+        else {
+          currElement += arrayString[strPos];
+        }
+      }
+      else if(inSingleQuotes) {
+        if(arrayString[strPos] == '\'') {
+          inSingleQuotes = false;
+        }
+        else {
+          currElement += arrayString[strPos];
+        }
+      }
+      // in double quotes
+      else {
+        if(arrayString[strPos] == '"') {
+          inDoubleQuotes = false;
+        }
+        else {
+          currElement += arrayString[strPos];
         }
       }
     }
 
-    return;
+    if(!arrayClosed || currElement != "") {
+      string msg = "Invalid array format [" + arrayString + "]";
+      throw iException::Message(iException::User, msg, _FILEINFO_);
+    }
+
+    return values;
   }
+
+
+  /**
+   * This interprets the "-" options for reserved parameters
+   * 
+   * @param name "-OPTIONNAME"
+   * @param value Value of the option, if supplied (-name=value)
+   */
+  void UserInterface::EvaluateOption(const std::string name, const std::string value) {
+    Preference &p = Preference::Preferences();
+
+    if (name == "-GUI") {
+      p_interactive = true;
+    } 
+    else if (name == "-NOGUI") {
+      p_interactive = false;
+    } 
+    else if (name == "-BATCHLIST") {
+      LoadBatchList(value);
+    } 
+    else if (name == "-LAST") {
+      PvlGroup &grp = p.FindGroup("UserInterface", Isis::Pvl::Traverse);
+      iString histFile = grp["HistoryPath"][0] + "/" + Filename(p_progName).Name() + ".par"; 
+      
+      LoadHistory(histFile);
+    } 
+    else if (name == "-RESTORE") {
+      LoadHistory(value);
+    } 
+    else if (name == "-WEBHELP") {
+      Isis::PvlGroup &pref = Isis::Preference::Preferences().FindGroup("UserInterface");
+      string command = pref["GuiHelpBrowser"];
+      command += " $ISISROOT/doc/Application/presentation/Tabbed/";
+      command += Filename(p_progName).Name() + "/" + Filename(p_progName).Name() + ".html";
+      Isis::System(command);
+      exit(0);
+    } 
+    else if (name == "-INFO") {
+      p_info = true;
+
+      // check for filename and set value
+      if (value.size() != 0) {
+        p_infoFileName = value;
+      }
+    }
+    else if (name == "-HELP") {
+      if (value.size() == 0) {
+        Pvl params;
+        params.SetTerminator("");
+        for (int k=0; k<NumGroups(); k++) {
+          for (int j=0; j<NumParams(k); j++) {
+            if (ParamListSize(k,j) == 0) {
+              params += PvlKeyword(ParamName(k,j), ParamDefault(k,j)); 
+            } else {
+              PvlKeyword key(ParamName(k,j));
+              string def = ParamDefault(k,j);
+              for (int l=0; l<ParamListSize(k,j); l++) {
+                if (ParamListValue(k,j,l) == def) key.AddValue("*" + def);
+                else key.AddValue(ParamListValue(k,j,l));
+              }
+              params += key;
+            }
+          }
+        }
+        cout << params;
+      }
+      else {
+        Pvl param;
+        param.SetTerminator("");
+        string key = value;
+        for (int k=0; k<NumGroups(); k++) {
+          for (int j=0; j<NumParams(k); j++) {
+            if (ParamName(k,j) == key) {
+              param += PvlKeyword("ParameterName",key);
+              param += PvlKeyword("Brief",ParamBrief(k,j));
+              param += PvlKeyword("Type",ParamType(k,j));               
+              if (PixelType(k,j) != "") {
+                param += PvlKeyword("PixelType",PixelType(k,j));
+              }
+              if (ParamInternalDefault(k,j) != "") {
+                param += PvlKeyword("InternalDefault",
+                                    ParamInternalDefault(k,j));
+              } else param += PvlKeyword("Default",ParamDefault(k,j));
+              if (ParamMinimum(k,j) != "") {
+                if (ParamMinimumInclusive(k,j) =="YES") {
+                  param += PvlKeyword("GreaterThanOrEqual",ParamMinimum(k,j));
+                } else {
+                  param += PvlKeyword("GreaterThan",ParamMinimum(k,j));
+                }
+              }
+              if (ParamMaximum(k,j) != "") {
+                if (ParamMaximumInclusive(k,j) =="YES") {
+                  param += PvlKeyword("LessThanOrEqual",ParamMaximum(k,j));
+                } else {
+                  param += PvlKeyword("LessThan",ParamMaximum(k,j));
+                }
+              }
+              if (ParamLessThanSize(k,j) > 0) {
+                PvlKeyword key("LessThan");
+                for (int l=0; l<ParamLessThanSize(k,j); l++) {
+                  key.AddValue(ParamLessThan(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamLessThanOrEqualSize(k,j) > 0) {
+                PvlKeyword key("LessThanOrEqual");
+                for (int l=0; l<ParamLessThanOrEqualSize(k,j); l++) {
+                  key.AddValue(ParamLessThanOrEqual(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamNotEqualSize(k,j) > 0) {
+                PvlKeyword key("NotEqual");
+                for (int l=0; l<ParamNotEqualSize(k,j); l++) {
+                  key.AddValue(ParamNotEqual(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamGreaterThanSize(k,j) > 0) {
+                PvlKeyword key("GreaterThan");
+                for (int l=0; l<ParamGreaterThanSize(k,j); l++) {
+                  key.AddValue(ParamGreaterThan(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamGreaterThanOrEqualSize(k,j) > 0) {
+                PvlKeyword key("GreaterThanOrEqual");
+                for (int l=0; l<ParamGreaterThanOrEqualSize(k,j); l++) {
+                  key.AddValue(ParamGreaterThanOrEqual(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamIncludeSize(k,j) >0) {
+                PvlKeyword key("Inclusions");
+                for (int l=0; l<ParamIncludeSize(k,j); l++) {
+                  key.AddValue(ParamInclude(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamExcludeSize(k,j) >0) {
+                PvlKeyword key("Exclusions");
+                for (int l=0; l<ParamExcludeSize(k,j); l++) {
+                  key.AddValue(ParamExclude(k,j,l));
+                }
+                param += key;
+              }
+              if (ParamOdd(k,j) != "") {
+                param +=PvlKeyword("Odd",ParamOdd(k,j));
+              }
+              if (ParamListSize(k,j) != 0) {
+                for (int l=0; l<ParamListSize(k,j); l++) {
+                  PvlGroup grp(ParamListValue(k,j,l));
+                  grp += PvlKeyword("Brief",ParamListBrief(k,j,l));
+                  if (ParamListIncludeSize(k,j,l) != 0) {
+                    PvlKeyword include("Inclusions");
+                    for (int m=0; m<ParamListIncludeSize(k,j,l); m++) {
+                      include.AddValue(ParamListInclude(k,j,l,m));
+                    }
+                    grp += include;
+                  }
+                  if (ParamListExcludeSize(k,j,l) != 0) {
+                    PvlKeyword exclude("Exclusions");
+                    for (int m=0; m<ParamListExcludeSize(k,j,l); m++) {
+                      exclude.AddValue(ParamListExclude(k,j,l,m));
+                    }
+                    grp += exclude;
+                  }
+                  param.AddGroup(grp);
+                }
+              }
+              cout << param;
+            }
+          }
+        }
+      }
+      exit(0);
+    } 
+    else if (name == "-PID") {
+      p_parentId = iString(value).ToInteger();
+    } 
+    else if (name == "-ERRLIST") {
+      p_errList = value;
+
+      if(value == "") {
+        string msg = "-ERRLIST expects a file name";
+        throw iException::Message(iException::User, msg, _FILEINFO_);
+      }
+
+      if (Filename(p_errList).Exists()) {
+        remove(p_errList.c_str());
+      }
+    } 
+    else if (name == "-ONERROR") {
+      if (iString(value).UpCase() == "CONTINUE") {
+        p_abortOnError = false;
+      }
+
+      else if (iString(value).UpCase() == "ABORT") {
+        p_abortOnError = true;
+      }
+
+      else {
+        string msg = "[" + value + 
+                     "] is an invalid value for -ONERROR, options are ABORT or CONTINUE";
+        throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+      }
+    } 
+    else if (name == "-SAVE") {
+      if (value.size() == 0) {
+        p_saveFile = ProgramName() + ".par";
+      }
+      else {
+        p_saveFile = value;
+      }
+    } 
+    else if (name == "-PREFERENCE") {
+      p.Load(value);
+    } 
+    else if (name == "-LOG") {
+      if (value.empty()) {
+        p.FindGroup("SessionLog")["FileOutput"].SetValue("On");
+      }
+      else {
+        p.FindGroup("SessionLog")["FileOutput"].SetValue("On");
+        p.FindGroup("SessionLog")["FileName"].SetValue(value);
+      }
+    } 
+    else if (name == "-VERBOSE") {
+      p.FindGroup("SessionLog")["TerminalOutput"].SetValue("On");
+    }
+  
+    // Can't have a parent id and the gui
+    if (p_parentId > 0 && p_interactive) {
+      string msg = "-GUI and -PID are incompatible arguments";
+      throw Isis::iException::Message(Isis::iException::System,msg,_FILEINFO_);
+    }
+  }
+
 
   /**
    * Loads the user entered batchlist file into a private variable for later use
@@ -433,11 +650,14 @@ namespace Isis {
     TextFile temp;
     try {
       temp.Open(file);
-    } catch (iException &e) {
+    } 
+    catch (iException &e) {
       string msg = "The batchlist file [" + file + "] could not be opened";
       throw iException::Message(iException::User,msg,_FILEINFO_);   
     }
+
     p_batchList.resize(temp.LineCount());
+
     for (int i=0; i<temp.LineCount(); i++) {
       p_batchList[i].resize(10);
       iString t;
@@ -455,9 +675,8 @@ namespace Isis {
       t.Replace (" ", "," , true);
       int j=0;
       iString token = t.Token(",");
-      int iteration =0;
+
       while (token != "") {
-        iteration++;
         // removes quotes from tokens. NOTE: also removes escaped quotes.
         token = token.Remove("\"'");
         p_batchList[i][j] = token;
@@ -478,6 +697,7 @@ namespace Isis {
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
   }
+
 
   /**
    * Loads the previous history for the program
@@ -601,30 +821,57 @@ namespace Isis {
     }
 
     //Load the new parameters into the gui
-    vector<Isis::PvlToken> t = p_cmdline.GetTokenList();
     cout << p_progName << " ";
-    for (int k=0; k<(int)t.size(); k++) {
+
+    for (unsigned int currArgument = 1; currArgument < p_cmdline.size(); currArgument++) {
+      string paramName;
+      vector<string> paramValue;
+
       try {
-        string tok = t[k].GetKey();
-        if (tok[0] == '-') continue;
-        iString value = t[k].GetValue();
-        value.Trim(" ");
-        string cmd;
-        // Replace all $number occurences with the value in that column of the
-        // batchlist
-        string token = value.Token("$");
-        while (value != "") {
-          cmd += token;
-          int j = iString(value.substr(0,1)).ToInteger() - 1;
-          cmd += p_batchList[i][j];
-          value.replace(0,1,"");
-          token = value.Token("$");
+        GetNextParameter(currArgument, paramName, paramValue);
+  
+        if(paramName[0] == '-') continue;
+  
+        for(unsigned int value = 0; value < paramValue.size(); value ++) {
+          iString thisValue = paramValue[value];
+          
+          string token = thisValue.Token("$");
+          iString newValue;
+  
+          while (thisValue != "") {
+            newValue += token;
+            int j = iString(thisValue.substr(0,1)).ToInteger() - 1;
+            newValue += p_batchList[i][j];
+            thisValue.replace(0,1,"");
+            token = thisValue.Token("$");
+          }
+  
+          if (token != "") newValue += token;
+  
+          paramValue[value] = newValue;
         }
-        if (token != "") cmd += token;
-        PutAsString(t[k].GetKey(),cmd);
-        cout << t[k].GetKey() << "=" << cmd << " ";
-      } catch (Isis::iException &e) {
+      }
+      catch (Isis::iException &e) {
         throw Isis::iException::Message(Isis::iException::User,"Invalid command line",_FILEINFO_);
+      }
+
+      PutAsString(paramName, paramValue);
+        
+      cout << paramName;
+
+      if(paramValue.size() == 1) {
+        cout << "=" << paramValue[0] << " ";
+      }
+      else if(paramValue.size() > 1) {
+        cout << "=(";
+
+        for(unsigned int value = 0; value < paramValue.size(); value ++) {
+          if(value != 0) cout << ",";
+
+          cout << paramValue[value] << endl;
+        }
+
+        cout << ") ";
       }
     }
     cout << endl;
@@ -645,14 +892,17 @@ namespace Isis {
       std::ofstream os;
       string fileName(Filename(p_errList).Expanded());
       os.open(fileName.c_str(),std::ios::app);
+
       if (!os.good()) {
         string msg = "Unable to create error list [" + p_errList + 
                      "] Disk may be full or directory permissions not writeable";
         throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
       }
+
       for (int j=0; j<(int)p_batchList[i].size(); j++) {
         os << p_batchList[i][j] << " ";
       }
+
       os << endl;
       os.close();
     }

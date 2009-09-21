@@ -1,7 +1,7 @@
 #ifndef ThemisVisCamera_h
 #define ThemisVisCamera_h
 
-#include "Camera.h"
+#include "PushFrameCamera.h"
 
 namespace Isis {
   namespace Odyssey {
@@ -25,8 +25,10 @@ namespace Isis {
      *  @history 2008-06-16 Steven Lambright - Made camera work with
      *                                         new push frame
      *                                         classes
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-    class ThemisVisCamera : public Isis::Camera {
+    class ThemisVisCamera : public Isis::PushFrameCamera {
       public:
         // constructor
         ThemisVisCamera (Isis::Pvl &lab);

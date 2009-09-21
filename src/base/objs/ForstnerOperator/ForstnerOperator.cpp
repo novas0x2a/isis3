@@ -37,14 +37,14 @@ namespace Isis {
 
       for (int j=0; j<Guu.dim2(); j++) {
         if (i>chip.Lines()-2 || j>chip.Samples()-2 ||
-            IsSpecial(chip(j+1,i+1)) || IsSpecial(chip(j+1,i+2)) ||
-            IsSpecial(chip(j+2,i+1)) || IsSpecial(chip(j+2,i+2)) ) {
+            IsSpecial(chip.GetValue(j+1,i+1)) || IsSpecial(chip.GetValue(j+1,i+2)) ||
+            IsSpecial(chip.GetValue(j+2,i+1)) || IsSpecial(chip.GetValue(j+2,i+2)) ) {
           gu = 0.0;
           gv = 0.0;
         }
         else {
-          gu = chip(j+1,i+1)-chip(j+2,i+2);
-          gv = chip(j+2,i+1)-chip(j+1,i+2);
+          gu = chip.GetValue(j+1,i+1)-chip.GetValue(j+2,i+2);
+          gv = chip.GetValue(j+2,i+1)-chip.GetValue(j+1,i+2);
         }
 
         line1[j] = gu*gu;

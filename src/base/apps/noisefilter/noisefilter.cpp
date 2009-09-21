@@ -2,6 +2,7 @@
 #include "ProcessByQuickFilter.h"
 #include "UserInterface.h"
 
+
 using namespace std; 
 using namespace Isis;
 
@@ -93,7 +94,7 @@ void RemoveNoiseViaStd (Buffer &in, Buffer &out, QuickFilter &filter) {
           (IsHrsPixel(in[i])  && hrsIsNoise)   ||
           (IsLisPixel(in[i])  && lisIsNoise)   ||
           (IsLrsPixel(in[i])  && lrsIsNoise)) {
-        out[i] = (replaceWithAverage) ? goodAvg : NULL8;
+        out[i] = (replaceWithAverage) ? avg : NULL8;
         specialPixelsReplaced++;
       }
       else {
@@ -149,7 +150,7 @@ void RemoveNoiseViaDn (Buffer &in, Buffer &out, QuickFilter &filter) {
           (IsHrsPixel(in[i])  && hrsIsNoise)   ||
           (IsLisPixel(in[i])  && lisIsNoise)   ||
           (IsLrsPixel(in[i])  && lrsIsNoise)) {
-        out[i] = (replaceWithAverage) ? goodAvg : NULL8;
+        out[i] = (replaceWithAverage) ? avg : NULL8;
         specialPixelsReplaced++;
       }
       else {

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2008/10/01 01:12:19 $
+ * $Revision: 1.12 $
+ * $Date: 2009/09/11 17:24:06 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -19,6 +19,8 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.
  */                                                                       
+
+#include "IsisDebug.h"
 
 #include "PvlKeyword.h"
 #include "iException.h"
@@ -127,6 +129,52 @@ namespace Isis {
     Clear();
     AddValue(value,unit);
   }
+  
+  
+  /**
+   * @brief Sets the unit of measure for all current values if any exist
+   *  
+   * @param units New units to be assigned.
+   *  
+   */
+  void PvlKeyword::SetUnits(const iString & units) {
+    p_units.clear();
+    for (unsigned int i = 0; i < p_values.size(); i++) {
+      p_units.push_back(units);
+    }
+  }
+
+  
+  /**
+   * @brief Sets the unit of measure for a given value
+   *  
+   * @param units New units to be assigned.
+   *
+   * @throws Isis::iException::Programmer - Given value must exist
+   *  
+   */
+  void PvlKeyword::SetUnits(const iString & value, const iString & units) {
+
+    bool found = false;
+    int i = -1;
+    while (!found && ++i < (int) p_values.size()) {
+      if (value == p_values[i]) {
+        found = true;
+      }
+    }
+    
+    if (found) {
+      ASSERT(i < (int) p_units.size());
+      
+      p_units[i] = units;
+    }
+    else {
+      iString msg = "PvlKeyword::SetUnits called with value [" + value +
+          "] which does not exist in this Keyword";
+      throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+    }
+  }
+
 
   /** @brief Sets new values.
    * Overwrites the '=' operator to add a new value using 
@@ -543,16 +591,20 @@ namespace Isis {
         os << " "; 
       }
       charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
+      pos = charsLeft - 1;
     }
 
-    //If it's quoted...
-    if (tempText[0] == '\"') {
+    // If it's quoted, see if we must break it up internally
+    if (tempText.length() > 0 && tempText[0] == '"' || 
+        (tempText.length() > 1 && tempText[0] == '(' && tempText[1] == '"')) {
       while ((int) tempText.length() > charsLeft) {
         //look for these symbols
         while (pos > 0 && tempText[pos] != ' ' && tempText[pos] != ',') {
           --pos;
         }
-        if (pos <= 0) break;
+        if (pos <= 0) {
+          break;
+        }
 
         os << tempText.substr(0, (pos+1));
         os << tempFormat->FormatEOL();
@@ -574,11 +626,17 @@ namespace Isis {
         os << " "; 
       }
       charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
-    }
 
-    // Write the remaining text
-    os << tempText;
-    charsLeft -= tempText.length();
+      // The text was too long for this line with no spaces, so we started a new line.
+      // tempText might still not fit, use a recursive call to do our best to fit it.
+      // The code wont get here if nothing is changed, so a recursive loop will not happen.
+      WriteWithWrap(os, tempText, startColumn, charsLeft, tempFormat);
+    }
+    else {
+      // Write the remaining text
+      os << tempText;
+      charsLeft -= tempText.length();
+    }
 
     return os;
   }
@@ -658,7 +716,6 @@ namespace Isis {
       string val = tempFormat->FormatValue(keyword, i);
       keyword.WriteWithWrap(os, val, startColumn, charsLeft, tempFormat);
       if ((i==0) && keyword.Size() > 1) startColumn++;
-//cout << " I: " << i;
     }
 
     if (removeFormatter) delete tempFormat;

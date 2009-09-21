@@ -17,6 +17,8 @@ class MyCamera : public Isis::Camera {
     void SetBand(const int band) {
       cout << "SetBand called, band: " << band << endl;
     }
+
+   virtual CameraType GetCameraType() const { return Framing; } 
 };
 
 int main() {

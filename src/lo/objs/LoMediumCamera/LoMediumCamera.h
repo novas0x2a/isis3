@@ -20,7 +20,7 @@
 #ifndef LoMediumCamera_h
 #define LoMediumCamera_h
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 using namespace std;
 
@@ -44,8 +44,10 @@ namespace Isis {
      *            change. Also, now using the new LoadCache(...) method instead of
      *            CreateCache(...).
      *   @history 2009-03-07 Debbie A. Cook Removed reference to obsolute CameraDetectorMap methods
+     *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+     *            inherit directly from Camera
      */
-   class LoMediumCamera : public Isis::Camera {
+   class LoMediumCamera : public Isis::FramingCamera {
       public:
         LoMediumCamera (Isis::Pvl &lab);
         ~LoMediumCamera () {}; 

@@ -1,4 +1,4 @@
-// $Id: IssWACamera.cpp,v 1.5 2009/01/22 22:43:28 kbecker Exp $
+// $Id: IssWACamera.cpp,v 1.6 2009/08/31 15:12:29 slambright Exp $
 #include "IssWACamera.h"
 #include "CameraDetectorMap.h"
 #include "CameraFocalPlaneMap.h"
@@ -10,7 +10,7 @@
 using namespace std;
 using namespace Isis;
 namespace Cassini {
-  IssWACamera::IssWACamera (Pvl &lab) : Camera(lab) {
+  IssWACamera::IssWACamera (Pvl &lab) : FramingCamera(lab) {
     PvlGroup bandBin = lab.FindGroup ("BandBin",Pvl::Traverse);
     // Get the camera characteristics
     iString key = string("INS"+(iString)(int)NaifIkCode()+"_")+ (string)bandBin["FilterName"] + "_FOCAL_LENGTH";

@@ -9,3 +9,4 @@ Group = LUNAR_RECONNAISSANCE_ORBITER/NACR
   Library = LroNarrowAngleCamera
   Routine = LroNarrowAngleCameraPlugin
 EndGroup
+

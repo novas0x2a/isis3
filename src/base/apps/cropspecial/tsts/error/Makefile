@@ -4,6 +4,8 @@ include $(ISISROOT)/make/isismake.tsts
 
 commands:
 	if [ `$(APPNAME) from=$(INPUT)/allnull.cub to=$(OUTPUT)/fail.cub \
-	> $(OUTPUT)/error.txt 2>&1` ]; then \
+	  -preference=$(ISISROOT)/src/base/objs/Preference/TestPreferences \
+	   >& $(OUTPUT)/error.txt` ]; \
+	then \
 	  true; \
 	fi;

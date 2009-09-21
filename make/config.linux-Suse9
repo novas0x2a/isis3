@@ -44,9 +44,9 @@ ISISARFLAGS     =
 #---------------------------------------------------------------------------
 # Set up local library designations
 #---------------------------------------------------------------------------
-ISIS3SYSINC ?= /usgs/pkgs/local/include
-ISIS3SYSLIB ?= /usgs/pkgs/local/lib
-ISIS3LOCAL  ?= /usgs/pkgs/local
+ISIS3SYSINC ?= /usgs/pkgs/local/isis$(ISISVERSION)/include
+ISIS3SYSLIB ?= /usgs/pkgs/local/isis$(ISISVERSION)/lib
+ISIS3LOCAL  ?= /usgs/pkgs/local/isis$(ISISVERSION)
 
 #---------------------------------------------------------------------------
 # Set up for cwd

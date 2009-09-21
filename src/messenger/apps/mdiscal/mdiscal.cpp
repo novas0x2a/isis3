@@ -1,4 +1,4 @@
-// $Id: mdiscal.cpp,v 1.21 2008/11/25 16:38:26 kbecker Exp $
+// $Id: mdiscal.cpp,v 1.22 2009/09/04 17:59:05 mboyd Exp $
 #include "Isis.h"
 
 #include <vector>
@@ -61,7 +61,7 @@ void IsisMain() {
 
   const string mdiscal_program = "mdiscal";
   const string mdiscal_version = "1.2";
-  const string mdiscal_revision = "$Revision: 1.21 $";
+  const string mdiscal_revision = "$Revision: 1.22 $";
   string mdiscal_runtime = Application::DateTime();
 
   // Specify the version of the CDR generated
@@ -295,6 +295,7 @@ void IsisMain() {
     newflat.Temporary(flatfield.Basename()+"_reduced", "cub");
     string parameters = "FROM=" + flatfield.Expanded() +
                              " TO="   + newflat.Expanded() +
+                             " REDUCTION_TYPE=SCALE" +
                              " LSCALE=" + scale +
                              " SSCALE=" + scale;
     cout << "Running: reduce " << parameters << endl;

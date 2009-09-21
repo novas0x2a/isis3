@@ -11,7 +11,7 @@ using namespace std;
 namespace Isis {
   namespace Mro {
     // constructors
-    CTXCamera::CTXCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    CTXCamera::CTXCamera (Isis::Pvl &lab) : Isis::LineScanCamera(lab) {
       // Set up the camera info from ik/iak kernels
       SetFocalLength();
       SetPixelPitch();

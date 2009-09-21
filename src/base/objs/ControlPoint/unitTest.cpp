@@ -1,7 +1,10 @@
 #include "ControlPoint.h"
 #include "Preference.h"
+#include "iException.h"
+
 #include <string>
 #include <iostream>
+
 using namespace std;
 void outit(Isis::ControlPoint &p);
 
@@ -21,6 +24,7 @@ int main () {
   c.SetIgnore(true);
   c.SetUniversalGround(10.0,15.0,20.0);
   c.SetType(Isis::ControlPoint::Ground);
+  cout << "test PointTypeToString(): " << c.PointTypeToString(c.Type()) << "\n";
   outit(c);
 
   d.SetCubeSerialNumber("Test2");

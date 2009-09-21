@@ -13,7 +13,7 @@ using namespace std;
 namespace Isis {
   namespace Lo {
     // constructors
-    LoMediumCamera::LoMediumCamera (Pvl &lab) : Camera(lab) {
+    LoMediumCamera::LoMediumCamera (Pvl &lab) : FramingCamera(lab) {
       // Get the Instrument label information needed to define the camera for this frame
       PvlGroup inst = lab.FindGroup ("Instrument",Pvl::Traverse);
       iString spacecraft = (string)inst["SpacecraftName"];

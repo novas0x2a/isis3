@@ -97,19 +97,6 @@ you must <em>not</em> upgrade the Isis Data Files!!!
         <strong><i>Warning:  We are no longer building Isis 3 for Linux SuSE 
           9.X, RedHat Enterprise 3, 4 or equivalent systems.
         </i></strong>
-
-        <p>
-          Example for Solaris Sun:
-        </p>
-<pre>
-        rsync -azv --delete isisdist.wr.usgs.gov::isis3_sparc_sunos/isis .
-</pre>
-        <strong><i>
-          Isis 3.1.17 will be the last version to support the Sun Solaris 
-          platform.
-        </i></strong>
-
-
         <p>
           Example for MacOSX PowerPC:
         </p>

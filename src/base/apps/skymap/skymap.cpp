@@ -186,6 +186,10 @@ void IsisMain() {
   p.StartProcess(*xform, *interp);
   p.EndProcess();
 
+  // add mapping to print.prt
+  PvlGroup mapping = proj->Mapping(); 
+  Application::Log(mapping); 
+
   // Cleanup
   delete xform;
   delete interp;

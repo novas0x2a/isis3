@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="nocam2map" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Map project a cube without a camera model
   </brief>
@@ -99,9 +100,12 @@
     <change name="Christopher Austin" date="2009-01-27">
       Fixed parameter names
     </change>
-    <change name="Noah Hilt" date="2009-03-2">
+    <change name="Noah Hilt" date="2009-03-02">
       The min/max longitude/latitude are now converted from the input domain to 
       the map file's domain if necessary.
+    </change>
+    <change name="Travis Addair" date="2009-08-10">
+      Mapping group parameters are now placed into the print file.
     </change>
   </history>
 

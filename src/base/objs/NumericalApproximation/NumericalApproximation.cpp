@@ -3,14 +3,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 #include "NumericalApproximation.h"
 #include "SpecialPixel.h"
 #include "iException.h"
 #include "iString.h"
-
-#define MAX(x,y) (((x) > (y)) ? (x) : (y))
-// MAX(x,y) performs the following:
-//      if x > y then returns x, else returns y
 
 using namespace std;
 namespace Isis {
@@ -157,6 +154,8 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Changed name and 
    *            modified to allow for interpolation types other than
    *            those supported by GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Set new variable,
+   *            p_fprimeOfx.
    */
   NumericalApproximation::NumericalApproximation(const NumericalApproximation &oldObject) {
     try{
@@ -174,6 +173,7 @@ namespace Isis {
       p_clampedDerivFirstPt = oldObject.p_clampedDerivFirstPt; 
       p_clampedDerivLastPt = oldObject.p_clampedDerivLastPt;  
       p_polyNevError = oldObject.p_polyNevError;
+      p_fprimeOfx = oldObject.p_fprimeOfx;
     }
     catch (iException e){ // catch exception from Init()
       throw iException::Message(e.Type(),
@@ -201,6 +201,8 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Changed name and 
    *            modified to allow for interpolation types other
    *            than those supported by GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Set new variable,
+   *            p_fprimeOfx.
    */
   NumericalApproximation::NumericalApproximation &NumericalApproximation::operator=(const NumericalApproximation &oldObject) {
     try{
@@ -215,6 +217,7 @@ namespace Isis {
         p_clampedDerivFirstPt = oldObject.p_clampedDerivFirstPt; 
         p_clampedDerivLastPt = oldObject.p_clampedDerivLastPt;  
         p_polyNevError = oldObject.p_polyNevError;
+        p_fprimeOfx = oldObject.p_fprimeOfx;
       }
       return (*this);
     }
@@ -259,6 +262,8 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Modified to allow for 
    *            interpolation types other than those supported by
    *            GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Added CubicHermite
+   *            name.
    */
   string NumericalApproximation::Name() const {
     if (p_itype == NumericalApproximation::CubicNeighborhood) {
@@ -269,6 +274,9 @@ namespace Isis {
     }
     else if (p_itype == NumericalApproximation::PolynomialNeville) {
       return "polynomial-Neville's";
+    }
+    else if (p_itype == NumericalApproximation::CubicHermite) {
+      return "cspline-Hermite";
     }
     try{
       string name = (string(GslFunctor(p_itype)->name));
@@ -303,6 +311,9 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Modified to allow for 
    *            interpolation types other than those supported by
    *            GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Added min points for
+   *            CubicHermite.
+   *  
    */
   int NumericalApproximation::MinPoints() {
     if (p_itype == NumericalApproximation::CubicNeighborhood) {
@@ -313,6 +324,9 @@ namespace Isis {
     }
     else if (p_itype == NumericalApproximation::PolynomialNeville) {
       return 3;
+    }
+    else if (p_itype == NumericalApproximation::CubicHermite) {
+      return 2;
     }
     try{
       return (GslFunctor(p_itype)->min_size);
@@ -348,6 +362,8 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Modified to allow for 
    *            interpolation types other than those supported by
    *            GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Added min points for
+   *            CubicHermite.
    */
   int NumericalApproximation::MinPoints(NumericalApproximation::InterpType itype) throw (iException &){
     //Validates the parameter
@@ -371,6 +387,9 @@ namespace Isis {
     }
     else if (itype == NumericalApproximation::PolynomialNeville) {
       return 3;
+    }
+    else if (itype == NumericalApproximation::CubicHermite) {
+      return 2;
     }
     throw iException::Message(iException::Programmer,
                               "MinPoints() - Invalid argument. Unknown interpolation type: " 
@@ -527,6 +546,81 @@ namespace Isis {
   }
 
   /**
+   * Adds values for the first derivatives of the data points.
+   * This method can only be called for cubic Hermite splines, 
+   * i.e. if NumericalApproximation::InterpType is 
+   * @a CubicHermite. These values should be entered in the order 
+   * of the corresponding data points.
+   *  
+   * @param n     Number of derivative values to be added.
+   * @param fprimeOfx Array of derivative values to be added.
+   * @throws Isis::iException::Programmer "Method only used for 
+   *             cspline-Hermite interpolation type"
+   * @internal 
+   *   @history 2009-06-10 Jeannie Walldren - Original version
+   */
+  void NumericalApproximation::AddCubicHermiteDeriv(unsigned int n, double *fprimeOfx) throw (iException &){
+    if (p_itype != NumericalApproximation::CubicHermite) {
+      ReportException(iException::Programmer, "SetCubicHermiteDeriv()",
+                      "This method is only valid for cspline-Hermite interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
+    }
+    for (unsigned int i = 0; i < n; i++) {
+      p_fprimeOfx.push_back(fprimeOfx[i]);
+    }
+    return;
+  }
+  /**
+   * Adds values for the first derivatives of the data points.
+   * This method can only be called for cubic Hermite splines, 
+   * i.e. if NumericalApproximation::InterpType is 
+   * @a CubicHermite. These values should be entered in the order 
+   * of the corresponding data points.
+   *  
+   * @param fprimeOfx Vector of derivative values to be added.
+   * @throws Isis::iException::Programmer "Method only used for 
+   *             cspline-Hermite interpolation type"
+   * @internal 
+   *   @history 2009-06-10 Jeannie Walldren - Original version
+   */
+  void NumericalApproximation::AddCubicHermiteDeriv(const vector <double> &fprimeOfx) throw (iException &){
+    if (p_itype != NumericalApproximation::CubicHermite) {
+      ReportException(iException::Programmer, "SetCubicHermiteDeriv()",
+                      "This method is only valid for cspline-Hermite interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
+    }
+    for (unsigned int i = 0; i < fprimeOfx.size(); i++) {
+      p_fprimeOfx.push_back(fprimeOfx[i]);
+    }
+    return;
+  }
+  /**
+   * Adds value of a first derivative of a data point. This method
+   * can only be called for cubic Hermite splines, i.e. if 
+   * NumericalApproximation::InterpType is 
+   * @a CubicHermite. Values should be entered in the order 
+   * of the corresponding data points.
+   *  
+   * @param fprimeOfx Derivative value to be added.
+   * @throws Isis::iException::Programmer "Method only used for 
+   *             cspline-Hermite interpolation type"
+   * @internal 
+   *   @history 2009-06-10 Jeannie Walldren - Original version
+   */
+  void NumericalApproximation::AddCubicHermiteDeriv(double fprimeOfx) throw (iException &){
+    if (p_itype != NumericalApproximation::CubicHermite) {
+      ReportException(iException::Programmer, "SetCubicHermiteDeriv()",
+                      "This method is only valid for cspline-Hermite interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
+    }
+    p_fprimeOfx.push_back(fprimeOfx);
+    return;
+  }
+
+  /**
    * @brief Retrieves the second derivatives of the data set.
    *  
    * This method returns a vector of the same size as the data 
@@ -546,15 +640,18 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Original version 
    *          written to save off the error estimate found by
    *          EvaluatePolynomialNeville()
+   *   @history 2009-06-10 Jeannie Walldren - Moved itype
+   *            verification to beginning of method.
+   *  
    */
   vector <double> NumericalApproximation::CubicClampedSecondDerivatives() throw (iException &){
     try{
-      if (!p_clampedComputed) ComputeCubicClamped();
       if (p_itype != NumericalApproximation::CubicClamped)
         ReportException(iException::Programmer, "CubicClampedSecondDerivatives()",
                         "This method is only valid for cspline-clamped interpolation type may not be used for " 
                         + Name() + " interpolation", 
                         _FILEINFO_);
+      if (!p_clampedComputed) ComputeCubicClamped();
       return p_clampedSecondDerivs;
     }
     catch (iException e) { // catch exception from ComputeCubicClamped()
@@ -638,6 +735,23 @@ namespace Isis {
   }
 
   /**
+   * Returns whether the passed value is an element of the set of 
+   * x-values in the data set. This method uses a binary search of 
+   * the set of x-values to determine whether the input is 
+   * contained in this set. 
+   * 
+   * @param x Value to search for in the data set.
+   * @return @b bool Whether the passed value is contained in the 
+   *         x-values of the data set.
+   * @internal 
+   *   @history 2009-06-19 Jeannie Walldren - Original version.
+   *  
+   */
+  bool NumericalApproximation::Contains(double x){ 
+    return binary_search(p_x.begin(),p_x.end(),x);
+  }
+
+  /**
    *@brief Calculates interpolated or extrapolated value of 
    *       tabulated data set for given domain value.
    *
@@ -649,9 +763,9 @@ namespace Isis {
    * @a CubicNeighborhood and GSL interpolation types can not
    * extrapolate, so the user must choose to throw an error or
    * return @e f evaluated at the nearest domain boundary.
-   * @a CubicClamped and @a PolynomialNeville interpolation types
-   * can extrapolate a value with accuracy only if @a a is
-   * near enough to the domain boundary. Default
+   * @a CubicClamped, @a CubicHermite, and @a PolynomialNeville
+   * interpolation types can extrapolate a value with accuracy
+   * only if @a a is near enough to the domain boundary. Default
    * NumericalApproximation::ExtrapType is @a ThrowError.
    *  
    * @param a     Domain value from which to interpolate a
@@ -673,6 +787,8 @@ namespace Isis {
    *   @history 2008-12-18 Jeannie Walldren - Added address
    *            operator (&) to input variables of type
    *            NumericalApproximation::ExtrapType.
+   *   @history 2009-06-10 Jeannie Walldren - Added functionality
+   *            for CubicHermite evaluation.
    */
   double NumericalApproximation::Evaluate(const double a, const ExtrapType &etype) throw (iException &) {
     try{
@@ -693,6 +809,9 @@ namespace Isis {
         // if cubic clamped, we need to compute, if not already done
         if (!p_clampedComputed) ComputeCubicClamped();
         return EvaluateCubicClamped(a0);
+      }
+      else if (p_itype == NumericalApproximation::CubicHermite) {
+        return EvaluateCubicHermite(a0);
       }
       // if GSL interpolation type we need to compute, if not already done
       if (!GslComputed()) ComputeGsl();
@@ -743,6 +862,8 @@ namespace Isis {
    *   @history 2008-12-18 Jeannie Walldren - Added address
    *            operator (&) to input variables of type vector and
    *            NumericalApproximation::ExtrapType.
+   *   @history 2009-06-10 Jeannie Walldren - Added functionality
+   *            for CubicHermite evaluation.
    */
   vector <double> NumericalApproximation::Evaluate(const vector <double> &a, const ExtrapType &etype) throw (iException &) {
     try{
@@ -766,7 +887,7 @@ namespace Isis {
         }
         return result;
       }
-      // cubic clamped and gsl types can be done by calling Evaluate(double)
+      // cubic-clamped, cubic-Hermite and gsl types can be done by calling Evaluate(double)
       // for each value of the passed in vector
       for (unsigned int i = 0; i < result.size(); i++) {
           result[i] = Evaluate(a[i],etype);
@@ -885,6 +1006,64 @@ namespace Isis {
                                 "GslFirstDerivative() - Unable to compute the first derivative at a = "
                                 + iString(a) + ". GSL integrity check failed",
                                 _FILEINFO_);
+    }
+  }
+
+  /** 
+   * @brief Approximates the first derivative of the data set 
+   *       function evaluated at the given domain value for
+   *       @a CubicHermite interpolation type.
+   *
+   * This method returns an approximation of the first derivative
+   * evaluated at given a valid domain value, @a a. It is able to 
+   * extrapolate for values not far outside of the domain 
+   *  
+   * @internal 
+   *   @history 2009-07-30 Debbie Cook - Original Version 
+   */
+  double NumericalApproximation::EvaluateCubicHermiteFirstDeriv(const double a){
+    if (p_itype != NumericalApproximation::CubicHermite) {//??? is this necessary??? create single derivative method with GSL?
+      ReportException(iException::User,"EvaluateCubicHermiteFirstDeriv()",
+                      "This method is only valid for cspline-Hermite interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
+    }
+    if (p_fprimeOfx.size() != Size()) {
+      ReportException(iException::User,"EvaluateCubicHermiteFirstDeriv()",
+                      "Invalid arguments. The size of the first derivative vector does not match the number of (x,y) data points.",
+                      _FILEINFO_);
+    }
+    // find the interval in which "a" exists 
+    int lowerIndex = FindIntervalLowerIndex(a);
+
+    // we know that "a" is within the domain since this is verified in 
+    // Evaluate() before this method is called, thus n <= Size()
+    if (a == p_x[lowerIndex]) { 
+      return p_fprimeOfx[lowerIndex];   
+    }
+    if (a == p_x[lowerIndex+1]) { 
+      return p_fprimeOfx[lowerIndex+1];   
+    }                  
+
+    double x0, x1, y0, y1, m0, m1;
+    // a is contained within the interval (x0,x1) 
+    x0 = p_x[lowerIndex];
+    x1 = p_x[lowerIndex+1];
+    // the corresponding known y-values for x0 and x1
+    y0 = p_y[lowerIndex];
+    y1 = p_y[lowerIndex+1];
+    // the corresponding known tangents (slopes) at (x0,y0) and (x1,y1)
+    m0 = p_fprimeOfx[lowerIndex];
+    m1 = p_fprimeOfx[lowerIndex+1];
+
+    double h, t;
+    h = x1-x0;
+    t = (a - x0)/h;
+    if (h != 0.) {
+      return ( (6*t*t-6*t)*y0 + (3*t*t-4*t+1)*h*m0 + (-6*t*t+6*t)*y1 + (3*t*t-2*t)*h*m1 ) / h;
+    }
+    else {
+      return 0;  // Should never happen
     }
   }
 
@@ -1216,7 +1395,55 @@ namespace Isis {
                                 + iString(a) + ". GSL integrity check failed",
                                 _FILEINFO_);
     }
+  }
 
+
+  /** 
+   * @brief Approximates the second derivative of the data set 
+   *       function evaluated at the given domain value for
+   *       @a CubicHermite interpolation type.
+   *
+   * This method returns an approximation of the second derivative
+   * evaluated at given a valid domain value, @a a. It is able to 
+   * extrapolate for values not far outside of the domain 
+   *  
+   * @internal 
+   *   @history 2009-07-30 Debbie Cook - Original Version 
+   */
+  double NumericalApproximation::EvaluateCubicHermiteSecDeriv(const double a){
+    if (p_itype != NumericalApproximation::CubicHermite) {
+      ReportException(iException::User,"EvaluateCubicHermiteSecDeriv()",
+                      "This method is only valid for cspline-Hermite interpolation, may not be used for " 
+                      + Name() + " interpolation", 
+                      _FILEINFO_);
+    }
+    if (p_fprimeOfx.size() != Size()) {
+      ReportException(iException::User,"EvaluateCubicHermiteSecDeriv()",
+                      "Invalid arguments. The size of the first derivative vector does not match the number of (x,y) data points.",
+                      _FILEINFO_);
+    }
+    // find the interval in which "a" exists 
+    int lowerIndex = FindIntervalLowerIndex(a);
+    double x0, x1, y0, y1, m0, m1;
+    // a is contained within the interval (x0,x1) 
+    x0 = p_x[lowerIndex];
+    x1 = p_x[lowerIndex+1];
+    // the corresponding known y-values for x0 and x1
+    y0 = p_y[lowerIndex];
+    y1 = p_y[lowerIndex+1];
+    // the corresponding known tangents (slopes) at (x0,y0) and (x1,y1)
+    m0 = p_fprimeOfx[lowerIndex];
+    m1 = p_fprimeOfx[lowerIndex+1];
+
+    double h, t;
+    h = x1-x0;
+    t = (a - x0)/h;
+    if (h != 0.) {
+      return ( (12*t-6)*y0 + (6*t-4)*h*m0 + (-12*t+6)*y1 + (6*t-2)*h*m1 ) / h; 
+    }
+    else {
+      return 0; // Should never happen
+    }
   }
 
   /**
@@ -1939,6 +2166,8 @@ namespace Isis {
    *   @history 2008-11-05 Jeannie Walldren - Modified to reset class
    *            variables related to interpolation types not
    *            supported by GSL.
+   *   @history 2009-06-10 Jeannie Walldren - Reset new variable,
+   *            p_fprimeOfx.
    */
   void NumericalApproximation::Reset() {
     if (GslInterpType(p_itype)) GslDeallocation();
@@ -1951,6 +2180,7 @@ namespace Isis {
     p_clampedDerivFirstPt = 0;     
     p_clampedDerivLastPt = 0;      
     p_polyNevError.clear();
+    p_fprimeOfx.clear();
     return;
   }
 
@@ -2003,6 +2233,8 @@ namespace Isis {
    * @see Reset() 
    * @internal 
    *   @history 2008-11-05 Jeannie Walldren - Original version.
+   *   @history 2009-06-10 Jeannie Walldren - Reset new variable,
+   *            p_fprimeOfx.
    */
   void NumericalApproximation::SetInterpType(NumericalApproximation::InterpType itype) throw (iException &){
     //  Validates the parameter
@@ -2015,7 +2247,7 @@ namespace Isis {
                         "SetInterpType() - Unable to set interpolation type",
                         _FILEINFO_);
       }
-    } else if (itype > 8) { // there are currently 9 interpolation types
+    } else if (itype > 9) { // there are currently 9 interpolation types
       ReportException(iException::Programmer,"SetInterpType()",
                       "Invalid argument. Unknown interpolation type: " 
                       + iString(NumericalApproximation::InterpType(itype)), 
@@ -2023,7 +2255,7 @@ namespace Isis {
     }
     // p_x, p_y are kept and p_itype is replaced
     p_itype = itype;
-    // reset state of class variables that are InterpType dependent
+    // reset state of class variables that are InterpType dependent  //??? should we keep some of this info?
     p_dataValidated = false; 
     p_clampedComputed = false; 
     p_clampedEndptsSet = false; 
@@ -2031,6 +2263,7 @@ namespace Isis {
     p_clampedDerivFirstPt = 0;     
     p_clampedDerivLastPt = 0;      
     p_polyNevError.clear();
+    p_fprimeOfx.clear();
   }
 
   /**
@@ -2299,8 +2532,12 @@ namespace Isis {
    */ 
   bool NumericalApproximation::InsideDomain(const double a) { 
     try{
-      if (a < DomainMinimum()) return false;
-      if (a > DomainMaximum()) return false;
+      if (a+DBL_EPSILON < DomainMinimum()) {
+        return false;
+      }
+      if (a-DBL_EPSILON > DomainMaximum()){ 
+        return false;
+      }
     }
     catch (iException e){ // catch exception from DomainMinimum(), DomainMaximum()
       throw iException::Message(e.Type(),
@@ -2509,11 +2746,16 @@ namespace Isis {
                       _FILEINFO_);
     }
     if (etype == NumericalApproximation::NearestEndpoint) {
-      if (a < DomainMinimum()) return DomainMinimum();
-      else return DomainMaximum(); // (a > DomainMaximum()) 
+      if (a+DBL_EPSILON < DomainMinimum()) {
+        return DomainMinimum();
+      }
+      else {
+        return DomainMaximum(); // (a > DomainMaximum()) 
+      }
     }
-    else {
-      if (GslInterpType(p_itype) || p_itype == NumericalApproximation::CubicNeighborhood) {
+    else {  // gsl interpolations and CubicNeighborhood cannot extrapolate
+      if (GslInterpType(p_itype) 
+          || p_itype == NumericalApproximation::CubicNeighborhood) {
         ReportException(iException::Programmer,"Evaluate()",
                         "Invalid argument. Cannot extrapolate for type " 
                         + Name() + ", must choose to throw error or return nearest neighbor",
@@ -2757,6 +2999,119 @@ namespace Isis {
   }
 
   /** 
+   * @brief Performs interpolation using the Hermite cubic 
+   *        polynomial.
+   *  
+   * This is a protected method called by Evaluate() if the 
+   * NumericalApproximation::InterpType is 
+   * @a CubicHermite. It returns an approximate value for
+   * @e f(@a a) by using the Hermite cubic polynomial, which uses 
+   * Lagrange coefficient polynomials. The data points and each 
+   * corresponding first derivative should have been already 
+   * added. 
+   *  
+   * @param a Domain value from which to interpolate a 
+   *          corresponding range value
+   * @return @b double  Value returned from interpolation or 
+   *         extrapolation
+   * @throw Isis::iException::User "Invalid arguments. The size of
+   *        the first derivative vector does not match the number
+   *        of (x,y) data points."
+   * @see http://mathworld.wolfram.com/HermitesInterpolatingPolynomial.html
+   * @see http://en.wikipedia.org/wiki/Lagrange_Polynomial
+   * @see Evaluate() 
+   * @see AddCubicHermiteDeriv() 
+   * @internal 
+   *   @history 2009-06-10 Jeannie Walldren - Original version.
+   *  
+   */
+  double NumericalApproximation::EvaluateCubicHermite(const double a) throw (iException &){
+    //  algorithm was found at en.wikipedia.org/wiki/Cubic_Hermite_spline
+    //  it seems to produce same answers, as the NumericalAnalysis book
+ 
+    if (p_fprimeOfx.size() != Size()) {
+      ReportException(iException::User,"EvaluateCubicHermite()",
+                      "Invalid arguments. The size of the first derivative vector does not match the number of (x,y) data points.",
+                      _FILEINFO_);
+    }
+    // find the interval in which "a" exists 
+    int lowerIndex = FindIntervalLowerIndex(a);
+
+    // we know that "a" is within the domain since this is verified in 
+    // Evaluate() before this method is called, thus n <= Size()
+    if (a == p_x[lowerIndex]) { 
+      return p_y[lowerIndex];   
+    }
+    if (a == p_x[lowerIndex+1]) { 
+      return p_y[lowerIndex+1];   
+    }                  
+
+    double x0, x1, y0, y1, m0, m1;
+    // a is contained within the interval (x0,x1) 
+    x0 = p_x[lowerIndex];
+    x1 = p_x[lowerIndex+1];
+    // the corresponding known y-values for x0 and x1
+    y0 = p_y[lowerIndex];
+    y1 = p_y[lowerIndex+1];
+    // the corresponding known tangents (slopes) at (x0,y0) and (x1,y1)
+    m0 = p_fprimeOfx[lowerIndex];
+    m1 = p_fprimeOfx[lowerIndex+1];
+
+
+    //  following algorithm found at en.wikipedia.org/wiki/Cubic_Hermite_spline
+    //  seems to produce same answers, is it faster?
+    
+    double h, t;
+    h = x1-x0;
+    t = (a - x0)/h;
+    return (2*t*t*t-3*t*t+1)*y0 + (t*t*t-2*t*t+t)*h*m0 + (-2*t*t*t+3*t*t)*y1 + (t*t*t-t*t)*h*m1; 
+  }
+
+  /** 
+   * Find the index of the x-value in the data set that is just 
+   * below the input value, a. This method is used by 
+   * EvaluateCubicHermite(), EvaluateCubFirstDeriv() and 
+   * EvaluateCubicHermiteSecDeriv() to determine in which interval
+   * of x-values a lies. It returns the index of the lower 
+   * endpoint of the interval. If a is below the domain minimum, 
+   * the method returns 0 as the lower index.  If a is above the 
+   * domain maximum, it returns the second to last index of the 
+   * data set, Size()-2, as the lower index. 
+   *  
+   * @param a Domain value around which the interval lies 
+   * @return @b int Index of the x-value that is the lower 
+   *         endpoint of the interval of data points that
+   *         surrounds a. Returns 0 if a is below domain min and
+   *         Size()-2 if a is above domain max.
+   * @internal 
+   *   @history 2009-06-10 Jeannie Walldren - Original Version
+   *  
+   */
+  int NumericalApproximation::FindIntervalLowerIndex(const double a){
+    if (InsideDomain(a)) {
+      // find the interval in which "a" exists 
+      std::vector<double>::iterator pos;
+      // find position in vector that is greater than or equal to "a"
+      pos = upper_bound(p_x.begin(),p_x.end(),a);
+      int upperIndex = 0;
+      if (pos != p_x.end()) {
+        upperIndex = distance(p_x.begin(),pos);
+      }
+      else {
+        upperIndex = Size() - 1;
+      }
+      return upperIndex-1;
+    }
+    else if ((a+DBL_EPSILON) < DomainMinimum()) {
+      return 0;
+    }
+    else {
+      return Size() - 2;
+    }
+  }
+
+
+  /** 
    * @brief Performs polynomial interpolation using Neville's 
    * algorithm. 
    *  
@@ -2927,4 +3282,5 @@ namespace Isis {
     throw iException::Message(type,msg.c_str(),filesrc,lineno);
     return;
   }
+  
 }

@@ -107,6 +107,20 @@ int main () {
     Isis::PvlKeyword k("key");
     k = seq;
     cout << k << endl;
+    
+    // Test SetUnits methods
+    k = Isis::PvlKeyword("k", "radius", "meters");
+    k.AddValue("circumference", "meters");
+    cout << "\n\n"
+         << "Test SetUnits methods:\n\n"
+         << "  original condition of Keyword k :\n"
+         << "    " << k << "\n\n"
+         << "  after k.SetUnits(\"circumference\", \"Fathoms\") :\n";
+    k.SetUnits("circumference", "Fathoms");
+    cout << "    " << k << "\n\n"
+         << "  after k.SetUnits(\"TeraFathoms\") :\n";
+    k.SetUnits("TeraFathoms");
+    cout << "    " << k << "\n\n\n";
 
     //Test casting operators
     cout << "----------------------------------------" << endl;

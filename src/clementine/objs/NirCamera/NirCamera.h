@@ -1,7 +1,7 @@
 #ifndef NirCamera_h
 #define NirCamera_h
 
-#include "Camera.h"
+#include "FramingCamera.h"
 
 namespace Clementine { 
   /**                                                                       
@@ -20,8 +20,10 @@ namespace Clementine {
    *  @history 2008-08-08 Steven Lambright Made the unit test work with a Sensor
    *           change. Also, now using the new LoadCache(...) method instead of
    *           CreateCache(...).
+   *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+   *            inherit directly from Camera
    */
-  class NirCamera : public Isis::Camera {
+  class NirCamera : public Isis::FramingCamera {
     public:
       NirCamera (Isis::Pvl &lab);
       ~NirCamera () {};      

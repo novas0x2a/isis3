@@ -3,8 +3,8 @@
 
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/08/08 20:30:36 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/08/31 15:12:31 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -23,7 +23,7 @@
  *   http://www.usgs.gov/privacy.html.                                    
  */                                                                       
 
-#include "Camera.h"
+#include "LineScanCamera.h"
 #include "VariableLineScanCameraDetectorMap.h"
 
 namespace Isis {
@@ -43,8 +43,10 @@ namespace Isis {
     *            change. Also, now using the new LoadCache(...) method instead of
     *            CreateCache(...). Increased the delta line/samp tolerance in the
     *            unit test.
+    *   @history 2009-08-28 Steven Lambright - Changed inheritance to no longer
+    *            inherit directly from Camera
     */
-    class HrscCamera : public Isis::Camera {
+    class HrscCamera : public Isis::LineScanCamera {
       public:
         // Constructs a HiriseCamera object
         HrscCamera (Isis::Pvl &lab);

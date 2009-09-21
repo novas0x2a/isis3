@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="seedgrid" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    Creates a control network for a Lat/Lon range
+  </brief>
+
+  <description>
+    <p>
+      This program creates a control network for a latitude/longitude range on a
+      specified target planet using a specified projection type to do the 
+      seeding.  The control network generated will have no control measures, but 
+      will instead have a known latitude and longitude for each control point.
+    </p>
+  </description>
+
+  <category>
+    <categoryItem>Control Networks</categoryItem>
+  </category>
+
+  <history>
+    <change name="Stacy Alley" date="2009-07-27">
+      Original version
+    </change>
+    <change name="Travis Addair" date="2009-08-27">
+      Fixed error when calculating X/Y range and added application test.
+    </change>
+    <change name="Travis Addair" date="2009-09-11">
+      Added parameter allowing user to enter in projection type to use in seeding process.
+    </change>
+    <change name="Travis Addair" date="2009-09-14">
+      Changed means of entering projection type to be a map file so as to allow 
+      for more customization and accepted projection types.
+    </change>
+  </history>
+
+  <groups>
+
+    <group name="Target/Range">
+      <parameter name="PROJECTION">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          File containing mapping parameters
+        </brief>
+        <description>
+          A file containing the mapping parameters in PVL form.  This
+          file can be a hand produced label file.  It can also be an existing cube label
+          which contains a Mapping group.  You can produce map files using the 
+          "maptemplate" program.
+        </description>
+        <helpers>
+          <helper name="H1">
+            <function>PrintMap</function>
+            <brief>View MapFile</brief>
+            <description>
+              This helper button will cat out the mapping group of the given mapfile to the session log
+               of the application
+             </description>
+            <icon>$ISIS3DATA/base/icons/labels.png</icon>
+          </helper>
+        </helpers>
+        <filter>
+          *.map *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="MINLAT">
+        <type>double</type>
+        <brief>
+          Minimum Latitude
+        </brief>
+        <description>
+          This is the minimum latitude for the Lat/Lon range.
+        </description>
+      </parameter>
+
+      <parameter name="MAXLAT">
+        <type>double</type>
+        <brief>
+          Maximum Latitude
+        </brief>
+        <description>
+          This is the maximum latitude for the Lat/Lon range.
+        </description>
+      </parameter>
+
+      <parameter name="MINLON">
+        <type>double</type>
+        <brief>
+          Minimum Longitude
+        </brief>
+        <description>
+          This is the minimum longitude for the Lat/Lon range.
+        </description>
+      </parameter>
+
+      <parameter name="MAXLON">
+        <type>double</type>
+        <brief>
+          Maximum Longitude
+        </brief>
+        <description>
+          This is the maximum longitude for the Lat/Lon range.
+        </description>
+      </parameter>
+    </group>
+
+    <group name="Step Size">
+
+      <parameter name="XSTEP">
+        <type>double</type>
+        <brief>
+            Step Size in the x direction.
+        </brief>
+        <description>
+            Points will be placed on the grid in the Lat/Long range in the
+            step descriped here.
+        </description>
+      </parameter>
+
+      <parameter name="YSTEP">
+        <type>double</type>
+        <brief>
+            Step Size in the y direction.
+        </brief>
+        <description>
+            Points will be placed on the grid in the Lat/Long range in the
+            step descriped here.
+        </description>
+      </parameter>
+
+    </group>
+
+    <group name="Control">
+
+      <parameter name="NETWORKID">
+        <type>string</type>
+        <brief>
+            Name of this control network
+        </brief>
+        <description>
+            The ID or name of this particular control network. This string
+            should be unique.
+        </description>
+      </parameter>
+
+      <parameter name="POINTID">
+        <type>string</type>
+        <brief>
+            The pattern to be used to create point ids.
+        </brief>
+        <description>
+            A string with one and only one set of question marks ("?").
+            This string will be used to create unique IDs for each control
+            point created by this program. The question marks will be replaced
+            with a number beginning with zero. For example the pattern
+            "User????" would create point IDs "User0001" through
+            "User9999". Note: Make sure there are enough "?"s for all the control
+            points that may be created during this run. If all question marks are
+            exausted the program will throw an error.
+        </description>
+      </parameter>
+
+      <parameter name="DESCRIPTION">
+        <type>string</type>
+        <brief>
+            The description of the network.
+        </brief>
+        <description>
+            A string describing purpose of this control network.
+        </description>
+      </parameter>
+
+    </group>
+
+    <group name="Files">
+      <parameter name="TO">
+        <type>filename</type>
+        <fileMode>output</fileMode>
+        <brief>
+          Output control network
+        </brief>
+        <description>
+          This file will contain the control network
+        </description>
+      </parameter>
+    </group>
+
+  </groups>
+
+</application>

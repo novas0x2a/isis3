@@ -1,7 +1,7 @@
 /* @file                                                                  
- * $Revision: 1.11 $
- * $Date: 2009/06/23 16:51:24 $
- * $Id: CamTools.cpp,v 1.11 2009/06/23 16:51:24 kbecker Exp $
+ * $Revision: 1.15 $
+ * $Date: 2009/08/25 01:37:55 $
+ * $Id: CamTools.cpp,v 1.15 2009/08/25 01:37:55 kbecker Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -25,6 +25,9 @@
 #include <vector>
 #include <numeric>
 #include <algorithm>
+#if defined(DEBUG)
+#include <fstream>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <sstream>
@@ -293,7 +296,10 @@ void BandGeometry::collect(Camera &camera, Cube &cube, bool doGeometry,
     if ( doPolygon ) {
       // Now compute the the image polygon
       ImagePolygon poly;
-      poly.Create(cube,_pixinc,1,1,0,0,band+1);
+      poly.Incidence(_maxIncidence);
+      poly.Emission(_maxEmission);
+      poly.EllipsoidLimb(true);  // Allow disabling of shape model for limbs
+      poly.Create(cube,_pixinc,_pixinc,1,1,0,0,band+1);
       geos::geom::MultiPolygon *multiP = poly.Polys();
       _polys.push_back(multiP->clone());
       if (_combined == 0) {
@@ -526,6 +532,11 @@ Pvl BandGeometry::getProjGeometry(Camera &camera,
                                    geos::geom::MultiPolygon *footprint,
                                    GProperties &g) {
 
+#if defined(DEBUG)
+  std::ofstream fp("footprint.gml");
+  fp << PolygonTools::ToGML(footprint, "Footprint");
+  fp.close();
+#endif
   // Get basic projection information.  Assumes a Sinusoidal projection with
   // East 360 longitude domain and planetocentric laitudes.
   Pvl sinuMap;
@@ -538,11 +549,11 @@ Pvl BandGeometry::getProjGeometry(Camera &camera,
   if ( IsSpecial(clon) ) clon = (minLon + maxLon)/2.0;
 
   //  Make adjustments for center projection type/ranges.
-  //  Tests show that converting to 180 domain at poles works better
-  //  than not.
+  //  To be consistant with other implementations, do not
+  //  convert poles to 180 domain.  
   geos::geom::MultiPolygon *poly180(0), *poly(footprint);
   if ( g.hasLongitudeBoundary ) {
-//    if ( !(g.hasNorthPole || g.hasSouthPole) ) {
+    if ( !(g.hasNorthPole || g.hasSouthPole) ) {
       // Convert the mapping group contents to 180 Longitude domain
       PvlKeyword &ldkey = mapping["LongitudeDomain"];
       ldkey.SetValue("180");
@@ -561,13 +572,24 @@ Pvl BandGeometry::getProjGeometry(Camera &camera,
 
       // Convert the polygon to 180 domain
       poly = poly180 = PolygonTools::To180(footprint);
-//    }
+#if defined(DEBUG)
+  std::ofstream p180("poly180.gml");
+  p180 << PolygonTools::ToGML(poly180, "180Domain");
+  p180.close();
+#endif
+
+    }
   }
 
   mapping += PvlKeyword("CenterLongitude", clon);
 
   Projection *sinu = ProjectionFactory::Create(sinuMap, true);
   geos::geom::MultiPolygon *sPoly = PolygonTools::LatLonToXY(*poly, sinu);
+#if defined(DEBUG)
+  std::ofstream ll("sinuprojxy.gml");
+  ll << PolygonTools::ToGML(sPoly, "SinuProjectedXY");
+  ll.close();
+#endif
   geos::geom::Point *center = sPoly->getCentroid();
 
   sinu->SetCoordinate(center->getX(), center->getY());

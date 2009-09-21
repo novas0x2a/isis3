@@ -11,6 +11,6 @@ commands:
 	$(RM) $(OUTPUT)/h1235_0001_bl2.cub;
 	$(APPNAME) FROM=$(INPUT)/PSP_001365_2720_RED4_0.cub LINE=500 NLINES=30 \
 	TO=$(OUTPUT)/hirise.cub LINC=3 > /dev/null;
-	tabledump FROM=$(OUTPUT)/hirise.cub NAME=\"HiRISE Ancillary\" \
+	tabledump FROM=$(OUTPUT)/hirise.cub NAME="HiRISE Ancillary" \
 	to=$(OUTPUT)/lineAssocTbl.txt > /dev/null;
 	$(RM) $(OUTPUT)/hirise.cub;

@@ -2,8 +2,8 @@
 #define GridPolygonSeeder_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $                                                             
- * $Date: 2009/01/30 16:43:57 $                                                                 
+ * $Revision: 1.9 $                                                             
+ * $Date: 2009/08/05 21:45:05 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -53,6 +53,8 @@ namespace Isis {
    * @history 2000-01-30 Steven Lambright - Fixed an issue with not seeding entire
    *          polygons when a large portion of the polygon was on the right side
    *          of the envelope.
+   * @history 2009-08-05 Travis Addair - Encapsulated group 
+   *          creation for seed definition group
    */
   class GridPolygonSeeder : public PolygonSeeder {
     public:
@@ -65,6 +67,7 @@ namespace Isis {
                                      Projection *proj);
 
       const bool SubGrid() { return p_subGrid; }
+      virtual PvlGroup PluginParameters(std::string grpName);
 
     protected:
       virtual void Parse(Pvl &pvl);
@@ -80,8 +83,6 @@ namespace Isis {
 
       double p_Xspacing;
       double p_Yspacing;
-      double p_minThickness; // area / max(Xextent,Yextent)**2
-      double p_minArea; // Units are meters
       bool   p_subGrid;
   };
 };

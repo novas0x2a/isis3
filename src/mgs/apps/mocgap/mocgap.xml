@@ -12,9 +12,7 @@
   </description>
 
   <category>
-    <missionItem>
-      Mars Global Surveyor
-    </missionItem>
+    <missionItem>Mars Global Surveyor</missionItem>
   </category>
 
   <history>
@@ -53,10 +51,10 @@
         <description>
           This is the cube to which we will output our data
         </description>
+        <filter>
+          *.cub
+        </filter>
       </parameter>
-      <filter>
-        *.cub
-      </filter>
     </group>
     <group name="Parameters">
       <parameter name="MAXSD">

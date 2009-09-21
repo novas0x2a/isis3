@@ -1,5 +1,8 @@
 include $(ISISROOT)/make/isismake.macros
 
+MOCINC       = $(wildcard *.h)
+MOCGEN	     = $(wildcard moc_*.cpp)
+
 .SUFFIXES:
 .SUFFIXES: .cpp .o
 .SUFFIXES: .c .o
@@ -10,7 +13,7 @@ app: $(BINS)
 $(BINS): $(OBJS)
 	$(CXX) $(ALLLIBDIRS) $(ISISLDFLAGS) -o $@ $(OBJS) $(ALLLIBS)
 
-.cpp.o :
+.cpp.o : qtmoc
 	$(CXX) $(ALLINCDIRS) $(ISISCPPFLAGS) $(CPPFLAGS) -c -o $@ $?
 
 .c.o :
@@ -19,12 +22,16 @@ $(BINS): $(OBJS)
 .xml.html :
 	$(XALAN) -v -o $@ $? $(ISISROOT)/src/docsys/Application/presentation/ProgTester/IsisApplicationDocStyle.xsl
 
-clean:
-	-$(RM) $(OBJS) $(BINS) `basename $(CURDIR)`.html appTest.sh
-	if [ "$(shell cat Makefile | grep cleanlocal | wc -l)" -ne 0 ]; \
+qtmoc: $(MOCINC:%.h=moc_%.cpp)
+
+moc_%.cpp: %.h		
+	if [ "$(filter-out ' ', $(shell grep -sIE -m1 'Q_OBJECT' $(<F)))" == "Q_OBJECT" ]; \
 	then \
-	  $(MAKE) cleanlocal; \
+	  $(MOC) $(MOCDEFINES) -o $@ $(<F); \
 	fi
+
+clean:  localclean
+	-$(RM) $(OBJS) $(BINS) $(MOCGEN) `basename $(CURDIR)`.html	
 	if [ -d "tsts" ]; \
 	then \
 	  if [ -f "tsts/Makefile" ]; \
@@ -35,10 +42,16 @@ clean:
 	  fi; \
 	fi
 
+localclean:
+	if [ "$(findstring cleanlocal,$(shell grep cleanlocal Makefile))" = "cleanlocal" ]; \
+	then \
+	   $(MAKE) cleanlocal; \
+	fi
+
 sanitize: clean
 	-$(RM) tttt* junk.* TEMP*
 
-install: app
+install: app 
 	if [ ! -d "$(ISISROOT)/bin/xml" ]; \
 	then \
 	  mkdir -p $(ISISROOT)/bin/xml; \
@@ -46,6 +59,9 @@ install: app
 	cp -p $(BINS) $(ISISROOT)/bin
 	cp -p $(BINS).xml $(ISISROOT)/bin/xml
 	chmod 644 $(ISISROOT)/bin/xml/$(BINS).xml
+
+validxml:
+	$(XALAN) -v -o /dev/null $(BINS).xml $(ISISROOT)/src/docsys/Application/presentation/ProgTester/IsisApplicationDocStyle.xsl;
 
 docs:
 	mkdir -p $(ISISROOT)/src/docsys/Application/data/`basename $(CURDIR)`

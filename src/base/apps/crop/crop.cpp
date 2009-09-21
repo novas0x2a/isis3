@@ -1,4 +1,5 @@
 #include "Isis.h"
+#include "Cube.h"
 #include "ProcessByLine.h"
 #include "SpecialPixel.h"
 #include "LineManager.h"
@@ -16,7 +17,7 @@ int ss,sl,sb;
 int ns,nl,nb;
 int sinc,linc;
 Cube cube;
-LineManager *in;
+LineManager *in = NULL;
 
 void crop (Buffer &out);
 
@@ -164,8 +165,11 @@ void IsisMain() {
   // Crop the input cube
   p.StartProcess(crop);
 
+  delete in;
+  in = NULL;
+
   // Adjust the upper corner x,y values if the cube is projected
-  try {
+  if(cube.HasProjection()) {
     // Try to create a projection & set the x,y position
     Projection *proj = cube.Projection();
     proj->SetWorld(ss-0.5,sl-0.5);
@@ -179,10 +183,7 @@ void IsisMain() {
     ocube->PutGroup(mapgrp);
   }
   // Only write the alpha group if the cube is not projected
-  catch (iException &e) {
-    // Clear the exception
-    e.Clear();
-
+  else {
     // Add and/or update the alpha group
     AlphaCube aCube(cube.Samples(),cube.Lines(),
                         ocube->Samples(),ocube->Lines(),

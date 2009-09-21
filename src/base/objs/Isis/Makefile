@@ -1,5 +1,5 @@
 INCS = Isis.h IsisDebug.h
-SRCS =  
+SRCS = 
 OBJS = $(SRCS:%.cpp=%.o)
 
 include $(ISISROOT)/make/isismake.objs

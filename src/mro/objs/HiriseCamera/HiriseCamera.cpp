@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2009/03/09 03:51:18 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2009/08/31 15:12:31 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -39,7 +39,7 @@ namespace Isis {
     * 
     * @param lab Pvl label from the iamge
     */
-    HiriseCamera::HiriseCamera (Isis::Pvl &lab) : Isis::Camera(lab) {
+    HiriseCamera::HiriseCamera (Isis::Pvl &lab) : Isis::LineScanCamera(lab) {
       // Setup camera characteristics from instrument and frame kernel
       SetFocalLength();
       SetPixelPitch();

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/10/29 23:36:13 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/07/24 20:54:22 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -40,26 +40,50 @@ namespace Isis {
    */
   Affine::Affine () {
     Identity();
+    p_x = p_y = p_xp = p_yp = 0.0;
+  }
+
+  /**
+   * @brief Create Affine transform from matrix 
+   *  
+   * This constructor creates the affine transform from a forward matrix.  The 
+   * input matrix is checked for the proper dimensions (3x3) and is then 
+   * inverted to complete the inverse functionality. 
+   *  
+   * The input matrix must be invertable or an exception will be thrown! 
+   * 
+   * @param a Forward affine matrix
+   */
+  Affine::Affine(const Affine::AMatrix &a) {
+    checkDims(a);
+    p_matrix = a.copy();
+    p_invmat = invert(p_matrix);
+    p_x = p_y = p_xp = p_yp = 0.0;
   }
 
   //! Destroys the Affine object
   Affine::~Affine() {}
 
   /**
+   * @brief Return an Affine identity matrix
+   * 
+   * @return Affine::AMatrix The identity matrix
+   */
+  Affine::AMatrix Affine::getIdentity() {
+    AMatrix ident(3,3, 0.0);
+    for (int i = 0 ; i < ident.dim2() ; i++) {
+      ident[i][i] = 1.0;
+    }
+    return (ident);
+  }
+
+  /**
    * Set the forward and inverse affine transform to the identity. 
    * That is, xp = x and yp = y for all (x,y).
    */
   void Affine::Identity() {
-    TNT::Array2D<double> ident(3,3);
-    for (int i=0; i<3; i++) {
-      for (int j=0; j<3; j++) {
-        ident[i][j] = 0.0;
-      }
-      ident[i][i] = 1.0;
-    }
-
-    p_matrix = ident;
-    p_invmat = ident;
+    p_matrix = getIdentity();
+    p_invmat = getIdentity();
   }
 
   /** 
@@ -108,39 +132,8 @@ namespace Isis {
     p_matrix[2][1] = 0.0;
     p_matrix[2][2] = 1.0;
 
-    // Now compute the inverse affine matrix using singular value
-    // decomposition A = USV'.  So invA = V invS U'.  Where ' represents
-    // the transpose of a matrix and invS is S with the recipricol of the
-    // diagonal elements
-    JAMA::SVD<double> svd(p_matrix);
-
-    TNT::Array2D<double> V;
-    svd.getV(V);
-
-    // The inverse of S is 1 over each diagonal element of S
-    TNT::Array2D<double> invS;
-    svd.getS(invS);
-    for (int i=0; i<invS.dim1(); i++) {
-      if (invS[i][i] == 0.0) {
-        string msg = "Affine transform not invertible";
-        throw iException::Message(iException::Math,msg,_FILEINFO_);
-      }
-      invS[i][i] = 1.0 / invS[i][i];
-    }
-
-    // Transpose U
-    TNT::Array2D<double> U;
-    svd.getU(U);
-    TNT::Array2D<double> transU(U.dim2(),U.dim1());
-    for (int r=0; r<U.dim1(); r++) {
-      for (int c=0; c<U.dim2(); c++) {
-        transU[c][r] = U[r][c];
-      }
-    }
-
-    // Multiply stuff together to get the inverse of the affine
-    TNT::Array2D<double> VinvS = TNT::matmult(V,invS);
-    p_invmat = TNT::matmult(VinvS,transU);
+    // invert the matrix
+    p_invmat = invert(p_matrix);
   }
 
   /**
@@ -150,13 +143,8 @@ namespace Isis {
    * @param ty translation to add to y'
    */
   void Affine::Translate (double tx, double ty) {
-    TNT::Array2D<double> trans(3,3);
-    for (int i=0; i<3; i++) {
-      for (int j=0; j<3; j++) {
-        trans[i][j] = 0.0;
-      }
-      trans[i][i] = 1.0;
-    }
+    AMatrix trans = getIdentity();
+
     trans[0][2] = tx;
     trans[1][2] = ty;
     p_matrix = TNT::matmult(trans,p_matrix);
@@ -172,13 +160,7 @@ namespace Isis {
    * @param angle degrees of counterclockwise rotation
    */
   void Affine::Rotate(double angle) {
-    TNT::Array2D<double> rot(3,3);
-    for (int i=0; i<3; i++) {
-      for (int j=0; j<3; j++) {
-        rot[i][j] = 0.0;
-      }
-      rot[i][i] = 1.0;
-    }
+    AMatrix rot = getIdentity();
 
     double angleRadians = angle * Isis::PI / 180.0;
     rot[0][0] = cos(angleRadians);
@@ -201,13 +183,7 @@ namespace Isis {
    * @param scaleFactor The scale factor
    */
   void Affine::Scale (double scaleFactor) {
-    TNT::Array2D<double> scale(3,3);
-    for (int i=0; i<3; i++) {
-      for (int j=0; j<3; j++) {
-        scale[i][j] = 0.0;
-      }
-      scale[i][i] = 1.0;
-    }
+    AMatrix scale = getIdentity();
     scale[0][0] = scaleFactor;
     scale[1][1] = scaleFactor;
     p_matrix = TNT::matmult(scale,p_matrix);
@@ -274,4 +250,66 @@ namespace Isis {
      coef.push_back(p_invmat[index][2]);
      return coef;
    }
+
+  /**
+   * @brief Checks affine matrix to ensure it is a 3x3 standard form transform 
+   * 
+   * @param am Affine matrix to validate
+   */
+  void Affine::checkDims(const AMatrix &am) const throw (iException &) {
+    if ((am.dim1() != 3) && (am.dim2() != 3)) {
+      ostringstream mess;
+      mess << "Affine matrices must be 3x3 - this one is " << am.dim1()
+           << "x" << am.dim2();
+      throw iException::Message(iException::Programmer, mess.str(), _FILEINFO_);
+    }
+    return;
+  }
+
+  /**
+   * @brief Compute the inverse of a matrix 
+   *  
+   * This method will compute the inverse of an affine matrix for purposes of 
+   * forward and inverse Affine computations. 
+   * 
+   * @param a Matrix to invert
+   * 
+   * @return Affine::AMatrix The inverted matrix
+   */
+  Affine::AMatrix Affine::invert(const AMatrix &a) const throw (iException &) {
+   // Now compute the inverse affine matrix using singular value
+    // decomposition A = USV'.  So invA = V invS U'.  Where ' represents
+    // the transpose of a matrix and invS is S with the recipricol of the
+    // diagonal elements
+    JAMA::SVD<double> svd(a);
+
+    AMatrix V;
+    svd.getV(V);
+
+    // The inverse of S is 1 over each diagonal element of S
+    AMatrix invS;
+    svd.getS(invS);
+    for (int i=0; i<invS.dim1(); i++) {
+      if (invS[i][i] == 0.0) {
+        string msg = "Affine transform not invertible";
+        throw iException::Message(iException::Math,msg,_FILEINFO_);
+      }
+      invS[i][i] = 1.0 / invS[i][i];
+    }
+
+    // Transpose U
+    AMatrix U;
+    svd.getU(U);
+    AMatrix transU(U.dim2(),U.dim1());
+    for (int r=0; r<U.dim1(); r++) {
+      for (int c=0; c<U.dim2(); c++) {
+        transU[c][r] = U[r][c];
+      }
+    }
+
+    // Multiply stuff together to get the inverse of the affine
+    AMatrix VinvS = TNT::matmult(V,invS);
+    return (TNT::matmult(VinvS,transU));
+  }
+
 } // end namespace isis

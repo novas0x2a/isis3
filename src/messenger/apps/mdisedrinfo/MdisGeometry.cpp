@@ -1,8 +1,8 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $
- * $Date: 2008/07/11 22:38:41 $
- * $Id: MdisGeometry.cpp,v 1.7 2008/07/11 22:38:41 nhilt Exp $
+ * $Revision: 1.8 $
+ * $Date: 2009/09/19 00:12:10 $
+ * $Id: MdisGeometry.cpp,v 1.8 2009/09/19 00:12:10 dcook Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -772,8 +772,8 @@ namespace Isis {
     //  Get focal length
     double foclen = _camera->FocalLength();
 
-    // Get pixel pitch
-    double pxlscl = _camera->PixelPitch();
+    // Get pixel scale (pix/mm) from camera pixel pitch (mm/pix)
+    double pxlscl = 1.0/_camera->PixelPitch();
 
 //--  Now implement the SMEAR routine (smrimg)
     SpiceDouble tipm[3][3], dtipm[3][3];
@@ -835,7 +835,7 @@ namespace Isis {
     double explen = (double) key;   // in milliseconds
 
     SpiceDouble smear[2];
-    vsclg_c(pxlscl*(explen*1000.0), dvf, 2, smear);
+    vsclg_c(pxlscl*(explen/1000.0), dvf, 2, smear); //convert explen to seconds
 
     //  Compute the norm and azimuth angle
     smear_magnitude = vnormg_c(smear, 2);

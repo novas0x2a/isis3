@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application name="lrowaccal" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
+  <brief>
+    This program calibrates WAC images
+  </brief>
+
+  <description>
+    This program applies a dark and flat-field correction for each framelet based on the 
+    band's filter number. In order to output in I/F units, the cube must have spice
+    data.
+  </description>
+
+  <category>
+    <missionItem>Lunar Reconnaissance Orbiter</missionItem>
+  </category>
+
+  <history>
+    <change name="Jacob Danton" date="2009-07-01">
+      Original version
+    </change>
+  </history>
+
+  <groups>
+    <group name="Files">
+      <parameter name="FROM">
+        <type>cube</type>
+        <fileMode>input</fileMode>
+        <brief>
+          Input Image
+        </brief>
+        <description>
+          This is the non-calibrated, unprojected WAC cube
+        </description>
+        <filter>
+          *.cub
+        </filter>
+      </parameter>
+
+      <parameter name="TO">
+         <type>cube</type>
+         <fileMode>output</fileMode>
+         <pixelType>real</pixelType>
+         <brief>
+           Output Image
+         </brief>
+         <description>
+           This is the calibrated WAC cube
+         </description>
+         <filter>
+           *.cub
+         </filter>
+       </parameter>
+    </group>
+
+    <group name="Options">
+      <parameter name="Dark">
+        <type>boolean</type>
+        <default><item>True</item></default>
+        <brief>
+        Calibrate using the average dark pixels.
+        </brief>
+        <description>
+        </description>
+      </parameter>
+      
+      <parameter name="Flatfield">
+        <type>boolean</type>
+        <default><item>True</item></default>
+        <brief>
+        Calibrate using the flatfield.
+        </brief>
+        <description>
+        </description>
+      </parameter>
+      
+      <parameter name="Radiometric">
+        <type>boolean</type>
+        <default><item>True</item></default>
+        <brief>
+        Calibrate using radiometric calibration.
+        </brief>
+        <description>
+        </description>
+        <inclusions><item>RadiometricType</item></inclusions>
+      </parameter>
+      
+      <parameter name="RadiometricType">
+        <type>string</type>
+        <brief>
+        Which radiance correction?
+        </brief>
+        <description>
+        </description>
+        <default><item>IOF</item></default>
+        <list>
+          <option value="IOF">
+            <brief>I/F</brief>
+            <description>
+            </description>
+          </option>
+          <option value="MEAN">
+            <brief>Weighted mean</brief>
+            <description>
+            </description>
+          </option>
+        </list>
+      </parameter>
+     </group>
+   </groups>
+</application>
