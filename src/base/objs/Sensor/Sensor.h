@@ -2,8 +2,8 @@
 #define Sensor_h
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/07/10 00:43:14 $
+ * $Revision: 1.13 $
+ * $Date: 2009/09/23 23:08:11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -101,7 +101,7 @@ namespace Isis {
  *                                      available) when
  *                                      computing a ground point
  *  @history 2007-05-18 Jeff Anderson - Modify SpacecraftAltitude method
- *					to use DEM
+ *          to use DEM
  *  @history 2007-06-11 Debbie A. Cook - Added alternative  method that includes radius
  *  @history 2007-08-24 Debbie A. Cook - Replaced references to p_sB since it was removed from Spice
  *  @history 2007-11-27 Debbie A. Cook - Added overloaded method SetUniversalGround(lat, lon, radius)
@@ -117,6 +117,8 @@ namespace Isis {
  *  @history 2009-06-30 Steven Lambright - Added IgnoreElevationModel and fixed
  *           DemRadius
  *  @history 2009-07-09 Debbie A. Cook - Corrected documentation on Resolution method
+ *  @history 2009-09-23  Tracie Sucharski - Convert negative longitudes 
+ *                         returned by reclat in SetLookDirection.
  *  
  */
   class Sensor : public Isis::Spice {

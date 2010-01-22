@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.15 $
- * $Date: 2009/06/30 21:53:32 $
+ * $Revision: 1.16 $
+ * $Date: 2009/09/23 23:08:11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -135,7 +135,9 @@ namespace Isis {
   *
   * @param v[] A look vector in camera coordinates. For example, (0,0,1) is
   *            usually the look direction out of the boresight of a camera.
-  *
+  *  
+  * history  2009-09-23  Tracie Sucharski - Convert negative longitudes 
+  *                         returned my reclat. 
   * @return bool
   */
   bool Sensor::SetLookDirection(const double v[3]) {
@@ -194,6 +196,7 @@ namespace Isis {
         reclat_c(p_pB,&radius,&lon,&lat);
         lat *= 180.0 / Isis::PI;
         lon *= 180.0 / Isis::PI;
+        if (lon < 0.0) lon += 360.0;
 
         if (it == 1) {
           p_radius = DemRadius(lat, lon);

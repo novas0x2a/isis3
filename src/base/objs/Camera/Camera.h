@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.26 $                                                             
- * $Date: 2009/08/31 15:11:48 $                                                                 
+ * $Revision: 1.28 $                                                             
+ * $Date: 2009/09/23 22:12:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -115,6 +115,8 @@ namespace Isis {
  *            to calculate the correct azimuth value.
  *   @history 2009-08-28 Steven Lambright - Added GetCameraType method and 
  *            returned enumeration value
+ *   @history 2009-09-23  Tracie Sucharski - Convert negative longitudes coming
+ *            out of reclat when computing azimuths.
  */
 
   class Camera : public Isis::Sensor {

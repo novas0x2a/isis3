@@ -472,6 +472,9 @@ void ProcessBands(Pvl &pdsLab, Cube *vimsCube, VimsType vtype)
 //  Parameters:  Pvl & pdsLab - Label
 //               Cube *vimsCube - output VIS/IR cubes
 //               VimsType vType - VIS / IR
+// 
+//  History:     2009-10-20 Tracie Sucharski, Corrected indices for 
+//                             SAMPLING_MODE_ID and GAIN_MODE_ID.
 //               
 //  Return:      None
 //************************************************************
@@ -497,7 +500,12 @@ void TranslateVimsLabels (Pvl &pdsLab, Cube *vimscube, VimsType vType){
   strTime = (string)qube["StopTime"];
   inst.FindKeyword("StopTime").SetValue((string)((iString)strTime).Trim("Z")); 
 
-  inst += PvlKeyword("SamplingMode", (string)qube["SamplingModeId"][1]);
+  if (vType == IR) {
+    inst += PvlKeyword("SamplingMode", (string)qube["SamplingModeId"][0]);
+  }
+  else {
+    inst += PvlKeyword("SamplingMode", (string)qube["SamplingModeId"][1]);
+  }
   if (vType == VIS) {
     inst += PvlKeyword("Channel", "VIS");
   }
@@ -510,7 +518,12 @@ void TranslateVimsLabels (Pvl &pdsLab, Cube *vimscube, VimsType vType){
   expDuration.AddValue(qube["ExposureDuration"][1],"VIS");
   inst += expDuration;
   
-  inst += PvlKeyword("GainMode", (string)qube["GainModeId"][1]);  
+  if (vType == IR) {  
+    inst += PvlKeyword("GainMode", (string)qube["GainModeId"][0]);  
+  }
+  else {
+    inst += PvlKeyword("GainMode", (string)qube["GainModeId"][1]);  
+  }
   
   vimscube->PutGroup(inst);
 

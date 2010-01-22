@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.26 $
- * $Date: 2009/08/19 22:13:03 $
+ * $Revision: 1.27 $
+ * $Date: 2009/09/23 22:10:35 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -994,7 +994,10 @@ namespace Isis {
    *
    * @param lon The Longitude
    *
-   * @return double Azimuth value
+   * @return double Azimuth value 
+   *  
+   * @history 2009-09-23  Tracie Sucharski - Convert negative 
+   *                         longitudes coming out of reclat. 
    *
    * @todo Write PushState and PopState method to ensure the
    * internals of the class are set based on SetImage or SetGround
@@ -1045,7 +1048,10 @@ namespace Isis {
     // Convert the point to a lat/lon and find out its image coordinate
     double nrad,nlon,nlat;
     reclat_c(nB,&nrad,&nlon,&nlat);
-    SetUniversalGround(nlat*180.0/Isis::PI,nlon*180.0/Isis::PI);
+    nlat = nlat * 180.0 / Isis::PI;
+    nlon = nlon * 180.0 / Isis::PI;
+    if (nlon < 0) nlon += 360.0;
+    SetUniversalGround(nlat,nlon);
     double nsample = Sample();
     double nline = Line();
 

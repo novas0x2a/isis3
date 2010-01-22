@@ -52,6 +52,9 @@
           Saturation values are now set when present and if IR or VIS
           was turned off then files will not be imported for those channels. 
         </change>
+        <change name="Tracie Sucharski" date="2009-10-20">
+          Corrected indexing for SAMPLING_MODE_ID and GAIN_MODE_ID values.
+        </change>
       </history>
     <category>
         <missionItem>Cassini</missionItem>

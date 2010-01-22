@@ -403,7 +403,13 @@ namespace Isis {
       return p_offset;
     }
     /**
-     * Reads the wide-angle gain/offset table and internalizes
+     * Reads the wide-angle gain/offset table and internalizes 
+     * @internal 
+     *   @history 2010-01-05 Jeannie Walldren - Fixed bug that
+     *                                          passed sclkKern
+     *                                          filename into
+     *                                          scs2e_c instead of
+     *                                          the sclk string.
      */
     void MocLabels::InitWago() {
       // Only do this once
@@ -532,9 +538,9 @@ namespace Isis {
             sclk = line.Token(",");
             sclk.Remove("\"");
             sclk.Trim(" ");
-  
-            scs2e_c(-94,sclkKern.c_str(),&et);
-  
+
+            scs2e_c(-94,sclk.c_str(),&et);
+
             // Get the gain mode id
             gainId = line.Token(",");
             gainId.Remove("\"");
@@ -573,13 +579,11 @@ namespace Isis {
           low = high++;
         }
         //If we're too high, search beginning of array
-        else if( et < p_etStart )
-        {
+        else if( et < p_etStart ){
           low = middle + 1;
         }
         //If we're too low, search end of array
-        else
-        {
+        else {
           high = middle- 1;
         }
       }

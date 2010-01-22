@@ -2,8 +2,8 @@
 #define MocLabels_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2008/11/07 22:58:46 $                                                                 
+ * $Revision: 1.8 $                                                             
+ * $Date: 2010/01/05 20:56:07 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -48,6 +48,8 @@ namespace Isis {
      *            WideAngle(), WideAngleBlue(), and WideAngleRed(),
      *            respectively.  Added documentation.
      *   @history 2008-11-07 Jeannie Walldren - Fixed documentation
+     *   @history 2010-01-05 Jeannie Walldren - Fixed bug in
+     *                                          InitWago() method.
      */  
     class MocLabels {
       public:
