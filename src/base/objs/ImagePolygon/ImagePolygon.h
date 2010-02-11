@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.30 $
- * $Date: 2009/08/29 00:34:54 $
+ * $Revision: 1.31 $
+ * $Date: 2010/02/08 22:46:05 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -144,6 +144,8 @@ namespace Isis {
  *  @history 2009-08-20 Christopher Austin - Added meridian walking and subpixel
  *  	     accuracy.
  *  @history 2009-08-28 Christopher Austin - Fixed a memory bounds error.
+ *  @history 2010-02-08 Christopher Austin - Fixed an infinite loop which
+ *           revisited the starting point, and added 360 meridian crossing
  */
 
   class ImagePolygon : public Isis::Blob {

@@ -54,14 +54,13 @@ void IsisMain ()
   try {
     PvlObject qube(lab.FindObject("QUBE"));
     iString id;
-    id = (string)qube["DATA_SET_ID"];
+    id = (string)qube["INSTRUMENT_ID"];
     id.ConvertWhiteSpace();
     id.Compress();
     id.Trim(" ");
-    if ((id != "CO-J-VIMS-2-EDR-V1.0") &&
-        (id != "CO-S-VIMS-2-EDR-V1.0")) {
-      string msg = "Invalid DATA_SET_ID [" + id + "]";
-      throw iException::Message(iException::Pvl,msg,_FILEINFO_);
+    if (id != "VIMS") {
+      string msg = "Invalid INSTRUMENT_ID [" + id + "]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
     }
   }
   catch (iException &e) {

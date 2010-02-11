@@ -1,7 +1,7 @@
 /**                                                                       
 * @file                                                                  
-* $Revision: 1.34 $                                                             
-* $Date: 2009/08/29 00:34:54 $                                                                 
+* $Revision: 1.35 $                                                             
+* $Date: 2010/02/08 22:46:05 $                                                                 
 *                                                                        
 *   Unless noted otherwise, the portions of Isis written by the USGS are 
 *   public domain. See individual third-party library and package descriptions 
@@ -484,23 +484,25 @@ namespace Isis {
       if (tempPoint.equals(currentPoint)) {
         // Init vars for first run through the loop
         tempPoint = lastPoint;
+        lastPoint = currentPoint;
+        currentPoint = tempPoint;
 
-        do {
+        // Must be 3 (not 2) to prevent the revisit of the starting point,
+        // resulting in an infinite loop
+        if (points->size() < 3) {
+          std::string msg = "Failed to find next point in the image.";
+          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        }
 
-          lastPoint = currentPoint;
-          currentPoint = tempPoint;
+        // remove last point from the list
+        points->pop_back();
 
-          // remove last point from the list
-          if (points->size() < 2) {
-            std::string msg = "Failed to find next point in the image.";
-            throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-          }
+        tempPoint = FindNextPoint(&currentPoint, lastPoint, 1);
 
-          points->pop_back();
-
-          tempPoint = FindNextPoint(&currentPoint, lastPoint, 1);
-
-        } while(points->size() > 1 && tempPoint.equals(points->at(points->size()-2)));
+        if (tempPoint.equals(currentPoint)) {
+          std::string msg = "Failed to find next valid point in the image.";
+          throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+        }
       }
 
 
@@ -712,25 +714,32 @@ std::cerr << std::endl;*/
             toLon   = 0.0;
           }
 
+          geos::algorithm::LineIntersector lineIntersector;
+          geos::geom::Coordinate crossingPoint;
           geos::geom::Coordinate nPole( 0.0, 90.0 );
           geos::geom::Coordinate sPole( 0.0, -90.0 );
+          double dist = DBL_MAX;
 
-          geos::geom::Coordinate crossingPoint;
-          if (temp.x > 0.0  &&  p_pts->getAt(i+1).x > 0.0 ) {
-            crossingPoint = geos::geom::Coordinate(p_pts->getAt(i+1).x - 360.0, p_pts->getAt(i+1).y);
-          }
-          else if (temp.x < 0.0  &&  p_pts->getAt(i+1).x < 0.0 ) { // This should never happen
-            crossingPoint = geos::geom::Coordinate(p_pts->getAt(i+1).x + 360.0, p_pts->getAt(i+1).y);
+          for( int num = 0; num < 2 && dist > 180.0; num ++ ) {
+            nPole = geos::geom::Coordinate( num*360.0, 90.0 );
+            sPole = geos::geom::Coordinate( num*360.0, -90.0 );
+
+            if (temp.x > 0.0  &&  p_pts->getAt(i+1).x > 0.0 ) {
+              crossingPoint = geos::geom::Coordinate(p_pts->getAt(i+1).x - 360.0 + (num*720.0), p_pts->getAt(i+1).y);
+            }
+            else if (temp.x < 0.0  &&  p_pts->getAt(i+1).x < 0.0 ) { // This should never happen
+              crossingPoint = geos::geom::Coordinate(p_pts->getAt(i+1).x + 360.0 - (num*720.0), p_pts->getAt(i+1).y);
+            }
+
+            dist = std::sqrt( DistanceSquared( &temp, &crossingPoint ) );
           }
 
-          geos::algorithm::LineIntersector lineIntersector;
           lineIntersector.computeIntersection( nPole, sPole, temp, crossingPoint );
 
           if(lineIntersector.hasIntersection()) {
             const geos::geom::Coordinate & intersection = lineIntersector.getIntersection( 0 );
 
             // Calculate the latituded of the points along the meridian
-            double dist = std::sqrt( DistanceSquared( &temp, &crossingPoint ) );
             if( pole->y < intersection.y ) { dist = -dist; }
             vector<double> lats;
             double maxLat = std::max( intersection.y, pole->y );
