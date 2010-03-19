@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2008/10/01 01:15:11 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/12/17 21:23:39 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *   individual third-party library and package descriptions for intellectual property information,
@@ -18,6 +18,7 @@
  *   http://www.usgs.gov/privacy.html.                                    
  */                                                                       
 
+#include "PvlKeyword.h"
 #include "iException.h"
 #include "PvlFormat.h"
 #include "PvlGroup.h"
@@ -37,74 +38,113 @@ namespace Isis {
 
 
   /**
-   * Creates a PvlGroup object using a vector of tokens and an iterator.
-   * @param tokens The vector of PvlTokens to use.
-   * @param pos The iterator to use.
-   * @throws iException::Message
+   * Read in a group 
+   * 
+   * @param is The input stream
+   * @param result The PvlGroup to read into (OUTPUT)
+   * 
    */
-  PvlGroup::PvlGroup (std::vector<Isis::PvlToken> &tokens, 
-                      std::vector<Isis::PvlToken>::iterator &pos) :
-                Isis::PvlContainer("Group") {
-    // Grab any comments
-    p_name.AddComments(tokens,pos);
-  
-    // Get the group name
-    SetName(pos->GetValue());
-    pos++;
-  
-    // Loop and parse
-    string key;
-    vector<Isis::PvlToken>::iterator curPos = pos;
-    while (pos != tokens.end()) {
-      // Grab the keyword
-      key = pos->GetKey();
-  
-      // Are we at the groups end
-      if (PvlKeyword::StringEqual (key, "ENDGROUP")) {
-        pos++;
-        return;
-      }
-  
-      // Don't allow groups inside of groups
-      if (PvlKeyword::StringEqual (key, "GROUP")) {
-        string message = "Nested groups are not allowed [Group=" + 
-                         pos->GetValue() +
-                         "] is inside [Group=" + Name() + "]";
-        throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-      }
-  
-      // Don't allow objects inside of groups
-      if (PvlKeyword::StringEqual (key, "OBJECT")) {
-        string message = "Objects can not be nested in groups [Group=" + 
-                         pos->GetValue() +
-                         "] is inside [Group=" + Name() + "]";
-        throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-      }
-  
-      // Don't allow reserved keyword endobject inside of a group
-      if (PvlKeyword::StringEqual (key, "ENDOBJECT")) {
-        string message = "Reserved word [EndObject] found inside [Group=" 
-                         + Name() + "]";
-        throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-      }
-  
-      // See if we have a comment
-      if (PvlKeyword::StringEqual (key, "_COMMENT_")) {
-        pos++;
-      }
-      else {
-        Isis::PvlKeyword keyword(tokens,curPos);
-        AddKeyword(keyword);
-        pos = curPos;
-      }
-    } 
-  
-    // Fell out of the loop so we don't have an endgroup
-    string message = "Ending delimiter [EndGroup] not found for [Group=" 
-                     + Name() + "]";
-    throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-  }
+  std::istream& operator>>(std::istream &is, PvlGroup &result) {
+    PvlKeyword termination("EndGroup");
 
+    PvlKeyword errorKeywords[] = {
+      PvlKeyword("Group"),
+      PvlKeyword("Object"),
+      PvlKeyword("EndObject")
+    };
+
+    PvlKeyword readKeyword;
+
+    istream::pos_type beforeKeywordPos = is.tellg();
+    is >> readKeyword;
+
+    if(readKeyword != PvlKeyword("Group")) {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+      }
+
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Expected keyword named [Group], found keyword named [";
+      msg += readKeyword.Name();
+      msg += "]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    if(readKeyword.Size() == 1) {
+      result.SetName(readKeyword[0]);
+    }
+    else {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+      }
+
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Expected a single value for group name, found [(";
+
+      for(int i = 0; i < readKeyword.Size(); i++) {
+        if(i != 0) msg += ", ";
+
+        msg += readKeyword[i];
+      }
+
+      msg += ")]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+    
+
+    for(int comment = 0; comment < readKeyword.Comments(); comment++) {
+      result.AddComment(readKeyword.Comment(comment));
+    }
+
+    readKeyword = PvlKeyword();
+    beforeKeywordPos = is.tellg();
+
+    is >> readKeyword;
+    while(is.good() && readKeyword != termination) {
+      for(unsigned int errorKey = 0; 
+           errorKey < sizeof(errorKeywords)/sizeof(PvlKeyword);
+           errorKey++) {
+
+        if(readKeyword == errorKeywords[errorKey]) {
+          if(is.eof() && !is.bad()) {
+            is.clear();
+          }
+
+          is.seekg(beforeKeywordPos, ios::beg);
+
+          string msg = "Unexpected [";
+          msg += readKeyword.Name();
+          msg += "] in Group [";
+          msg += result.Name();
+          msg += "]";
+          throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+        }
+      }
+
+      result.AddKeyword(readKeyword);
+      readKeyword = PvlKeyword();
+      beforeKeywordPos = is.tellg();
+
+      is >> readKeyword;
+    }
+
+    if(readKeyword != termination) {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+        is.unget();
+      }
+
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Group [" + result.Name();
+      msg += "] EndGroup not found before end of file";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    return is;
+  }
 
   /**
    * Outputs the PvlGroup data to a specified output stream.

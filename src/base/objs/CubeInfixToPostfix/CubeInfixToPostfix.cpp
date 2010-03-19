@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $                                                             
- * $Date: 2008/04/16 23:58:08 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2010/02/23 17:09:44 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -37,7 +37,7 @@ namespace Isis {
    */
   bool CubeInfixToPostfix::IsKnownSymbol(iString representation) {
     for(int i = 0; i < p_operators.size(); i++) {
-      if(representation.compare(p_operators[i]->representation) == 0) {
+      if(representation.compare(p_operators[i]->InputString()) == 0) {
         return true;
       }
     }

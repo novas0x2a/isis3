@@ -43,7 +43,10 @@ namespace Isis {
    *   @history 2008-08-19 Steven Koechle - Removed Geos includes
    *   @author 2009-02-12 Steven Lambright - Made the class available as an
    *           instance and not just statically. Added optional cube open limits.
-   */
+   *   @history 2009-11-03 Mackenzie Boyd - Modified to include
+   *            cube attributes (input) when opening cubes.
+   *  
+   */ 
   class CubeManager  {
     public:
       CubeManager();

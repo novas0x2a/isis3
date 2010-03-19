@@ -55,6 +55,9 @@
       for images with DataConversionType of Table.  Updated documentation in 
       ciss2isis.cpp
     </change>
+    <change name="Christopher Austin" date="2010-01-08">
+      Fixed the reading of Pvl labels twice.
+    </change>
   </history>
   <liens>
     <item> 

@@ -9,7 +9,7 @@ SetImage (sample, line): 1
 NorthAzimuth: 269.544
 SunAzimuth: 168.17
 SpacecraftAzimuth: 184.591
-OffNadirAngle: 44.4229
+OffNadirAngle: 44.4225
 
 SetUniversalGround(lat, lon): 1
 SetRightAscensionDeclination(ra, dec): 1
@@ -18,14 +18,14 @@ IsBandIndependent called...
 ReferenceBand: 0
 HasReferenceBand: 0
 SetBand called, band: 7
-Sample: 408.127
-Line: 962.454
+Sample: 408.126
+Line: 962.452
 GroundRange: 0
 IntersectsLongitudeDomain: 0
-PixelResolution: 628.048
-LineResolution: 628.048
-SampleResolution: 628.048
-DetectorResolution: 157.012
+PixelResolution: 628.042
+LineResolution: 628.042
+SampleResolution: 628.042
+DetectorResolution: 157.011
 LowestImageResolution: 2047.19
 HighestImageResolution: 429.526
 Calling BasicMapping (pvl)...
@@ -166,8 +166,8 @@ End_Object
 
 Group = Mapping
   TargetName         = Mars
-  EquatorialRadius   = 3396190.0 <<meters>>
-  PolarRadius        = 3376200.0 <<meters>>
+  EquatorialRadius   = 3396190.0 <meters>
+  PolarRadius        = 3376200.0 <meters>
   LatitudeType       = Planetocentric
   LongitudeDirection = PositiveEast
   LongitudeDomain    = 360
@@ -175,7 +175,7 @@ Group = Mapping
   MaximumLatitude    = 34.449775120271
   MinimumLongitude   = 218.13667853438
   MaximumLongitude   = 237.62560286587
-  PixelResolution    = 429.52631513751
+  PixelResolution    = 429.52632181214
   ProjectionName     = Sinusoidal
 End_Group
 End
@@ -204,8 +204,8 @@ Test Polar Boundary Conditions
 Basic Mapping: 
 Group = Mapping
   TargetName         = Moon
-  EquatorialRadius   = 1737400.0 <<meters>>
-  PolarRadius        = 1737400.0 <<meters>>
+  EquatorialRadius   = 1737400.0 <meters>
+  PolarRadius        = 1737400.0 <meters>
   LatitudeType       = Planetocentric
   LongitudeDirection = PositiveEast
   LongitudeDomain    = 360

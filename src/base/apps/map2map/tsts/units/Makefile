@@ -1,7 +1,5 @@
 APPNAME = map2map
 
-labels.txt.IGNORELINES = Bytes ByteOrder
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
@@ -9,4 +7,4 @@ commands:
 	MAP=$(INPUT)/mapfile.map \
 	TO=$(OUTPUT)/map2mapTruth.cub \
 	MAXLON=-109 > /dev/null;
-	catlab FROM=$(OUTPUT)/map2mapTruth.cub >& $(OUTPUT)/labels.txt;
+	catlab FROM=$(OUTPUT)/map2mapTruth.cub >& $(OUTPUT)/labels.pvl;

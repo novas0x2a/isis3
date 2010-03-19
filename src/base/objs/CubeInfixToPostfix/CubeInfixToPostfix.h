@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/04/16 23:58:08 $
+ * $Revision: 1.2 $
+ * $Date: 2010/02/23 17:09:44 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -39,7 +39,9 @@ namespace Isis {
  *
  * @author 2007-08-21 Steven Lambright
  * 
- * @internal
+ * @internal 
+ *   @history 2010-02-23 Steven Lambright Updated to use InfixOperator class
+ *              method instead of direct access to member
  */
   class CubeInfixToPostfix : public InfixToPostfix {
     public:

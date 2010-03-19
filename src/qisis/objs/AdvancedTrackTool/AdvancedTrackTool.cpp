@@ -5,7 +5,14 @@
 #include "SerialNumber.h"
 #include "iTime.h"
 
+using namespace Isis;
+
 namespace Qisis {
+
+  // For mosaic tracking
+  #define FLOAT_MIN         -16777215  
+  #define TABLE_MOSAIC_SRC  "InputImages"
+
   /**
    * Constructs an AdvancedTrackTool object
    * 
@@ -61,6 +68,9 @@ namespace Qisis {
     p_tableWin->addToTable (false,"Path","Path");
     p_tableWin->addToTable (false,"Filename","Filename");
     p_tableWin->addToTable (false,"Serial Number","Serial Number");
+    p_tableWin->addToTable (false,"Track Mosaic Index","Track Mosaic Index");
+    p_tableWin->addToTable (false,"Track Mosaic FileName","Track Mosaic FileName");
+    p_tableWin->addToTable (false,"Track Mosaic Serial Number","Track Mosaic Serial Number");
     p_tableWin->addToTable (false,"Notes","Notes");
     //This variable will keep track of how many times 
     // the user has issued the 'record' command.
@@ -164,7 +174,8 @@ namespace Qisis {
     if(!cubeViewport()->isLinked()) {
       updateRow (cvp,p,p_tableWin->currentRow());
       p_numRows = 1;
-    } else {
+    } 
+    else {
       p_numRows = 0;
       for (int i = 0; i < (int)cubeViewportList()->size(); i++) {
         CubeViewport *d = (*(cubeViewportList()))[i];
@@ -179,9 +190,9 @@ namespace Qisis {
   /**
    * This method updates the row given with data from the viewport cvp at point p.
    * 
-   * @param cvp 
-   * @param p 
-   * @param row 
+   * @param cvp CubeViewPort that contains p
+   * @param p   QPoint from which the row will be updated
+   * @param row Row to be updated
    */
   void AdvancedTrackTool::updateRow (CubeViewport *cvp, QPoint p, int row) {
     // Get the sample line position to report
@@ -382,11 +393,87 @@ namespace Qisis {
         p_tableWin->table()->item(row, PROJECTED_Y)->setText(QString::number(projY, 'f', 15));
       }
     }
+
+    // Track the Mosaic Origin -  Index (Zero based) and FileName
+    int iMosaicOrigin=-1;
+    std::string sSrcFileName="";
+    std::string sSrcSerialNum="";
+    TrackMosaicOrigin(cvp, iline, isample, iMosaicOrigin, sSrcFileName, sSrcSerialNum);
+    p_tableWin->table()->item(row, TRACK_MOSAIC_INDEX)->setText(QString::number(iMosaicOrigin));
+    p_tableWin->table()->item(row, TRACK_MOSAIC_FILENAME)->setText(QString(sSrcFileName.c_str()));
+    p_tableWin->table()->item(row, TRACK_MOSAIC_SERIAL_NUM)->setText(QString(sSrcSerialNum.c_str()));
   }
 
 
   /**
-   * This methods records data to the current row.
+   * TrackMosaicOrigin - Given the pointer to Cube and line and 
+   * sample index, finds the origin of the mosaic if the TRACKING 
+   * band and Mosaic Origin Table  exists. 
+   * 
+   * @author sprasad (11/16/2009)
+   * 
+   * @param cvp           - Points to the CubeViewPort
+   * @param piLine        - Line Index
+   * @param piSample      - Sample Index 
+   * @param piOrigin      - Contains the Src Index (zero based) 
+   * @param psSrcFileName - Contains the Src Filename 
+   * @param psSrcSerialNum- Contains the Src Serial Number 
+   * 
+   * @return void 
+   */
+  void AdvancedTrackTool::TrackMosaicOrigin(CubeViewport *cvp, int piLine, int piSample, int & piOrigin, std::string & psSrcFileName, std::string & psSrcSerialNum)
+  {
+    Cube* cCube = cvp->cube();
+    int iTrackBand=-1;    
+
+    if (cCube->HasTable(TABLE_MOSAIC_SRC)) {
+      Pvl* cPvl = cCube->Label();
+      PvlObject cObjIsisCube = cPvl->FindObject("IsisCube");      
+      PvlGroup cGrpBandBin = cObjIsisCube.FindGroup("BandBin");      
+      for (int i=0; i<cGrpBandBin.Keywords(); i++) {
+        PvlKeyword &cKeyTrackBand = cGrpBandBin[i];   
+        for (int j=0; j<cKeyTrackBand.Size(); j++) {
+          if (cKeyTrackBand[j] == "TRACKING") {
+            iTrackBand = j;          
+            break;
+          }
+        }
+      }    
+
+      if (iTrackBand > 0 && iTrackBand <= cCube->Bands()) {
+        Isis::Portal cOrgPortal (cCube->Samples(), 1, cCube->PixelType());
+        cOrgPortal.SetPosition (piSample, piLine, iTrackBand+1); // 1 based
+        cCube->Read(cOrgPortal);
+
+        piOrigin = (int)cOrgPortal[0];
+        switch (SizeOf(cCube->PixelType())) {
+          case 1:
+            piOrigin -= VALID_MIN1;
+            break;
+
+          case 2:
+            piOrigin -= VALID_MIN2;
+            break;
+
+          case 4:
+            piOrigin -= FLOAT_MIN;
+            break;
+        }        
+     
+        // Get the input file name and serial number
+        Table cFileTable(TABLE_MOSAIC_SRC);  
+        cCube->Read(cFileTable);          
+        int iRecs =   cFileTable.Records();                                                     
+        if (piOrigin >=0 && piOrigin < iRecs) {
+          psSrcFileName = std::string(cFileTable[piOrigin][0]);    
+          psSrcSerialNum = std::string(cFileTable[piOrigin][1]); 
+        }
+      } 
+    }
+  }  
+
+  /**
+   * This method records data to the current row.
    * 
    */
   void AdvancedTrackTool::record () {
@@ -402,14 +489,35 @@ namespace Qisis {
       for (int c=0; c<p_tableWin->table()->columnCount(); c++) {
         QTableWidgetItem *item = new QTableWidgetItem("");
         p_tableWin->table()->setItem(row,c,item);
-      }
-      
+      }      
     }
+
     QApplication::sendPostedEvents(p_tableWin->table(),0);
     p_tableWin->table()->scrollToItem(p_tableWin->table()->item(p_tableWin->currentRow(),0),QAbstractItemView::PositionAtBottom);
 
     //Keep track of number times user presses 'R' (record command)    
     p_id = p_tableWin->table()->item(p_tableWin->currentRow()-1, 0)->text().toInt() + 1;
+  }
+
+
+  /**
+   * This slot updates the row with data from the point given and
+   * records data to the current row. 
+   *  
+   * @param p   QPoint from which the row(s) will be updated and 
+   *            recorded.
+   * @return void 
+   * @author Jeannie Walldren 
+   *  
+   * @internal 
+   *  @history 2010-03-08 - Jeannie Walldren - This slot was
+   *           added to be connected to the FindTool recordPoint()
+   *           signal in qview.
+   * 
+   */
+  void AdvancedTrackTool::record (QPoint p) {
+    updateRow(p);
+    record();
   }
 
   /**

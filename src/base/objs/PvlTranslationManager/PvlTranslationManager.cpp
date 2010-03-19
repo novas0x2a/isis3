@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/07/10 17:57:36 $
+ * $Revision: 1.10 $
+ * $Date: 2010/01/04 18:01:31 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -59,7 +59,7 @@ namespace Isis {
   PvlTranslationManager::PvlTranslationManager (Isis::Pvl &inputLabel,
                                                 std::istream &transStrm) {
     p_fLabel = inputLabel;
-  
+
     // Internalize the translation table
     AddTable (transStrm);
   }
@@ -79,22 +79,21 @@ namespace Isis {
     * 
     * @return string
     */
-    string PvlTranslationManager::Translate (const std::string nName, int findex) {
-    Isis::PvlContainer *con;
+  string PvlTranslationManager::Translate (const std::string nName, int findex) {
+    const Isis::PvlContainer *con;
     int inst = 0;
-    string grp;
-    while ((grp = InputGroup(nName, inst++)) != "") {
+    PvlKeyword grp;
+
+    while ((grp = InputGroup(nName, inst++)).Name() != "") {
       if ((con = GetContainer(grp)) != NULL) {
-    //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
-//    if ((con = GetContainer (InputGroup(nName))) != NULL) {
-        if (con->HasKeyword(InputKeyword(nName))) {
-          return Isis::PvlTranslationTable::Translate(nName,
-                 (*con)[InputKeyword(nName)][findex]);
+        if (con->HasKeyword(InputKeywordName(nName))) {
+          return PvlTranslationTable::Translate(nName,
+                 (*con)[InputKeywordName(nName)][findex]);
         }
       }
     }
-  
-    return Isis::PvlTranslationTable::Translate(nName, "");
+
+    return Isis::PvlTranslationTable::Translate(nName);
   }
   
  /** 
@@ -104,36 +103,34 @@ namespace Isis {
   * @param nName The output name used to identify the input keyword to be 
   *              translated.
   * 
-  * @param dummy  
-  * 
   * @return Isis::PvlKeyword
   */
-  Isis::PvlKeyword PvlTranslationManager::Translate (const std::string nName, double dummy) {
-    Isis::PvlContainer *con = NULL;
+  Isis::PvlKeyword PvlTranslationManager::DoTranslation(
+      const std::string nName) {
+    const Isis::PvlContainer *con = NULL;
     Isis::PvlKeyword key;
 
     int inst = 0;
-    string grp;
-    while ((grp = InputGroup(nName, inst++)) != "") {
+    PvlKeyword grp;
+
+    while ((grp = InputGroup(nName, inst++)).Name() != "") {
       if ((con = GetContainer(grp)) != NULL) {
-        //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
-        //if ((con = GetContainer (InputGroup(nName))) != NULL) {
-        // If the label contains the correct keyword, translate all values
-        if (con->HasKeyword(InputKeyword(nName))) {
-          //if (InputHasKeyword(nName)) {
+        if (con->HasKeyword(InputKeywordName(nName))) {
           key.SetName(OutputName(nName));
-          for (int v=0; v<(*con)[(InputKeyword(nName))].Size(); v++) {
-            //key.AddValue(Isis::PvlTranslationTable::Translate(nName, InputValue(nName, v)),
-            //             InputUnits(nName, v));
-            key.AddValue(Isis::PvlTranslationTable::Translate(nName, (*con)[InputKeyword(nName)][v]),
-                         (*con)[InputKeyword(nName)].Unit(v));
+
+          for (int v=0; v<(*con)[(InputKeywordName(nName))].Size(); v++) {
+            key.AddValue(Isis::PvlTranslationTable::Translate(nName,
+                         (*con)[InputKeywordName(nName)][v]),
+                         (*con)[InputKeywordName(nName)].Unit(v));
           }
+
           return key;
         }
       }
     }
+
     return Isis::PvlKeyword (OutputName(nName),
-                           Isis::PvlTranslationTable::Translate(nName, ""));
+                           PvlTranslationTable::Translate(nName, ""));
   }
   
   
@@ -149,7 +146,7 @@ namespace Isis {
       if (IsAuto(g.Name())) {
         try {
           Isis::PvlContainer *con = CreateContainer(g.Name(), outputLabel);
-          (*con) += Translate (g.Name(),  0.5);
+          (*con) += PvlTranslationManager::DoTranslation (g.Name());
         }
         catch (iException &e){
           if (IsOptional(g.Name())) {
@@ -173,112 +170,47 @@ namespace Isis {
   * 
   * @throws Isis::iException::Programmer
   */
-  string PvlTranslationManager::InputValue (const std::string nName,
-                                            const int findex) {
-    Isis::PvlContainer *con;
-    int inst = 0;
-    //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
-    //if ((con = GetContainer (InputGroup(nName))) != NULL) {
+  const PvlKeyword &PvlTranslationManager::InputKeyword (
+      const std::string nName) const {
 
-    string grp;
-    bool grpFound = false;
-    while ((grp = InputGroup(nName, inst++)) != "") {
-      if ((con = GetContainer(grp)) != NULL) {
+    int instanceNumber = 0;
+    PvlKeyword inputGroupKeyword = InputGroup(nName, instanceNumber);
+    bool anInputGroupFound = false;
 
-        if (con->HasKeyword(InputKeyword(nName))) {
-          return (*con)[InputKeyword(nName)][findex];
+    while(inputGroupKeyword.Name() != "") {
+      const PvlContainer *containingGroup = GetContainer(inputGroupKeyword);
+      if (containingGroup != NULL) {
+        anInputGroupFound = true;
+
+        if (containingGroup->HasKeyword(InputKeywordName(nName))) {
+          return containingGroup->FindKeyword(InputKeywordName(nName));
         }
-        grpFound = true;
       }
+
+      instanceNumber ++;
+      inputGroupKeyword = InputGroup(nName, instanceNumber);
     }
 
-    if(grpFound) {
-      string msg = "Unable to find input keyword [" + InputKeyword(nName) +
+    if(anInputGroupFound) {
+      string msg = "Unable to find input keyword [" + InputKeywordName(nName) +
                    "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
       throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
     }
     else {
-      string msg = "Unable to find input group [" + InputGroup(nName) +
-                   "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
-      throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
-    }
-  }
-  
- /** 
-  * Returns the ith input units assiciated with the output name argument.  
-  * 
-  * @param nName The output name used to identify the input keyword.
-  * 
-  * @param findex The index into the input keyword array.  Defaults to 0
-  * 
-  * @throws Isis::iException::Programmer
-  */
-  string PvlTranslationManager::InputUnits (const std::string nName,
-                                              const int findex) {
-    Isis::PvlContainer *con;
-    int inst = 0;
-    //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
-    //if ((con = GetContainer (InputGroup(nName))) != NULL) {
+      string container = "";
 
-    string grp;
-    bool grpFound = false;
-    while ((grp = InputGroup(nName, inst++)) != "") {
-      if ((con = GetContainer(grp)) != NULL) {
+      for(int i = 0; i < InputGroup(nName).Size(); i++) {
+        if(i > 0) container += ",";
 
-        if (con->HasKeyword(InputKeyword(nName))) {
-          return (*con)[InputKeyword(nName)].Unit(findex);
-        }
-        grpFound = true;
-
+        container += InputGroup(nName)[i];
       }
-    }
-    if(grpFound) {
-      string msg = "Unable to find input keyword [" + InputKeyword(nName) +
-                   "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
-      throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
-    }
-    else {
-      string msg = "Unable to find input group [" + InputGroup(nName) +
-                   "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
-      throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
-    }  
-  }
-  
- /** 
-  * Returns the number of values in foriegn keyword assiciated with the output 
-  * name argument.
-  * 
-  * @param nName The output name used to identify the input keyword.
-  * 
-  * @throws Isis::iException::Programmer
-  */
-  int PvlTranslationManager::InputSize (const std::string nName) { 
-    Isis::PvlContainer *con;
-    int inst = 0;
-    //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
-    //if ((con = GetContainer (InputGroup(nName))) != NULL) {
 
-    string grp;
-    bool grpFound = false;
-    while ((grp = InputGroup(nName, inst++)) != "") {
-      if ((con = GetContainer(grp)) != NULL) {
-        if (con->HasKeyword(InputKeyword(nName))) {
-          return (*con)[(InputKeyword(nName))].Size();
-        }
-        grpFound = true;
-      }
-    }
-    if(grpFound) {
-      string msg = "Unable to find input keyword [" + InputKeyword(nName) +
+      string msg = "Unable to find input group [" + container +
                    "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
       throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
     }
-    else {
-      string msg = "Unable to find input group [" + InputGroup(nName) +
-                   "] for output name [" + nName + "] in file [" + TranslationTable().Filename() +"]";
-      throw Isis::iException::Message(Isis::iException::Programmer,msg, _FILEINFO_);
-    } 
   }
+
   
  /** 
   * Indicates if the input keyword corresponding to the output name exists in 
@@ -290,17 +222,18 @@ namespace Isis {
   
     // Set the current position in the input label pvl
     // by finding the input group corresponding to the output group
-    Isis::PvlContainer *con;
+    const Isis::PvlContainer *con;
     int inst = 0;
     //while ((con = GetContainer(InputGroup(nName, inst++))) != NULL) {
     //if ((con = GetContainer (InputGroup(nName))) != NULL) {
 
-    string grp;
-    while ((grp = InputGroup(nName, inst++)) != "") {
+    PvlKeyword grp;
+    while ((grp = InputGroup(nName, inst++)).Name() != "") {
       if ((con = GetContainer(grp)) != NULL) {  
-        if (con->HasKeyword(InputKeyword(nName))) return true;
+        if (con->HasKeyword(InputKeywordName(nName))) return true;
       }
     }
+
     return false;
   }
   
@@ -321,30 +254,41 @@ namespace Isis {
 */  
   
   // Return a container from the input label according tund
-  Isis::PvlContainer *PvlTranslationManager::GetContainer(const std::string &fGroup) {
-    Isis::iString groups(fGroup);
-    Isis::iString g;
-    Isis::PvlObject *obj = &p_fLabel;
+  const Isis::PvlContainer *PvlTranslationManager::GetContainer(
+      const PvlKeyword &inputGroup) const {
+
 
     // Return the root container if "ROOT" is the ONLY thing in the list
-    if (groups.UpCase() == "ROOT") {
-      return (Isis::PvlContainer *) obj;
+    if (inputGroup.Size() == 1 && 
+        PvlKeyword::StringEqual(inputGroup[0], "ROOT")) {
+      return &p_fLabel;
     }
 
-    while ((g = groups.Token(",").Trim(" \n\t\v\b\f\r")).length() != 0) {
-      if (obj->HasObject(g)) {
-        obj = &obj->FindObject(g);
-        continue;
-      }
-      else if (obj->HasGroup(g)) {
-        return (Isis::PvlContainer *) &obj->FindGroup(g);
+    const Isis::PvlObject *currentObject = &p_fLabel;
+
+    // Search for object containing our solution
+    int objectIndex;
+    for(objectIndex = 0; 
+         objectIndex < inputGroup.Size() - 1; 
+         objectIndex ++) {
+      if(currentObject->HasObject(inputGroup[objectIndex])) {
+        currentObject = &currentObject->FindObject(inputGroup[objectIndex]);
       }
       else {
         return NULL;
       }
     }
-  
-    return (Isis::PvlContainer *) obj;
+
+    // Our solution can be an object or a group
+    if(currentObject->HasObject(inputGroup[objectIndex])) {
+      return &currentObject->FindObject(inputGroup[objectIndex]);
+    }
+    else if(currentObject->HasGroup(inputGroup[objectIndex])) {
+      return &currentObject->FindGroup(inputGroup[objectIndex]);
+    }
+    else {
+      return NULL;
+    }
   }
   
   

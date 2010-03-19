@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2008/06/18 20:57:04 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2010/02/23 16:58:28 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -442,14 +442,18 @@ namespace Isis {
 
 
   /**
-   * Pop one element, then push the maximum on the stack
+   * Pop one element, then push the minimum on the stack
    */
   void Calculator::Minimum() {
     std::vector<double> result = Pop();
 
     int size = result.size();
     double minVal = result[0];
-    for(unsigned int i = 0; i < result.size(); i++) minVal = min(minVal, result[i]);
+    for(unsigned int i = 0; i < result.size(); i++) {
+      if(!IsSpecial(result[i])) {
+        minVal = min(minVal, result[i]);
+      }
+    }
 
     result.clear();
     result.resize(size, minVal);
@@ -465,10 +469,69 @@ namespace Isis {
 
     int size = result.size();
     double maxVal = result[0];
-    for(unsigned int i = 0; i < result.size(); i++) maxVal = max(maxVal, result[i]);
+    for(unsigned int i = 0; i < result.size(); i++) {
+      if(!IsSpecial(result[i])) {
+        maxVal = max(maxVal, result[i]);
+      }
+    }
 
     result.clear();
     result.resize(size, maxVal);
+    Push(result);
+  }
+
+
+  /**
+   * Pop two elements, then push the minimum on the stack
+   */
+  void Calculator::Minimum2() {
+    std::vector<double> x = Pop();
+    std::vector<double> y = Pop();
+    std::vector<double> result;
+
+    double minVal = x[0];
+    for(unsigned int i = 0; i < x.size(); i++) {
+      if(!IsSpecial(x[i])) {
+        minVal = min(minVal, x[i]);
+      }
+    }
+
+    for(unsigned int i = 0; i < y.size(); i++) {
+      if(!IsSpecial(y[i])) {
+        minVal = min(minVal, y[i]);
+      }
+    }
+
+    
+    result.clear();
+    result.push_back(minVal);
+    Push(result);
+  }
+
+
+  /**
+   * Pop two elements, then push the maximum on the stack
+   */
+  void Calculator::Maximum2() {
+    std::vector<double> x = Pop();
+    std::vector<double> y = Pop();
+    std::vector<double> result;
+
+    double maxVal = x[0];
+    for(unsigned int i = 0; i < x.size(); i++) {
+      if(!IsSpecial(x[i])) {
+        maxVal = max(maxVal, x[i]);
+      }
+    }
+
+    for(unsigned int i = 0; i < y.size(); i++) {
+      if(!IsSpecial(y[i])) {
+        maxVal = max(maxVal, y[i]);
+      }
+    }
+
+    result.clear();
+    result.push_back(maxVal);
     Push(result);
   }
 
@@ -909,6 +972,7 @@ namespace Isis {
 
     for(unsigned int pos = 0; pos < results.size(); pos++) {
       results[pos] = operation(*arg1Start);
+      
       arg1Start++;
     }
   }

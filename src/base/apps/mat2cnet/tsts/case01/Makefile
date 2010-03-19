@@ -9,7 +9,7 @@ commands:
 	match=$(INPUT)/pts.mat \
 	list3=$(OUTPUT)/cub3.lis \
 	control=$(OUTPUT)/mat2cnetTruth1.pvl \
-	description="Test Network" \
+	description="Default Test Network" \
 	networkid=TestNet01 \
 	target=Titan > /dev/null;
 	rm -f $(OUTPUT)/cub2.lis;

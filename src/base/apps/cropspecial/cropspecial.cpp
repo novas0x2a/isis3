@@ -5,10 +5,9 @@
 #include "SpecialPixel.h"
 #include "Cube.h"
 #include "Table.h"
-#include "AlphaCube.h"
-#include "Projection.h"
 #include "Pvl.h"
 #include "PvlKeyword.h"
+#include "SubArea.h"
 
 using namespace std; 
 using namespace Isis;
@@ -50,6 +49,7 @@ void IsisMain() {
   // Setup the input cube
   ProcessByLine p1;
   p1.SetInputCube("FROM");
+  p1.Progress()->SetText("Finding Perimeter");
       
   // Start the first pass
   p1.StartProcess(FindPerimeter);
@@ -68,6 +68,7 @@ void IsisMain() {
   ProcessByLine p2;
   p2.SetInputCube("FROM");
   p2.PropagateTables(false);
+  p2.Progress()->SetText("Removing Special Pixels");
   Cube *ocube = p2.SetOutputCube("TO", numSamples, numLines, numBands);
   p2.ClearInputCubes();  
   
@@ -103,31 +104,12 @@ void IsisMain() {
   // Start the second pass
   p2.StartProcess(SpecialRemoval);
 
-  // Adjust the upper corner x,y values if the cube is projected
-  try {
-    // Try to create a projection & set the x,y position
-    Projection *proj = cube.Projection();
-    proj->SetWorld(minSample-0.5,minLine-0.5);
-
-    // Set the new x,y coords in the cube label
-    PvlGroup &mapgrp = cube.Label()->FindGroup("Mapping",Pvl::Traverse);
-    mapgrp.AddKeyword(PvlKeyword("UpperLeftCornerX",proj->XCoord()), 
-                       Pvl::Replace);
-    mapgrp.AddKeyword(PvlKeyword("UpperLeftCornerY",proj->YCoord()),
-                                      Pvl::Replace);
-    ocube->PutGroup(mapgrp);
-  }
-  // Only write the alpha group if the cube is not projected
-  catch (iException &e) {
-    // Clear the exception
-    e.Clear();
-
-    // Add and/or update the alpha group
-    AlphaCube aCube(cube.Samples(),cube.Lines(),
-                        ocube->Samples(),ocube->Lines(),
-                        minSample-0.5,minLine-0.5,numSamples+0.5,numLines+0.5);
-    aCube.UpdateGroup(*ocube->Label());
-  }
+  // Update the Mapping, Instrument, and AlphaCube groups in the output
+  // cube label
+  SubArea s;
+  s.SetSubArea(cube.Lines(),cube.Samples(),minLine,minSample,minLine+numLines-1,
+               minSample+numSamples-1,1.0,1.0);
+  s.UpdateLabel(&cube,ocube,results);
 
   p2.EndProcess(); 
   cube.Close();  

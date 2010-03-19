@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/10/01 01:14:27 $
+ * $Revision: 1.14 $
+ * $Date: 2009/12/28 16:49:00 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -27,6 +27,9 @@
 #include "Message.h"
 #include "PvlFormat.h"
 #include "PvlObject.h"
+
+#include <iostream>
+#include <sstream>
 
 using namespace std;
 namespace Isis {
@@ -56,7 +59,8 @@ namespace Isis {
    *  
    * @throws iException::Pvl 
    */
-  Isis::PvlGroup &PvlObject::FindGroup(const std::string &name, PvlObject::FindOptions opts) {
+  Isis::PvlGroup &PvlObject::FindGroup(const std::string &name, 
+                                       PvlObject::FindOptions opts) {
     vector<PvlObject *> searchList;
     searchList.push_back(this);
 
@@ -90,7 +94,8 @@ namespace Isis {
    *  
    * @throws iException::Pvl 
    */
-  const Isis::PvlGroup &PvlObject::FindGroup(const std::string &name, PvlObject::FindOptions opts) const {
+  const Isis::PvlGroup &PvlObject::FindGroup(const std::string &name, 
+                                           PvlObject::FindOptions opts) const {
     vector<const PvlObject *> searchList;
     searchList.push_back(this);
 
@@ -102,7 +107,7 @@ namespace Isis {
       if (it != searchList[0]->EndGroup()) return *it;
       if (opts == Traverse) {
         for (int i=0; i<searchList[0]->Objects(); i++) {
-          searchList.push_back(new PvlObject(searchList[0]->Object(i)));
+          searchList.push_back(&searchList[0]->Object(i));
         }
       }
       searchList.erase(searchList.begin());
@@ -152,7 +157,8 @@ namespace Isis {
       // See if the keyword is inside a Group of this Object
       for (int g=0; g<searchList[0]->Groups(); g++) {
         PvlKeywordIterator it = 
-            searchList[0]->Group(g).FindKeyword(kname, searchList[0]->Group(g).Begin(),
+            searchList[0]->Group(g).FindKeyword(kname, 
+                                                searchList[0]->Group(g).Begin(),
                                                 searchList[0]->Group(g).End());
         if (it != searchList[0]->Group(g).End()) {
           return *it;
@@ -210,8 +216,10 @@ namespace Isis {
       // See if the keyword is inside a Group of this Object
       for (int g=0; g<searchList[0]->Groups(); g++) {
         ConstPvlKeywordIterator it = 
-            searchList[0]->Group(g).FindKeyword(kname, searchList[0]->Group(g).Begin(), 
+            searchList[0]->Group(g).FindKeyword(kname, 
+                                                searchList[0]->Group(g).Begin(), 
                                                 searchList[0]->Group(g).End());
+
         if (it != searchList[0]->Group(g).End()) {
           return true;
         }
@@ -261,6 +269,50 @@ namespace Isis {
 
     string msg = "Unable to find object [" + name + "]";
     if (p_filename.size() > 0) msg += " in file [" + p_filename + "]";
+    throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
+  }
+
+
+  /**
+   * Find an object within the current PvlObject. 
+   *  
+   * @param name The object name to look for.
+   * @param opts The FindOptions option (None or Traverse). 
+   *  
+   * @return The PvlObject sought for. 
+   *  
+   * @throws iException::Pvl 
+   */
+  const PvlObject &PvlObject::FindObject(const std::string &name, 
+                                         FindOptions opts) const {
+    vector<const PvlObject *> searchList;
+    searchList.push_back(this);
+
+    while (searchList.size() > 0) {
+      ConstPvlObjectIterator it = 
+        searchList[0]->FindObject(name,
+                                  searchList[0]->BeginObject(),
+                                  searchList[0]->EndObject());
+
+      if (it != searchList[0]->EndObject()) {
+        return *it;
+      }
+
+      if (opts == Traverse) {
+        for (int i=0; i<searchList[0]->Objects(); i++) {
+          searchList.push_back(&searchList[0]->Object(i));
+        }
+      }
+
+      searchList.erase(searchList.begin());
+    }
+
+    string msg = "Unable to find object [" + name + "]";
+
+    if (p_filename.size() > 0) {
+      msg += " in file [" + p_filename + "]";
+    }
+
     throw Isis::iException::Message(Isis::iException::Pvl,msg,_FILEINFO_);
   }
 
@@ -361,8 +413,11 @@ namespace Isis {
   Isis::PvlGroup &PvlObject::Group(const int index) {
     if (index < 0 || index >= (int)p_groups.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
+
     return p_groups[index];
   }
 
@@ -379,8 +434,11 @@ namespace Isis {
   const Isis::PvlGroup &PvlObject::Group(const int index) const {
     if (index < 0 || index >= (int)p_groups.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
+
     return p_groups[index];
   }
 
@@ -396,8 +454,11 @@ namespace Isis {
   PvlObject &PvlObject::Object(const int index) {
     if (index < 0 || index >= (int)p_objects.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
+
     return p_objects[index];
   }
 
@@ -413,72 +474,13 @@ namespace Isis {
   const PvlObject &PvlObject::Object(const int index) const {
     if (index < 0 || index >= (int)p_objects.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
+
     return p_objects[index];
   }
-
-  /** 
-   * Creates a PvlObject using a vector of tokens and an iterator. 
-   *  
-   * @param tokens The vector of tokens to use. 
-   *  
-   * @param pos The counter to use.
-   *  
-   * @throws iException::Pvl 
-   */
-  PvlObject::PvlObject (std::vector<Isis::PvlToken> &tokens, 
-                        std::vector<Isis::PvlToken>::iterator &pos) :
-  Isis::PvlContainer("Object") {
-    // Grab any comments
-    p_name.AddComments(tokens,pos);
-
-    // Get the group name
-    SetName(pos->GetValue());
-    pos++;
-
-    // Loop and parse
-    string key;
-    vector<Isis::PvlToken>::iterator curPos = pos;
-    while (pos != tokens.end()) {
-      // Grab the keyword
-      key = pos->GetKey();
-
-      // Are we at the objects end
-      if (PvlKeyword::StringEqual (key, "ENDOBJECT")) {
-        pos++;
-        return;
-      }
-
-      // See if we have a group
-      if (PvlKeyword::StringEqual (key, "GROUP")) {
-        Isis::PvlGroup group(tokens,curPos);
-        AddGroup(group);
-        pos = curPos;
-      }
-
-      // See if we have an object
-      else if (PvlKeyword::StringEqual (key, "OBJECT")) {
-        PvlObject object(tokens,curPos);
-        AddObject(object);
-        pos = curPos;
-      }
-
-      // See if we have a comment otherwise its a keyword
-      else if (PvlKeyword::StringEqual (key, "_COMMENT_")) {
-        pos++;
-      } else {
-        Isis::PvlKeyword keyword(tokens,curPos);
-        AddKeyword(keyword);
-        pos = curPos;
-      }
-    } 
-
-    // Fell out of the loop so we don't have an endobject
-    string message = "Ending delimiter [EndObject] not found for [Object=" 
-                     + Name() + "]";
-    throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-  } 
 
 
   /**
@@ -497,10 +499,16 @@ namespace Isis {
     }
 
     Isis::PvlObject outTemplate("DEFAULT");
-    if (object.HasFormatTemplate()) outTemplate = *(Isis::PvlObject*)object.FormatTemplate();
+    if (object.HasFormatTemplate()) 
+      outTemplate = *(Isis::PvlObject*)object.FormatTemplate();
 
     // Look for and process all include files and remove duplicates
     Isis::PvlObject newTemp(outTemplate.Name());
+
+    // Make sure the new template has all the original's comments
+    for (int i = 0; i < outTemplate.Comments(); i++) {
+      newTemp.AddComment(outTemplate.Comment(i));
+    }
 
     // Include files take precedence to all other objects and groups
     for (int i=0; i<outTemplate.Keywords(); i++) {
@@ -508,9 +516,13 @@ namespace Isis {
         string filename = outTemplate[i];
         Isis::Filename file(filename);
         if (!file.Exists()) {
-          string message = "Could not open the following template file: " + filename;
-          throw Isis::iException::Message(Isis::iException::Io,message,_FILEINFO_);
+          string message = "Could not open the following template file: ";
+          message += filename;
+          throw Isis::iException::Message(Isis::iException::Io,
+                                          message,
+                                          _FILEINFO_);
         }
+
         Isis::Pvl include(file.Expanded());
 
         for (int j=0; j<include.Keywords(); j++) {
@@ -547,13 +559,13 @@ namespace Isis {
 
     outTemplate = newTemp;
 
-    // Write out comments for this Objects that were in the template
+    // Write out comments for this Object that were in the template
     if (outTemplate.Comments() > 0) {
       for (int k=0; k<outTemplate.Comments(); k++) {
         for (int l=0; l<object.Indent(); l++) os << " ";
         os << outTemplate.Comment(k) << object.GetFormat()->FormatEOL();
       }
-      os << object.GetFormat()->FormatEOL();
+      //os << object.GetFormat()->FormatEOL();
     }
 
     // Output the object comments and name
@@ -572,14 +584,18 @@ namespace Isis {
     for (int i=0; i<outTemplate.Objects(); i++) {
       for (int j=0; j<object.Objects(); j++) {
         if (outTemplate.Object(i).Name() != object.Object(j).Name()) continue;
-        if (j == 0 && object.Keywords() > 0) os << object.GetFormat()->FormatEOL();
+        if (j == 0 && object.Keywords() > 0) 
+          os << object.GetFormat()->FormatEOL();
+
         object.Object(j).SetIndent(object.Indent());
         object.Object(j).SetFormatTemplate(outTemplate.Object(i));
         object.Object(j).SetFormat(object.GetFormat());
         os << object.Object(j) << object.GetFormat()->FormatEOL();
         object.Object(j).SetFormat(NULL);
         object.Object(j).SetIndent(0);
-        if (++numObjects < object.Objects()) os << object.GetFormat()->FormatEOL();
+
+        if (++numObjects < object.Objects()) 
+          os << object.GetFormat()->FormatEOL();
       }
     }
 
@@ -587,13 +603,18 @@ namespace Isis {
     // format template pvl
     for (int i=0; i<object.Objects(); i++) {
       if (outTemplate.HasObject(object.Object(i).Name())) continue;
-      if (i == 0 && object.Keywords() > 0) os << object.GetFormat()->FormatEOL();
+      if (i == 0 && object.Keywords() > 0) 
+        os << object.GetFormat()->FormatEOL();
+
       object.Object(i).SetIndent(object.Indent());
       object.Object(i).SetFormat(object.GetFormat());
       os << object.Object(i) << object.GetFormat()->FormatEOL();
       object.Object(i).SetFormat(NULL);
       object.Object(i).SetIndent(0);
-      if (++numObjects < object.Objects()) os << object.GetFormat()->FormatEOL();
+
+      if (++numObjects < object.Objects()) 
+        os << object.GetFormat()->FormatEOL();
+
     }
 
     // This number keeps track of the number of Groups that have been written
@@ -604,7 +625,9 @@ namespace Isis {
       for (int j=0; j<object.Groups(); j++) {
         if (outTemplate.Group(i).Name() != object.Group(j).Name()) continue;
         if ((numGroups == 0) && 
-            (object.Objects() > 0 || object.Keywords() > 0)) os << object.GetFormat()->FormatEOL();
+            (object.Objects() > 0 || object.Keywords() > 0)) 
+          os << object.GetFormat()->FormatEOL();
+
         object.Group(j).SetIndent(object.Indent());
         object.Group(j).SetFormatTemplate(outTemplate.Group(i));
         object.Group(j).SetFormat(object.GetFormat());
@@ -619,13 +642,17 @@ namespace Isis {
     for (int i=0; i<object.Groups(); i++) {
       if (outTemplate.HasGroup(object.Group(i).Name())) continue;
       if ((numGroups == 0) && 
-          (object.Objects() > 0 || object.Keywords() > 0)) os << object.GetFormat()->FormatEOL();
+          (object.Objects() > 0 || object.Keywords() > 0)) 
+        os << object.GetFormat()->FormatEOL();
+
       object.Group(i).SetIndent(object.Indent());
       object.Group(i).SetFormat(object.GetFormat());
       os << object.Group(i) << object.GetFormat()->FormatEOL();
       object.Group(i).SetFormat(NULL);
       object.Group(i).SetIndent(0);
-      if (++numGroups < object.Groups()) os << object.GetFormat()->FormatEOL();
+
+      if (++numGroups < object.Groups()) 
+        os << object.GetFormat()->FormatEOL();
     }
 
     // Output the end of the object
@@ -639,6 +666,125 @@ namespace Isis {
     }
 
     return os;
+  }
+
+
+  /**
+   * This method reads a PvlObject from the input stream
+   * 
+   */
+  std::istream& operator>>(std::istream &is, PvlObject &result) {
+    PvlKeyword termination("EndObject");
+
+    PvlKeyword errorKeywords[] = {
+      PvlKeyword("EndGroup")
+    };
+
+    PvlKeyword readKeyword;
+
+    istream::pos_type beforeKeywordPos = is.tellg();
+    is >> readKeyword;
+
+    if(readKeyword != PvlKeyword("Object")) {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+      }
+
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Expected keyword named [Object], found keyword named [";
+      msg += readKeyword.Name();
+      msg += "]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    if(readKeyword.Size() == 1) {
+      result.SetName(readKeyword[0]);
+    }
+    else {
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Expected a single value for object name, found [(";
+
+      for(int i = 0; i < readKeyword.Size(); i++) {
+        if(i != 0) msg += ", ";
+
+        msg += readKeyword[i];
+      }
+
+      msg += ")]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+    
+    for(int comment = 0; comment < readKeyword.Comments(); comment++) {
+      result.AddComment(readKeyword.Comment(comment));
+    }
+
+    readKeyword = PvlKeyword();
+    beforeKeywordPos = is.tellg();
+
+    is >> readKeyword;
+    while(readKeyword != termination) {
+      for(unsigned int errorKey = 0; 
+           errorKey < sizeof(errorKeywords)/sizeof(PvlKeyword);
+           errorKey++) {
+        if(readKeyword == errorKeywords[errorKey]) {
+          if(is.eof() && !is.bad()) {
+            is.clear();
+          }
+
+          is.seekg(beforeKeywordPos, ios::beg);
+
+          string msg = "Unexpected [";
+          msg += readKeyword.Name();
+          msg += "] in Object [";
+          msg += result.Name();
+          msg += "]";
+          throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+        }
+      }
+
+      if(readKeyword == PvlKeyword("Group")) {
+        is.seekg(beforeKeywordPos);
+        PvlGroup newGroup;
+        is >> newGroup;
+        result.AddGroup(newGroup); 
+      }
+      else if(readKeyword == PvlKeyword("Object")) {
+        is.seekg(beforeKeywordPos);
+        PvlObject newObject;
+        is >> newObject;
+        result.AddObject(newObject); 
+      }
+      else {
+        result.AddKeyword(readKeyword);
+      }
+
+      readKeyword = PvlKeyword();
+      beforeKeywordPos = is.tellg();
+
+      if(is.good()) {
+        is >> readKeyword;
+      }
+      else {
+        // eof found
+        break;
+      }
+    }
+
+    if(readKeyword != termination) {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+      }
+
+      is.seekg(beforeKeywordPos, ios::beg);
+
+      string msg = "Object [" + result.Name();
+      msg += "] EndObject not found before end of file";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    return is;
   }
 
 } // end namespace isis

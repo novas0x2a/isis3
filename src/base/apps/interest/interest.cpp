@@ -170,20 +170,23 @@ void IsisMain() {
           if (gMaps[sn]->SetUniversalGround(referenceLat, referenceLon)) {
     
             // Put the corresponding line/samp into a newMsr
-            newMsr.SetCoordinate (gMaps[sn]->Sample(), gMaps[sn]->Line(),
-                                      ControlMeasure::Estimated);
+            if (sn == referenceSn) {
+              newMsr.SetCoordinate (bestSamples[best], bestLines[best],
+                                        ControlMeasure::Estimated);
+              newMsr.SetReference(true);
+            }
+            else {
+              newMsr.SetCoordinate (gMaps[sn]->Sample(), gMaps[sn]->Line(),
+                                        ControlMeasure::Estimated);
+              newMsr.SetReference(false);
+            }
+
             if (bestInterests[best] != interest->WorstInterest()) {
               newMsr.SetType(ControlMeasure::Estimated);
             }
             else {
               newMsr.SetType(ControlMeasure::Unmeasured);
               newPnt.SetIgnore(true);
-            }
-            if (sn == referenceSn) {
-              newMsr.SetReference(true);
-            }
-            else {
-              newMsr.SetReference(false);
             }
           }
           // The lat/lon could not be set in the UGM so output a bad line/samp

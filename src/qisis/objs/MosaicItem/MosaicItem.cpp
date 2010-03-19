@@ -80,7 +80,6 @@ namespace Qisis {
     if(group != 0) {
       setUpItem(group);
     }
-
   }
 
 
@@ -550,8 +549,9 @@ namespace Qisis {
       return;
     }
     
+    // The Archive group should never be searched for anything ever!
     //Get the product ID and set the label text to that.
-    Isis::PvlKeyword keyword = cube.Label()->FindObject("IsisCube").FindGroup("Archive").FindKeyword("ProductId");
+    //Isis::PvlKeyword keyword = cube.Label()->FindObject("IsisCube").FindGroup("Archive").FindKeyword("ProductId");
     //p_label->setPlainText(keyword[0].ToQt());
     //p_label->setText(keyword[0].ToQt());
 

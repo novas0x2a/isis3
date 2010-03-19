@@ -2,8 +2,8 @@
 #define FindTool_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/09/26 21:26:32 $
+ * $Revision: 1.8 $
+ * $Date: 2010/03/08 23:10:20 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -50,6 +50,10 @@ namespace Qisis {
    *           red dot is draw in the corresponding spot of a
    *           linked image, if there is overlap in the two
    *           images.
+   *  @history 2010-03-08 - Jeannie Walldren - The recordAction()
+   *           slot and recordPoint() signal were created to
+   *           connect in qview to the AdvancedTrackTool record()
+   *           slot.
    */
   class GroundTab : public QWidget {
       Q_OBJECT
@@ -79,8 +83,8 @@ namespace Qisis {
       ~FindTool();
       void addTo(QMenu *menu);
       void paintViewport(CubeViewport *vp,QPainter *painter);
-
-      
+    signals:
+      void recordPoint(QPoint p); //!< Emitted when point should be recorded
 
     protected:
       QAction *toolPadAction(ToolPad *toolpad);
@@ -107,6 +111,7 @@ namespace Qisis {
       void findPoint (QPoint p);
       void linkValid();
       void clearPoint();
+      void recordAction();
 
     private:
       QDialog *p_dialog;
@@ -118,6 +123,10 @@ namespace Qisis {
       QTabWidget *p_tabWidget;
       GroundTab *p_groundTab;
       ImageTab *p_imageTab;
+      QString p_lat;
+      QString p_lon;
+      QString p_line;
+      QString p_samp;
       bool p_released;
       bool p_pressed;
       QPoint p_point;

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/06/18 17:31:16 $
+ * $Revision: 1.7 $
+ * $Date: 2010/02/04 22:36:41 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -72,6 +72,7 @@ namespace Isis {
   void PvlFormat::Init() {
     p_keywordMap.Clear();
     p_keywordMapFile.clear();
+    p_charLimit = 80;
   }
 
 
@@ -240,34 +241,53 @@ namespace Isis {
   * @param value The PvlKeyword value to be quoted if necessary.
   */
   std::string PvlFormat::AddQuotes(const std::string value) {
-
     std::string val = value;
 
-    bool quoteValue = false;
-    bool singleQuoteValue = false;
-    if (val.find(" ") != std::string::npos || val.find("(") != std::string::npos || 
-        val.find(")") != std::string::npos) {
-      if (val.find("\"") != std::string::npos) {
-        singleQuoteValue = true;
+    bool needQuotes = false;
+    
+    // find out if we need quotes and what kind of quotes might already exist
+    char existingQuoteType = '\0';
+    for(unsigned int pos = 0; !needQuotes && pos < val.size(); pos++) {
+      // check for values indicating we need quotes, if we have a sequence
+      //   it should already be properly quoted...
+      if(pos == 0) {
+        if(val[pos] == '(' && val[val.size() - 1] == ')') break;
+        if(val[pos] == '{' && val[val.size() - 1] == '}') break;
+      }
+
+      if(val[pos] == ' ' || val[pos] == '(' ||
+         val[pos] == '(' || val[pos] == ')' ||
+         val[pos] == '{' || val[pos] == '}' ||
+         val[pos] == ',') {
+         needQuotes = true;
+      }
+
+      // remember if we are a quote, what quote type we are
+      if(existingQuoteType == '\0') {
+        if(val[pos] == '"') {
+          existingQuoteType = '"';
+        }
+        else if(val[pos] == '\'') {
+          existingQuoteType = '\'';
+        }
       }
       else {
-        quoteValue = true;
+        // make sure we dont have mixing of our outside quote type
+        if(val[pos] == '"' || val[pos] == '\'') {
+          val[pos] = existingQuoteType;
+        }
       }
     }
 
-    // Turn the quoting back off if this value looks like a sequence
-    // In this case the internal values should already be quoted.
-    if (val[0] == '(' && val[val.length()-1] == ')' && 
-        val.find_last_of("(") == 0 && val.find_first_of(")") == val.length()-1) {
-      singleQuoteValue = false;
-      quoteValue = false;
+    // figure out what kind of quotes we want to add
+    char quoteValue = '"';
+
+    if(existingQuoteType == '"') {
+      quoteValue = '\''; 
     }
-  
-    if (quoteValue) {
-      val = "\"" + val + "\"";
-    }
-    else if (singleQuoteValue) {
-      val = "'" + val + "'";
+
+    if(needQuotes) {
+      val = quoteValue + val + quoteValue;
     }
 
     return val;

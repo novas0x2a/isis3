@@ -54,6 +54,21 @@
     <change name="Travis Addair" date="2009-08-11">
       Added .def filter to the SEEDDEF parameter.
     </change>
+    <change name="Christopher Austin" date="2009-10-23">
+      Added keywords to the SEEDDEF file which tell autoseed which Control
+      Measures to mark as ignored under the keyword's conditions. These new
+      keywords include "PixelsFromEdge", "MinEmission", "MaxEmission",
+      "MinIncidence", "MaxIncidence", "MinResolution", and "MaxResolution".
+      Any Control Point with less than 2 valid measures as a result of these
+      keywords will be marked as ignored.
+    </change>
+    <change name="Christopher Austin" date="2009-11-25">
+      Added the keywords "MinDN" and "MaxDN" to the SEEDDEF possibilities.
+      Using these keywords will increase runtime. 
+    </change>
+    <change name="Eric Hyer" date="2010-01-29">
+      Added Results group to print.prt
+    </change>
   </history>
 
   <groups>

@@ -4,11 +4,14 @@
 #include <QMessageBox>
 #include <QString>
 
+#include <sstream>
+
 #include "System.h"
 #include "Application.h"
 #include "AutoRegFactory.h"
 #include "Filename.h"
 #include "Pvl.h"
+#include "iString.h"
 
 namespace Qisis {
 
@@ -623,6 +626,15 @@ namespace Qisis {
    *            error before creating QMessageBox
    *   @history 2009-03-23  Tracie Sucharski - Added private p_autoRegAttempted
    *                             for the SaveChips method.
+   *   @history 2010-02-16  Tracie Sucharski- If autoreg fails,
+   *                             print registration stats.
+   *   @history 2010-02-18  Tracie Sucharski - Registration stats wasn't the
+   *                             correct info to print.  Instead, check
+   *                             registrationStatus and print separate errors
+   *                             for each possibility.
+   *   @history 2010-02-22  Tracie Sucharski - Added more info for registration
+   *                             failures.
+   *          
    */
   
   void ControlPointEdit::registerPoint() {
@@ -648,12 +660,61 @@ namespace Qisis {
                  p_rightMeasure->Sample(),p_rightMeasure->Line());
     p_autoRegFact->SearchChip()->Load(*p_rightCube,*(p_autoRegFact->PatternChip()),*p_leftCube);
 
-    if (p_autoRegFact->Register() != 0) {
+    Isis::AutoReg::RegisterStatus status = p_autoRegFact->Register();
+    if (status != Isis::AutoReg::Success) {
       try{
         throw Isis::iException::Message(Isis::iException::User,"Cannot autoregister this point",_FILEINFO_);
       }
       catch (Isis::iException &e){
         QString msg = e.Errors().c_str();
+        if (status == Isis::AutoReg::PatternChipNotEnoughValidData) {
+          msg += "\n\nNot enough valid data in Pattern Chip.\n";
+          msg += "  PatternValidPercent = ";
+          msg += QString::number(p_autoRegFact->PatternValidPercent()) + "%";
+        }
+        else if (status == Isis::AutoReg::FitChipNoData) {
+          msg += "\n\nNo valid data in Fit Chip.";
+        }
+        else if (status == Isis::AutoReg::FitChipToleranceNotMet) {
+          msg += "\n\nGoodness of Fit Tolerance not met.\n";
+          msg += "\nGoodnessOfFit = " + QString::number(p_autoRegFact->GoodnessOfFit());
+          msg += "\nGoodnessOfFitTolerance = ";
+          msg += QString::number(p_autoRegFact->Tolerance());
+        }
+        else if (status == Isis::AutoReg::SurfaceModelNotEnoughValidData) {
+          msg += "\n\nNot enough points to fit a surface model for sub-pixel ";
+          msg += "accuracy.  Probably too close to edge.\n";
+        }
+        else if (status == Isis::AutoReg::SurfaceModelSolutionInvalid) {
+          msg += "\n\nCould not model surface for sub-pixel accuracy.\n";
+        }
+        else if (status == Isis::AutoReg::SurfaceModelDistanceInvalid) {
+          double sampDist,lineDist;
+          p_autoRegFact->Distance(sampDist,lineDist);
+          msg += "\n\nSurface model moves registartion more than tolerance.\n";
+          msg += "\nSampleMovement = " + QString::number(sampDist) + 
+                 "    LineMovement = " + QString::number(lineDist);
+          msg += "\nDistanceTolerance = " +
+                 QString::number(p_autoRegFact->DistanceTolerance());
+        }
+        else if (status == Isis::AutoReg::PatternZScoreNotMet) {
+          double score1,score2;
+          p_autoRegFact->ZScores(score1,score2);
+          msg += "\n\nPattern data max or min does not pass z-score test.\n";
+          msg += "\nMinimumZScore = " + QString::number(p_autoRegFact->MinimumZScore());
+          msg += "\nCalculatedZscores = " + QString::number(score1) + ", " + QString::number(score2);
+        }
+        else if (status == Isis::AutoReg::SurfaceModelEccentricityRatioNotMet) {
+          msg += "\n\nEllipse eccentricity of surface model not met.";
+          msg += "\nEccentricityTolerance = " + QString::number(p_autoRegFact->EccentricityTolerance());
+        }
+        else if (status == Isis::AutoReg::AdaptiveAlgorithmFailed) {
+          msg += "\n\nError occured in Adaptive algorithm.";
+        }
+        else {
+          msg += "\n\nUnknown registration error.";
+        }
+
         QMessageBox::information((QWidget *)parent(),"Error",msg);
         e.Clear();
         return;

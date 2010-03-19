@@ -1,8 +1,8 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $
- * $Date: 2008/11/18 06:59:47 $
- * $Id: HiCalConf.cpp,v 1.4 2008/11/18 06:59:47 kbecker Exp $
+ * $Revision: 1.5 $
+ * $Date: 2009/12/29 23:03:52 $
+ * $Id: HiCalConf.cpp,v 1.5 2009/12/29 23:03:52 ehyer Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -37,7 +37,7 @@
 #include "iString.h"
 #include "iException.h"
 
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 
 using namespace std;
 

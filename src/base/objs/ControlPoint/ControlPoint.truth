@@ -76,5 +76,5 @@ End
 ReferenceIndex = 0
 
 Test adding control measures with identical serial numbers ...
-**PROGRAMMER ERROR** The SerialNumber [Test2] is not unique, another ControlMeasure shares this SerialNumber
+**PROGRAMMER ERROR** The SerialNumber is not unique. A measure with serial number [Test2] already exists for ControlPoint [C151].
 

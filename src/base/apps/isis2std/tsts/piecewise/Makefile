@@ -9,5 +9,6 @@ commands:
 	  format=png \
 	  stretch=piecewise > /dev/null;
 	std2isis FROM=$(OUTPUT)/isis2stdTruth4.png \
+	  MODE=grayscale \
 	  TO=$(OUTPUT)/isis2stdTruth4.cub > /dev/null;
 	rm -f $(OUTPUT)/isis2stdTruth4.png;

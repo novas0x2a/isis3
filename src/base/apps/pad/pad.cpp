@@ -3,6 +3,8 @@
 #include "ProcessByLine.h"
 #include "AlphaCube.h"
 #include "SpecialPixel.h"
+#include "Projection.h"
+#include "SubArea.h"
 
 using namespace std; 
 using namespace Isis;
@@ -43,12 +45,27 @@ void IsisMain() {
   p.Progress()->SetText("Inserting cube");
   p.StartProcess(leftPad+1, topPad+1, 1, input);
 
-  // Add the AlphaCube group
-  AlphaCube acube(ins,inl,ns,nl,
-                      0.5-leftPad, 0.5-topPad, 
-                      ins+rightPad+0.5, inl+bottomPad+0.5);
-  acube.UpdateGroup(*ocube->Label());
+  // Construct a label with the results
+  PvlGroup results("Results");
+  results += PvlKeyword ("InputLines", inl);
+  results += PvlKeyword ("InputSamples", ins);
+  results += PvlKeyword ("LeftPad", leftPad);
+  results += PvlKeyword ("RightPad", rightPad);
+  results += PvlKeyword ("TopPad", topPad);
+  results += PvlKeyword ("BottomPad", bottomPad);
+  results += PvlKeyword ("OutputLines", nl);
+  results += PvlKeyword ("OutputSamples", ns);
+
+  // Update the Mapping, Instrument, and AlphaCube groups in the
+  // output cube label
+  SubArea s;
+  s.SetSubArea(inl,ins,1-topPad,1-leftPad,inl+bottomPad,ins+rightPad,1.0,1.0);
+  s.UpdateLabel(icube,ocube,results);
+
   p.EndProcess();
+
+  // Write the results to the log
+  Application::Log(results);
 }
 
 void CreateBase (Buffer &buf) {

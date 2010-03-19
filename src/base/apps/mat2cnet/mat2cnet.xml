@@ -2,13 +2,17 @@
 
 <application name="mat2cnet" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
   <brief>
-    Converts an ISIS2 match point file to an Isis3 control network file.
+    Converts an Isis2 match point file to an Isis3 control network file.
   </brief>
 
   <description>
     <p>
-      This program converts an ISIS2 match point file to an Isis3 control
-      network file.
+      This program converts an Isis2 match point file to an Isis3 control
+      network file.  It requires a list file of Isis 2 cubes and corresponding 
+      list file of Isis 3 cubes , a match point file, a output pvl name, a 
+      network ID, a target and a description.  It also takes, as an optional 
+      input, a rand file containing latitude, longitude and radius for each 
+      corresponding point ID. 
     </p>
   </description>
 
@@ -34,24 +38,37 @@
        Added exception message when the given MATCH file's "Matchpoint total"
        keyword is less than the number of actual Match Points in the file.
     </change>
+    <change name="Jeannie Walldren" date="2009-11-06">
+       Added RAND input parameter and updated documentation.  Added exception 
+       messages for invalid match point file headers and values. Added 1%
+       Progress updates to show potentially slower steps. Added appTests for
+       RAND parameter and to catch errors.  Added examples to xml file.
+    </change>
+    <change name="Jeannie Walldren" date="2009-12-17">
+       Modify code to allow use of particular types of edited RAND files. 
+       Updated description of RAND parameter to reflect this change.  
+    </change>
   </history>
 
   <groups>
-    <group name="ISIS 2 Files">
+    <group name="Isis 2 Files">
       <parameter name="LIST2">
         <type>filename</type>
         <fileMode>input</fileMode>
         <brief>
-          List of ISIS2 input cubes in the match point file.
+          List of Isis2 input cubes in the match point file.
         </brief>
         <description>
-          A text file containing one column of ISIS2 cube file names. Every file
-          used in the match point file should be represented in this list. The
-          cubes must be available for the program to open and must be in the 
-          same order as the Isis3 cubes in LIST3
+          A text file containing one column of Isis 2 cube file names. Every 
+          file used in the match point file should be represented in this list. 
+          The cubes must be available for the program to open and must be in the 
+          same order as the Isis 3 cubes in LIST3.  An error will be thrown if 
+          the number of files in this list does not match the number of files in 
+          LIST2, or if the IMAGE_ID and IMAGE_NUMBER keywords are not found in 
+          any Isis 2 cube.
         </description>
         <filter>
-          *.lis
+          *.lis *.txt *.lst
         </filter>
       </parameter>
 
@@ -59,15 +76,59 @@
         <type>filename</type>
         <fileMode>input</fileMode>
         <brief>
-            ISIS2 match point file
+            Isis2 match point file
         </brief>
         <description>
-          Use this parameter to spexify the ISIS2 match point file
-          to be converted to an Isis3 control network file.
+          Use this parameter to specify the Isis2 match point file to be
+          converted to an Isis3 control network file.  This file must contain a 
+          two line header.  The first line of the header must have the 
+          "Matchpoint Total" keyword and a value for the number of measures in 
+          the match point file.  The second line of the header should be text 
+          labels for each column.  The match point file has 7 columns: PointID, 
+          FSC, LINE, SAMP, CLASS, DIAMETER, and Comments.  The Point ID is 
+          made up of alphanumeric characters,  FSC is an integer, LINE and SAMP 
+          must be doubles.  CLASS is used to determine the measure type.  Valid 
+          values include T (set to reference measure, validated manual), M 
+          (validated manual), S (validated automatic), or U (if line/samp=0/0, 
+          set unmeasured, otherwise set estimated).   The DIAMETER column is 
+          used in the case of a crater.  Comments are not read in to this 
+          application. A match point file may only have one line for a 
+          particular PointID/FSC combination, otherwise an error will be thrown 
+          since there is no way to determine which line contains correct values.
         </description>
         <filter>
-          *.mat
+          *.mat *.txt *.dat *.tbl
         </filter>
+      </parameter>
+      <parameter name="RAND">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+            RAND file containing latitude, longitude, and radius values for 
+            given Point IDs.
+        </brief>
+        <description>
+          Use this parameter to specify the RAND file to assign latitude,
+          longitude and radius values associated with corresponding 
+          point IDs in the match file.  These files do not contain headers and 
+          have 4 unlabeled columns: LATITUDE, LONGITUDE, RADIUS, and PointID.  
+          The lines of original RAND files have exactly 79 characters, and
+          columns are right justified with specific lengths, namely, 24, 24, 24,
+          and 7.  The only edited RAND files that are valid for this program are 
+          those that have a single space added between the RADIUS and the 
+          PointID. LATITUDE, LONGITUDE, and RADIUS values must be doubles and
+          PointID is alphanumeric.  If this file contains a Point ID that does
+          not exist in the match point file, it will be added to the ControlNet
+          output as a "Tie" point with no measures.  The user may remove these,
+          if necessary, using the
+                                  <strong>qnet</strong> application.
+        </description>
+        <filter>
+          *.ppp *.dat *.txt
+        </filter>
+        <internalDefault>
+          None
+        </internalDefault>
       </parameter>
     </group>
 
@@ -76,16 +137,18 @@
           <type>filename</type>
           <fileMode>input</fileMode>
           <brief>
-            List of ISIS3 input cubes in the match point file.
+            List of Isis3 input cubes in the match point file.
           </brief>
           <description>
-          A text file containing one column of ISIS3 cube file names. Every file
-          used in the match point file should be represented in this list. The
-          cubes must be available for the program to open and must be in the 
-          same order as the Isis2 cubes in LIST2
+          A text file containing one column of Isis 3 cube file names. Every 
+          file used in the match point file should be represented in this list. 
+          The cubes must be available for the program to open and must be in the 
+          same order as the Isis 2 cubes in LIST2.  An error will be thrown if 
+          the number of files in this list does not match the number of files in 
+          LIST2.
           </description>
           <filter>
-            *.lis
+            *.lis *.txt *.lst
           </filter>
         </parameter>
 
@@ -96,11 +159,11 @@
               Isis3 output control network file
           </brief>
           <description>
-            Use this parameter to spexify the file name of the 
-            output Isis3 control network.
+            Use this parameter to specify the file name of the output Isis3
+            control network.
             </description>
           <filter>
-            *.ctl
+            *.net *.pvl *.ctl *.cnet
           </filter>
         </parameter>
     </group>
@@ -130,14 +193,138 @@
       <parameter name="TARGET">
         <type>string</type>
         <brief>
-            The body the control network is for
+            The target body of the control network.
         </brief>
         <description>
-            The planet or body the control points and measures in this control
-            network are for.
+            The targeted planet or body for the control points and measures in 
+            this control network.
         </description>
       </parameter>
 
     </group>
   </groups>
+  <examples>
+    <example>
+      <brief>Create control net from match point file</brief>
+      <description>
+        This example demonstrates how to use the  <strong>mat2cnet </strong> 
+        application to create a control network from a match point file.  In 
+        this case, no RAND file is used.
+      </description>
+      <terminalInterface>
+        <commandLine> 
+          list2=../IN/isis2cubes.lis match=../IN/matchpointfile.mat 
+          list3=../IN/isis3cubes.lis control=../OUT/controlnet.net 
+          description="Default Test Network" networkid= TestNet01 target=Titan
+        </commandLine>
+        <description> 
+          Run the <strong>mat2cnet</strong> application to create a ControlNet 
+          file from a match point file with corresponding Isis2 cubelist and 
+          Isis3 cubelist
+        </description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image width="496" height="550" src="assets/images/mat2cnetGuiEx1.jpg">
+            <brief>Example Gui</brief>
+            <description>
+              Screenshot of GUI with parameters filled in to perform the 
+              <strong>mat2cnet</strong> application.  The RAND parameter is left
+              as the default of "None".
+            </description>
+            <thumbnail width="180" height="200" caption="Mat2cnet Gui using match point file" src="assets/thumbs/mat2cnetGuiThumbEx1.jpg" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/match.mat">
+          <brief>Example of match point file.</brief>
+          <description>
+            This text file is an example of a valid match point file with proper
+            header and columns.
+          </description>
+          <parameterName>
+            MATCH
+          </parameterName>
+        </dataFile>
+        <dataFile path="assets/controlnet.net">
+          <brief>Example of control net file.</brief>
+          <description>
+            This pvl file is an example of the output control network created
+            from the given match point file.  Notice the NetworkId, TargetName,
+            and Description are assigned the values from the command line.
+          </description>
+          <parameterName>
+            CONTROL
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+    </example>
+
+    <example>
+      <brief>Create control net from match point file and RAND file</brief>
+      <description>
+        This example demonstrates how to use the  <strong>mat2cnet </strong> 
+        application to create a control network from a match point file and 
+        corresponding RAND file.
+      </description>
+      <terminalInterface>
+        <commandLine> 
+          list2=../IN/isis2cubes.lis match=../IN/matchpt.mat rand=../IN/rand.ppp
+          list3=../IN/isis3cubes.lis control=../OUT/control.net
+          description="Rand Test Network" networkid= TestNet02 target=Titan
+        </commandLine>
+        <description> 
+          Run the <strong>mat2cnet</strong> application to create a ControlNet 
+          file from a match point file with corresponding Isis2 cubelist, Isis3
+          cubelist, and RAND file.
+        </description>
+      </terminalInterface>
+      <guiInterfaces>
+        <guiInterface>
+          <image width="691" height="550" src="assets/images/mat2cnetGuiEx2.jpg">
+            <brief>Example Gui</brief>
+            <description>
+              Screenshot of GUI with parameters filled in to perform the 
+              <strong>mat2cnet</strong> application with a RAND file.  
+            </description>
+            <thumbnail width="200" height="159" caption="Mat2cnet Gui using intensity" src="assets/thumbs/mat2cnetGuiThumbEx2.jpg" />
+          </image>
+        </guiInterface>
+      </guiInterfaces>
+      <dataFiles>
+        <dataFile path="assets/match.mat">
+          <brief>Example of match point file.</brief>
+          <description>
+            This text file is an example of a valid match point file with proper
+            header and columns.
+          </description>
+          <parameterName>
+            MATCH
+          </parameterName>
+        </dataFile>
+        <dataFile path="assets/rand.ppp">
+          <brief>Example of RAND file.</brief>
+          <description>
+            This text file is an example of a valid RAND file.
+          </description>
+          <parameterName>
+            RAND
+          </parameterName>
+        </dataFile>
+        <dataFile path="assets/controlnet_rand.net">
+          <brief>Example of control net file.</brief>
+          <description>
+            This pvl file is an example of the output control network created
+            from the given match point file and RAND file.  Notice the 
+            NetworkId, TargetName, and Description are assigned the values from 
+            the command line.
+          </description>
+          <parameterName>
+            CONTROL
+          </parameterName>
+        </dataFile>
+      </dataFiles>
+    </example>
+  </examples>
 </application>

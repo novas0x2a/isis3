@@ -8,14 +8,14 @@ Group = GroundPoint
   PlanetographicLatitude     = -84.757759588221
   PositiveEastLongitude      = 12.099790311414
   PositiveWestLongitude      = 347.90020968859
-  BodyFixedCoordinate        = (155.17944862822, 33.266997191508, 
+  BodyFixedCoordinate        = (155.17944862822, 33.266997191508,
                                 -1729.7476298847) <km>
   LocalRadius                = 1737013.0159186 <m>
   SampleResolution           = 187.5857977999 <m>
   LineResolution             = 187.5857977999 <m>
 
   # Spacecraft Information
-  SpacecraftPosition         = (216.76438021064, 54.256829537357, 
+  SpacecraftPosition         = (216.76438021064, 54.256829537357,
                                 -2462.1179579952) <km>
   SpacecraftAzimuth          = 199.50893004833
   SlantDistance              = 735.2547683331 <km>
@@ -27,7 +27,7 @@ Group = GroundPoint
   SubSpacecraftGroundAzimuth = 106.69243625663
 
   # Sun Information
-  SunPosition                = (142092302.24738, 46513072.418956, 
+  SunPosition                = (142092302.24738, 46513072.418956,
                                 3175615.049146) <km>
   SubSolarAzimuth            = 91.677449357755
   SolarDistance              = 0.99964724201843 <AU>
@@ -58,14 +58,14 @@ Group = GroundPoint
   PlanetographicLatitude     = -84.5
   PositiveEastLongitude      = 15.0
   PositiveWestLongitude      = 345.0
-  BodyFixedCoordinate        = (160.94890808189, 43.126129943212, 
+  BodyFixedCoordinate        = (160.94890808189, 43.126129943212,
                                 -1730.4831018617) <km>
   LocalRadius                = 1738486.75 <m>
   SampleResolution           = 187.22618189816 <m>
   LineResolution             = 187.22618189816 <m>
 
   # Spacecraft Information
-  SpacecraftPosition         = (216.76438021064, 54.256829537357, 
+  SpacecraftPosition         = (216.76438021064, 54.256829537357,
                                 -2462.1179579952) <km>
   SpacecraftAzimuth          = 280.8533797296
   SlantDistance              = 733.84493360323 <km>
@@ -77,7 +77,7 @@ Group = GroundPoint
   SubSpacecraftGroundAzimuth = 195.20808001613
 
   # Sun Information
-  SunPosition                = (142092302.24738, 46513072.418956, 
+  SunPosition                = (142092302.24738, 46513072.418956,
                                 3175615.049146) <km>
   SubSolarAzimuth            = 91.701141069967
   SolarDistance              = 0.99964718498012 <AU>

@@ -35,7 +35,8 @@ void PrintHelp() {
 }
 
 void MakeCompletion(const string &appName) {
-  char *argv[2];
+  static char *argv[2];
+  static int argc(2);
   argv[0] = (char*)appName.c_str();
   argv[1] = "-nogui";
 
@@ -56,7 +57,7 @@ void MakeCompletion(const string &appName) {
   // Do not complete self
   if(appName.compare("isiscomplete") == 0) return;
 
-  Application app(2,argv);
+  Application app(argc,argv);
   UserInterface &ui = Application::GetUserInterface();
   string paramList = "";
   string completeCommand;

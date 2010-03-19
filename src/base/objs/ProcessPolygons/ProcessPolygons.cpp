@@ -12,6 +12,7 @@
 #include "geos/geom/Geometry.h"
 #include "geos/geom/Point.h"
 #include "geos/util/IllegalArgumentException.h"
+#include "geos/operation/overlay/snap/GeometrySnapper.h"
 
 using namespace std;
 namespace Isis {
@@ -109,9 +110,6 @@ namespace Isis {
                /*write the count file*/
               if (Flag == 0) {
                 p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), i+1); 
-                //std::cout << "Setting Base Position to: " <<  (int)(x+0.5) << "," << (int) (y+0.5);
-                //std::cout << "  Band Number = " << i+1 << std::endl;
-
               }
               if (Flag == 1) {
                 p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), p_band);
@@ -218,89 +216,90 @@ namespace Isis {
       geos::geom::Polygon *intersectPoly = ((geos::geom::Polygon*)p_imagePoly->intersection(poly));   
       const geos::geom::Envelope *envelope = intersectPoly->getEnvelopeInternal();
 
-     // for (unsigned int i = 0; i<p_values.size(); i++) {
+      geos::operation::overlay::snap::GeometrySnapper snap(*intersectPoly);
 
-        /*go thru each coord. in the envelope and ask if it is within the polygon*/
-        for (double x = floor(envelope->getMinX()); x <= ceil(envelope->getMaxX()); x++) {
-          if(x == 0 )continue;
+      /*go thru each coord. in the envelope and ask if it is within the polygon*/
+      for (double x = floor(envelope->getMinX()); x <= ceil(envelope->getMaxX()); x++) {
+        if(x == 0 ) continue;
 
-          for (double y = floor(envelope->getMinY()); y <= ceil(envelope->getMaxY()); y++) {
-            if(y == 0 )continue;
+        for (double y = floor(envelope->getMinY()); y <= ceil(envelope->getMaxY()); y++) {
+          if(y == 0 ) continue;
 
-            geos::geom::Coordinate c(x,y);
-            geos::geom::Point *p = Isis::globalFactory.createPoint(c);
-            bool contains = p->within(intersectPoly);
-            delete p;
+          geos::geom::Coordinate c(x,y);
+          geos::geom::Point *p = Isis::globalFactory.createPoint(c);
+          geos::geom::Geometry *pSnapped = snap.snapTo(*p, 1.0e-10)->clone();
 
-            if (contains) {
-              //std::cout << "p_value = " << p_value << std::endl;
-              /*write the count file*/
-              for (unsigned int i = 0; i<p_values.size(); i++) {
-                if(Flag == 0) {
-                  p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), i+1); 
-                  
-                }
-                if(Flag == 1) {
-                  p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), p_band);
-                }
-          
-                this->OutputCubes[1]->Read(*p_brick2);
-                double previousPixelCount = (*p_brick2)[0];  
-  
-                if ((*p_brick2)[0] != Isis::Null) {
-                  (*p_brick2)[0] += 1;
-                } else {
-                  (*p_brick2)[0] = 1;
-                }
+          bool contains = pSnapped->within(intersectPoly);
+
+          delete p;
+          delete pSnapped;
+
+          if (contains) {
+            /*write the count file*/
+            for (unsigned int i = 0; i<p_values.size(); i++) {
+              if(Flag == 0) {
+                p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), i+1); 
                 
-                this->OutputCubes[1]->Write(*p_brick2);
-                double currentCount = (*p_brick2)[0];
-  
-  
-                /*write the average band*/
+              }
+              if(Flag == 1) {
+                p_brick2->SetBasePosition((int)(x+0.5), (int) (y+0.5), p_band);
+              }
+        
+              this->OutputCubes[1]->Read(*p_brick2);
+              double previousPixelCount = (*p_brick2)[0];  
+
+              if ((*p_brick2)[0] != Isis::Null) {
+                (*p_brick2)[0] += 1;
+              } else {
+                (*p_brick2)[0] = 1;
+              }
+              
+              this->OutputCubes[1]->Write(*p_brick2);
+              double currentCount = (*p_brick2)[0];
+
+
+              /*write the average band*/
+              if(Flag == 0) {
+                p_brick1->SetBasePosition((int)(x+0.5), (int)(y+0.5), i+1); 
+              }
+              if(Flag == 1) {
+                p_brick1->SetBasePosition((int)(x+0.5), (int)(y+0.5), p_band);
+              }
+              //We need to think about how to handle special pixels in p_values also if
+              //the read-in value is a special pixel.
+              this->OutputCubes[0]->Read(*p_brick1);
+              double previousPixelValue = (*p_brick1)[0];
+              if ((*p_brick1)[0] == Isis::Null) {
                 if(Flag == 0) {
-                  p_brick1->SetBasePosition((int)(x+0.5), (int)(y+0.5), i+1); 
+                  (*p_brick1)[0] = p_values[i];
                 }
                 if(Flag == 1) {
-                  p_brick1->SetBasePosition((int)(x+0.5), (int)(y+0.5), p_band);
+                  (*p_brick1)[0] = p_value; 
                 }
-                //We need to think about how to handle special pixels in p_values also if
-                //the read-in value is a special pixel.
-                this->OutputCubes[0]->Read(*p_brick1);
-                double previousPixelValue = (*p_brick1)[0];
-                if ((*p_brick1)[0] == Isis::Null) {
-                  if(Flag == 0) {
-                    (*p_brick1)[0] = p_values[i];
-                  }
-                  if(Flag == 1) {
-                    (*p_brick1)[0] = p_value; 
-                  }
-                } else {
-                  /*Calculate the running average.*/
-                  double avg = 0;
-                  if(Flag == 0) {                  
-                    avg = (previousPixelCount*previousPixelValue+p_values[i])
-                                 /currentCount;
-                  }
-                  if(Flag == 1) {
-                    avg = (previousPixelCount*previousPixelValue+p_value)
-                                 /currentCount;
-                  }
-                  (*p_brick1)[0] = avg;
-                  
+              } else {
+                /*Calculate the running average.*/
+                double avg = 0;
+                if(Flag == 0) {                  
+                  avg = (previousPixelCount*previousPixelValue+p_values[i])
+                               /currentCount;
                 }
-  
-                /*The new average value is written to the output cube.*/
-                this->OutputCubes[0]->Write(*p_brick1);
-              }/*End for each band*/
+                if(Flag == 1) {
+                  avg = (previousPixelCount*previousPixelValue+p_value)
+                               /currentCount;
+                }
+                (*p_brick1)[0] = avg;
+                
+              }
 
-            }/*End if (contains)*/
+              /*The new average value is written to the output cube.*/
+              this->OutputCubes[0]->Write(*p_brick1);
+            }/*End for each band*/
 
-          } /*End for y*/
+          }/*End if (contains)*/
 
-        }/*End for x*/
+        } /*End for y*/
 
-     // }/*End for p_bands*/
+      }/*End for x*/
 
       delete poly;
       delete intersectPoly;

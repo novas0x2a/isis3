@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/06/17 21:26:19 $
+ * $Revision: 1.2 $
+ * $Date: 2009/12/28 20:18:06 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -20,7 +20,7 @@
  *   http://www.usgs.gov/privacy.html.
  */
 #include "NaifStatus.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 #include "iException.h"
 #include "iString.h"
 #include "Pvl.h"

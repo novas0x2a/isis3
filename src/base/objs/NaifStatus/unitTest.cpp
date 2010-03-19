@@ -1,5 +1,5 @@
 #include "NaifStatus.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 #include "Preference.h"
 #include "iException.h"
 

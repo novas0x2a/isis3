@@ -2,8 +2,8 @@
 #define PvlFormat_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/10/01 01:10:44 $
+ * $Revision: 1.7 $
+ * $Date: 2010/02/04 22:36:41 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -109,6 +109,10 @@ namespace Isis {
  * @internal
  *  @history 2006-09-05 Stuart Sides - Original version
  *  @history 2008-09-30 Christopher Austin - added FormatEOL()
+ *  @history 2009-12-17 Steven Lambright - {} are now treated the same as ()
+ *  @history 2010-02-04 Travis Addair - Added SetCharLimit
+ *           method allowing users to set the point at which a
+ *           keyword value is output to the next line down.
  */                                                                       
   class PvlFormat {
 
@@ -121,6 +125,24 @@ namespace Isis {
 
       void Add(const std::string &file);
       void Add(Pvl &keymap);
+
+      /**
+       * Sets the maximum number of characters in a keyword value that
+       * can be printed to a line before it wraps to the next line. By
+       * default, the limit is set to 80 characters. 
+       *  
+       * @param limit The new character limit. 
+       */
+      void SetCharLimit(const unsigned int limit) { p_charLimit = limit; };
+
+      /**
+       * Retrieves the maximum number of characters in a keyword value
+       * that can be printed to a line before it wraps to the next 
+       * line. By default, the limit is set to 80 characters. 
+       *  
+       * @return <B>unsigned int</B> Maximum number of characters.
+       */
+      unsigned int CharLimit() const { return p_charLimit; };
 
       virtual std::string FormatValue (const PvlKeyword &keyword,
                                        int valueIndex = 0);
@@ -139,6 +161,9 @@ namespace Isis {
 
       std::string p_keywordMapFile;
       Pvl p_keywordMap;
+
+      //! Maximum number of characters on a single line of a keyword value.
+      unsigned int p_charLimit;
 
     private:
       void Init();

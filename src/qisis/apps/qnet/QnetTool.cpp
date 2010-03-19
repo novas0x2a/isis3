@@ -228,12 +228,19 @@ namespace Qisis {
    *            to ask user whether the current reference measure
    *            should be replaced with the measure in the left
    *            viewport.
+   *   @history 2010-01-27 Jeannie Walldren - Added question box
+   *            to warn the user that they are saving an "Ignore"
+   *            measure and ask whether they would like to set
+   *            Ignore=False.  This emits an ignoreRightChanged()
+   *            signal so the "Ignore" box in the window is
+   *            unchecked.  Modified Ignore Point message for
+   *            clarity.
    */
   void QnetTool::pointSaved() {
     if (p_controlPoint->Ignore()) {
       switch(QMessageBox::question((QWidget *)parent(),
                                 "Qnet Tool Save Point",
-                                "This ControlPoint has Ignore = True.  Do you want to set Ignore = False?",
+                                "You are saving changes to an ignored point.  Do you want to set Ignore = False on the point and both measures?",
                                 "&Yes", "&No", 0, 0)){
         case 0: // Yes was clicked or Enter was pressed, set Ignore=false for the point and measures and save point
           p_controlPoint->SetIgnore(false);
@@ -246,6 +253,19 @@ namespace Qisis {
             p_rightMeasure->SetIgnore(false);
             emit ignoreRightChanged();
           }
+        case 1: // No was clicked, keep Ignore=true and save point
+          break;
+
+      }
+    }
+    if (p_rightMeasure->Ignore()) {
+      switch(QMessageBox::question((QWidget *)parent(),
+                                "Qnet Tool Save Point",
+                                "You are saving changes to an ignored measure.  Do you want to set Ignore = False on the right measure?",
+                                "&Yes", "&No", 0, 0)){
+        case 0: // Yes was clicked, set Ignore=false for the right measure and save point
+            p_rightMeasure->SetIgnore(false);
+            emit ignoreRightChanged();
         case 1: // No was clicked, keep Ignore=true and save point
           break;
 
@@ -461,16 +481,21 @@ namespace Qisis {
 
   /**
    * Set the "Ignore" keyword of the measure shown in the left 
-   * viewport to the value of the input parameter.
+   * viewport to the value of the input parameter. 
+   * @internal 
+   *   @history 2010-01-27 Jeannie Walldren - Fixed bug that
+   *            resulted in segfault. Moved the check whether 
+   *            p_rightMeasure is null before the check whether
+   *            p_rightMeasure equals p_leftMeasure.
    */
   void QnetTool::setIgnoreLeftMeasure (bool ignore) {
     if (p_leftMeasure != NULL) p_leftMeasure->SetIgnore(ignore);
     emit netChanged();
 
     //  If the right chip is the same as the left chip , update the right
-    //  ignore blox.
-    if (p_rightMeasure->CubeSerialNumber() == p_leftMeasure->CubeSerialNumber()) {
-      if (p_rightMeasure != NULL) {
+    //  ignore box.
+    if (p_rightMeasure != NULL) {
+      if (p_rightMeasure->CubeSerialNumber() == p_leftMeasure->CubeSerialNumber()) {
         p_rightMeasure->SetIgnore(ignore);
         p_ignoreRightMeasure->setChecked(ignore);
       }
@@ -481,6 +506,11 @@ namespace Qisis {
   /**
    * Set the "Ignore" keyword of the measure shown in the right 
    * viewport to the value of the input parameter. 
+   * @internal 
+   *   @history 2010-01-27 Jeannie Walldren - Fixed bug that
+   *            resulted in segfault. Moved the check whether 
+   *            p_leftMeasure is null before the check whether
+   *            p_rightMeasure equals p_leftMeasure.
    */
   void QnetTool::setIgnoreRightMeasure (bool ignore) {
     if (p_rightMeasure != NULL) p_rightMeasure->SetIgnore(ignore);
@@ -488,8 +518,8 @@ namespace Qisis {
 
     //  If the right chip is the same as the left chip , update the right
     //  ignore blox.
-    if (p_rightMeasure->CubeSerialNumber() == p_leftMeasure->CubeSerialNumber()) {
-      if (p_leftMeasure != NULL) {
+    if (p_leftMeasure != NULL) {
+      if (p_rightMeasure->CubeSerialNumber() == p_leftMeasure->CubeSerialNumber()) {
         p_leftMeasure->SetIgnore(ignore);
         p_ignoreLeftMeasure->setChecked(ignore);
       }
@@ -964,7 +994,6 @@ namespace Qisis {
     //  If p_leftCube is not null, delete before creating new one
     if (p_rightCube != NULL) delete p_rightCube;
     p_rightCube = new Isis::Cube();
-    //std::cout<<"QnetTool::p_rightCube = "<<p_rightCube<<std::endl;
     p_rightCube->Open(file);
 
     //  Update left measure of pointEditor

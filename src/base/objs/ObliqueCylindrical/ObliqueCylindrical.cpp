@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/05/09 18:50:28 $
+ * $Revision: 1.6 $
+ * $Date: 2010/02/08 19:02:07 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -25,7 +25,7 @@
 #include "ObliqueCylindrical.h"
 #include "iException.h"
 #include "Constants.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 
 using namespace std;
 namespace Isis {     
@@ -507,14 +507,11 @@ namespace Isis {
   bool ObliqueCylindrical::operator== (const Isis::Projection &proj) {
     if (!Isis::Projection::operator==(proj)) return false;
 
-    ObliqueCylindrical *projection = (ObliqueCylindrical *) &proj;
+    ObliqueCylindrical *obProjection = (ObliqueCylindrical *) &proj;    
 
-    if (projection->p_longitude != this->p_longitude) return false;
-    if (projection->p_latitude != this->p_latitude) return false;
-
-    if(projection->GetPoleLatitude() != GetPoleLatitude()) return false;
-    if(projection->GetPoleLongitude() != GetPoleLongitude()) return false;
-    if(projection->GetPoleRotation() != GetPoleRotation()) return false;
+    if(obProjection->GetPoleLatitude()  != GetPoleLatitude())  return false;
+    if(obProjection->GetPoleLongitude() != GetPoleLongitude()) return false;
+    if(obProjection->GetPoleRotation()  != GetPoleRotation())  return false;
 
     return true;
   }

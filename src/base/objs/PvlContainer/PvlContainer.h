@@ -2,8 +2,8 @@
 #define PvlContainer_h
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2009/06/01 17:23:01 $
+ * $Revision: 1.11 $
+ * $Date: 2010/01/08 00:31:31 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -50,6 +50,7 @@ namespace Isis {
   *           problem pointed out by "novas0x2a" (Support Forum Member)
   *  @history 2009-06-01 Kris Becker - Added a new AddKeyword method that
   *           provides insert capabilities at iterator positions.
+  *  @history 2010-01-06 Christopher Austin - Added CleanDuplicateKeywords()
   *  
   *  @todo 2005-04-04 Need coded example.
   */                                                                       
@@ -187,6 +188,8 @@ namespace Isis {
   
       void DeleteKeyword (const std::string &name);
       void DeleteKeyword (const int index);
+      
+      bool CleanDuplicateKeywords();
 
       /**
        * When you use the -= operator with a (string) name, it will call the

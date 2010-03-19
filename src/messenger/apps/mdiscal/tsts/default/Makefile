@@ -2,14 +2,6 @@ APPNAME = mdiscal
 
 include $(ISISROOT)/make/isismake.tsts
 
-default_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-iof_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-keepdark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-lineardark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-nodark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-standarddark_label.pvl.IGNORELINES = DarkStripMean ProcessDate From Bytes StartByte ByteOrder SourceProductId
-
-
 commands:
 	$(APPNAME) FROM=$(INPUT)/EW0089565626A.cub to=$(OUTPUT)/default.cub iof=no > /dev/null;
 	catlab FROM=$(OUTPUT)/default.cub > $(OUTPUT)/default_label.pvl;

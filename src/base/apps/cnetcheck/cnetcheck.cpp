@@ -66,6 +66,8 @@ void IsisMain() {
   map< string, set<string> > noLatLonControlPoints;
   set<string> latlonchecked;
 
+  map< string, int > cubeMeasureCount;
+
   if (innet.Size() > 0) {
     progress.SetText("Calculating");
     progress.SetMaximumSteps(innet.Size());
@@ -113,6 +115,9 @@ void IsisMain() {
       string sn = controlpt[0].CubeSerialNumber();
       singleMeasureSerialNumbers.insert(sn);
       singleMeasureControlPoints[sn].insert( controlpt.Id() );
+
+      // Records how many times a cube is in the ControlNet
+      cubeMeasureCount[sn] ++;
     }
     else {
       // Checks for duplicate Measures for the same SerialNumber
@@ -122,6 +127,9 @@ void IsisMain() {
 
         controlMeasures.push_back(controlpt[cm]);
         iString currentsn = controlpt[cm].CubeSerialNumber();
+
+        // Records how many times a cube is in the ControlNet
+        cubeMeasureCount[currentsn] ++;
 
         // Compares previous ControlMeasure SerialNumbers with the current
         for(int pre_cm = controlMeasures.size()-1-1; pre_cm >= 0; pre_cm --) {
@@ -214,7 +222,7 @@ void IsisMain() {
     ss << "There are " << islands.size() << " disjoint sets of cubes." << endl;
   }
 
-  if(ui.GetBoolean("SINGLE")  &&  singleMeasureSerialNumbers.size() > 0) {
+  if(ui.GetBoolean("SINGLEMEASURE")  &&  singleMeasureSerialNumbers.size() > 0) {
     results.AddKeyword( 
       PvlKeyword("SingleMeasure",iString((BigInt)singleMeasureSerialNumbers.size())) );
 
@@ -324,6 +332,45 @@ void IsisMain() {
     ss << Filename(name).Name() + "]" << endl;
   }
 
+  // At this point cubeMeasureCount should be equal to the number of
+  //  ControlMeasures associated with each serial number.
+  if( ui.GetBoolean("SINGLECUBE") ) {
+    set<string> singleMeasureCubes;
+    for( map<string,int>::iterator cube = cubeMeasureCount.begin();
+         cube != cubeMeasureCount.end();
+         cube ++ ) {
+      if( cube->second == 1 ) { singleMeasureCubes.insert( cube->first ); }
+    }
+
+    if( singleMeasureCubes.size() > 0 ) {
+      results.AddKeyword(
+        PvlKeyword("SingleCube",iString((BigInt)singleMeasureCubes.size())) );
+
+      string name(Filename(prefix + "SingleCube.txt").Expanded());
+      ofstream out_stream;
+      out_stream.open(name.c_str(), std::ios::out);
+      out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
+
+      for( set<string>::iterator sn = singleMeasureCubes.begin();
+           sn != singleMeasureCubes.end();
+           sn ++ ) {
+        out_stream << (*sn);
+        out_stream << "\t" << Filename(num2cube[(*sn)]).Name();
+        out_stream << "\n";
+      }
+
+      out_stream.close();
+
+      ss << "----------------------------------------" \
+            "----------------------------------------" << endl;
+      ss << "There are " << singleMeasureCubes.size();
+      ss << " serial numbers in the Control Net [";
+      ss << Filename(ui.GetFilename("CNET")).Basename();
+      ss << "] which only exist in one Control Measure." << endl;
+      ss << "These serial numbers are listed in [";
+      ss << Filename(name).Name() + "]" << endl;
+    }
+  }
 
   ss << "----------------------------------------" \
         "----------------------------------------" << endl << endl;

@@ -5,10 +5,10 @@
 #include "SpecialPixel.h"
 #include "BasisFunction.h"
 #include "LeastSquares.h"
+#include "CameraGroundMap.h"
 #include "CameraDetectorMap.h"
 #include "CameraDistortionMap.h"
 #include "ControlPoint.h"
-#include "SpicePosition.h"
 #include "SpicePosition.h"
 #include "Application.h"
 
@@ -412,7 +412,8 @@ namespace Isis {
       if (p_observationMode) {
           oIndex = i;
           oIndex = p_onlist->ObservationNumberMapIndex(oIndex);  // Get the observation index for this image
-          iIndex = observationInitialValueIndex[oIndex]; // Get the index of the image to use for initial values                                                 // being used for the observation
+          iIndex = observationInitialValueIndex[oIndex]; // Get the index of the image to use for initial values 
+                                                         // being used for the observation
       }
       if (p_cmatrixSolveType != None) {
         // For observations, find the index of the first image and use its polynomial for the observation
@@ -577,6 +578,8 @@ namespace Isis {
                                   int pointIndex) {
     ControlPoint &point = (*p_cnet)[pointIndex];
     if (point.Ignore()) return;  // Ignore entire point
+    std::vector<double> lookJ(3);
+    std::vector<double> lookC(3);
 
     for (int i=0; i<point.Size(); i++) {
       if (point[i].Ignore()) continue;  // Ignore this measure
@@ -595,47 +598,22 @@ namespace Isis {
       // measured point's time.
       cam->SetImage(point[i].Sample(),point[i].Line());  // Set the Spice to the measured point
 
-      // Compute the look vector in body-fixed coordinates
-      double pB[3]; // Point on surface
-      latrec_c( point.Radius() / 1000.0,
-               (point.UniversalLongitude() * Isis::PI / 180.0),
-               (point.UniversalLatitude() * Isis::PI / 180.0),
-               pB);
-
-      // May need to do back of planet test here TODO 
-      std::vector<double> lookB(3);
-      SpiceRotation *bodyRot = cam->BodyRotation();
-      std::vector<double> sB(3); // Spacecraft vector in bodyj-fixed coordinates
-      sB = bodyRot->ReferenceVector(cam->InstrumentPosition()->Coordinate());
-      for (int ic=0; ic<3; ic++)   lookB[ic] = pB[ic] - sB[ic];
-      
-//      if (!cam->SetUniversalGround(point.UniversalLatitude(),
-//                                   point.UniversalLongitude(),
-//                                   point.Radius())) {
-//         std::string msg = "Point off image (lat/lon = ";
-//         msg += "Isis::iString(point.UniversalLatitude()/";
-//         msg += "Isis::iString(point.UniversalLongitude() - point may be too ";
-//         msg += "close to the edge on point Isis::iString(pointIndex) and ";
-//         msg += "Measure Isis::iString(i)";
-//         throw iException::Message(iException::User,msg,_FILEINFO_);
-//         exit(0);
-//      }
+      // Compute the look vector in instrument coordinates based on time of observation and apriori lat/lon/radius
+      if (!(cam->GroundMap()->GetXY( point.UniversalLatitude(), point.UniversalLongitude(), point.Radius(), lookJ))) {
+        std::string msg = "Unable to map apriori surface point for measure ";
+        msg += iString(i) + " on point " + point.Id() + " into focal plane";
+        throw iException::Message(iException::User,msg,_FILEINFO_);
+      }
+      SpiceRotation *instRot = cam->InstrumentRotation();
+      lookC = instRot->ReferenceVector( lookJ);
 
       // Create the known array to put in the least squares
       std::vector<double> xKnowns(BasisColumns(),0.0);
       std::vector<double> yKnowns(BasisColumns(),0.0);
 
-      // Get the look vector in the camera frame and the instrument rotation
-      std::vector<double> lookC(3);
-      std::vector<double> lookJ(3);
-      lookJ = cam->BodyRotation()->J2000Vector( lookB );
-      SpiceRotation *instRot = cam->InstrumentRotation();
-      lookC = instRot->ReferenceVector( lookJ);
-
-//      cam->LookDirection(((double *)&lookC[0]));  // From computed position
-
       // Determine the image index for nonheld images
       bool useImage=false;
+
       if ( p_heldImages == 0) { 
         useImage = true;
       }
@@ -652,7 +630,7 @@ namespace Isis {
 
           // Add the partial for the x coordinate of the position (differentiating
           // point(x,y,z) - spacecraftPosition(x,y,z) in J2000
-          std::vector<double> d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X0);
+          std::vector<double> d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X, 0);
           for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
           std::vector<double> d_lookC_WRT_X0 =  instRot->ReferenceVector(d_lookJ);
           xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_X0,0);
@@ -660,14 +638,14 @@ namespace Isis {
           index++;
 
           if (p_spacecraftPositionSolveType > PositionOnly) {
-            d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X1);
+            d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X, 1);
             for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
             std::vector<double> d_lookC_WRT_X1 =  instRot->ReferenceVector(d_lookJ);
             xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_X1,0);
             yKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_X1,1); index++;
 
             if (p_spacecraftPositionSolveType == PositionVelocityAcceleration) {
-              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X2);
+              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_X, 2);
               for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
               std::vector<double> d_lookC_WRT_X2 =  instRot->ReferenceVector(d_lookJ);
               xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_X2,0);
@@ -676,7 +654,7 @@ namespace Isis {
           }
 
           // Add the partial for the y coordinate of the position
-          d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y0);
+          d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y, 0);
           for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
           std::vector<double> d_lookC_WRT_Y0 =  instRot->ReferenceVector(d_lookJ);
           xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Y0,0);
@@ -684,14 +662,14 @@ namespace Isis {
           index++;
 
           if (p_spacecraftPositionSolveType > PositionOnly) {
-             d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y1);
+             d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y, 1);
              for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
              std::vector<double> d_lookC_WRT_Y1 =  instRot->ReferenceVector(d_lookJ);
              xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Y1,0);
              yKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Y1,1); index++;
 
             if (p_spacecraftPositionSolveType == PositionVelocityAcceleration) {
-              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y2);
+              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Y, 2);
               for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
               std::vector<double> d_lookC_WRT_Y2 =  instRot->ReferenceVector(d_lookJ);
               xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Y2,0);
@@ -700,7 +678,7 @@ namespace Isis {
           }
 
           // Add the partial for the z coordinate of the position
-          d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z0);
+          d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z, 0);
           for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
           std::vector<double> d_lookC_WRT_Z0 =  instRot->ReferenceVector(d_lookJ);
           xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Z0,0);
@@ -708,14 +686,14 @@ namespace Isis {
           index++;
 
           if (p_spacecraftPositionSolveType > PositionOnly) {
-            d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z1);
+            d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z, 1);
             for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
             std::vector<double> d_lookC_WRT_Z1 =  instRot->ReferenceVector(d_lookJ);
             xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Z1,0);
             yKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Z1,1); index++;
 
             if (p_spacecraftPositionSolveType == PositionVelocityAcceleration) {
-              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z2);
+              d_lookJ = instPos->CoordinatePartial (SpicePosition::WRT_Z, 2);
               for (int j=0; j<3; j++) d_lookJ[j] *= -1.0;
               std::vector<double> d_lookC_WRT_Z2 =  instRot->ReferenceVector(d_lookJ);
               xKnowns[index] = fl * LowDHigh(lookC,d_lookC_WRT_Z2,0);

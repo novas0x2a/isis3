@@ -20,7 +20,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 3;
       char *myArgv[myArgc] = {"unitTest","from=input.cub", "to=output.cub"};
       
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -32,7 +33,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 7;
       char *myArgv[myArgc] = {"highpass","from=dog", "to=biscuit", "line=", "3", "samp=", "3"};
 
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -44,7 +46,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 1;
       char *myArgv[myArgc] = {"unitTest"};
 
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -56,7 +59,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 7;
       char *myArgv[myArgc] = {"highpass","from=dog", "to=(biscuit,bread)", "line=", "3", "samp=", "3"};
 
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
       vector<string> vals;
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      ";
@@ -80,7 +84,8 @@ int main (int argc, char *argv[]) {
         "to=(biscuit\\,,'bread,',\",b,\\,iscuit2,\"\\,,)", 
         "line=", "3", "samp=", "3"};
 
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+        int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
       vector<string> vals;
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << endl;
@@ -100,7 +105,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 13;
       char *myArgv[myArgc] = {"highpass", "from", "=", "dog", "to", "=", "bread", "line", "=", "3", "samp", "=", "3"};
 
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
       vector<string> vals;
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
@@ -113,7 +119,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 3;
       char *myArgv[myArgc] = {"unitTest","from=input file.cub", "to=output.cub"};
       
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -124,7 +131,8 @@ int main (int argc, char *argv[]) {
     {
       const int myArgc = 1;
       char *myArgv[myArgc] = {"unitTest"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "GUI:     " << ui.IsInteractive() << endl;
       cout << endl;
     }
@@ -132,7 +140,8 @@ int main (int argc, char *argv[]) {
     {
       const int myArgc = 1;
       char *myArgv[myArgc] = {"./unitTest"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "GUI:     " << ui.IsInteractive() << endl;
       cout << endl;
     }
@@ -141,7 +150,8 @@ int main (int argc, char *argv[]) {
       cout << "Starting Batchlist Test" << endl;
       const int myArgc = 4;
       char *myArgv[myArgc] = {"unitTest","from=$1", "to=$2", "-batchlist=unitTest.lis"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       for (int i=0; i< ui.BatchListSize(); i++) {
         ui.SetBatchList(i);
         cout << "FROM:    " << ui.GetAsString("FROM") << endl;
@@ -158,7 +168,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 4;
       char *myArgv[myArgc] = {"unitTest","=input.cub", "to", "=output.cub"};
       
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -174,7 +185,8 @@ int main (int argc, char *argv[]) {
       const int myArgc = 10;
       char *myArgv[myArgc] = {"highpass", "from=dog", "to", "=bread", "line", "=", "3", "samp", "=", "3"};
 
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
       vector<string> vals;
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
@@ -190,7 +202,8 @@ int main (int argc, char *argv[]) {
     try {
       const int myArgc = 2;
       char *myArgv[myArgc] = {"./unitTest","from=(\"hello)"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -205,7 +218,8 @@ int main (int argc, char *argv[]) {
     try {
       const int myArgc = 2;
       char *myArgv[myArgc] = {"./unitTest","from=(hello)\\"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -219,7 +233,8 @@ int main (int argc, char *argv[]) {
     try {
       const int myArgc = 2;
       char *myArgv[myArgc] = {"./unitTest","-restore=unitTest.par"};
-      Isis::UserInterface ui(unitTestXml,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(unitTestXml,myArgcQ,myArgv);
       cout << "FROM:    " << ui.GetAsString("FROM") << endl;
       cout << "TO:      " << ui.GetAsString("TO") << endl;
       cout << "GUI:     " << ui.IsInteractive() << endl;
@@ -233,7 +248,8 @@ int main (int argc, char *argv[]) {
     try {
       const int myArgc = 2;
       char *myArgv[myArgc] = {"$ISISROOT/src/base/apps/highpass/highpass","bogus=parameter"};
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
     }
     catch (Isis::iException &e) {
       e.Report(false);
@@ -243,7 +259,8 @@ int main (int argc, char *argv[]) {
     try {
       const int myArgc = 2;
       char *myArgv[myArgc] = {"$ISISROOT/src/base/apps/highpass/highpass","-restore=junk.par"};
-      Isis::UserInterface ui(highpass,myArgc,myArgv);
+      int myArgcQ = myArgc;
+      Isis::UserInterface ui(highpass,myArgcQ,myArgv);
     }
     catch (Isis::iException &e) {
       e.Report(false);

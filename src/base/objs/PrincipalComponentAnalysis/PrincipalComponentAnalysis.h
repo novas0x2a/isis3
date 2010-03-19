@@ -2,8 +2,8 @@
 #define PrincipalComponentAnalysis_h
 /**
  * @file
- * $Revision: 1.1.1.1 $
- * $Date: 2006/10/31 23:18:08 $
+ * $Revision: 1.2 $
+ * $Date: 2009/12/22 02:09:54 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -23,7 +23,7 @@
  */ 
 
 #include <vector>
-#include "tnt_array2d.h"
+#include "tnt/tnt_array2d.h"
 #include "MultivariateStatistics.h"
 #include "iException.h"
 #include "Constants.h"

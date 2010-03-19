@@ -8,8 +8,6 @@ namespace Isis {
   //!Creates an empty ControlNet object
   ControlNet::ControlNet () {
     p_invalid = false;
-    p_numMeasures = 0;
-    p_numIgnoredMeasures = 0;
   }
 
 
@@ -23,8 +21,6 @@ namespace Isis {
   */
   ControlNet::ControlNet(const std::string &ptfile, Progress *progress, bool forceBuild) {
     p_invalid = false;
-    p_numMeasures = 0;
-    p_numIgnoredMeasures = 0;
     ReadControl(ptfile, progress, forceBuild);
   }
 
@@ -172,15 +168,6 @@ namespace Isis {
           if (cn.Object(i).IsNamed("ControlPoint")) {
             ControlPoint cp;
             cp.Load(cn.Object(i),forceBuild);
-            p_numMeasures += cp.Size();
-            if (cp.Ignore()) {
-              p_numIgnoredMeasures += cp.Size();
-            }
-            else {
-              for (int m=0; m<cp.Size(); m++) {
-                if (cp[m].Ignore()) p_numIgnoredMeasures++;
-              }
-            }
             Add(cp,forceBuild);
           }
         }
@@ -468,5 +455,45 @@ namespace Isis {
     return size;
   }
 
+  /*
+   * Return the total number of measures for all control points in the network
+   *
+   * @return Number of control measures
+   */
+  int ControlNet::NumMeasures() {
+    int numMeasures = 0;
+    for (int cp = 0; cp < Size(); cp++) {
+      numMeasures += p_pointsHash[p_pointIds[cp]].Size();
+    }
+    return numMeasures;
+  }
 
+  /*
+   * Return the number of valid (non-ignored) measures for all control points
+   * in the network
+   *
+   * @return Number of valid measures
+   */
+  int ControlNet::NumValidMeasures() {
+    int numValidMeasures = 0;
+    for (int cp = 0; cp < Size(); cp++) {
+      numValidMeasures += p_pointsHash[p_pointIds[cp]].NumValidMeasures();
+    }
+    return numValidMeasures;
+  }
+
+  /*
+   * Return the total number of ignored measures for all control points in the
+   * network
+   *
+   * @return Number of valid measures
+   */
+  int ControlNet::NumIgnoredMeasures() {
+    int numIgnoredMeasures = 0;
+    for (int cp = 0; cp < Size(); cp++) {
+      ControlPoint &pt = p_pointsHash[p_pointIds[cp]];
+      numIgnoredMeasures += pt.Size() - pt.NumValidMeasures();
+    }
+    return numIgnoredMeasures;
+  }
 }

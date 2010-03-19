@@ -2,8 +2,8 @@
 #define UserInterface_h
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2009/08/17 21:49:56 $
+ * $Revision: 1.12 $
+ * $Date: 2009/11/27 23:29:03 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -95,13 +95,16 @@ namespace Isis {
  *           interpretted from argv resulting in fewer escape characters and
  *           problems such as "  " (2 spaces) being interpretted properly. Array
  *           parameter values support improved.
+ *  @history 2009-11-19 Kris Becker - Made argc pass by reference since Qt's
+ *           QApplication/QCoreApplication requires it
  *  @todo 2005-02-22 Jeff Anderson - add coded and implementation examples to
  *                                   class documentation
+ *  
  */
 
   class UserInterface : public IsisAml {
     public:
-      UserInterface (const std::string &xmlfile, int argc, char*argv[]);
+      UserInterface (const std::string &xmlfile, int &argc, char*argv[]);
       ~UserInterface ();
 
      /**

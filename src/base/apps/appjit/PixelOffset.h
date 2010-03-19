@@ -2,8 +2,8 @@
 #define PixelOffset_h
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/12/20 05:39:21 $
+ * $Revision: 1.3 $
+ * $Date: 2009/12/29 23:03:47 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -25,9 +25,9 @@
 #include <string>
 #include <vector>
 #include "PolynomialUnivariate.h"
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 
 
 namespace Isis {
@@ -48,6 +48,7 @@ namespace Isis {
    * @internal
    *  @history 2008-08-20  Debbie A. Cook Original Version
    *  @history 2008-12-19  Debbie A. Cook Removed couts to prepare for commiting
+   *  @history 2009-10-01  Debbie A. Cook Cleaned up extrapolation code
    */
   class PixelOffset {
     public:

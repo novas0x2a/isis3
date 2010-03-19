@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.20 $
- * $Date: 2009/08/04 00:15:39 $
+ * $Revision: 1.22 $
+ * $Date: 2010/01/30 01:23:08 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -242,7 +242,7 @@ namespace Isis {
       if (key[i] == "") continue;
       if (iString(key[i]).UpCase() == "NULL") break;
       if (iString(key[i]).UpCase() == "NADIR") break;
-      if (iString(key[i]).UpCase() == "TABLE") continue;
+      if (iString(key[i]).UpCase() == "TABLE") break;
       Isis::Filename file(key[i]);
       if (!file.exists()) {
         string msg = "Spice file does not exist [" + file.Expanded() + "]";
@@ -320,19 +320,6 @@ namespace Isis {
 
     double avgTime = (startTime + endTime) / 2.0;
     ComputeSolarLongitude(avgTime);
-
-    // Check for a valid tolerance.  If not set to MRO HiRise pixel resolution/100 (0.003) since it has the
-    // highest resolution of supported missions
-//    double tolerance = tol;
-/*
-    if (tol < 0.) {                                                                                           
-      p_instrumentPosition->SetEphemerisTime ( (startTime-p_startTimePadding + endTime+p_endTimePadding) / 2.)
-      std::vector<double> s = p_instrumentPosition->Coordinate();                                             
-      double alt = sqrt(s[0]*s[0] + s[1]*s[1] + s[2]*s[2]);                                                   
-      tolerance = .003;                                                                                       
-      std::cout<<"In Spice with tolerance = "<<tol<<std::endl;                                                
-    }                                                                                                         
-*/
 
     // Cache everything
     if (!p_bodyRotation->IsCached()) {

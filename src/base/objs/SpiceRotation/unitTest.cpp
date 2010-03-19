@@ -59,6 +59,11 @@ int main (int argc, char *argv[]) {
     cout << "CJ(" << i << ") = " << CJ[0] << " " << CJ[1] << " " << CJ[2] << endl;
     cout << "         " << CJ[3] << " " << CJ[4] << " " << CJ[5] << endl;
     cout << "         " << CJ[6] << " " << CJ[7] << " " << CJ[8] << endl;     
+
+    if ( rot.HasAngularVelocity() ) {
+      std::vector<double> av = rot.AngularVelocity();
+      cout << "av(" << i << ") = " << av[0] << " " << av[1] << " " << av[2] << endl;
+    }
   }
   cout << endl;
 
@@ -74,6 +79,11 @@ int main (int argc, char *argv[]) {
     cout << "CJ(" << i << ") = " << CJ[0] << " " << CJ[1] << " " << CJ[2] << endl;
     cout << "         " << CJ[3] << " " << CJ[4] << " " << CJ[5] << endl;
     cout << "         " << CJ[6] << " " << CJ[7] << " " << CJ[8] << endl;     
+
+    if ( rot.HasAngularVelocity() ) {
+      std::vector<double> av = rot.AngularVelocity();
+      cout << "av(" << i << ") = " << av[0] << " " << av[1] << " " << av[2] << endl;
+    }
   }
   cout << endl;
 
@@ -91,6 +101,11 @@ int main (int argc, char *argv[]) {
     cout << "CJ(" << i << ") = " << CJ[0] << " " << CJ[1] << " " << CJ[2] << endl;
     cout << "         " << CJ[3] << " " << CJ[4] << " " << CJ[5] << endl;
     cout << "         " << CJ[6] << " " << CJ[7] << " " << CJ[8] << endl;     
+
+    if ( rot.HasAngularVelocity() ) {
+      std::vector<double> av = rot.AngularVelocity();
+      cout << "av(" << i << ") = " << av[0] << " " << av[1] << " " << av[2] << endl;
+    }
   }
   cout << endl;
 
@@ -154,6 +169,11 @@ int main (int argc, char *argv[]) {
     cout << "CJ(" << i << ") = " << CJ[0] << " " << CJ[1] << " " << CJ[2] << endl;
     cout << "         " << CJ[3] << " " << CJ[4] << " " << CJ[5] << endl;
     cout << "         " << CJ[6] << " " << CJ[7] << " " << CJ[8] << endl;     
+
+    if ( rot3.HasAngularVelocity() ) {
+      std::vector<double> av = rot3.AngularVelocity();
+      cout << "av(" << i << ") = " << av[0] << " " << av[1] << " " << av[2] << endl;
+    }
   }
   cout << endl;
 
@@ -172,6 +192,11 @@ int main (int argc, char *argv[]) {
     cout << "         " << CJ[3] << " " << CJ[4] << " " << CJ[5] << endl;
     cout << "         " << CJ[6] << " " << CJ[7] << " " << CJ[8] << endl;     
 //    cout << "Spacecraft (J) = " << p[0] << " " << p[1] << " " << p[2] << endl;
+
+    if ( rot2.HasAngularVelocity() ) {
+      std::vector<double> av = rot2.AngularVelocity();
+      cout << "av(" << i << ") = " << av[0] << " " << av[1] << " " << av[2] << endl;
+    }
   }
   cout << endl;
 

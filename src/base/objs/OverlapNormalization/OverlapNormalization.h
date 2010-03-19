@@ -2,8 +2,8 @@
 #define OverlapNormalization_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2009/06/24 20:53:41 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/11/25 22:09:21 $                                                                 
  *                                                             
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -62,6 +62,9 @@ namespace Isis {
  *            variables/enums
  *   @history 2009-06-24 Travis Addair - changed gain and offset vectors to
  *            itialize to 1.0 and 0.0, respectively
+ *   @history 2009-11-25 Travis Addair - held images are now
+ *            weighted to ensure gain and offset of 1.0 and 0.0,
+ *            respectively
  */
 
   class OverlapNormalization {

@@ -15,8 +15,8 @@ LABEL_RECORDS                  = 170
 
 /* IDENTIFICATION DATA ELEMENTS */
 DATA_SET_ID                    = MER2-M-MI-2-EDR-V1.0
-DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER 
-                                 CAMERA V1.0"
+DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER
+                                  CAMERA V1.0"
 COMMAND_SEQUENCE_NUMBER        = 1
 FRAME_ID                       = MONO
 FRAME_TYPE                     = MONO
@@ -36,8 +36,8 @@ MISSION_NAME                   = "MARS EXPLORATION ROVER"
 MISSION_PHASE_NAME             = "PRIMARY MISSION"
 OBSERVATION_ID                 = 301989888
 PLANET_DAY_NUMBER              = 35
-PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM, 
-                                 JET PROPULSION LAB"
+PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM ,
+                                  JET PROPULSION LAB"
 PRODUCT_CREATION_TIME          = 2004-02-08T03:13:17.000Z
 PRODUCT_ID                     = 2M129469022ETH0327P2942M1M1
 PRODUCT_VERSION_ID             = "V3.0 D-22846"
@@ -64,14 +64,15 @@ EARTH_RECEIVED_STOP_TIME       = 2004-02-08T03:13:05.487Z
 EXPECTED_PACKETS               = N/A
 PACKET_MAP_MASK                = N/A
 RECEIVED_PACKETS               = N/A
-SPICE_FILE_NAME                = /oss/mera/ops/ops/surface/strategic/ref/naif/misc/chronos/chronos.mer
+SPICE_FILE_NAME                = /oss/mera/ops/ops/surface/strategic/ref/naif-
+                                 /misc/chronos/chronos.mer
 TELEMETRY_PROVIDER_ID          = "SSW MER_DP"
 TELEMETRY_SOURCE_NAME          = 029_003_p2942-001-0001_002_0129469022-095.dat
 TELEMETRY_SOURCE_TYPE          = "DATA PRODUCT"
 
 /* HISTORY DATA ELEMENTS */
-PROCESSING_HISTORY_TEXT        = "CODMAC LEVEL 1 to LEVEL 2 CONVERSION VIA 
-                                 JPL/MIPL MERTELEMPROC"
+PROCESSING_HISTORY_TEXT        = "CODMAC LEVEL 1 to LEVEL 2 CONVERSION VIA
+                                  JPL/MIPL MERTELEMPROC"
 SOFTWARE_NAME                  = MERTELEMPROC
 SOFTWARE_VERSION_ID            = "V3.0 10-31-03"
 
@@ -111,8 +112,8 @@ Group = GEOMETRIC_CAMERA_MODEL
   ^MODEL_DESC                  = GEOMETRIC_CM.TXT
   MODEL_TYPE                   = CAHVOR
   MODEL_COMPONENT_ID           = (C, A, H, V, O, R)
-  MODEL_COMPONENT_NAME         = (CENTER, AXIS, HORIZONTAL, VERTICAL, 
-                                  OPTICAL, RADIAL)
+  MODEL_COMPONENT_NAME         = (CENTER, AXIS, HORIZONTAL, VERTICAL, OPTICAL,
+                                  RADIAL)
   MODEL_COMPONENT_1            = (1.10908, -0.113534, 0.138245)
   MODEL_COMPONENT_2            = (0.585857, 0.404665, 0.702152)
   MODEL_COMPONENT_3            = (-5.77698, 146.922, -35.9137)
@@ -130,7 +131,7 @@ Group = ROVER_COORDINATE_SYSTEM
   COORDINATE_SYSTEM_INDEX_NAME  = (SITE, DRIVE, IDD, PMA, HGA)
   COORDINATE_SYSTEM_NAME        = ROVER_FRAME
   ORIGIN_OFFSET_VECTOR          = (-1.92792, -0.942284, -0.0451125)
-  ORIGIN_ROTATION_QUATERNION    = (0.00913962, 0.0177138, -0.00127372, 
+  ORIGIN_ROTATION_QUATERNION    = (0.00913962, 0.0177138, -0.00127372,
                                    -0.999801)
   POSITIVE_AZIMUTH_DIRECTION    = CLOCKWISE
   POSITIVE_ELEVATION_DIRECTION  = UP
@@ -156,10 +157,10 @@ End_Group
 Group = PMA_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = PMA
   ARTICULATION_DEVICE_NAME       = "PANCAM MAST ASSEMBLY"
-  ARTICULATION_DEVICE_ANGLE      = (3.03997, -0.677912, 0.0, 0.0, 0.0, 
+  ARTICULATION_DEVICE_ANGLE      = (3.03997, -0.677912, 0.0, 0.0, 0.0,
                                     0.0) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = (AZIMUTH-MEASURED, ELEVATION-MEASURED, 
-                                    AZIMUTH-REQUESTED, ELEVATION-REQUESTED, 
+  ARTICULATION_DEVICE_ANGLE_NAME = (AZIMUTH-MEASURED, ELEVATION-MEASURED,
+                                    AZIMUTH-REQUESTED, ELEVATION-REQUESTED,
                                     AZIMUTH-INITIAL, ELEVATION-INITIAL)
   ARTICULATION_DEVICE_MODE       = DEPLOYED
 End_Group
@@ -177,41 +178,42 @@ Group = FILTER_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = FILTER
   ARTICULATION_DEVICE_NAME       = "FILTER ACTUATORS"
   ARTICULATION_DEV_POSITION      = (7, 2, 17)
-  ARTICULATION_DEV_POSITION_ID   = (PANCAM_L7_440NM, PANCAM_R2_754NM, 
+  ARTICULATION_DEV_POSITION_ID   = (PANCAM_L7_440NM, PANCAM_R2_754NM,
                                     MI_CLOSED)
-  ARTICULATION_DEV_POSITION_NAME = ("LEFT PANCAM FILTER", "RIGHT PANCAM 
-                                    FILTER", "MI DUST COVER")
+  ARTICULATION_DEV_POSITION_NAME = ("LEFT PANCAM FILTER",
+                                    "RIGHT PANCAM FILTER", "MI DUST COVER")
 End_Group
 
 /* ARTICULATION DEVICE STATE: INSTRUMENT DEPLOYMENT DEVICE */
 Group = IDD_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = IDD
   ARTICULATION_DEVICE_NAME       = "INSTRUMENT DEPLOYMENT DEVICE"
-  ARTICULATION_DEVICE_ANGLE      = (-0.16709, -0.342424, 1.39101, 3.01013, 
-                                    -2.09443, -0.173267, -0.347162, 1.39253, 
+  ARTICULATION_DEVICE_ANGLE      = (-0.16709, -0.342424, 1.39101, 3.01013,
+                                    -2.09443, -0.173267, -0.347162, 1.39253,
                                     3.02501, -2.12136) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = ("JOINT 1 AZIMUTH-ENCODER", "JOINT 2 
-                                    ELEVATION-ENCODER", "JOINT 3 
-                                    ELBOW-ENCODER", "JOINT 4 WRIST-ENCODER", 
-                                    "JOINT 5 TURRET-ENCODER", "JOINT 1 
-                                    AZIMUTH-POTENTIOMETER", "JOINT 2 
-                                    ELEVATION-POTENTIOMETER", "JOINT 3 
-                                    ELBOW-POTENTIOMETER", "JOINT 4 
-                                    WRIST-POTENTIOMETER", "JOINT 5 
-                                    TURRET-POTENTIOMETER")
+  ARTICULATION_DEVICE_ANGLE_NAME = ("JOINT 1 AZIMUTH-ENCODER",
+                                    "JOINT 2 ELEVATION-ENCODER",
+                                    "JOINT 3 ELBOW-ENCODER",
+                                    "JOINT 4 WRIST-ENCODER",
+                                    "JOINT 5 TURRET-ENCODER",
+                                    "JOINT 1 AZIMUTH-POTENTIOMETER",
+                                    "JOINT 2 ELEVATION-POTENTIOMETER",
+                                    "JOINT 3 ELBOW-POTENTIOMETER",
+                                    "JOINT 4 WRIST-POTENTIOMETER",
+                                    "JOINT 5 TURRET-POTENTIOMETER")
   ARTICULATION_DEVICE_MODE       = GUARDED
   ARTICULATION_DEVICE_TEMP       = (-30.9296, -22.4574) <degC>
   ARTICULATION_DEVICE_TEMP_NAME  = ("AZIMUTH JOINT 1", "TURRET JOINT 5")
   ARTICULATION_DEV_VECTOR        = (-0.0353972, 0.00287072, 0.999369)
   ARTICULATION_DEV_INSTRUMENT_ID = MI
   ARTICULATION_DEV_VECTOR_NAME   = GRAVITY
-  CONTACT_SENSOR_STATE           = ("NO CONTACT", "NO CONTACT", CONTACT, 
-                                    CONTACT, "NO CONTACT", "NO CONTACT", 
+  CONTACT_SENSOR_STATE           = ("NO CONTACT", "NO CONTACT", CONTACT,
+                                    CONTACT, "NO CONTACT", "NO CONTACT",
                                     CLOSED, "NO CONTACT")
-  CONTACT_SENSOR_STATE_NAME      = ("MI SWITCH 1", "MI SWITCH 2", "RAT SWITCH 
-                                    1", "RAT SWITCH 2", "MB SWITCH 1", "MB 
-                                    SWITCH 2", "APXS DOOR SWITCH", "APXS 
-                                    CONTACT SWITCH")
+  CONTACT_SENSOR_STATE_NAME      = ("MI SWITCH 1", "MI SWITCH 2",
+                                    "RAT SWITCH 1", "RAT SWITCH 2",
+                                    "MB SWITCH 1", "MB SWITCH 2",
+                                    "APXS DOOR SWITCH", "APXS CONTACT SWITCH")
 End_Group
 
 /* COORDINATE SYSTEM STATE: PANCAM MAST ASSEMBLY */
@@ -231,16 +233,16 @@ End_Group
 Group = CHASSIS_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = CHASSIS
   ARTICULATION_DEVICE_NAME       = "MOBILITY CHASSIS"
-  ARTICULATION_DEVICE_ANGLE      = (-0.00212176, -0.0059257, -0.00674381, 
-                                    0.00963577, 0.0291252, 0.00517551, 
+  ARTICULATION_DEVICE_ANGLE      = (-0.00212176, -0.0059257, -0.00674381,
+                                    0.00963577, 0.0291252, 0.00517551,
                                     0.0132111) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = ("LEFT FRONT WHEEL POTENTIOMETER", "RIGHT 
-                                    FRONT WHEEL POTENTIOMETER", "LEFT REAR 
-                                    WHEEL POTENTIOMETER", "RIGHT REAR WHEEL 
-                                    POTENTIOMETER", "LEFT BOGIE 
-                                    POTENTIOMETER", "RIGHT BOGIE 
-                                    POTENTIOMETER", "DIFFERENTIAL BOGIE 
-                                    POTENTIOMETER")
+  ARTICULATION_DEVICE_ANGLE_NAME = ("LEFT FRONT WHEEL POTENTIOMETER",
+                                    "RIGHT FRONT WHEEL POTENTIOMETER",
+                                    "LEFT REAR WHEEL POTENTIOMETER",
+                                    "RIGHT REAR WHEEL POTENTIOMETER",
+                                    "LEFT BOGIE POTENTIOMETER",
+                                    "RIGHT BOGIE POTENTIOMETER",
+                                    "DIFFERENTIAL BOGIE POTENTIOMETER")
   ARTICULATION_DEVICE_MODE       = DEPLOYED
 End_Group
 
@@ -374,14 +376,14 @@ Group = INSTRUMENT_STATE_PARMS
   FLAT_FIELD_CORRECTION_FLAG     = FALSE
   FLAT_FIELD_CORRECTION_PARM     = (0.0, 0.0, 0.0, 0.0, 0.0)
   INSTRUMENT_MODE_ID             = FULL_FRAME
-  INSTRUMENT_TEMPERATURE         = (-26.9828, -15.1587, -8.44871, -15.6144, 
-                                    -17.9811, 0.0, -18.333, -6.78394, 
+  INSTRUMENT_TEMPERATURE         = (-26.9828, -15.1587, -8.44871, -15.6144,
+                                    -17.9811, 0.0, -18.333, -6.78394,
                                     0.0) <degC>
-  INSTRUMENT_TEMPERATURE_NAME    = ("FRONT HAZ ELECTRONICS", "REAR HAZ 
-                                    ELECTRONICS", "LEFT PAN ELECTRONICS", 
-                                    "LEFT PAN CCD", "RIGHT PAN CCD", "LEFT 
-                                    NAV CCD", "MI CCD", "MI ELECTRONICS", 
-                                    "EDL CCD")
+  INSTRUMENT_TEMPERATURE_NAME    = ("FRONT HAZ ELECTRONICS",
+                                    "REAR HAZ ELECTRONICS",
+                                    "LEFT PAN ELECTRONICS", "LEFT PAN CCD",
+                                    "RIGHT PAN CCD", "LEFT NAV CCD", "MI CCD",
+                                    "MI ELECTRONICS", "EDL CCD")
   OFFSET_MODE_ID                 = 4090
   PIXEL_AVERAGING_HEIGHT         = 16
   PIXEL_AVERAGING_WIDTH          = 16
@@ -390,7 +392,7 @@ Group = INSTRUMENT_STATE_PARMS
   SHUTTER_EFFECT_CORRECTION_FLAG = TRUE
   SUN_FIND_FLAG                  = FALSE
   SUN_FIND_PARM                  = (0.0, 0.0, 0.0)
-  SUN_FIND_PARM_NAME             = ("WINDOW SIZE", "BRIGHTNESS THRESHOLD", 
+  SUN_FIND_PARM_NAME             = ("WINDOW SIZE", "BRIGHTNESS THRESHOLD",
                                     "SUMMED BRIGHTNESS")
   SUN_LINE                       = -1
   SUN_LINE_SAMPLE                = -1
@@ -401,12 +403,12 @@ End_Group
 /* COMPRESSION RESULTS */
 Group = COMPRESSION_PARMS
   ERROR_PIXELS                   = 0
-  INST_CMPRS_DESC                = "Lossless compression algorithm developed 
-                                   at JPL"
+  INST_CMPRS_DESC                = "Lossless compression algorithm developed
+                                    at JPL"
   INST_CMPRS_FILTER              = E
   INST_CMPRS_MODE                = 1
-  INST_CMPRS_NAME                = "ICER ADAPTIVE VARIABLE-LENGTH CODING 
-                                   (ICER)"
+  INST_CMPRS_NAME                = "ICER ADAPTIVE VARIABLE-LENGTH CODING
+                                    (ICER)"
   INST_CMPRS_RATE                = 1.22266
   INST_CMPRS_RATIO               = 9.8147
   INST_CMPRS_SEGMENTS            = 1
@@ -456,8 +458,8 @@ LABEL_RECORDS                  = 170
 
 /* IDENTIFICATION DATA ELEMENTS */
 DATA_SET_ID                    = MER2-M-MI-2-EDR-V1.0
-DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER 
-                                 CAMERA V1.0"
+DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER
+                                  CAMERA V1.0"
 COMMAND_SEQUENCE_NUMBER        = 1
 FRAME_ID                       = MONO
 FRAME_TYPE                     = MONO
@@ -477,8 +479,8 @@ MISSION_NAME                   = "MARS EXPLORATION ROVER"
 MISSION_PHASE_NAME             = "PRIMARY MISSION"
 OBSERVATION_ID                 = 301989888
 PLANET_DAY_NUMBER              = 35
-PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM, 
-                                 JET PROPULSION LAB"
+PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM ,
+                                  JET PROPULSION LAB"
 PRODUCT_CREATION_TIME          = 2004-02-08T03:13:17.000Z
 PRODUCT_ID                     = 2M129469022ETH0327P2942M1M1
 PRODUCT_VERSION_ID             = "V3.0 D-22846"
@@ -505,14 +507,15 @@ EARTH_RECEIVED_STOP_TIME       = 2004-02-08T03:13:05.487Z
 EXPECTED_PACKETS               = N/A
 PACKET_MAP_MASK                = N/A
 RECEIVED_PACKETS               = N/A
-SPICE_FILE_NAME                = /oss/mera/ops/ops/surface/strategic/ref/naif/misc/chronos/chronos.mer
+SPICE_FILE_NAME                = /oss/mera/ops/ops/surface/strategic/ref/naif-
+                                 /misc/chronos/chronos.mer
 TELEMETRY_PROVIDER_ID          = "SSW MER_DP"
 TELEMETRY_SOURCE_NAME          = 029_003_p2942-001-0001_002_0129469022-095.dat
 TELEMETRY_SOURCE_TYPE          = "DATA PRODUCT"
 
 /* HISTORY DATA ELEMENTS */
-PROCESSING_HISTORY_TEXT        = "CODMAC LEVEL 1 to LEVEL 2 CONVERSION VIA 
-                                 JPL/MIPL MERTELEMPROC"
+PROCESSING_HISTORY_TEXT        = "CODMAC LEVEL 1 to LEVEL 2 CONVERSION VIA
+                                  JPL/MIPL MERTELEMPROC"
 SOFTWARE_NAME                  = MERTELEMPROC
 SOFTWARE_VERSION_ID            = "V3.0 10-31-03"
 
@@ -552,8 +555,8 @@ Group = GEOMETRIC_CAMERA_MODEL
   ^MODEL_DESC                  = GEOMETRIC_CM.TXT
   MODEL_TYPE                   = CAHVOR
   MODEL_COMPONENT_ID           = (C, A, H, V, O, R)
-  MODEL_COMPONENT_NAME         = (CENTER, AXIS, HORIZONTAL, VERTICAL, 
-                                  OPTICAL, RADIAL)
+  MODEL_COMPONENT_NAME         = (CENTER, AXIS, HORIZONTAL, VERTICAL, OPTICAL,
+                                  RADIAL)
   MODEL_COMPONENT_1            = (1.10908, -0.113534, 0.138245)
   MODEL_COMPONENT_2            = (0.585857, 0.404665, 0.702152)
   MODEL_COMPONENT_3            = (-5.77698, 146.922, -35.9137)
@@ -571,7 +574,7 @@ Group = ROVER_COORDINATE_SYSTEM
   COORDINATE_SYSTEM_INDEX_NAME  = (SITE, DRIVE, IDD, PMA, HGA)
   COORDINATE_SYSTEM_NAME        = ROVER_FRAME
   ORIGIN_OFFSET_VECTOR          = (-1.92792, -0.942284, -0.0451125)
-  ORIGIN_ROTATION_QUATERNION    = (0.00913962, 0.0177138, -0.00127372, 
+  ORIGIN_ROTATION_QUATERNION    = (0.00913962, 0.0177138, -0.00127372,
                                    -0.999801)
   POSITIVE_AZIMUTH_DIRECTION    = CLOCKWISE
   POSITIVE_ELEVATION_DIRECTION  = UP
@@ -597,10 +600,10 @@ End_Group
 Group = PMA_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = PMA
   ARTICULATION_DEVICE_NAME       = "PANCAM MAST ASSEMBLY"
-  ARTICULATION_DEVICE_ANGLE      = (3.03997, -0.677912, 0.0, 0.0, 0.0, 
+  ARTICULATION_DEVICE_ANGLE      = (3.03997, -0.677912, 0.0, 0.0, 0.0,
                                     0.0) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = (AZIMUTH-MEASURED, ELEVATION-MEASURED, 
-                                    AZIMUTH-REQUESTED, ELEVATION-REQUESTED, 
+  ARTICULATION_DEVICE_ANGLE_NAME = (AZIMUTH-MEASURED, ELEVATION-MEASURED,
+                                    AZIMUTH-REQUESTED, ELEVATION-REQUESTED,
                                     AZIMUTH-INITIAL, ELEVATION-INITIAL)
   ARTICULATION_DEVICE_MODE       = DEPLOYED
 End_Group
@@ -618,41 +621,42 @@ Group = FILTER_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = FILTER
   ARTICULATION_DEVICE_NAME       = "FILTER ACTUATORS"
   ARTICULATION_DEV_POSITION      = (7, 2, 17)
-  ARTICULATION_DEV_POSITION_ID   = (PANCAM_L7_440NM, PANCAM_R2_754NM, 
+  ARTICULATION_DEV_POSITION_ID   = (PANCAM_L7_440NM, PANCAM_R2_754NM,
                                     MI_CLOSED)
-  ARTICULATION_DEV_POSITION_NAME = ("LEFT PANCAM FILTER", "RIGHT PANCAM 
-                                    FILTER", "MI DUST COVER")
+  ARTICULATION_DEV_POSITION_NAME = ("LEFT PANCAM FILTER",
+                                    "RIGHT PANCAM FILTER", "MI DUST COVER")
 End_Group
 
 /* ARTICULATION DEVICE STATE: INSTRUMENT DEPLOYMENT DEVICE */
 Group = IDD_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = IDD
   ARTICULATION_DEVICE_NAME       = "INSTRUMENT DEPLOYMENT DEVICE"
-  ARTICULATION_DEVICE_ANGLE      = (-0.16709, -0.342424, 1.39101, 3.01013, 
-                                    -2.09443, -0.173267, -0.347162, 1.39253, 
+  ARTICULATION_DEVICE_ANGLE      = (-0.16709, -0.342424, 1.39101, 3.01013,
+                                    -2.09443, -0.173267, -0.347162, 1.39253,
                                     3.02501, -2.12136) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = ("JOINT 1 AZIMUTH-ENCODER", "JOINT 2 
-                                    ELEVATION-ENCODER", "JOINT 3 
-                                    ELBOW-ENCODER", "JOINT 4 WRIST-ENCODER", 
-                                    "JOINT 5 TURRET-ENCODER", "JOINT 1 
-                                    AZIMUTH-POTENTIOMETER", "JOINT 2 
-                                    ELEVATION-POTENTIOMETER", "JOINT 3 
-                                    ELBOW-POTENTIOMETER", "JOINT 4 
-                                    WRIST-POTENTIOMETER", "JOINT 5 
-                                    TURRET-POTENTIOMETER")
+  ARTICULATION_DEVICE_ANGLE_NAME = ("JOINT 1 AZIMUTH-ENCODER",
+                                    "JOINT 2 ELEVATION-ENCODER",
+                                    "JOINT 3 ELBOW-ENCODER",
+                                    "JOINT 4 WRIST-ENCODER",
+                                    "JOINT 5 TURRET-ENCODER",
+                                    "JOINT 1 AZIMUTH-POTENTIOMETER",
+                                    "JOINT 2 ELEVATION-POTENTIOMETER",
+                                    "JOINT 3 ELBOW-POTENTIOMETER",
+                                    "JOINT 4 WRIST-POTENTIOMETER",
+                                    "JOINT 5 TURRET-POTENTIOMETER")
   ARTICULATION_DEVICE_MODE       = GUARDED
   ARTICULATION_DEVICE_TEMP       = (-30.9296, -22.4574) <degC>
   ARTICULATION_DEVICE_TEMP_NAME  = ("AZIMUTH JOINT 1", "TURRET JOINT 5")
   ARTICULATION_DEV_VECTOR        = (-0.0353972, 0.00287072, 0.999369)
   ARTICULATION_DEV_INSTRUMENT_ID = MI
   ARTICULATION_DEV_VECTOR_NAME   = GRAVITY
-  CONTACT_SENSOR_STATE           = ("NO CONTACT", "NO CONTACT", CONTACT, 
-                                    CONTACT, "NO CONTACT", "NO CONTACT", 
+  CONTACT_SENSOR_STATE           = ("NO CONTACT", "NO CONTACT", CONTACT,
+                                    CONTACT, "NO CONTACT", "NO CONTACT",
                                     CLOSED, "NO CONTACT")
-  CONTACT_SENSOR_STATE_NAME      = ("MI SWITCH 1", "MI SWITCH 2", "RAT SWITCH 
-                                    1", "RAT SWITCH 2", "MB SWITCH 1", "MB 
-                                    SWITCH 2", "APXS DOOR SWITCH", "APXS 
-                                    CONTACT SWITCH")
+  CONTACT_SENSOR_STATE_NAME      = ("MI SWITCH 1", "MI SWITCH 2",
+                                    "RAT SWITCH 1", "RAT SWITCH 2",
+                                    "MB SWITCH 1", "MB SWITCH 2",
+                                    "APXS DOOR SWITCH", "APXS CONTACT SWITCH")
 End_Group
 
 /* COORDINATE SYSTEM STATE: PANCAM MAST ASSEMBLY */
@@ -672,16 +676,16 @@ End_Group
 Group = CHASSIS_ARTICULATION_STATE
   ARTICULATION_DEVICE_ID         = CHASSIS
   ARTICULATION_DEVICE_NAME       = "MOBILITY CHASSIS"
-  ARTICULATION_DEVICE_ANGLE      = (-0.00212176, -0.0059257, -0.00674381, 
-                                    0.00963577, 0.0291252, 0.00517551, 
+  ARTICULATION_DEVICE_ANGLE      = (-0.00212176, -0.0059257, -0.00674381,
+                                    0.00963577, 0.0291252, 0.00517551,
                                     0.0132111) <rad>
-  ARTICULATION_DEVICE_ANGLE_NAME = ("LEFT FRONT WHEEL POTENTIOMETER", "RIGHT 
-                                    FRONT WHEEL POTENTIOMETER", "LEFT REAR 
-                                    WHEEL POTENTIOMETER", "RIGHT REAR WHEEL 
-                                    POTENTIOMETER", "LEFT BOGIE 
-                                    POTENTIOMETER", "RIGHT BOGIE 
-                                    POTENTIOMETER", "DIFFERENTIAL BOGIE 
-                                    POTENTIOMETER")
+  ARTICULATION_DEVICE_ANGLE_NAME = ("LEFT FRONT WHEEL POTENTIOMETER",
+                                    "RIGHT FRONT WHEEL POTENTIOMETER",
+                                    "LEFT REAR WHEEL POTENTIOMETER",
+                                    "RIGHT REAR WHEEL POTENTIOMETER",
+                                    "LEFT BOGIE POTENTIOMETER",
+                                    "RIGHT BOGIE POTENTIOMETER",
+                                    "DIFFERENTIAL BOGIE POTENTIOMETER")
   ARTICULATION_DEVICE_MODE       = DEPLOYED
 End_Group
 
@@ -815,14 +819,14 @@ Group = INSTRUMENT_STATE_PARMS
   FLAT_FIELD_CORRECTION_FLAG     = FALSE
   FLAT_FIELD_CORRECTION_PARM     = (0.0, 0.0, 0.0, 0.0, 0.0)
   INSTRUMENT_MODE_ID             = FULL_FRAME
-  INSTRUMENT_TEMPERATURE         = (-26.9828, -15.1587, -8.44871, -15.6144, 
-                                    -17.9811, 0.0, -18.333, -6.78394, 
+  INSTRUMENT_TEMPERATURE         = (-26.9828, -15.1587, -8.44871, -15.6144,
+                                    -17.9811, 0.0, -18.333, -6.78394,
                                     0.0) <degC>
-  INSTRUMENT_TEMPERATURE_NAME    = ("FRONT HAZ ELECTRONICS", "REAR HAZ 
-                                    ELECTRONICS", "LEFT PAN ELECTRONICS", 
-                                    "LEFT PAN CCD", "RIGHT PAN CCD", "LEFT 
-                                    NAV CCD", "MI CCD", "MI ELECTRONICS", 
-                                    "EDL CCD")
+  INSTRUMENT_TEMPERATURE_NAME    = ("FRONT HAZ ELECTRONICS",
+                                    "REAR HAZ ELECTRONICS",
+                                    "LEFT PAN ELECTRONICS", "LEFT PAN CCD",
+                                    "RIGHT PAN CCD", "LEFT NAV CCD", "MI CCD",
+                                    "MI ELECTRONICS", "EDL CCD")
   OFFSET_MODE_ID                 = 4090
   PIXEL_AVERAGING_HEIGHT         = 16
   PIXEL_AVERAGING_WIDTH          = 16
@@ -831,7 +835,7 @@ Group = INSTRUMENT_STATE_PARMS
   SHUTTER_EFFECT_CORRECTION_FLAG = TRUE
   SUN_FIND_FLAG                  = FALSE
   SUN_FIND_PARM                  = (0.0, 0.0, 0.0)
-  SUN_FIND_PARM_NAME             = ("WINDOW SIZE", "BRIGHTNESS THRESHOLD", 
+  SUN_FIND_PARM_NAME             = ("WINDOW SIZE", "BRIGHTNESS THRESHOLD",
                                     "SUMMED BRIGHTNESS")
   SUN_LINE                       = -1
   SUN_LINE_SAMPLE                = -1
@@ -842,12 +846,12 @@ End_Group
 /* COMPRESSION RESULTS */
 Group = COMPRESSION_PARMS
   ERROR_PIXELS                   = 0
-  INST_CMPRS_DESC                = "Lossless compression algorithm developed 
-                                   at JPL"
+  INST_CMPRS_DESC                = "Lossless compression algorithm developed
+                                    at JPL"
   INST_CMPRS_FILTER              = E
   INST_CMPRS_MODE                = 1
-  INST_CMPRS_NAME                = "ICER ADAPTIVE VARIABLE-LENGTH CODING 
-                                   (ICER)"
+  INST_CMPRS_NAME                = "ICER ADAPTIVE VARIABLE-LENGTH CODING
+                                    (ICER)"
   INST_CMPRS_RATE                = 1.22266
   INST_CMPRS_RATIO               = 9.8147
   INST_CMPRS_SEGMENTS            = 1
@@ -896,8 +900,8 @@ LABEL_RECORDS                  = 170
 
 /* IDENTIFICATION DATA ELEMENTS */
 DATA_SET_ID                    = MER2-M-MI-2-EDR-V1.0
-DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER 
-                                 CAMERA V1.0"
+DATA_SET_NAME                  = "MARS EXPLORATION ROVER 2 MICROSCOPIC IMAGER
+                                  CAMERA V1.0"
 COMMAND_SEQUENCE_NUMBER        = 1
 FRAME_ID                       = MONO
 FRAME_TYPE                     = MONO
@@ -917,8 +921,8 @@ MISSION_NAME                   = "MARS EXPLORATION ROVER"
 MISSION_PHASE_NAME             = "PRIMARY MISSION"
 OBSERVATION_ID                 = 301989888
 PLANET_DAY_NUMBER              = 35
-PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM, 
-                                 JET PROPULSION LAB"
+PRODUCER_INSTITUTION_NAME      = "MULTIMISSION IMAGE PROCESSING SUBSYSTEM ,
+                                  JET PROPULSION LAB"
 PRODUCT_CREATION_TIME          = 2004-02-08T03:13:17.000Z
 PRODUCT_ID                     = 2M129469022ETH0327P2942M1M1
 PRODUCT_VERSION_ID             = "V3.0 D-22846"

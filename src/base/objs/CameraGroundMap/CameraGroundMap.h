@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2008/07/15 15:06:51 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/10/15 01:38:43 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -49,6 +49,7 @@ namespace Isis {
    *                     LookCtoFocalPlaneXY() to handle the common functionality
    *                     between the SetGround methods
    *  @history 2008-07-14 Steven Lambright Added NaifStatus calls
+   *  @history 2009-10-14 Debbie A. Cook Added new virtual method Getxy(lat,lon,radius)
    *              
    */
   class CameraGroundMap {
@@ -63,6 +64,7 @@ namespace Isis {
 
       virtual bool SetGround(const double lat, const double lon);
       virtual bool SetGround(const double lat, const double lon, const double radius);
+      virtual bool GetXY(const double lat, const double lon, const double radius, std::vector<double> &lookJ);
 
       //! Return undistorted focal plane x
       inline double FocalPlaneX() const { return p_focalPlaneX; };

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.14 $
- * $Date: 2009/09/08 17:38:17 $
+ * $Revision: 1.16 $
+ * $Date: 2009/10/13 14:54:19 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -79,7 +79,10 @@ namespace Isis {
    *            the CameraDistortionMap,
    *   @history 2009-08-21 Christopher Austin, Put the default return of
    *            ReferenceIndex() back as the first Measured measure.
-   *
+   *   @history 2009-09-01 Eric Hyer, fixed some include issues.
+   *   @history 2009-09-08 Eric Hyer, Added PointTypeToString method.
+   *   @history 2009-10-13 Jeannie Walldren - Added detail to
+   *            error messages.
    */
   class ControlPoint {
     public:

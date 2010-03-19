@@ -2,7 +2,7 @@
 
 #include "Isis.h"
 #include "Constants.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 #include "Brick.h"
 #include "PolynomialBivariate.h"
 #include "LeastSquares.h"

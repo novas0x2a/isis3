@@ -13,7 +13,8 @@ commands:
 	tol=1.64742389 \
 	solvedegree=3 \
 	camsolve=all \
-	twist=no | grep -v "100% Processed" > $(OUTPUT)/case01OutLog.pvl;
+	twist=no | grep -v "100% Processed" | \
+	grep -v "jigsaw" > $(OUTPUT)/case01OutLog.pvl;
 	$(RM) $(OUTPUT)/cube.lis > /dev/null;
 	cathist from=$(OUTPUT)/PSP_002733_1880_RED4.crop.cub > $(OUTPUT)/PSP4.pvl;										    
 	cathist from=$(OUTPUT)/PSP_002733_1880_RED5.crop.cub > $(OUTPUT)/PSP5.pvl;

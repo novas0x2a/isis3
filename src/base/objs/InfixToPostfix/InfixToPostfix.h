@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2008/04/16 23:57:20 $
+ * $Revision: 1.2 $
+ * $Date: 2010/02/23 17:07:00 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -45,6 +45,8 @@ namespace Isis {
  *                   vector to QList (static std::vector is unsafe)
  *   @history 2008-01-23 Steven Lambright - Added the operators (constants)
  *                   PI and e
+ *   @history 2010-02-23 Steven Lambright - Operator/Function input strings and
+ *                   output strings now separated
  */
   class InfixToPostfix {
     public:
@@ -78,25 +80,63 @@ namespace Isis {
    */
   class InfixOperator {
     public:
-      InfixOperator(int prec, iString rep, bool isFunc = false) { 
-        precedence = prec;
-        representation = rep; 
-        isFunction = isFunc;
+      InfixOperator(int prec, iString inString, bool isFunc = false) { 
+        m_precedence = prec;
+        m_inputString = inString; 
+        m_outputString = inString; 
+        m_isFunction = isFunc;
       }
+
+      InfixOperator(int prec, iString inString, iString outString,
+                    bool isFunc = false) { 
+        m_precedence = prec;
+        m_inputString = inString; 
+        m_outputString = outString; 
+        m_isFunction = isFunc;
+      }
+
+      const iString &InputString() const {
+        return m_inputString;
+      }
+
+      const iString &OutputString() const {
+        return m_outputString;
+      }
+
+      int Precedence() const {
+        return m_precedence;
+      }
+
+      bool IsFunction() const {
+        return m_isFunction;
+      }
+
   
-      int precedence;
-      iString representation;
-      bool isFunction;
+    private:
+      int m_precedence;
+      iString m_inputString;
+      iString m_outputString;
+      bool m_isFunction;
   };
 
   class InfixFunction : public InfixOperator {
     public:
-      InfixFunction(iString rep, int argCount) :
-        InfixOperator(-1,rep,true) {
-        numArguments = argCount;
+      InfixFunction(iString inString, int argCount) :
+        InfixOperator(-1,inString,true) {
+        m_numArguments = argCount;
+      }
+
+      InfixFunction(iString inString, iString outString, int argCount) :
+        InfixOperator(-1,inString,outString,true) {
+        m_numArguments = argCount;
+      }
+
+      int ArgumentCount() const {
+        return m_numArguments;
       }
   
-      int numArguments;
+    private:
+      int m_numArguments;
   };
 };
 

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2009/09/01 17:53:05 $
+ * $Revision: 1.6 $
+ * $Date: 2009/10/30 17:53:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -214,7 +214,7 @@ namespace Isis {
 
   
   //! Returns a list of all valid options to pass to GetMeasureData
-  const QVector< QString > ControlMeasure::GetMeasureDataNames() const {
+  const QVector< QString > ControlMeasure::GetMeasureDataNames() {
     QVector< QString > names;
     
     names.push_back("ZScoreMin");

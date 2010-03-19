@@ -52,6 +52,10 @@
           Saturation values are now set when present and if IR or VIS
           was turned off then files will not be imported for those channels. 
         </change>
+        <change name="Sharmila Prasad" date="2009-09-10"> 
+            Added the ability  to translate Vims label for both  IR and VIS 
+            cubes
+        </change>
         <change name="Tracie Sucharski" date="2009-10-20">
           Corrected indexing for SAMPLING_MODE_ID and GAIN_MODE_ID values.
         </change>

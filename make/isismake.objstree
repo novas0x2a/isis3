@@ -1,8 +1,11 @@
 include $(ISISROOT)/make/isismake.macros
 
-	OBJECTS = $(filter-out CVS Makefile , $(wildcard *))
+DIRONLY = $(subst /,,$(shell ls -d */))
+CVS := CVS
 
-api: 
+OBJECTS = $(filter-out $(CVS), $(DIRONLY))
+
+api:
 	if [ "$(OBJECTS)" != "" ]; \
 	then \
 	for i in $(OBJECTS); do \
@@ -33,6 +36,7 @@ clean:
 	if [ "$(OBJECTS)" != "" ]; \
 	then \
 	for i in $(OBJECTS); do \
+	  echo "    Cleaning [$$i]"; \
 	  cd $$i; $(MAKE) clean; cd ..; \
 	done \
 	fi

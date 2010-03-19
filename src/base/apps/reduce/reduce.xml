@@ -3,14 +3,15 @@
 <application name="reduce" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
 
   <brief>
-    Scale cube down
+    Reduce the pixel dimensions of an image
   </brief>
 
   <description>
-    This program will reduce a cube either by averaging pixels or using the
-    nearest-neighbor algorithm. All special pixels that can't be resolved by the 
-    VALIDPER value will be set to NULL.
-
+    This program will reduce a cube to a given proportion of the original or to 
+    specific dimensions.  The user can specify to perform the reduction by
+    either averaging pixels or using the nearest-neighbor algorithm. The user 
+    also has the option of filling all special pixels that can't be resolved by 
+    the VALIDPER value with NULL or the nearest-neighbor value.
   </description>
 
   <history>
@@ -67,6 +68,17 @@
       Added keyword REDUCTION_TYPE to allow for clear switching between ons, onl 
       and sscale, lscale.  Fixed problem involving cube remaning open after an 
       exception.
+    </change>
+    <change name="Janet Barrett" date="2009-10-22">
+      Now uses the SubArea class to produce output cube labels
+      with corrected Mapping, Instrument, and AlphaCube groups.
+    </change>
+    <change name="Travis Addair" date="2009-11-12">
+      Improved documentation, changed parameter names, and updated examples.
+    </change>
+    <change name="Travis Addair" date="2009-12-09">
+      Updated documentation and changed parameters STOTAL and LTOTAL back to ONS 
+      and ONL, respectively.
     </change>
   </history>
 
@@ -131,23 +143,26 @@
         </list>
       </parameter>
       
-      <parameter name="REDUCTION_TYPE">
+      <parameter name="MODE">
         <type>string</type>
         <brief>
-          Parameters used to set scaling values
+          Scale down the image or reduce to specific dimensions
         </brief>
-        <default><item>TOTAL</item></default>
+        <default><item>SCALE</item></default>
         <description>
-          Select between using a scaling factor or a total number of pixels for 
-          the reduced image.
+          Select between reducing the image to a proportion of the original (by
+          a scaling factor inverse) or to specific dimensions (in terms of total
+          number of pixels).
         </description>
         <list>
           <option value="SCALE">
             <brief>
-              Use a scaling factor
+              Reduce by a scaling factor inverse
             </brief>
             <description>
-              Uses a scaling factor to reduce the image.
+              Reduces the input image by a scaling factor inverse.  The scaling 
+              factor inverse along the sample range and line range must then be 
+              specified in the SSCALE and LSCALE parameters, respectively.
             </description>
             <exclusions>
               <item>ONS</item>
@@ -160,10 +175,13 @@
           </option>
           <option value="TOTAL">
             <brief>
-              Use a total number of pixels
+              Reduce to a total number of pixels
             </brief>
             <description>
-              User a total number of pixels to reduce the image.
+              Reduces the input image to a total number of pixels.  The number 
+              of pixels in the output image along the sample range and line 
+              range must then be specified in the ONS and ONL parameters, 
+              respectively.
             </description>
             <inclusions>
               <item>ONS</item>
@@ -181,10 +199,10 @@
         <type>double</type>
         <minimum inclusive="yes">1.0</minimum>
         <default><item>1.0</item></default>
-        <brief>Sample scaling factor</brief>
+        <brief>Sample scaling factor inverse</brief>
         <description>
-          This is the scaling factor for the sample direction.  For example,
-          SSCALE=4 will reduce the number of samples by 1/4th.
+          This is the scaling factor inverse for the sample direction.  For 
+          example, SSCALE=4 will reduce the number of samples by 1/4th.
         </description>
       </parameter>
 
@@ -192,10 +210,10 @@
         <type>double</type>
         <minimum inclusive="yes">1.0</minimum>
         <default><item>1.0</item></default>
-        <brief>Line scaling factor</brief>
+        <brief>Line scaling factor inverse</brief>
         <description>
-          This is the scaling factor for the line direction.  For example,
-          LSCALE=4 will reduce the number of lines by 1/4th.
+          This is the scaling factor inverse for the line direction.  For 
+          example, LSCALE=4 will reduce the number of lines by 1/4th.
         </description>
       </parameter>
 
@@ -229,7 +247,7 @@
           This parameter specifies what percentage of the pixels need to be
           valid (non-special pixels).  For example, scaling down by a factor
           of two results in a 2x2 window (four pixels) being reduced to one
-          pixel.  If VPER is set at 50, then at least two pixels of the four
+          pixel.  If VALIDPER is set at 50, then at least two pixels of the four
           must be valid (50%).  If this criteria is met, the resulting value
           of the output pixel will be the average of the valid input pixels.
           Otherwise the output pixel will be set to the input pixel which is
@@ -239,96 +257,167 @@
 
       <parameter name="VPER_REPLACE">
         <type>string</type>
-        <brief>Replacement method when VPER fails</brief>
+        <brief>Replacement method when VALIDPER fails</brief>
         <default><item>NULL</item></default>
         <description>
-          When the set VPER variable is not met, this is how the pixel with be 
-          filled.
+          When the set VALIDPER variable is not met, this is how the pixel with 
+          be filled.
         </description>
     	<list>
     	  <option value="NULL">
     	    <brief>NULL replacement</brief>
     	    <description>
-    	      Use NULL value when VPER is invalid..
+    	      Use NULL value when VALIDPER is invalid..
     	    </description>
     	  </option>
     	  <option value="NEAREST">
     	    <brief>Nearest-Neighbor replacement</brief>
     	    <description>
-    	      Use nearest neighbor when VPER is invalid.
+    	      Use nearest neighbor when VALIDPER is invalid.
     	    </description>
     	  </option>
     	</list>
       </parameter>
     </group>
   </groups>
+
   <examples>
     <example>
       <brief>
-        Reduce the number of samples by a factor of 2
+        Reduce the number of samples by a factor inverse of 2, while leaving the 
+        number of lines the same
       </brief>
       <description>
-      Essentially the opposite of enlarge, this configuration for reduce takes
-      an image and scales down the samples. 
+        Essentially the opposite of enlarge, this configuration for reduce takes
+        an image and scales down the samples, keeping all parameters, except the 
+        sample scale, at their default settings. 
       </description>
       <terminalInterface>
         <commandLine>
-	  from= peaks.cub
-	  to=reducedPeaks.cub
-	  sscale=2
-	  lscale=1
-	</commandLine>
-	<description>
-	In this example the sample scale is 2. Note that this implies that the
-	image will be scaled down by a factor of 2, not scaled up.
-	</description>
+      	  from=peaks.cub
+      	  to=reducedPeaks.cub
+      	  sscale=2.0
+      	</commandLine>
+      	<description>
+        	In this example the sample scale factor inverse is 2. Note that this implies 
+        	that the image will be scaled down by a factor of 2, not scaled up. No 
+          line scale is specified since the default is 1.0.  Since the default 
+          mode of reduction is scale, the mode parameter does not need to be 
+          specified.
+      	</description>
       </terminalInterface>
       
       <guiInterfaces>
         <guiInterface>
-	  <image width="440" height="625" src="assets/images/vReduceGui.jpg">
-	    <brief>
-	    Example GUI
-	    </brief>
-	    <description>
-	      Screenshot of the GUI with parameters set to perform a sample
-	      reduction.
-	    </description>
-	    <thumbnail width="220" height="312" caption="reduce gui" 
-	     src="assets/thumbs/vReduceGui.jpg" />
-	  </image>
-	</guiInterface>
+      	  <image width="614" height="750" src="assets/images/scaleGui.jpg">
+      	    <brief>
+              Example GUI
+      	    </brief>
+      	    <description>
+      	      Screenshot of the GUI with parameters set to perform a sample
+      	      reduction by scaling.
+      	    </description>
+      	    <thumbnail width="164" height="200" caption="reduce gui" src="assets/thumbs/scaleGui.jpg" />
+      	  </image>
+      	</guiInterface>
       </guiInterfaces>
       
       <inputImages>
         <image width="500" height="500" src="assets/images/peaks.jpg">
-	  <brief>
-	    Input image before reduce
-	  </brief>
-	  <description>
-	    This is the image as it was taken originally. 
-	  </description>
-	  <thumbnail caption= "The image before the filter" 
-	   src="assets/thumbs/peaks.jpg" width="200" height="200"/>
-	  <parameterName>FROM</parameterName>
-	</image>
+      	  <brief>
+      	    Input image for reduce
+      	  </brief>
+      	  <description>
+      	    This is the image as it was taken originally. 
+      	  </description>
+      	  <thumbnail caption= "The image before reduction" src="assets/thumbs/peaks.jpg" width="200" height="200"/>
+      	  <parameterName>FROM</parameterName>
+      	</image>
       </inputImages>
       
       <outputImages>
-        <image width="500" height="500" src="assets/images/vReduce.jpg">
-	  <brief>
-	  Output image after minmax
-	  </brief>
-	  <description>
-	    The reduced image. Though it has been scaled down so that it can
-	    be viewed by a web browser, the essential change can still be observed.
-	    The vertical distortion is noticable, and the output cube is 1/2 the
-	    size of the input cube. 
-	  </description>
-	  <thumbnail caption= "The image after the filter" 
-	  src="assets/thumbs/vReduce.jpg" width="100" height="200"/>
-	  <parameterName>TO</parameterName>
-	</image>
+        <image width="500" height="500" src="assets/images/scale.jpg">
+      	  <brief>
+            Output image for reduce
+      	  </brief>
+      	  <description>
+      	    The reduced image. Though it has been scaled down so that it can
+      	    be viewed in a web browser, the essential change can still be 
+      	    observed. The vertical distortion is noticable, and the output cube 
+      	    is 1/2 the size of the input cube. 
+      	  </description>
+      	  <thumbnail caption= "The image after reduction" src="assets/thumbs/scale.jpg" width="100" height="200"/>
+      	  <parameterName>TO</parameterName>
+      	</image>
+      </outputImages>
+    </example>
+
+    <example>
+      <brief>
+        Reduce the number of samples to 150, and the number of lines to 250
+      </brief>
+      <description>
+        Here the mode has been set to reduce to a total number of pixels along 
+        the sample and line dimensions, with all other parameters kept at their 
+        default settings.
+      </description>
+      <terminalInterface>
+        <commandLine>
+      	  from=peaks.cub
+      	  to=totalPeaks.cub
+          mode=total
+      	  ons=150
+      	  onl=250
+      	</commandLine>
+      	<description>
+          In order to reduce to specific dimensions, the mode is set here to
+          "total".
+      	</description>
+      </terminalInterface>
+      
+      <guiInterfaces>
+        <guiInterface>
+      	  <image width="614" height="750" src="assets/images/totalGui.jpg">
+      	    <brief>
+              Example GUI
+      	    </brief>
+      	    <description>
+      	      Screenshot of the GUI with parameters set to perform a sample and 
+      	      line reduction to a total number of pixels.
+      	    </description>
+      	    <thumbnail width="164" height="200" caption="reduce gui" src="assets/thumbs/totalGui.jpg" />
+      	  </image>
+      	</guiInterface>
+      </guiInterfaces>
+      
+      <inputImages>
+        <image width="500" height="500" src="assets/images/peaks.jpg">
+      	  <brief>
+      	    Input image for reduce
+      	  </brief>
+      	  <description>
+      	    This is the image as it was taken originally. 
+      	  </description>
+      	  <thumbnail caption= "The image before reduction" src="assets/thumbs/peaks.jpg" width="200" height="200"/>
+      	  <parameterName>FROM</parameterName>
+      	</image>
+      </inputImages>
+      
+      <outputImages>
+        <image width="500" height="500" src="assets/images/total.jpg">
+      	  <brief>
+            Output image for reduce
+      	  </brief>
+      	  <description>
+      	    The reduced image. Though it has been scaled down so that it can
+      	    be viewed in a web browser, the essential change can still be 
+      	    observed. The vertical and horizontal distortion is noticable, and 
+      	    the output cube has 1/3 the number of samples and 1/2 the number of 
+            lines as the input cube.
+      	  </description>
+      	  <thumbnail caption= "The image after reduction" src="assets/thumbs/total.jpg" width="120" height="200"/>
+      	  <parameterName>TO</parameterName>
+      	</image>
       </outputImages>
     </example>
   </examples>

@@ -464,13 +464,13 @@ int host;
     /****************************************************************/
 
      if (host == 3) {
-       read(infile,&shortint,2);
+       read(infile, &shortint, (size_t) 2);
        if (shortint > 0 && shortint < 80) {
 	 host = 4;              /* change host to 4                */
 //	 printf("This is not a VAX variable length file.");
        }
 //       else printf("This is a VAX variable length file.");
-       lseek(infile,0,0);        /* reposition to beginning of file */
+       lseek(infile, (off_t) 0, SEEK_SET);        /* reposition to beginning of file */
      }
   }
 
@@ -1021,8 +1021,8 @@ int   host;
           /* IBM PC host                                         */
           /*******************************************************/
     length = 0;
-    result = read(infile,&length,2);
-    nlen =   read(infile,ibuf,length+(length%2));
+    result = read(infile, &length, (size_t) 2);
+    nlen =   read(infile, ibuf, (size_t) (length + (length % 2)));
     return (length);
 
   case 2: /*******************************************************/
@@ -1030,31 +1030,31 @@ int   host;
           /*******************************************************/
 
     length = 0;
-    result = read(infile,onion.ichar,2);
+    result = read(infile, onion.ichar, (size_t) 2);
     /*     byte swap the length field                            */
     temp   = onion.ichar[0];
     onion.ichar[0]=onion.ichar[1];
     onion.ichar[1]=temp;
     length = onion.slen;       /* left out of earlier versions   */
-    nlen =   read(infile,ibuf,length+(length%2));
+    nlen =   read(infile, ibuf, (size_t) (length + (length % 2)));
     return (length);
 
   case 3: /*******************************************************/
           /* VAX host with variable length support               */
           /*******************************************************/
-    length = read(infile,ibuf,2048/* upper bound */);
+    length = read(infile, ibuf, (size_t) 2048); /* 2048 is upper bound */
     return (length);
 
   case 4: /*******************************************************/
           /* VAX host, but not a variable length file            */
           /*******************************************************/
     length = 0;
-    result = read(infile, &length, 2);
-    nlen =   read(infile, ibuf, length + (length % 2));
+    result = read(infile, &length, (size_t) 2);
+    nlen =   read(infile, ibuf, (size_t) (length + (length % 2)));
 
     /* check to see if we crossed a vax record boundary          */
     while (nlen < length)
-      nlen += read(infile, ibuf + nlen, length + (length % 2) - nlen);
+      nlen += read(infile, ibuf + nlen, (size_t) (length + (length % 2) - nlen));
 
     return (length);
 
@@ -1062,13 +1062,13 @@ int   host;
           /* Unix workstation host (non-byte-swapped 32 bit host)*/
           /*******************************************************/
     length = 0;
-    result = read(infile,onion.ichar,2);
+    result = read(infile, onion.ichar, (size_t) 2);
     /*     byte swap the length field                            */
     temp   = onion.ichar[0];
     onion.ichar[0]=onion.ichar[1];
     onion.ichar[1]=temp;
     length = onion.slen;
-    nlen =   read(infile,ibuf,length+(length%2));
+    nlen =   read(infile, ibuf, (size_t) (length + (length % 2)));
     return (length);
   }
 }

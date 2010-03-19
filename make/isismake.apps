@@ -30,6 +30,9 @@ moc_%.cpp: %.h
 	  $(MOC) $(MOCDEFINES) -o $@ $(<F); \
 	fi
 
+qrc_%.cpp: %.qrc
+	$(RCC) $(RCCDEFINES) -o $@ $(<F);
+
 clean:  localclean
 	-$(RM) $(OBJS) $(BINS) $(MOCGEN) `basename $(CURDIR)`.html	
 	if [ -d "tsts" ]; \

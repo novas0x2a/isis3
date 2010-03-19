@@ -9,8 +9,8 @@
 #include "iString.h"
 #include "OverlapNormalization.h"
 #include "CubeAttribute.h"
-#include "tnt_array2d.h"
-#include "jama_svd.h"
+#include "tnt/tnt_array2d.h"
+#include "jama/jama_svd.h"
 #include <cmath>
 
 using namespace Isis;

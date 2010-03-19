@@ -1,8 +1,8 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $
- * $Date: 2009/09/19 00:12:10 $
- * $Id: MdisGeometry.cpp,v 1.8 2009/09/19 00:12:10 dcook Exp $
+ * $Revision: 1.9 $
+ * $Date: 2009/12/29 23:03:50 $
+ * $Id: MdisGeometry.cpp,v 1.9 2009/12/29 23:03:50 ehyer Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -37,7 +37,7 @@
 #include "SpecialPixel.h"
 #include "iString.h"
 #include "iException.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 
 using namespace std;
 

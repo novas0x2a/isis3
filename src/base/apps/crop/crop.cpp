@@ -8,6 +8,7 @@
 #include "Projection.h"
 #include "AlphaCube.h"
 #include "Table.h"
+#include "SubArea.h"
 
 using namespace std; 
 using namespace Isis;
@@ -37,6 +38,8 @@ void IsisMain() {
   sl = ui.GetInteger("LINE");
   sb = 1;
 
+  int origns = cube.Samples();
+  int orignl = cube.Lines();
   int es = cube.Samples();
   if (ui.WasEntered("NSAMPLES")) es = ui.GetInteger("NSAMPLES") + ss - 1;
   int el = cube.Lines();
@@ -168,32 +171,31 @@ void IsisMain() {
   delete in;
   in = NULL;
 
-  // Adjust the upper corner x,y values if the cube is projected
-  if(cube.HasProjection()) {
-    // Try to create a projection & set the x,y position
-    Projection *proj = cube.Projection();
-    proj->SetWorld(ss-0.5,sl-0.5);
+  // Construct a label with the results
+  PvlGroup results("Results");
+  results += PvlKeyword ("InputLines", orignl);
+  results += PvlKeyword ("InputSamples", origns);
+  results += PvlKeyword ("StartingLine", sl);
+  results += PvlKeyword ("StartingSample", ss);
+  results += PvlKeyword ("EndingLine", el);
+  results += PvlKeyword ("EndingSample", es);
+  results += PvlKeyword ("LineIncrement", linc);
+  results += PvlKeyword ("SampleIncrement", sinc);
+  results += PvlKeyword ("OutputLines", nl);
+  results += PvlKeyword ("OutputSamples", ns);
 
-    // Set the new x,y coords in the cube label
-    PvlGroup &mapgrp = cube.Label()->FindGroup("Mapping",Pvl::Traverse);
-    mapgrp.AddKeyword(PvlKeyword("UpperLeftCornerX",proj->XCoord()), 
-                       Pvl::Replace);
-    mapgrp.AddKeyword(PvlKeyword("UpperLeftCornerY",proj->YCoord()),
-                                      Pvl::Replace);
-    ocube->PutGroup(mapgrp);
-  }
-  // Only write the alpha group if the cube is not projected
-  else {
-    // Add and/or update the alpha group
-    AlphaCube aCube(cube.Samples(),cube.Lines(),
-                        ocube->Samples(),ocube->Lines(),
-                        ss-0.5,sl-0.5,es+0.5,el+0.5);
-    aCube.UpdateGroup(*ocube->Label());
-  }
+  // Update the Mapping, Instrument, and AlphaCube groups in the output
+  // cube label 
+  SubArea s;
+  s.SetSubArea(orignl,origns,sl,ss,el,es,linc,sinc);
+  s.UpdateLabel(&cube,ocube,results);
 
   // Cleanup
   p.EndProcess();
   cube.Close();
+ 
+  // Write the results to the log
+  Application::Log(results);
 }
 
 // Line processing routine

@@ -49,6 +49,9 @@
     <change name="Steven Koechle" date="2007-07-10">
       Bug fix:  flipped the order that the TargetAttitudeShape kernels were furnished.
     </change>
+    <change name="Christopher Austin" date="2009-12-04">
+      Added an error when an spk file does not exist inside the latest mapping file.
+    </change>
   </history>
 
   <category>

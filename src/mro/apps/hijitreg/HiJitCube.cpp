@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/08/19 22:37:41 $                                                                 
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/12/29 23:03:52 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -24,7 +24,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 
 #include "HiJitCube.h"
 #include "Instrument.hh"

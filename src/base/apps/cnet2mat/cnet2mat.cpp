@@ -165,10 +165,13 @@ void IsisMain() {
         ptClass = "S   ";
       }
       else {
-        ptClass = "U   ";
+        ptClass = "M   "; //! U was causing qmatch "havoc"
       }
       if (currMeas.IsReference()) {
         ptClass = "T   ";
+      }
+      if (currMeas.Ignore() || cnet[i].Ignore()) {
+        ptClass = "U   ";
       }
       textLine += ptClass;
 

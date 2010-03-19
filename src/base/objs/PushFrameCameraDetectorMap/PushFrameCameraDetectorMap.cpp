@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2009/06/02 20:00:59 $
+ * $Revision: 1.4 $
+ * $Date: 2009/10/21 18:37:02 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -113,7 +113,9 @@ namespace Isis {
     double unsummedFrameletLine = p_detectorLine;
 
     // Sometime folks want to write the framelets flipped in the EDR so
-    // features match.  Take care of this.
+    // features match.  Take care of this. p_bandStartDetector is 0-based and
+    // unsummedFrameletLine is the correct base for p_detectorLine so these calculations 
+    // are valid.
     if (p_flippedFramelets) {
       p_detectorLine = p_bandStartDetector + p_frameletHeight - unsummedFrameletLine;
     }

@@ -1,35 +1,57 @@
+/**                                                                       
+ * @file                                                                  
+ * $Revision: 1.12 $ 
+ * $Date: 2010/01/06 19:40:17 $ 
+ *  
+ *   Unless noted otherwise, the portions of Isis written by the USGS are 
+ *   public domain. See individual third-party library and package descriptions 
+ *   for intellectual property information, user agreements, and related  
+ *   information.                                                      
+ *                                                                        
+ *   Although Isis has been used by the USGS, no warranty, expressed or   
+ *   implied, is made by the USGS as to the accuracy and functioning of such 
+ *   software and related material nor shall the fact of distribution     
+ *   constitute any such warranty, and no responsibility is assumed by the
+ *   USGS in connection therewith.                                        
+ *                                                                        
+ *   For additional information, launch                                   
+ *   $ISISROOT/doc//documents/Disclaimers/Disclaimers.html                
+ *   in a browser or see the Privacy &amp; Disclaimers page on the Isis website,
+ *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
+ *   http://www.usgs.gov/privacy.html.                                    
+ */  
+
 #include <sstream>
-#include <QHBoxLayout>
-#include <QFileDialog>
-#include <QTextEdit>
+
 #include <QDialog>
-#include <QString>
-#include <QToolButton>
-#include <QMenu>
 #include <QDir>
+#include <QFileDialog>
+#include <QHBoxLayout>
+#include <QLineEdit>
+#include <QMenu>
+#include <QString>
+#include <QTextEdit>
+#include <QToolButton>
 
 #include "GuiCubeParameter.h"
+
+#include "Application.h"
+#include "Cube.h"
 #include "Filename.h"
-#include "UserInterface.h"
+#include "Preference.h"
 #include "GuiInputAttribute.h"
 #include "GuiOutputAttribute.h"
-#include "Cube.h"
-#include "System.h"
 #include "iException.h"
 #include "Pvl.h"
-#include "Application.h"
+#include "System.h"
+#include "UserInterface.h"
 
 
 namespace Isis {
 
   GuiCubeParameter::GuiCubeParameter(QGridLayout *grid, UserInterface &ui,
                                      int group, int param) :
-  GuiParameter(grid, ui, group, param) {
-
-    p_lineEdit = new QLineEdit;
-    connect(p_lineEdit,SIGNAL(textChanged(const QString &)),this,SIGNAL(ValueChanged()));
-    grid->addWidget(p_lineEdit,param,2);
-
+  GuiFilenameParameter(grid, ui, group, param) {
     p_menu = new QMenu ();
 
     QAction *fileAction = new QAction(this);
@@ -52,46 +74,21 @@ namespace Isis {
     connect(labAction,SIGNAL(triggered(bool)),this,SLOT(ViewLabel()));
     p_menu->addAction(labAction);
 
-    QAction *action = new QAction(this);
-    std::string file = Filename("$ISIS3DATA/base/icons/view_tree.png").Expanded();
-    action->setIcon(QPixmap((iString)file));
-    connect(action,SIGNAL(triggered(bool)),this,SLOT(SelectFile()));
-
-    p_optButton = new QToolButton ();
-    p_optButton->setIconSize(QSize(22,22));
-    p_optButton->setIcon(QPixmap((iString)file));
-    p_optButton->setMenu(p_menu);
-    p_optButton->setPopupMode(QToolButton::MenuButtonPopup);
-    p_optButton->setDefaultAction(action);
-    p_optButton->setToolTip("Select file");
+    p_fileButton->setMenu(p_menu);
+    p_fileButton->setPopupMode(QToolButton::MenuButtonPopup);
     QString optButtonWhatsThisText = "<p><b>Function:</b> \
             Opens a file chooser window to select a file from</p> <p>\
             <b>Hint: </b> Click the arrow for more cube parameter options</p>"; 
-    p_optButton->setWhatsThis(optButtonWhatsThisText); 
-    grid->addWidget(p_optButton,param,3);
-
-    if (p_ui->HelpersSize(group,param) != 0) {
-      grid->addWidget(AddHelpers(p_lineEdit),param,4);
-    }
-
-    // Set up widgets for enabling and disabling
-    RememberWidget(p_lineEdit);
-    RememberWidget(p_optButton);
+    p_fileButton->setWhatsThis(optButtonWhatsThisText); 
 
     p_type = CubeWidget;
   }
+
 
   GuiCubeParameter::~GuiCubeParameter() {
     delete p_menu;
   }
 
-  void GuiCubeParameter::Set (iString newValue) {
-    p_lineEdit->setText (newValue.c_str());
-  }
-
-  iString GuiCubeParameter::Value () {
-    return p_lineEdit->text().toStdString();
-  }
 
   /**
    * Gets an input/output file from a GUI filechooser or typed in
@@ -118,9 +115,10 @@ namespace Isis {
 
     // Set up the filter
     QString filter = (iString)p_ui->ParamFilter(p_group,p_param);
-    if(filter.isEmpty()) {
+    if (filter.isEmpty()) {
       filter = "Any(*)";
-    } else {
+    } 
+    else {
       filter += ";;Any(*)";
     }
 
@@ -128,9 +126,20 @@ namespace Isis {
     // Get the filename
     QString s;
     if (p_ui->ParamFileMode(p_group,p_param) == "input") {
-      s = QFileDialog::getOpenFileName(p_optButton,"Select file",dir,filter);
-    } else {
-      s = QFileDialog::getSaveFileName(p_optButton,"Select file",dir,filter);
+      s = QFileDialog::getOpenFileName(p_fileButton,"Select file",dir,filter);
+    } 
+    else {
+      // if/else statements are functionally identical, but left in case 
+      // different file selection capabilities are desired for different
+      // preferences later
+      if (Preference::Preferences().FindGroup("CubeCustomization").FindKeyword("Overwrite")[0] == "Allow") {
+        QFlags<QFileDialog::Option> options (QFileDialog::DontConfirmOverwrite);
+        s = QFileDialog::getSaveFileName(p_fileButton,"Select file",dir,filter,0,options);
+      }
+      else {
+        QFlags<QFileDialog::Option> options (QFileDialog::DontConfirmOverwrite);
+        s = QFileDialog::getSaveFileName(p_fileButton,"Select file",dir,filter,0,options);
+      }
     }
 
     if (s != "") {
@@ -140,7 +149,7 @@ namespace Isis {
       }
       Set(s.toStdString());
     }
-  }
+  } 
 
   void GuiCubeParameter::SelectAttribute() {
     if (p_ui->ParamFileMode(p_group,p_param) == "input") {
@@ -149,7 +158,7 @@ namespace Isis {
       std::string newAtt;
       int status = GuiInputAttribute::GetAttributes (curAtt,newAtt,
                                                      p_ui->ParamName(p_group,p_param),
-                                                     p_optButton);
+                                                     p_fileButton);
       if ((status == 1) && (curAtt != newAtt)) {
         Isis::Filename f(p_lineEdit->text().toStdString());
         p_lineEdit->setText((iString)(f.Expanded() + newAtt));
@@ -165,7 +174,7 @@ namespace Isis {
       int status = GuiOutputAttribute::GetAttributes (curAtt,newAtt,
                                                       p_ui->ParamName(p_group,p_param),
                                                       allowProp,
-                                                      p_optButton);
+                                                      p_fileButton);
       if ((status == 1) && (curAtt != newAtt)) {
         Isis::Filename f(p_lineEdit->text().toStdString());
         p_lineEdit->setText((iString)(f.Expanded() + newAtt));

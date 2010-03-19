@@ -19,6 +19,8 @@ void TestLineSamp(Isis::Camera *cam, double samp, double line);
  *            fabs() takes floats. Changed Center Lat tolerance
  *            from 1E-10 to 1.7E-10 since the difference on
  *            Linux i686 was 1.68E-10.
+ *   @history 2010-02-24 Christopher Austin - Altered knownLat/Lon
+ *            for the new naif precision
  */
 int main (void)
 {
@@ -39,8 +41,14 @@ int main (void)
     //    double knownLon = 225.6312103276302;
     //    double knownLat = 22.75215722648675;
     //    double knownLon = 225.6312106938898;
-    double knownLat = 22.75215722969901;
-    double knownLon = 225.6312106946057;
+    //  blackflag
+    //    double knownLat = 22.75215722969901;
+    //    double knownLon = 225.6312106946057;
+    //  deet
+    //    double knownLat = 22.75215809276655;
+    //    double knownLon = 225.6312105606938;
+    double knownLat = 22.75215809276655;
+    double knownLon = 225.6312105606938;
 
     Isis::Pvl p("$mgs/testData/ab102401.cub");
     Isis::Camera *cam = Isis::CameraFactory::Create(p);

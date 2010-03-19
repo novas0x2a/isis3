@@ -1,7 +1,11 @@
 #include "CubeManager.h"
-#include "Preference.h"
-#include "Cube.h"
 #include "Filename.h"
+#include "Cube.h"
+#include "Preference.h"
+
+#include <iostream>
+
+#include <QVector>
 
 using namespace std;
 using namespace Isis;
@@ -10,15 +14,16 @@ int main (int argc, char *argv[]) {
   Isis::Preference::Preferences(true);
 
   std::cout << "CubeManager Unit Test" << std::endl;
-  std::vector<Cube *> cubes;
+  QVector<Cube *> cubes;
 
   // Read Cubes Into Memory
   cubes.push_back(CubeManager::Open("$base/testData/isisTruth.cub"));
   cubes.push_back(CubeManager::Open("$base/testData/isisTruth.cub"));
   cubes.push_back(CubeManager::Open("$base/testData/blobTruth.cub"));
   cubes.push_back(CubeManager::Open("$base/testData/blobTruth.cub"));
-  cubes.push_back(CubeManager::Open("$base/testData/isisTruth.cub"));
-
+  cubes.push_back(CubeManager::Open("$base/testData/isisTruth.cub+1"));
+  cubes.push_back(CubeManager::Open("$base/testData/isisTruth.cub+1"));
+  
   // Print Cube Filenames To Verify We Have Correct Ones
   std::cout << "Verify proper cubes have been read" << std::endl;
   std::cout << "Cube Filenames: " << std::endl;
@@ -38,7 +43,7 @@ int main (int argc, char *argv[]) {
     std::cout << " | Equals " << i+1;
   }
   std::cout << std::endl;
-
+    
   // Print Comparison Table Data
   for(int i = 0; i < (int)cubes.size(); i++) {
     std::cout << "  Cube " << i+1;
@@ -51,4 +56,11 @@ int main (int argc, char *argv[]) {
   }
 
   std::cout << std::endl;
+
+  // Test cube attributes presence, input attributes only affect bands
+  std::cout << "Verify cube attributes have been taken into account" << std::endl;
+  std::cout << "  Cube # | # of Bands" << std::endl;
+  for (int i = 0; i < (int)cubes.size(); i++) {
+    std::cout << "  Cube " << i + 1 << " | " << cubes[i]->Bands() << std::endl;
+  }
 }

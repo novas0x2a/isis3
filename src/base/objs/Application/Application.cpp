@@ -21,11 +21,12 @@ extern int errno;
 #include "Preference.h"
 #include "iException.h"
 #include "CubeManager.h"
+#include "Filename.h"
 
 /**
  * @file
- * $Revision: 1.17 $
- * $Date: 2009/01/21 16:09:17 $
+ * $Revision: 1.19 $
+ * $Date: 2010/03/17 15:43:53 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -51,13 +52,14 @@ namespace Isis {
   /**
    * Constuctor for the Application object   
    *
-   * @param argc Number of arguments in argv[]
+   * @param argc Number of arguments in argv[].  This must be passed by 
+   *             reference!!
    *
    * @param *argv[] An array containing the command line arguments
    *
    * @throws Isis::iException::Io - FileOpen error
    */
-  Application::Application (int argc, char *argv[]) {
+  Application::Application (int &argc, char *argv[]) {
     // Init socket communications
     p_socket = -1;
     p_childSocket = -1;
@@ -102,6 +104,10 @@ namespace Isis {
       p_ui = new Isis::UserInterface(xmlfile,argc,argv);
       if (!p_ui->IsInteractive()) {
         new QCoreApplication(argc,argv);
+
+        // Add the Qt plugin directory to the library path
+        Isis::Filename qtpluginpath ("$ISISROOT/3rdParty/plugins");
+        QCoreApplication::addLibraryPath(qtpluginpath.Expanded().c_str());
       }
       
     } catch (Isis::iException &e) {

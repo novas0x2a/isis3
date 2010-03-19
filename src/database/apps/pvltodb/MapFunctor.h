@@ -2,8 +2,8 @@
 #define MapFunctor_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.6 $                                                             
- * $Date: 2008/10/27 23:39:01 $
+ * $Revision: 1.7 $                                                             
+ * $Date: 2009/12/29 23:03:48 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -36,9 +36,9 @@
 #include <boost/spirit/symbols/symbols.hpp>
 
 
-#include "SpiceUsr.h"
-//#include "SpiceZfc.h"
-//#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+//#include "naif/SpiceZfc.h"
+//#include "naif/SpiceZmc.h"
 
 #include "CollectorMap.h"
 #include "iTime.h"

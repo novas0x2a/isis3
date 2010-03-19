@@ -2,6 +2,7 @@
 #define enlarge_h
 
 #include "Transform.h"
+
 #include <cmath>
 #include <iostream>
 
@@ -15,16 +16,15 @@ class Enlarge : public Isis::Transform {
 
   public:
     // constructor
-    Enlarge (const double inputSamples, const double inputLines, 
-             const double sampleScale, const double lineScale){
+    Enlarge (const double sampleScale, const double lineScale, 
+             const int outputSamples, const int outputLines){
 
       // Save off the sample and line magnification
       p_sampleScale = sampleScale;
       p_lineScale = lineScale;
 
-      // Calculate the output size. If there is a fractional pixel, round up
-      p_outputSamples = (int)ceil (inputSamples * p_sampleScale);
-      p_outputLines = (int)ceil (inputLines * p_lineScale);
+      p_outputSamples = outputSamples;
+      p_outputLines = outputLines;
     }
 
     // destructor

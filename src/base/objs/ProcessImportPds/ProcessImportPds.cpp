@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.28 $
- * $Date: 2009/07/16 18:13:58 $
+ * $Revision: 1.35 $
+ * $Date: 2010/02/22 02:26:15 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -47,6 +47,8 @@ namespace Isis {
   */
   ProcessImportPds::ProcessImportPds(){
     p_keepOriginalLabel = true;
+    p_encodingType = NONE;
+    p_jp2File.clear();
 
     // Set up a translater for PDS file of type IMAGE
     Isis::PvlGroup &dataDir = Isis::Preference::Preferences().FindGroup("DataDirectory");
@@ -85,8 +87,9 @@ namespace Isis {
     // type of PDS file this is (i.e., Qube or Image or SpectralQube)
     stringstream trnsStrm;
     trnsStrm << "Group = PdsTypeImage" << endl;
-    trnsStrm << "  InputGroup = ROOT" << endl;
-    trnsStrm << "  InputGroup = FILE" << endl;
+    trnsStrm << "  InputPosition = ROOT" << endl;
+    trnsStrm << "  InputPosition = FILE" << endl;
+    trnsStrm << "  InputPosition = UNCOMPRESSED_FILE" << endl;
     trnsStrm << "  InputKey = ^IMAGE" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = PdsTypeQube" << endl;
@@ -95,9 +98,54 @@ namespace Isis {
     trnsStrm << "Group = PdsTypeSpectralQube" << endl;
     trnsStrm << "  InputKey = ^SPECTRAL_QUBE" << endl;
     trnsStrm << "EndGroup" << endl;
+    trnsStrm << "Group = PdsEncodingType" << endl;
+    trnsStrm << "  InputPosition = COMPRESSED_FILE" << endl;
+    trnsStrm << "  InputKey = ENCODING_TYPE" << endl;
+    trnsStrm << "  Translation = (*,*)" << endl;
+    trnsStrm << "EndGroup" << endl;
+    trnsStrm << "Group = PdsCompressedFile" << endl;
+    trnsStrm << "  InputPosition = COMPRESSED_FILE" << endl;
+    trnsStrm << "  InputKey = FILE_NAME" << endl;
+    trnsStrm << "  Translation = (*,*)" << endl;
+    trnsStrm << "EndGroup" << endl;
     trnsStrm << "END";
 
     Isis::PvlTranslationManager pdsXlater (p_pdsLabel, trnsStrm);
+
+    // Check to see if we are dealing with a JPEG2000 file
+    Isis::iString str;
+    if (pdsXlater.InputHasKeyword("PdsEncodingType")) {
+      str = pdsXlater.Translate("PdsEncodingType");
+      if (str == "JP2") {
+        p_encodingType = JP2;
+        str = pdsXlater.Translate("PdsCompressedFile");
+        if (pdsDataFile.empty()) {
+          Isis::Filename lfile (p_labelFile);
+          Isis::Filename ifile (lfile.Path() + "/" + str);
+          if (ifile.Exists()) {
+            p_jp2File = ifile.Expanded();
+          }
+          else {
+            string tmp = ifile.Expanded();
+            str.DownCase();
+            ifile = lfile.Path() + "/" + str;
+            if (ifile.Exists()) {
+              p_jp2File = ifile.Expanded();
+            }
+            else {
+              string msg = "Unable to find input file [" + tmp + "] or [" +
+                            ifile.Expanded() + "]";
+              throw Isis::iException::Message(Isis::iException::Io,msg,_FILEINFO_);
+            }
+          }
+        }
+      }
+      else {
+        string msg = "Unsupported encoding type in [" + p_labelFile + "]";
+        throw Isis::iException::Message(Isis::iException::Io,msg,_FILEINFO_);
+      }
+    }
+
     // Call the correct label processing
     if (pdsXlater.InputHasKeyword("PdsTypeImage")) {
       ProcessPdsImageLabel (pdsDataFile);
@@ -252,9 +300,14 @@ namespace Isis {
     if (pdsDataFile.length() > 0) {
       SetInputFile (pdsDataFile);
     }
+    // If the data is in JPEG 2000 format, then use the name of the file
+    // from the label
+    else if (p_jp2File.length() > 0) {
+      SetInputFile (p_jp2File);
+    }
     // Use the "^IMAGE or ^QUBE" label to get the filename for the image data
     // Get the path portion from user entered label file spec
-    else if (pdsXlater.InputSize("DataFilePointer") == 2) {
+    else if (pdsXlater.InputKeyword("DataFilePointer").Size() == 2) {
       Isis::iString dataFile;
       dataFile = pdsXlater.Translate ("DataFilePointer", 0);
       Isis::Filename lfile (p_labelFile);
@@ -278,7 +331,7 @@ namespace Isis {
     }
     // The ^IMAGE keyword contains either the filename or the offset
     // within this file
-    else if (pdsXlater.InputSize("DataFilePointer") == 1) {
+    else if (pdsXlater.InputKeyword("DataFilePointer").Size() == 1) {
       // Try converting the single value to an integer. If that works
       // then the iamge data must be in the same file as the labels
       try {
@@ -324,9 +377,9 @@ namespace Isis {
     //----------------------------------------------------------------
     
     Isis::iString units;
-    if (pdsXlater.InputSize ("DataStart") == 1) {
+    if (pdsXlater.InputKeyword ("DataStart").Size() == 1) {
       str = pdsXlater.Translate ("DataStart", 0);
-      units = pdsXlater.InputUnits ("DataStart", 0);
+      units = pdsXlater.InputKeyword ("DataStart").Unit();
       try {
         str.ToInteger ();
       }
@@ -335,14 +388,14 @@ namespace Isis {
         units = "BYTES";
       }
     }
-    else if (pdsXlater.InputSize("DataStart") == 2) {
+    else if (pdsXlater.InputKeyword("DataStart").Size() == 2) {
       str = pdsXlater.Translate ("DataStart", 1);
-      units = pdsXlater.InputUnits ("DataStart", 1);
+      units = pdsXlater.InputKeyword ("DataStart").Unit(1);
     }
     else {
       string msg = "Invalid PDS labels in file [" + p_labelFile +
                    "]. Label value [" +
-                   pdsXlater.InputKeyword("DataStart") + "]" ;
+                   pdsXlater.InputKeywordName("DataStart") + "]" ;
       throw Isis::iException::Message(Isis::iException::Io,msg,_FILEINFO_);
     }
 
@@ -369,7 +422,10 @@ namespace Isis {
     // Find the organization of the image data
     str =pdsXlater.Translate("CoreOrganization");
 
-    if (str == "BSQ") {
+    if (p_encodingType == JP2) {
+      SetOrganization (ProcessImport::JP2);
+    }
+    else if (str == "BSQ") {
       SetOrganization (ProcessImport::BSQ);
     }
     else if (str == "BIP") {
@@ -410,7 +466,7 @@ namespace Isis {
     int linePos = 0;
     int samplePos = 0;
     int bandPos = 0;
-    int val = pdsXlater.InputSize("CoreOrganization");
+    int val = pdsXlater.InputKeyword("CoreOrganization").Size();
     Isis::iString tmp = "";
     for (int i=0; i<val; i++) {
       str = pdsXlater.Translate("CoreOrganization", i);
@@ -430,7 +486,10 @@ namespace Isis {
       }
     }
 
-    if (tmp == "SAMPLELINEBAND") {
+    if (p_encodingType == JP2) {
+      SetOrganization (ProcessImport::JP2);
+    }
+    else if (tmp == "SAMPLELINEBAND") {
       SetOrganization (ProcessImport::BSQ);
     }
     else if (tmp == "LINEBANDSAMPLE") {
@@ -538,9 +597,15 @@ namespace Isis {
       SetInputFile (pdsDataFile);
     }
 
+    // If the data is in JPEG 2000 format, then use the name of the file
+    // from the label
+    else if (p_jp2File.length() > 0) {
+      SetInputFile (p_jp2File);
+    }
+
     // Get the filename for the image data
     // Get the path portion from user entered label file spec
-    else if (pdsXlater.InputSize("DataFilePointer") == 2) {
+    else if (pdsXlater.InputKeyword("DataFilePointer").Size() == 2) {
       Isis::iString dataFile;
       dataFile = pdsXlater.Translate ("dataFilePointer", 0);
       Isis::Filename lfile (p_labelFile);
@@ -564,7 +629,7 @@ namespace Isis {
     }
 
     // Use the same name as the label file to get the filename for the image data
-    else if (pdsXlater.InputSize("DataFilePointer") == 1) {
+    else if (pdsXlater.InputKeyword("DataFilePointer").Size() == 1) {
       SetInputFile (p_labelFile);
     }
 
@@ -579,18 +644,18 @@ namespace Isis {
     // Calculate the file header size
     //----------------------------------------------------------------
     Isis::iString units;
-    if (pdsXlater.InputSize ("DataFilePointer") == 1) {
+    if (pdsXlater.InputKeyword ("DataFilePointer").Size() == 1) {
       str = pdsXlater.Translate ("DataFilePointer", 0);
-      units = pdsXlater.InputUnits ("DataFilePointer", 0);
+      units = pdsXlater.InputKeyword ("DataFilePointer").Unit();
     }
-    else if (pdsXlater.InputSize("DataFilePointer") == 2) {
+    else if (pdsXlater.InputKeyword("DataFilePointer").Size() == 2) {
       str = pdsXlater.Translate ("DataFilePointer", 1);
-      units = pdsXlater.InputUnits ("DataFilePointer", 1);
+      units = pdsXlater.InputKeyword ("DataFilePointer").Unit(1);
     }
     else {
       string msg = "Invalid PDS labels in file [" + p_labelFile +
                    "]. Label value [" +
-                   pdsXlater.InputKeyword("DataFilePointer") + "]" ;
+                   pdsXlater.InputKeywordName("DataFilePointer") + "]" ;
       throw Isis::iException::Message(Isis::iException::Io,msg,_FILEINFO_);
     }
 
@@ -614,7 +679,7 @@ namespace Isis {
         (pdsXlater.InputHasKeyword("BandMultiplier"))) {
       vector<double> bases;
       vector<double> mults;
-      for (int i=0; i<pdsXlater.InputSize("BandBase"); i++) {
+      for (int i=0; i<pdsXlater.InputKeyword("BandBase").Size(); i++) {
         str = pdsXlater.Translate("BandBase", i);
         bases.push_back(str.ToDouble());
         str = pdsXlater.Translate("BandMultiplier", i);
@@ -648,16 +713,16 @@ namespace Isis {
     // type of projection labels exist
     stringstream trnsStrm;
     trnsStrm << "Group = PdsProjectionTypeImage" << endl;
-    trnsStrm << "  InputGroup = IMAGE_MAP_PROJECTION" << endl;
-    trnsStrm << "  InputGroup = IMAGE_MAP_PROJECTION_CATALOG" << endl;
+    trnsStrm << "  InputPosition = IMAGE_MAP_PROJECTION" << endl;
+    trnsStrm << "  InputPosition = IMAGE_MAP_PROJECTION_CATALOG" << endl;
     trnsStrm << "  InputKey = MAP_PROJECTION_TYPE" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = PdsProjectionTypeQube" << endl;
-    trnsStrm << "  InputGroup = QUBE,IMAGE_MAP_PROJECTION" << endl;
+    trnsStrm << "  InputPosition = (QUBE,IMAGE_MAP_PROJECTION)" << endl;
     trnsStrm << "  InputKey = MAP_PROJECTION_TYPE" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = PdsProjectionTypeSpectralQube" << endl;
-    trnsStrm << "  InputGroup = SPECTRAL_QUBE,IMAGE_MAP_PROJECTION" << endl;
+    trnsStrm << "  InputPosition = (SPECTRAL_QUBE,IMAGE_MAP_PROJECTION)" << endl;
     trnsStrm << "  InputKey = MAP_PROJECTION_TYPE" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "END";
@@ -945,7 +1010,7 @@ namespace Isis {
 
     str = pdsXlater.Translate ("PixelResolution");
     p_pixelResolution = str.ToDouble();
-    str = pdsXlater.InputUnits ("PixelResolution", 0);
+    str = pdsXlater.InputKeyword ("PixelResolution").Unit();
     str.UpCase();
     // Assume KM/PIXEL if the unit doesn't exist or is not METERS/PIXEL
     if ((str != "METERS/PIXEL") && (str != "M/PIXEL")) {
@@ -1019,11 +1084,11 @@ namespace Isis {
     // type of input file we have
     stringstream trnsStrm;
     trnsStrm << "Group = PdsFile" << endl;
-    trnsStrm << "  InputGroup = ROOT" << endl;
+    trnsStrm << "  InputPosition = ROOT" << endl;
     trnsStrm << "  InputKey = PDS_VERSION_ID" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = Isis2File" << endl;
-    trnsStrm << "  InputGroup = ROOT" << endl;
+    trnsStrm << "  InputPosition = ROOT" << endl;
     trnsStrm << "  InputKey = CCSD3ZF0000100000001NJPL3IF0PDS200000001" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "END";

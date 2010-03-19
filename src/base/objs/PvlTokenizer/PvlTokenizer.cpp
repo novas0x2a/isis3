@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2009/07/17 15:39:15 $
+ * $Revision: 1.9 $
+ * $Date: 2010/01/09 02:09:23 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -20,6 +20,7 @@
  *   http://www.usgs.gov/privacy.html.
  */                                                                       
 #include <sstream>
+#include <fstream>
 #include "PvlTokenizer.h"
 #include "iException.h"
 #include "Message.h"

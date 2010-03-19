@@ -1,6 +1,14 @@
-GroupedStatistics unitTest
+GroupedStatistics unitTest!!!
+
 testing constructor...
+
 testing AddStatistic...
+
 testing copy constructor...
+
 testing GetStatistics...
-71.5
+    71.5
+
+testing GetStatisticTypes...
+    Height
+

@@ -29,7 +29,8 @@ ISISCFLAGS =
 RANLIB          = /bin/true
 SHAREDLIBEXT    = so
 
-ISISLDFLAGS = -Wl,-E
+ISISLDFLAGS  = -Wl,-E -Xlinker '-z' -Xlinker 'origin'
+ISISLDFLAGS += -Xlinker "-rpath" -Xlinker "${ISISROOT}/lib:${ISISROOT}/3rdParty/lib"
 ISISSYSLIBS = 
 ISISSTATIC  = -Wl,-Bstatic
 ISISDYNAMIC = -Wl,-Bdynamic

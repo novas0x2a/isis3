@@ -2,8 +2,8 @@
 #define Affine_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2009/07/24 20:54:22 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/12/22 02:09:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -23,7 +23,7 @@
  */                                                                       
 
 #include <vector>
-#include "tnt_array2d.h"
+#include "tnt/tnt_array2d.h"
 #include "iException.h"
 
 namespace Isis {

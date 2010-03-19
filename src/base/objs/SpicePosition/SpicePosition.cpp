@@ -348,10 +348,11 @@ namespace Isis {
 
    // Clear existing coordinates from cache
     p_cache.clear();
+    p_cacheVelocity.clear();
 
 
-    // Set velocity vector to false since it is not being updated
-    p_hasVelocity = false;
+    // Set velocity vector to true since it is calculated
+    p_hasVelocity = true;
 
 //    std::cout <<"time cache size is " << p_cacheTime.size() << std::endl;
 
@@ -376,7 +377,7 @@ namespace Isis {
       // finding these extrema is simple 
       double b1 = function1.Coefficient(1);
       double c1 = function1.Coefficient(2);
-      double extremumXtime = -b1/2*c1; // extremum is time value for root of 1st derivative
+      double extremumXtime = -b1/(2.*c1) + p_baseTime; // extremum is time value for root of 1st derivative
       // make sure we are in the domain
       if (extremumXtime < firstTime) {
         extremumXtime = firstTime;
@@ -387,7 +388,7 @@ namespace Isis {
 
       double b2 = function2.Coefficient(1);
       double c2 = function2.Coefficient(2);
-      double extremumYtime = -b2/2*c2;
+      double extremumYtime = -b2/(2.*c2) + p_baseTime;
       // make sure we are in the domain
       if (extremumYtime < firstTime) {
         extremumYtime = firstTime;
@@ -398,7 +399,7 @@ namespace Isis {
 
       double b3 = function3.Coefficient(1);
       double c3 = function3.Coefficient(2);
-      double extremumZtime = -b3/2*c3;
+      double extremumZtime = -b3/(2.*c3) + p_baseTime;
       // make sure we are in the domain
       if (extremumZtime < firstTime) {
         extremumZtime = firstTime;
@@ -441,7 +442,7 @@ namespace Isis {
         p_velocity[0] = b1 + 2*c1*(p_cacheTime[i]-p_baseTime); 
         p_velocity[1] = b2 + 2*c2*(p_cacheTime[i]-p_baseTime); 
         p_velocity[2] = b3 + 2*c3*(p_cacheTime[i]-p_baseTime); 
-        p_cache.push_back(p_velocity);
+        p_cacheVelocity.push_back(p_velocity);
       }
     }
     else {
@@ -454,7 +455,7 @@ namespace Isis {
       p_velocity[0] = 0.;
       p_velocity[1] = 0.;
       p_velocity[2] = 0.;
-      p_cache.push_back(p_velocity);
+      p_cacheVelocity.push_back(p_velocity);
     }
 
     double et = p_et;
@@ -682,10 +683,43 @@ namespace Isis {
    *                              with respect to partialVar
    *
    */
-  std::vector<double> SpicePosition::CoordinatePartial( SpicePosition::PartialType partialVar) {
+  std::vector<double> SpicePosition::CoordinatePartial( SpicePosition::PartialType partialVar, int coeffIndex) {
     // Start with a zero vector since the derivative of the other coordinates with
     // respect to the partial var will be 0.
     std::vector<double> coordinate(3,0);
+
+    // Get the index of the coordinate to update with the partial derivative
+    int coordIndex = partialVar;
+
+    if (coeffIndex > 2) {
+      std::string msg = "SpicePosition only supports up to a 2nd order fit for the spacecraft position";
+      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+    }
+
+    // Reset the coordinate to its derivative
+    coordinate[coordIndex] = DPolynomial ( (Coefficient)  coeffIndex );
+    return coordinate;
+  }
+
+
+
+  /** Compute the derivative of the velocity with respect to the specified variable.  The
+   *  velocity is the derivative of the coordinate with respect to time
+   *  coordinate = A + B*t + C*t**2, where t = time - p_basetime.
+   *  velocity = B + 2*C*t
+   *  partial(velocity) with respect to A = 0.
+   *  partial(velocity) with respect to B = 1.
+   *  partial(velocity) with respect to C = 2*t.
+   *
+   * @param partialVar     Variable output derivative vector is to be with respect to
+   * @return               Derivative of j2000 velocity vector calculated with respect 
+   *                        to partialVar
+   *
+   */
+  std::vector<double> SpicePosition::VelocityPartial( SpicePosition::PartialType partialVar) {
+    // Start with a zero vector since the derivative of the other coordinates with
+    // respect to the partial var will be 0.
+    std::vector<double> dvelocity(3,0);
 
     // Get the index of the coordinate to update with the partial derivative
     int coordIndex = partialVar / 3;
@@ -693,9 +727,21 @@ namespace Isis {
     // Get the coefficient being solved for
     int coef = partialVar%3;
 
-    // Reset the coordinate to its derivative
-    coordinate[coordIndex] = DPolynomial ( (Coefficient)  coef );
-    return coordinate;
+    double time = p_et - p_baseTime;
+    double derivative = 0.;
+
+    // Reset the velocity coordinate to its derivative
+    switch (coef) {
+    case A:
+      break;
+    case B:
+      derivative = 1.;
+    case C:
+      derivative *= 2.*time;
+      break;
+    }
+    dvelocity[coordIndex] = derivative;
+    return dvelocity;
   }
 
 

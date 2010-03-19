@@ -13,4 +13,4 @@ commands:
 	$(APP2NAME) from= $(OUTPUT)/cropTruth.cub \
 	  to= $(OUTPUT)/CropCam2mapTruth.cub \
 	  > /dev/null;
-	catlab from=$(OUTPUT)/CropCam2mapTruth.cub > $(OUTPUT)/labels.txt;
+	catlab from=$(OUTPUT)/CropCam2mapTruth.cub > $(OUTPUT)/labels.pvl;

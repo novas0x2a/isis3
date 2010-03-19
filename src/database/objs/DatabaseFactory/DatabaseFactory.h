@@ -2,8 +2,8 @@
 #define DatabaseFactory_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $
- * $Date: 2007/06/06 00:33:36 $
+ * $Revision: 1.3 $
+ * $Date: 2009/11/27 23:09:58 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -250,6 +250,8 @@ class DbProfile;
  * 
  * @history 2007-06-05 Brendan George - Modified to work with
  *          iString/StringTools merge
+ * @history 2009-11-27 Kris Becker - Made argc parameter for QCoreApplication so 
+ *          persistence of the parameter is preserve as required for Qt.
  */                                                                       
   class DatabaseFactory  {
     public: 

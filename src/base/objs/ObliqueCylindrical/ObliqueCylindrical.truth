@@ -4,6 +4,9 @@ Test missing pole rotation keyword ...
 **I/O ERROR** Invalid label group [Mapping]
 **PVL ERROR** Keyword [PoleRotation] does not exist in [Group = Mapping]
 
+Testing operator == ...
+(p1==p2) = True
+
 Test X,Y,Z Axis Vector Calculations ... 
 Map Group Data (X[0]):      -0.514035
 Map Group Data (X[1]):      0.568173

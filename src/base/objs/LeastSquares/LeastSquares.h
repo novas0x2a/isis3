@@ -2,8 +2,8 @@
 #define LeastSquares_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.7 $                                                             
- * $Date: 2009/04/08 21:22:55 $                                                                 
+ * $Revision: 1.9 $                                                             
+ * $Date: 2009/12/22 02:09:54 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -24,7 +24,7 @@
  */                                                                       
 #include <vector>
 
-#include "tnt_array2d.h"
+#include "tnt/tnt_array2d.h"
 
 #if !defined(__sun__)
 #include "gmm/gmm.h"
@@ -49,6 +49,31 @@ namespace Isis {
  * 2x -  y = 2
  * @f]
  * Is a simple system of equations that can be solved using this class.
+ * @code 
+ *   Isis::BasisFunction b("Linear",2,2);
+ *   Isis::LeastSquares lsq(b);
+ *  
+ *   std::vector<double> one;
+ *   one.push_back(1.0);
+ *   one.push_back(1.0);
+ *   lsq.AddKnown(one,3.0);
+ *  
+ *   std::vector<double> two;
+ *   two.push_back(-2.0);
+ *   two.push_back(3.0);
+ *   lsq.AddKnown(two,1.0);
+ *  
+ *   std::vector<double> tre;
+ *   tre.push_back(2.0);
+ *   tre.push_back(-1.0);
+ *   lsq.AddKnown(tre,2.0);
+ *  
+ *   lsq.Solve();
+ *  
+ *   double out1 = lsq.Evaluate(one);
+ *   double out2 = lsq.Evaluate(two);
+ *   double out3 = lsq.Evaluate(tre);
+ *  @endcode
  * 
  * @see PolynomialUnivariate 
  * @see PolynomialBiVariate 
@@ -76,6 +101,11 @@ namespace Isis {
  *   @history  2009-04-06 Tracie Sucharski, Added return value to SolveSparse,
  *                            which indicates a column containing all zeroes
  *                            which causes superlu to bomb.
+ *   @history  2009-12-21 Jeannie Walldren, Changed p_weight to
+ *                            p_sqrtweight. Modified Weight()
+ *                            and AddKnown() to take the square
+ *                            root of the given weight and add
+ *                            it to the p_sqrtweight vector.
  *  
  */                                                                       
   class LeastSquares {
@@ -100,18 +130,7 @@ namespace Isis {
       double Evaluate (const std::vector<double> &input); 
       std::vector<double> Residuals () const;
       double Residual (int i) const;
-
-     /** 
-      * Reset the weight for the ith known. This weight will not be used unless 
-      * the system is resolved using the Solve method.
-      * 
-      * @param index The position in the array to assign the given weight value
-      * @param weight A weight factor to apply to the ith known. A weight less 
-      *               than one increase the residual for this known while a 
-      *               weight greater than one decrease the residual for this 
-      *               known.
-      */
-      void Weight (int index, double weight) { p_weight[index] = weight; };
+      void Weight (int index, double weight);
 
      /** 
       * The number of knowns (or times AddKnown was invoked) linear combination 
@@ -144,7 +163,8 @@ namespace Isis {
                                                        variables to evaluate.*/
         std::vector<double> p_expected;            /**<A vector of the expected 
                                                        values when solved.*/
-        std::vector<double> p_weight;              /**<A vector of the weights 
+        std::vector<double> p_sqrtweight;          /**<A vector of the square 
+                                                       roots of the weights 
                                                        for each known value.*/
         std::vector<double> p_residuals;           /**<A vector of the residuals
                                                        (or difference between 

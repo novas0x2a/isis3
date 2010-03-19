@@ -10,6 +10,7 @@ commands:
 	  outline=2 \
 	  outband=1 \
 	  create=yes \
+	  track=yes \
 	  nsamples=10 \
 	  nlines=20 \
 	  nbands=2 > /dev/null;

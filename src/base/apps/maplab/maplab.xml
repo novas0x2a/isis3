@@ -1,16 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="maplab" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
-    Add "Mapping" group to labels of cube
+    Add "Mapping" group to the labels of a cube
   </brief>
 
   <description>
-    The maplab application will take in a cube and a map file.  The user will 
-    then need to choose to enter either latitude/longitude or x/y coordinates 
-    that correspond to a given sample/line.  This application will then modify 
-    the input cube's labels to include a Mapping Group with projection 
-    information.
+    <p>
+      The maplab application will take in a cube and a map file.  The user will 
+      then need to choose to enter either latitude/longitude or x/y coordinates 
+      that correspond to a given sample/line.  This application will then modify 
+      the input cube's labels to include a Mapping Group with projection 
+      information.
+    </p>
+
+    <p>
+      The map file provided as input must contain information pertaining to a 
+      target, body radius, and a longitude direction.  In terms of keywords, this 
+      means that all of the following must appear in the map file in order to
+      run this program:
+    </p>
+
+    <ul>
+      <li>TargetName</li>
+      <li>EquatorialRadius</li>
+      <li>PolarRadius</li>
+      <li>LongitudeDomain</li>
+    </ul>
+
+    <p>
+      It should also be noted that when selecting a sample and line for 
+      relating coordinates to a pixel, that position (0.5, 0.5) is the 
+      top-left corner of the top-left pixel in the image.  By extension, (1.0, 
+      1.0) is the center of the top-left pixel, and (1.5, 1.5) is the 
+      top-left corner of the pixel one sample to the right and one line down.
+    </p>
   </description>
 
   <category>
@@ -26,6 +51,11 @@
       The input map will now use pixels/degree if no pixel resolution is found.  
       If neither are present, throws an error.  Both PixelResolution and Scale 
       (pixels/degree) keywords will be in the output.
+    </change>
+    <change name="Travis Addair" date="2009-11-06">
+      Added error checking to ensure that the provided map file has all the 
+      necessary keywords for later processing, and enhanced documentation to 
+      discuss necessary keywords and pixel coordinates.
     </change>
   </history>
 
@@ -67,7 +97,8 @@
         <brief>Sample position in the cube</brief>
         <description>
          Some sample position in the cube that will correspond to a known 
-         x-coordinate or latitude.
+         x-coordinate or latitude.   In ISIS, the furthest left part of the
+         first sample is defined as 0.5.
         </description> 
       </parameter>
       <parameter name="LINE">
@@ -75,7 +106,8 @@
         <brief>Line position in the cube</brief>
         <description> 
           Some line position in the cube that will correspond to a known 
-          y-coordinate or longitude.
+          y-coordinate or longitude.  In ISIS, the top of the first line is 
+          defined as 0.5.
         </description>
       </parameter> 
       <parameter name="COORDINATES">

@@ -1,5 +1,5 @@
 Group = PolarStereographic
-  Library = PolarStereographic 
+  Library = PolarStereographic
   Routine = PolarStereographicPlugin
   Keyword = CenterLongitude
   Keyword = CenterLatitude

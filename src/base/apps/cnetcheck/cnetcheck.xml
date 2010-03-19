@@ -56,6 +56,9 @@
     <change name="Christopher Austin" date="2009-08-21">
       Cleaned up syntax and improved readability.
     </change>
+    <change name="Christopher Austin" date="2009-09-18">
+      Added the SINGLECUBE parameter, renaming SINGLE to SINGLEMEASURE as a consequence.
+    </change>
   </history>
 
   <category>
@@ -150,11 +153,11 @@
         </description>
       </parameter>
 
-      <parameter name="SINGLE">
+      <parameter name="SINGLEMEASURE">
         <type>boolean</type>
         <default><item>True</item></default>
         <brief>
-          Check for Control Points with contain a single Control Measure.
+          Check for Control Points which contain a single Control Measure.
         </brief>
         <description>
           When true, a file named [PREFIX]SinglePointCubes.txt will be created, 
@@ -168,13 +171,27 @@
         <type>boolean</type>
         <default><item>True</item></default>
         <brief>
-          Check for Control Points which contain same cube in more than one Control Measure.
+          Check for Control Points which contain the same cube in more than one Control Measure.
         </brief>
         <description>
           When true, a file named [PREFIX]DuplicateMeasures.txt will be created, 
           which will list all of the cubes which exist in more than one Control 
           Measure in a single Control Point within the provided Control Net.  If 
           there are no such duplicate Control Measures, then no file is created.
+        </description>
+      </parameter>
+
+      <parameter name="SINGLECUBE">
+        <type>boolean</type>
+        <default><item>True</item></default>
+        <brief>
+          Check for Cubes which have only a single Control Measure.
+        </brief>
+        <description>
+          When true, a file named [PREFIX]SingleCubes.txt will be created, 
+          which will list all of the Cubes which exist in only a single Control 
+          Measure within the entire Control Net.  If there 
+          are no such single Cubes, then no file is created.
         </description>
       </parameter>
 

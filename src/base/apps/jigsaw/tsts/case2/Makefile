@@ -14,5 +14,6 @@ commands:
 	maxits=10 \
 	tol=0.908  \
 	update=no \
-	spsolve=position | grep -v "100% Processed" > $(OUTPUT)/case2OutLog.pvl;
+	spsolve=position | grep -v "100% Processed" | \
+	grep -v "jigsaw" > $(OUTPUT)/case2OutLog.pvl;
 	$(RM) $(OUTPUT)/cub.lis $(OUTPUT)/held.lis > /dev/null;

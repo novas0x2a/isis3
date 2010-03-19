@@ -79,6 +79,13 @@
       <change name="Steven Lambright" date="2008-07-10"> 
           Added Rationale Description option
       </change>
+      <change name="Janet Barrett" date="2010-02-17"> 
+          Added ability to write output file in JPEG2000 format.
+      </change>
+      <change name="Christopher Austin" date="2010-03-01"> 
+          Fixed an error which misplaced the proper SCALING_FACTOR and OFFSET
+          keyword values.
+      </change>
  </history>
 
   <groups>
@@ -227,6 +234,27 @@
           </description>
           <minimum inclusive="yes">8</minimum>
           <maximum inclusive="yes">16</maximum>
+        </parameter> 
+        <parameter name="ENCODING_TYPE">
+          <type>string</type>
+          <default><item>NONE</item></default>
+          <brief>
+            Determine if data is to be encoded as JPEG2000
+          </brief>
+          <description>
+            This parameter is used to determine if the output data will
+            encoded using JPEG2000. The options are NONE or JP2.
+          </description>
+          <list>
+            <option value="NONE">
+              <brief>No encoding is performed</brief>
+              <description>No encoding is performed</description>
+            </option>
+            <option value="JP2">
+              <brief>Encode as JPEG2000</brief>
+              <description>The data is encoded as JPEG2000</description>
+            </option>
+          </list>
         </parameter> 
       </group>
 

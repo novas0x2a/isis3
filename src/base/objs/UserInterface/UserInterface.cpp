@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.14 $                                                             
- * $Date: 2009/08/18 18:16:12 $                                                                 
+ * $Revision: 1.15 $                                                             
+ * $Date: 2009/11/27 23:29:03 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -41,11 +41,12 @@ namespace Isis {
    * 
    * @param xmlfile Name of the Isis application xml file to open.
    * 
-   * @param argc Number of arguments on the command line
+   * @param argc Number of arguments on the command line.  Must be pass by 
+   *             reference!!
    * 
    * @param argv[] Array of arguments
    */
-  UserInterface::UserInterface (const std::string &xmlfile, int argc, char*argv[]) :
+  UserInterface::UserInterface (const std::string &xmlfile, int &argc, char*argv[]) :
   IsisAml::IsisAml (xmlfile) {
     p_interactive = false;
     p_info = false;

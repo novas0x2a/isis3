@@ -1,5 +1,5 @@
 Group = Sinusoidal
-  Library = Sinusoidal 
+  Library = Sinusoidal
   Routine = SinusoidalPlugin
   Keyword = CenterLongitude
 EndGroup

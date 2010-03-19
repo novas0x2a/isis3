@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2009/04/08 21:22:55 $
+ * $Revision: 1.11 $
+ * $Date: 2009/12/22 02:09:54 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -20,8 +20,8 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.
  */
-#include "jama_svd.h"
-#include "jama_qr.h"
+#include "jama/jama_svd.h"
+#include "jama/jama_qr.h"
 
 #if !defined(__sun__)
 #include "gmm/gmm_superlu_interface.h"
@@ -69,32 +69,37 @@ namespace Isis {
   LeastSquares::~LeastSquares () {
   }
 
- /**
-  * Invoke this method for each set of knowns. Given our example in the
-  * description, we have three knowns and expecteds. They are
-  * @f[
-  * (1,1) = 3
-  * @f]
-  * @f[
-  * (-2,3) = 1
-  * @f]
-  * @f[
-  * (2,-1) = 2
-  * @f]
-  *
-  * @param data A vector of knowns.
-  *
-  * @param result The expected value for the knowns.
-  *
-  * @param weight (Default = 1.0) How strongly to weight this known. Weight less
-  *               than 1 increases residual for this known, while weight greater
-  *               than 1 decreases the residual for this known.
-  *
-  * @throws Isis::iException::Programmer - Number of elements in data does not
-  *                                        match basis requirements
-  *  
-  * @history 04-22-2008  Tracie Sucharski,  Fill sparse matrix. 
-  */
+/**
+ * Invoke this method for each set of knowns. Given our example in the
+ * description, we have three knowns and expecteds. They are
+ * @f[
+ * (1,1) = 3
+ * @f]
+ * @f[
+ * (-2,3) = 1
+ * @f]
+ * @f[
+ * (2,-1) = 2
+ * @f]
+ *
+ * @param data A vector of knowns.
+ *
+ * @param result The expected value for the knowns.
+ *
+ * @param weight (Default = 1.0) How strongly to weight this known. Weight less
+ *               than 1 increases residual for this known, while weight greater
+ *               than 1 decreases the residual for this known.
+ *
+ * @throws Isis::iException::Programmer - Number of elements in data does not
+ *                                        match basis requirements
+ *  
+ * @internal 
+ * @history 2008-04-22  Tracie Sucharski,  Fill sparse matrix.
+ * @history 2009-12-21  Jeannie Walldren,  Modified code to add 
+ *          the square root of the weight to the vector
+ *          p_sqrtweight.
+ *  
+ */
   void LeastSquares::AddKnown (const std::vector<double> &data, double result,
                                double weight) {
     if ((int) data.size() != p_basis->Variables()) {
@@ -104,7 +109,12 @@ namespace Isis {
     }
 
     p_expected.push_back(result);
-    p_weight.push_back(weight);
+    if (weight == 1) {
+      p_sqrtweight.push_back(weight);
+    }
+    else {
+      p_sqrtweight.push_back(sqrt(weight));
+    }
 
     if (p_sparse) {
 #if !defined(__sun__)
@@ -118,17 +128,20 @@ namespace Isis {
 
 
 
-  /**
-  *  Invoke this method for each set of knowns for sparse solutions.  The A
-  *  sparse matrix must be filled as we go or we will quickly run out of memory
-  *  for large solutions. So, expand the basis function, apply weights (which is
-  *  done in the Solve method for the non-sparse case.
-  *
-  * @param data A vector of knowns.
-  *
-  * @history 2008-04-22  Tracie Sucharski - New method for sparse solutions. 
-  *                     
-  */
+/**
+ *  Invoke this method for each set of knowns for sparse solutions.  The A
+ *  sparse matrix must be filled as we go or we will quickly run out of memory
+ *  for large solutions. So, expand the basis function, apply weights (which is
+ *  done in the Solve method for the non-sparse case.
+ *
+ * @param data A vector of knowns.
+ *  
+ * @internal 
+ * @history 2008-04-22  Tracie Sucharski - New method for sparse solutions. 
+ * @history 2009-12-21  Jeannie Walldren - Changed variable name 
+ *          from p_weight to p_sqrtweight.
+ *                     
+ */
 #if !defined(__sun__)
   void LeastSquares::FillSparseA (const std::vector<double> &data) {
 
@@ -136,19 +149,19 @@ namespace Isis {
     p_currentFillRow++;
     //  ??? Speed this up using iterator instead of array indices???
     for (int c=0;  c<(int)data.size(); c++) {
-      p_sparseA(p_currentFillRow,c) = p_basis->Term(c) * p_weight[p_currentFillRow];
+      p_sparseA(p_currentFillRow,c) = p_basis->Term(c) * p_sqrtweight[p_currentFillRow];
     }
   }
 #endif
 
 
-  /**
-   * This method returns the data at the given row.
-   * 
-   * @param row 
-   * 
-   * @return std::vector<double> 
-   */
+/**
+ * This method returns the data at the given row.
+ * 
+ * @param row 
+ * 
+ * @return std::vector<double> 
+ */
   std::vector<double> LeastSquares::GetInput(int row) const {
     if((row >= Rows()) || (row < 0)) {
       std::string msg = "Index out of bounds ";
@@ -158,13 +171,13 @@ namespace Isis {
     return p_input[row];
   }
 
-  /**
-   * This method returns the expected value at the given row.
-   * 
-   * @param row 
-   * 
-   * @return double 
-   */
+/**
+ * This method returns the expected value at the given row.
+ * 
+ * @param row 
+ * 
+ * @return double 
+ */
   double LeastSquares::GetExpected(int row) const {
     if((row >= Rows()) || (row < 0)) {
       std::string msg = "Index out of bounds ";
@@ -174,28 +187,28 @@ namespace Isis {
     return p_expected[row];
   }
 
-  /**
-   * This methods returns the number of rows in the matrix.
-   * 
-   * 
-   * @return int 
-   */
+/**
+ * This methods returns the number of rows in the matrix.
+ * 
+ * 
+ * @return int 
+ */
   int LeastSquares::Rows() const {
     return (int)p_input.size();
   }
 
- /**
-  * After all the data has been registered through AddKnown, invoke this
-  * method to solve the system of equations. You can then use the Evaluate
-  * and Residual methods freely. 
-  *  
-  * @internal 
-  * @history  2008-04-16 Debbie Dook / Tracie Sucharski, Added SolveSparse. 
-  * @history  2009-04-08 Tracie Sucharski - Added return value which will 
-  *                          pass on what is returned from SolveSparse which
-  *                          is a column number of a column that contained
-  *                          all zeros.
-  */
+/**
+ * After all the data has been registered through AddKnown, invoke this
+ * method to solve the system of equations. You can then use the Evaluate
+ * and Residual methods freely. 
+ *  
+ * @internal 
+ * @history  2008-04-16 Debbie Dook / Tracie Sucharski, Added SolveSparse. 
+ * @history  2009-04-08 Tracie Sucharski - Added return value which will 
+ *                          pass on what is returned from SolveSparse which
+ *                          is a column number of a column that contained
+ *                          all zeros.
+ */
   int LeastSquares::Solve (Isis::LeastSquares::SolveMethod method) {
 
 #if defined(__sun__)
@@ -217,11 +230,15 @@ namespace Isis {
     return 0;
   }
 
-  /**
-  * After all the data has been registered through AddKnown, invoke this
-  * method to solve the system of equations. You can then use the Evaluate
-  * and Residual methods freely.
-  */
+/**
+ * After all the data has been registered through AddKnown, invoke this
+ * method to solve the system of equations. You can then use the Evaluate
+ * and Residual methods freely. 
+ * @internal 
+ * @history 2009-12-21  Jeannie Walldren - Changed variable name 
+ *          from p_weight to p_sqrtweight.
+ *  
+ */
   void LeastSquares::SolveSVD () {
 
     // We are solving Ax=b ... start by creating A
@@ -229,7 +246,7 @@ namespace Isis {
     for (int r=0; r<A.dim1(); r++) {
       p_basis->Expand(p_input[r]);
       for (int c=0; c<A.dim2(); c++) {
-        A[r][c] = p_basis->Term(c) * p_weight[r];
+        A[r][c] = p_basis->Term(c) * p_sqrtweight[r];
       }
     }
 
@@ -268,7 +285,7 @@ namespace Isis {
     // Using Aplus and our b we can solve for the coefficients
     TNT::Array2D<double> b(p_expected.size(),1);
     for (int r=0; r<(int)p_expected.size(); r++) {
-      b[r][0] = p_expected[r] * p_weight[r];
+      b[r][0] = p_expected[r] * p_sqrtweight[r];
     }
     TNT::Array2D<double> coefs = TNT::matmult(Aplus,b);
 
@@ -297,13 +314,17 @@ namespace Isis {
     p_solved = true;
   }
 
- /**
-  * After all the data has been registered through AddKnown, invoke this
-  * method to solve the system of equations with a QR 
-  * decomposition of A = QR. You can then use the Evaluate and 
-  * Residual methods freely. The QR decomposition is only slightly
-  * less reliable than the SVD, but much faster.
-  */
+/**
+ * After all the data has been registered through AddKnown, invoke this
+ * method to solve the system of equations with a QR 
+ * decomposition of A = QR. You can then use the Evaluate and 
+ * Residual methods freely. The QR decomposition is only slightly
+ * less reliable than the SVD, but much faster. 
+ * @internal 
+ * @history 2009-12-21  Jeannie Walldren - Changed variable name 
+ *          from p_weight to p_sqrtweight.
+ *  
+ */
   void LeastSquares::SolveQRD () {
 
     // We are solving Ax=b ... start by creating A
@@ -311,7 +332,7 @@ namespace Isis {
     for (int r=0; r<A.dim1(); r++) {
       p_basis->Expand(p_input[r]);
       for (int c=0; c<A.dim2(); c++) {
-        A[r][c] = p_basis->Term(c) * p_weight[r];
+        A[r][c] = p_basis->Term(c) * p_sqrtweight[r];
       }
     }
 
@@ -324,7 +345,7 @@ namespace Isis {
     // Using A and our b we can solve for the coefficients
     TNT::Array1D<double> b(p_expected.size());
     for (int r=0; r<(int)p_expected.size();r++) {
-      b[r] = p_expected[r] * p_weight[r];
+      b[r] = p_expected[r] * p_sqrtweight[r];
     }
 
 // Check to make sure the matrix is full rank before solving -- rectangular matrices must
@@ -356,22 +377,25 @@ namespace Isis {
 
 
 
-  /** 
-   * @brief  Solve using sparse class 
-   *  
-   * After all the data has been registered through AddKnown, invoke this
-   * method to solve the system of equations Ax = b, with a sparse solver which
-   * solves the matrix by factorizing A.  You can then use the Evaluate and 
-   * Residual methods freely. 
-   *  
-   * @internal 
-   * @history  2008-04-16 Debbie Cook / Tracie Sucharski, New method 
-   * @history  2008-04-23 Tracie Sucharski,  Fill sparse matrix as we go in 
-   *                          AddKnown method rather than in the solve method,
-   *                          otherwise we run out of memory very quickly.
-   * @history  2009-04-08 Tracie Sucharski - Added return value which is a
-   *                          column number of a column that contained all zeros.
-   */
+/** 
+ * @brief  Solve using sparse class 
+ *  
+ * After all the data has been registered through AddKnown, invoke this
+ * method to solve the system of equations Ax = b, with a sparse solver which
+ * solves the matrix by factorizing A.  You can then use the Evaluate and 
+ * Residual methods freely. 
+ *  
+ * @internal 
+ * @history  2008-04-16 Debbie Cook / Tracie Sucharski, New method 
+ * @history  2008-04-23 Tracie Sucharski,  Fill sparse matrix as we go in 
+ *                          AddKnown method rather than in the solve method,
+ *                          otherwise we run out of memory very quickly.
+ * @history  2009-04-08 Tracie Sucharski - Added return value which is a
+ *                          column number of a column that contained all zeros.
+ * @history 2009-12-21  Jeannie Walldren - Changed variable name 
+ *          from p_weight to p_sqrtweight.
+ *  
+ */
 #if !defined(__sun__)
   int LeastSquares::SolveSparse () {
 
@@ -385,7 +409,7 @@ namespace Isis {
     std::vector<double> x(p_sparseCols);
 
     for (int r=0; r<p_sparseRows; r++) {
-      b(r,0) = p_expected[r] * p_weight[r];
+      b(r,0) = p_expected[r] * p_sqrtweight[r];
     }
 
     //  Create square matrix
@@ -485,4 +509,29 @@ namespace Isis {
     }
     return p_residuals[i];
   }
+
+/** 
+ * Reset the weight for the ith known. This weight will not be used unless 
+ * the system is resolved using the Solve method.
+ * 
+ * @param index The position in the array to assign the given weight value
+ * @param weight A weight factor to apply to the ith known. A weight less 
+ *               than one increase the residual for this known while a 
+ *               weight greater than one decrease the residual for this 
+ *               known.
+ * @internal 
+ * @history 2009-12-21  Jeannie Walldren,  Modified code to add 
+ *          the square root of the weight to the vector
+ *          p_sqrtweight.
+ *  
+ */
+  void LeastSquares::Weight (int index, double weight) { 
+    if (weight == 1) {
+      p_sqrtweight[index] = weight;
+    }
+    else{
+      p_sqrtweight[index] = sqrt(weight);
+    }
+  }
+
 } // end namespace isis

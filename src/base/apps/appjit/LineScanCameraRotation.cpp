@@ -48,6 +48,9 @@ namespace Isis {
     p_cacheTime = timeCache;
 //    std::cout<<std::setprecision(24);
 //    std::cout<<timeCache.at(0)<<"-"<<timeCache.at(50000)<<std::endl;
+
+    InitConstantRotation( p_cacheTime[0] );
+
     p_cachesLoaded = false;
     p_spi->InstrumentRotation()->SetFrame(frameCode);
     p_crot = p_spi->InstrumentRotation();
@@ -90,6 +93,8 @@ namespace Isis {
     // Also add a label value to indicate jitterOffsets=jitterFileName
     // Then we can decide whether to simply grab the crot angles or do new decomposition and whether
     // to apply jitter or throw an error because jitter has already been applied.
+
+    // *** May need to do a frame trace and load the frames (at least the constant ones) ***
 
     // Loop and load the cache
     double cacheSlope = 0.0;
@@ -135,8 +140,8 @@ namespace Isis {
       p_cacheIB.push_back(IB);
       // end IB code
 
-      // Compute the CIcr matrix
-      mxmt_c((SpiceDouble (*)[3]) &(crot->Matrix())[0], (SpiceDouble (*)[3]) &(prot->Matrix())[0],
+      // Compute the CIcr matrix - in-track, cross-track, radial frame to constant frame 
+      mxmt_c((SpiceDouble (*)[3]) &(crot->TimeBasedMatrix())[0], (SpiceDouble (*)[3]) &(prot->Matrix())[0],
              (SpiceDouble (*)[3]) &CI[0]);
 
       // Put CI into parent cache to use the parent class methods on it
@@ -201,6 +206,8 @@ namespace Isis {
     double IJ[3][3];
     std::vector<double> rtime;
     SpiceRotation *prot = p_spi->BodyRotation();
+    std::vector<double> CJ;
+    CJ.resize(9);
 
     for (std::vector<double>::size_type pos=0;pos < p_cacheTime.size();pos++) {
       double et = p_cacheTime.at(pos);
@@ -225,9 +232,9 @@ namespace Isis {
 
       prot->SetEphemerisTime(et);
       mxm_c ( (SpiceDouble (*)[3]) &(p_cacheIB.at(pos))[0], (SpiceDouble (*)[3]) &(prot->Matrix())[0], IJ);
-      mxm_c (CI, IJ, (SpiceDouble (*)[3]) &p_RJ[0]);
+      mxm_c (CI, IJ, (SpiceDouble (*)[3]) &CJ[0]);
 
-      p_cache.push_back( p_RJ );
+      p_cache.push_back( CJ ); // J2000 to constant frame
     }
 
     // Set source to cache to get updated values

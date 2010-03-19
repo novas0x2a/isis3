@@ -27,9 +27,12 @@ void IsisMain() {
   MosaicPriority priority = input;
   m1.SetBandBinMatch(false);
   m1.SetOutputCube(cubes, oAtt, "./unitTest.cub");
+
+  //set priority
+  m1.SetPriority(priority);
   
   for(unsigned int i = 0; i < cubes.size(); i++) {
-    if(m1.StartProcess(cubes[i], priority)) {
+    if(m1.StartProcess(cubes[i])) {
       std::cout << cubes[i] << " is inside the mosaic" << std::endl;
     }
     else {
@@ -48,8 +51,11 @@ void IsisMain() {
   m2.SetBandBinMatch(false);
   m2.SetOutputCube(cubes, -6, -4, 29, 31, oAtt, "./unitTest.cub");
 
+  //set priority
+  m2.SetPriority(priority);
+
   for(unsigned int i = 0; i < cubes.size(); i++) {
-    if(m2.StartProcess(cubes[i], priority)) {
+    if(m2.StartProcess(cubes[i])) {
       std::cout << cubes[i] << " is inside the mosaic" << std::endl;
     }
     else {
@@ -59,8 +65,10 @@ void IsisMain() {
 
   m2.EndProcess();
   std::cout << "Mosaic label: " << std::endl;
+  
   Isis::iApp->Exec("catlab","FROM=./unitTest.cub");
   
+
   Isis::Cube tmp;
   tmp.Open("./unitTest.cub");
   Isis::LineManager lm(tmp);
@@ -77,4 +85,6 @@ void IsisMain() {
   tmp.Close();
   remove("./unitTest.cub");
 }
+
+
 

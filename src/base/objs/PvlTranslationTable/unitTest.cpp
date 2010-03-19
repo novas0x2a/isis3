@@ -6,12 +6,15 @@
 #include "Preference.h"
 
 using namespace std;
+using namespace Isis;
+
 int main (void) {
-  Isis::Preference::Preferences(true);
+  Preference::Preferences(true);
 
   try {
     stringstream in;
     in << "Group = DataFileName" << endl;
+    in << "  InputPosition = ROOT" << endl;
     in << "  InputKey = ^IMAGE" << endl;
     in << "  Translation = (*,*)" << endl;
     in << "EndGroup" << endl;
@@ -20,7 +23,7 @@ int main (void) {
     in << "  Translation = (*,*)" << endl;
     in << "EndGroup" << endl;
     in << "Group = CoreLines" << endl;
-    in << "  InputGroup = IMAGE" << endl;
+    in << "  InputPosition = IMAGE" << endl;
     in << "  InputKey = LINES" << endl;
     in << "  Translation = (*,*)" << endl;
     in << "EndGroup" << endl;
@@ -29,7 +32,7 @@ int main (void) {
     in << "  OutputName = BitsPerPixel" << endl;
     in << "  OutputPosition = (\"Object\",\"IsisCube\", \"Object\",\"Core\",";
     in <<                      "\"Group\",\"Pixels\")" << endl;
-    in << "  InputGroup = IMAGE" << endl;
+    in << "  InputPosition = IMAGE" << endl;
     in << "  InputKey = SAMPLE_BITS" << endl;
     in << "  InputDefault = 8" << endl;
     in << "  Translation = (8,8)" << endl;
@@ -37,7 +40,7 @@ int main (void) {
     in << "  Translation = (32,32)" << endl;
     in << "EndGroup" << endl;
     in << "Group = CorePixelType" << endl;
-    in << "  InputGroup = IMAGE" << endl;
+    in << "  InputPosition = IMAGE" << endl;
     in << "  InputKey = SAMPLE_TYPE" << endl;
     in << "  InputDefault = LSB_INTEGER" << endl;
     in << "  Translation = (Integer,LSB_INTEGER)" << endl;
@@ -49,7 +52,7 @@ int main (void) {
     in << "  Translation = (Unknown,*)" << endl;
     in << "EndGroup" << endl;
     in << "Group = CoreByteOrder" << endl;
-    in << "  InputGroup = IMAGE" << endl;
+    in << "  InputPosition = IMAGE" << endl;
     in << "  InputKey = SAMPLE_TYPE" << endl;
     in << "  InputDefault = LSB_INTEGER" << endl;
     in << "  Translation = (LittleEndian,LSB_INTEGER)" << endl;
@@ -61,7 +64,7 @@ int main (void) {
     in << "EndGroup" << endl;
     in << "End" << endl;
 
-    Isis::PvlTranslationTable table(in);
+    PvlTranslationTable table(in);
 
     string group,key;
 
@@ -70,13 +73,13 @@ int main (void) {
     cout << "  Test InputGroup :" << endl;
 
     cout << "    InputGroup (\"DataFileName\") = " <<
-            table.InputGroup ("DataFileName") << endl;
+            table.InputGroup("DataFileName")[0] << endl;
     cout << "    InputGroup (\"CoreLines\") = " <<
-            table.InputGroup ("CoreLines") << endl;
+            table.InputGroup("CoreLines")[0] << endl;
     try {
       table.InputGroup ("tttt1");
     }
-    catch (Isis::iException &e) {
+    catch (iException &e) {
       cerr << "    ";
       e.Report(false);
       cerr << endl;
@@ -84,14 +87,14 @@ int main (void) {
 
     cout << "  Test InputKey :" << endl;
 
-    cout << "    InputKeyword (\"DataFileName\") = " <<
-            table.InputKeyword ("DataFileName") << endl;
-    cout << "    InputKeyword (\"CoreLines\") = " <<
-            table.InputKeyword ("CoreLines") << endl;
+    cout << "    InputKeywordName (\"DataFileName\") = " <<
+            table.InputKeywordName ("DataFileName") << endl;
+    cout << "    InputKeywordName (\"CoreLines\") = " <<
+            table.InputKeywordName ("CoreLines") << endl;
     try {
-      table.InputKeyword ("tttt2");
+      table.InputKeywordName ("tttt2");
     }
-    catch (Isis::iException &e) {
+    catch (iException &e) {
       cerr << "    ";
       e.Report(false);
       cerr << endl;
@@ -106,7 +109,7 @@ int main (void) {
     try {
       table.InputDefault ("tttt3");
     }
-    catch (Isis::iException &e) {
+    catch (iException &e) {
       cerr << "    ";
       e.Report(false);
       cerr << endl;
@@ -125,7 +128,7 @@ int main (void) {
     try {
       table.Translate ("tttt6");
     }
-    catch (Isis::iException &e) {
+    catch (iException &e) {
       cerr << "    ";
       e.Report(false);
     }
@@ -133,7 +136,7 @@ int main (void) {
     try {
       table.Translate ("DataFileRecordBytes");
     }
-    catch (Isis::iException &e) {
+    catch (iException &e) {
       cerr << "    ";
       e.Report(false);
     }
@@ -149,6 +152,7 @@ int main (void) {
 
     cout << "  Test AddTable :" << endl;
 
+    in.clear();
     in << "Group = CoreLineSuffixBytes" << endl;
     in << "  InputKey = LINE_SUFFIX_BYTES" << endl;
     in << "  Translation = (*,*)" << endl;
@@ -214,7 +218,7 @@ int main (void) {
     t.tester();
 
   }
-  catch (Isis::iException &e) {
+  catch (iException &e) {
     e.Report();
   }
 

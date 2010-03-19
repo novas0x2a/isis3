@@ -61,7 +61,7 @@ install: object
 	then \
 	  ar $(ISISARFLAGS) -crs $(ISISROOT)/lib/libisis$(ISISLIBVERSION).a $(OBJS); \
 	  $(RANLIB) $(ISISROOT)/lib/libisis$(ISISLIBVERSION).a; \
-	fi					
+	fi
 
 force: ;
 
@@ -77,6 +77,9 @@ moc_%.cpp: %.h
 	then \
 	  $(MOC) $(MOCDEFINES) -o $@ $(<F); \
 	fi
+
+qrc_%.cpp: %.qrc		
+	$(RCC) $(RCCDEFINES) -o $@ $(<F);
 	
 help:
 	echo "Isis Make Object Commands"
@@ -150,7 +153,7 @@ sanitize: clean
 	-$(RM) tttt* junk.* TEMP*
 
 test:
-	$(ISISROOT)/scripts/unitTester ; \
+	$(ISISROOT)/scripts/unitTester $(HOST_OS) ; \
 	temp=$$? ; \
 	if test $$temp -eq 0 ; \
 	then \
@@ -185,4 +188,8 @@ truthdata: unitTest
 	./unitTest >& `basename $(CURDIR)`.truth;
 	
 ostruthdata: unitTest
-	./unitTest >& `basename $(CURDIR)`_$(HOST_ARCH)_$(HOST_PROC).truth;
+	if [ $(HOST_OS) = "" ]; then \
+	  ./unitTest >& `basename $(CURDIR)`_$(HOST_ARCH)_$(HOST_PROC).truth; \
+	else \
+	  ./unitTest >& `basename $(CURDIR)`_$(HOST_ARCH)_$(HOST_PROC)_$(HOST_OS).truth; \
+	fi

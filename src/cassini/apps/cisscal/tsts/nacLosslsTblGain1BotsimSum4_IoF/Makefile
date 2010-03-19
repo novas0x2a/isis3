@@ -1,6 +1,5 @@
 APPNAME = cisscal
 
-labels.truth.txt.IGNORELINES = Bytes ByteOrder
 N1536363784_1.truth.cub.TOLERANCE = 1.0e-5
 
 include $(ISISROOT)/make/isismake.tsts
@@ -11,4 +10,4 @@ commands:
 	to=$(OUTPUT)/N1536363784_1.truth.cub \
 	flux="I/F" \
 	> /dev/null;
-	catlab from=$(OUTPUT)/N1536363784_1.truth.cub >& $(OUTPUT)/labels.truth.txt;
+	catlab from=$(OUTPUT)/N1536363784_1.truth.cub >& $(OUTPUT)/labels.truth.pvl;

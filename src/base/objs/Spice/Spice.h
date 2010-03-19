@@ -2,8 +2,8 @@
 #define Spice_h
 /**
  * @file
- * $Revision: 1.17 $
- * $Date: 2009/08/21 20:25:52 $
+ * $Revision: 1.19 $
+ * $Date: 2010/01/30 01:23:08 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   intellectual property information,user agreements, and related information.
@@ -23,9 +23,9 @@
 
 #include <string>
 #include <vector>
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 #include "Pvl.h"
 #include "SpicePosition.h"
 #include "SpiceRotation.h"
@@ -145,6 +145,8 @@ namespace Isis {
  *                                       instrument position Spice table.
  *  @history 2009-08-21 Kris Becker - Moved the NAIF code methods to public
  *                                    scope.
+ *  @history 2010-01-29 Debbie A. Cook - Redid Tracie's change to make sure the table is loaded instead of the kernels if
+ *                                        the kernel keyword value lists "Table" before the kernel files.
  *                                    
  *                                    
  */

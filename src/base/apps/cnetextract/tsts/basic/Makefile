@@ -7,6 +7,7 @@ commands:
 	$(APPNAME) fromlist=$(OUTPUT)/list.lis cnet=$(INPUT)/cnet.net \
 	tolist=$(OUTPUT)/newList.lis outnet=$(OUTPUT)/newNet.pvl \
 	networkid=new description=new \
-	noignore=true noheld=true nosinglemeasure=true > /dev/null;
+	noignore=true noheld=true \
+	nosinglemeasure=true nomeasureless=true > /dev/null;
 	$(RM) $(OUTPUT)/newList.lis;
 	$(RM) $(OUTPUT)/list.lis;

@@ -100,8 +100,12 @@ namespace Isis {
       p_focalPlaneX = dx;
       p_focalPlaneY = dy;
 
-      // maximum x is about 38.045 and maximum y is about 31.899... add 10%
-      if (fabs(dx) > 41.85  ||  fabs(dy) > 35.09) return false;
+      // Test for extraneous data.  Maximum x is about 38.045 and maximum y is about 31.899.
+      // First tried adding 10% and it was sufficient to trim off extraneous data, but
+      // also prevented lat/lons from being calculated to the images edges. Increased x to
+      // 20.361224% to pick up image edges.  3171 was the test image.
+      // 17.5% to pick up image edges.  3171 was the test image.
+      if (fabs(dx) > 45.79142767  ||  fabs(dy) > 35.09) return false;
 
       p_camera->FocalPlaneMap()->SetFocalPlane(dx, dy);
       double ds = p_camera->FocalPlaneMap()->DetectorSample();
@@ -181,7 +185,8 @@ namespace Isis {
       p_undistortedFocalPlaneX = ux*signFactor;
       p_undistortedFocalPlaneY = uy*signFactor;
 
-      // Test for data outside of image (image bounds plus 10%)
+      // Test for data outside of image (image bounds plus 10% for y and 20.361224% for x)
+      if (fabs(ux) > 45.79142767  ||  fabs(uy) > 35.09) return false;
       if (fabs(ux) > 41.85  ||  fabs(uy) > 35.09) return false;
 
       // Set sRef needed for lo medium distortion algorithm

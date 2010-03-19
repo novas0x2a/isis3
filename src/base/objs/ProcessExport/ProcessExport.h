@@ -2,8 +2,8 @@
 #define ProcessExport_h
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2009/07/27 17:54:55 $
+ * $Revision: 1.8 $
+ * $Date: 2010/02/24 17:39:21 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -100,13 +100,14 @@ namespace Isis {
  *           constants (i.e. instead of 65535 VALID_MAX2 is used).  
  * @history 2009-07-27 Steven Lambright - Piecewise stretch backs off to linear
  *           if Median() == MINPCT or Median() == MAXPCT 
+ * @history 2010-02-24 Janet Barrett - Added code to support JPEG2000
  */
   class ProcessExport : public Isis::Process {
 
     public:
 
       //! Storage order enumeration
-      enum ExportFormat { BSQ, BIL, BIP };
+      enum ExportFormat { BSQ, BIL, BIP, JP2 };
 
       ProcessExport();
       ~ProcessExport();

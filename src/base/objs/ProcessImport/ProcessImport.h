@@ -2,8 +2,8 @@
 #define ProcessImport_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/09/16 23:06:36 $
+ * $Revision: 1.11 $
+ * $Date: 2010/02/22 02:25:02 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -31,6 +31,7 @@
 #include "EndianSwapper.h"
 #include "PvlTranslationManager.h"
 #include "CubeAttribute.h"
+#include "JP2Decoder.h"
 
 namespace Isis {
 /**                                                                       
@@ -132,6 +133,7 @@ namespace Isis {
  *  @history 2008-09-16 Christopher Austin - Added error throwing for the
  *           setting of special pixel ranges that overlap by adding
  *           CheckPixelRange().
+ *  @history 2009-12-14 Janet Barrett - Added capability to import JPEG2000 files.
  * 
  */                                                                       
 
@@ -199,11 +201,12 @@ class ProcessImport : public Isis::Process {
     std::vector<std::vector<char *> > DataSuffix ();
 
     /**
-     * This enum includes how the document should be read: by BSQ, BIL, BIP or
-     * InterleaveUndefined.
+     * This enum includes how the document should be read: by BSQ, BIL, BIP,
+     * JP2, or InterleaveUndefined.
      */
     enum Interleave {
       InterleaveUndefined, /**<Undefined */
+      JP2,                 /**<Jpeg 2000 Format (always band sequential).*/
       BSQ,                 /**<Band Sequential Format (i.e. Band Interleaved).  
                               The first line of data is followed immediately by 
                               the next line in the same spectral band.*/
@@ -333,6 +336,7 @@ class ProcessImport : public Isis::Process {
     void ProcessBsq (void funct(Isis::Buffer &out) = NULL);
     void ProcessBil (void funct(Isis::Buffer &out) = NULL);
     void ProcessBip (void funct(Isis::Buffer &out) = NULL);
+    void ProcessJp2 (void funct(Isis::Buffer &out) = NULL);
 
     void CheckPixelRange( std::string pixelName, double min, double max );
 };

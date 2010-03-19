@@ -22,7 +22,7 @@
 #       MAR 12 2009 - Christopher Austin - Changed the way ISIS3TESTDATE is set
 #                       to prevent its setting for outside groups and default
 #                       to "/usgs/cpkgs/isis3/testData"
-#_VER   $Id: isis3Startup.csh,v 1.4 2009/03/13 00:18:35 caustin Exp $
+#_VER   $Id: isis3Startup.csh,v 1.5 2010/03/16 19:40:22 ehyer Exp $
 #_END
 ################################################################################
 # Check parameters
@@ -74,41 +74,6 @@ endif
 # Create QT_PLUGIN_PATH env variable
 if ($QTPLUGINPATH == "true") then
   setenv QT_PLUGIN_PATH "$ISISROOT/3rdParty/plugins"
-endif
-
-# Initialize the platform specific library paths if they don't already exist
-if ($Platform == "Darwin") then
-  if ($?DYLD_FALLBACK_LIBRARY_PATH == 0) then
-    setenv DYLD_FALLBACK_LIBRARY_PATH ${ISISROOT}/lib
-  else
-    printenv DYLD_FALLBACK_LIBRARY_PATH | grep ${ISISROOT}/lib >& /dev/null
-    if  ( $status != 0) then
-      setenv DYLD_FALLBACK_LIBRARY_PATH "${DYLD_FALLBACK_LIBRARY_PATH}:${ISISROOT}/lib"
-    endif
-  endif
-  printenv DYLD_FALLBACK_LIBRARY_PATH | grep ${ISISROOT}/3rdParty/lib >& /dev/null
-  if  ( $status != 0) then  
-    setenv DYLD_FALLBACK_LIBRARY_PATH "${DYLD_FALLBACK_LIBRARY_PATH}:${ISISROOT}/3rdParty/lib"
-  endif
-else
-  if ($?LD_LIBRARY_PATH == 0) then
-    setenv LD_LIBRARY_PATH ${ISISROOT}/lib
-  else
-    printenv LD_LIBRARY_PATH | grep ${ISISROOT}/lib >& /dev/null
-    if  ( $status != 0) then
-      setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:${ISISROOT}/lib"
-    endif  
-  endif
-  printenv LD_LIBRARY_PATH | grep ${ISISROOT}/3rdParty/lib >& /dev/null
-  if  ( $status != 0) then
-    setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:${ISISROOT}/3rdParty/lib"
-  endif
-  if ($Platform == "SunOS") then
-    printenv LD_LIBRARY_PATH | grep /usr/lib/sparcv9 >& /dev/null
-    if  ( $status != 0) then
-      setenv LD_LIBRARY_PATH "${LD_LIBRARY_PATH}:/usr/lib/sparcv9"
-    endif
-  endif
 endif
 
 unset Platform

@@ -2,8 +2,8 @@
 #define ImagePolygon_h
 /**
  * @file
- * $Revision: 1.31 $
- * $Date: 2010/02/08 22:46:05 $
+ * $Revision: 1.32 $
+ * $Date: 2010/02/18 00:03:01 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -146,6 +146,9 @@ namespace Isis {
  *  @history 2009-08-28 Christopher Austin - Fixed a memory bounds error.
  *  @history 2010-02-08 Christopher Austin - Fixed an infinite loop which
  *           revisited the starting point, and added 360 meridian crossing
+ *  @history 2010-02-17 Christopher Austin - Fixed two more infinite looping
+ *           issues, including a cycle fix which occured during Emission Angle
+ *           and Incidence Angle restrictions
  */
 
   class ImagePolygon : public Isis::Blob {
@@ -222,7 +225,7 @@ namespace Isis {
       geos::geom::Coordinate FixCornerSkip(geos::geom::Coordinate *currentPoint,
 					   geos::geom::Coordinate newPoint);
 
-      void FindSubpixel( std::vector<geos::geom::Coordinate> * points);
+      void FindSubpixel( std::vector<geos::geom::Coordinate> & points);
 
       Cube *p_cube;       //!< The cube provided
       bool p_isProjected; //!< True when the provided cube is projected

@@ -2,8 +2,8 @@
 #define ObliqueCylindrical_h
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/05/09 18:50:29 $
+ * $Revision: 1.4 $
+ * $Date: 2010/02/08 19:02:07 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -52,6 +52,7 @@ namespace Isis {
  *   @history 2007-06-29 Steven Lambright - Added Mapping, MappingLatitudes and
  *                                          MappingLongitudes methods.
  *   @history 2008-05-09 Steven Lambright - Added Name, Version methods
+ *   @history 2010-02-08 Sharmila Prasad  - Removed testing p_latitude and p_longitude  in operator "=="
  */                                                                      
   class ObliqueCylindrical : public Isis::Projection {
     public:

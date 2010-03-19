@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2009/06/01 17:23:01 $
+ * $Revision: 1.11 $
+ * $Date: 2010/01/08 00:31:31 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -134,6 +134,30 @@ namespace Isis {
     for(int i=0; i<index; i++) key++;
 
     p_keywords.erase(key);
+  }
+
+
+  /**
+   * Removes keywords from the container that have BOTH the same name and value. 
+   * 
+   * @return bool True if one or more keywords were deleted; False if no keywords 
+   *         were deleted.
+   */
+  bool PvlContainer::CleanDuplicateKeywords() {
+    bool keywordDeleted = false;
+
+    for (unsigned int index = 0; index < p_keywords.size(); index ++) {
+      PvlKeyword & current = p_keywords[index];
+
+      for (PvlKeywordIterator key = Begin() + index + 1; key < End(); key ++) {
+        if (current == *key) {
+          p_keywords.erase(key);
+          keywordDeleted = true;
+        }
+      }
+    }
+    
+    return keywordDeleted;
   }
 
 

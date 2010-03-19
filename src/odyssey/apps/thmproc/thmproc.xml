@@ -150,11 +150,11 @@
           <item>YES</item>
         </default>
         <brief>
-          Import and initialize a Themis RDR file.
+          Import and initialize a Themis EDR/RDR file.
         </brief>
         <description>
-          Process the input file through all level0 steps. This includes "thm2isis" and "
-          spiceinit".
+          Process the input file through all steps. This includes "thm2isis" and 
+          "spiceinit"
         </description>
         <inclusions>
           <item>PCK</item>

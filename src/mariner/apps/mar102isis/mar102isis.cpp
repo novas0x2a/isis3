@@ -1,6 +1,3 @@
-//************************************************************************
-// See Full documentation in raw2isis.xml
-//************************************************************************
 #include "Isis.h"
 
 #include "Cube.h"
@@ -9,9 +6,12 @@
 #include "iTime.h"
 #include "PixelType.h"
 #include "ProcessImport.h"
+#include "ProcessImportPds.h"
 #include "Pvl.h"
 #include "PvlGroup.h"
 #include "PvlKeyword.h"
+#include "PvlFormat.h"
+#include "PvlFormatPds.h"
 
 #include <sstream>
 #include <string>
@@ -19,105 +19,231 @@
 using namespace std;
 using namespace Isis;
 
-string ebcdic2ascii (unsigned char *header);
-void UpdateLabels (Cube *cube, const string &header);
+void UpdateLabels (Cube *cube, const string &labels);
+void TranslateIsis2Labels (Filename &labelFile, Cube *oCube);
+string EbcdicToAscii (unsigned char *header);
+string DaysToDate (int days);
 
 void IsisMain () {
-  ProcessImport p;
-
-  // All mariner images from both cameras share this size
-  p.SetDimensions(832,700,1);
-  p.SetFileHeaderBytes(968);
-  p.SaveFileHeader();
-  p.SetPixelType(UnsignedByte);
-  p.SetByteOrder(Lsb);
-  p.SetDataSuffixBytes(136);
-
   UserInterface &ui = Application::GetUserInterface();
-  p.SetInputFile (ui.GetFilename("FROM"));
-  Cube *cube = p.SetOutputCube("TO");
 
-  p.StartProcess ();
-  unsigned char *header = (unsigned char *) p.FileHeader();
-  string labels = ebcdic2ascii(header);
+  // Determine whether input is a raw Mariner 10 image or an Isis 2 cube
+  bool isRaw = false;
+  Filename inputFile = ui.GetFilename("FROM");
+  Pvl label (inputFile.Expanded());
 
-  UpdateLabels(cube, labels);
+  // If the PVL created from the input labels is empty, then input is raw
+  if (label.Groups() + label.Objects() + label.Keywords() == 0) {
+    isRaw = true;
+  }
 
-  p.EndProcess ();
+  // Import for RAW files
+  if (isRaw) {
+    ProcessImport p;
+    
+    // All mariner images from both cameras share this size
+    p.SetDimensions(832,700,1);
+    p.SetFileHeaderBytes(968);
+    p.SaveFileHeader();
+    p.SetPixelType(UnsignedByte);
+    p.SetByteOrder(Lsb);
+    p.SetDataSuffixBytes(136);
+
+    p.SetInputFile (ui.GetFilename("FROM"));
+    Cube *oCube = p.SetOutputCube("TO");
+  
+    p.StartProcess ();
+    unsigned char *header = (unsigned char *) p.FileHeader();
+    string labels = EbcdicToAscii(header);
+    UpdateLabels(oCube, labels);
+    p.EndProcess ();
+  }
+  // Import for Isis 2 cubes
+  else {
+    ProcessImportPds p;
+  
+    // All mariner images from both cameras share this size
+    p.SetDimensions(832,700,1);
+    p.SetPixelType(UnsignedByte);
+    p.SetByteOrder(Lsb);
+    p.SetDataSuffixBytes(136);
+  
+    p.SetPdsFile (inputFile.Expanded(), "", label);
+    Cube *oCube = p.SetOutputCube("TO");
+  
+    TranslateIsis2Labels(inputFile, oCube);
+    p.StartProcess ();
+    p.EndProcess ();
+  }
 }
 
-//! Converts labels into standard pvl format and adds necessary 
-//! information not included in original labels
+// Converts labels into standard pvl format and adds necessary 
+// information not included in original labels
 void UpdateLabels (Cube *cube, const string &labels) {
-  // Convert string to stream
-  stringstream os;
-  os << labels;
-  // Ingest stream as Pvl
-  Pvl pvl;
-  os >> pvl;
+  // First, we parse out as much valid information as possible from the 
+  // original labels
+  string key;
+  int keyPosition;
+  int consumeChars;
+
+  // Image number
+  key = "FDS=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("IM-1") - keyPosition - key.length();
+  iString fds (labels.substr(keyPosition + key.length(), consumeChars));
+  fds.Trim(" ");
+
+  // Year the image was taken
+  key = "YR=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("DAY") - keyPosition - key.length();
+  iString yr (labels.substr(keyPosition + key.length(), consumeChars));
+  yr.Trim(" ");
+
+  // Day the image was taken
+  key = "DAY=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("GMT") - keyPosition - key.length();
+  iString day (labels.substr(keyPosition + key.length(), consumeChars));
+  day.Trim(" ");
+
+  // Greenwich Mean Time
+  key = "GMT=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("CCAMERA") - keyPosition - key.length();
+  iString gmt (labels.substr(keyPosition + key.length(), consumeChars));
+  gmt.Trim(" ");
+
+  // Which of the two cameras took the image
+  key = "CCAMERA=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("FILTER") - keyPosition - key.length();
+  iString ccamera (labels.substr(keyPosition + key.length(), consumeChars));
+  ccamera.Trim(" ");
+
+  // Filter number
+  key = "FILTER=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("(") - keyPosition - key.length();
+  iString filterNum (labels.substr(keyPosition + key.length(), consumeChars));
+  filterNum.Trim(" ");
+
+  // Filter name
+  consumeChars = labels.find(")") - keyPosition - key.length() - consumeChars;
+  iString filterName (labels.substr(labels.find("(") + 1, consumeChars));
+  filterName.Trim(" ");
+
+  // Center wavelength
+  int fnum = filterNum.ToInteger();
+  double filterCenter = 0.;
+  switch (fnum) {
+    case 0:
+      filterCenter = .575;
+      break;
+    case 2:
+      filterCenter = .475;
+      break;
+    case 3:
+      filterCenter = .360;
+      break;
+    case 4:
+      filterCenter = .511;
+      break;
+    case 5:
+      filterCenter = .487;
+      break;
+    case 6:
+      filterCenter = .355;
+      break;
+    default:
+      break;
+  }
+  
+  // Exposure duration
+  key = "EXPOSURE=";
+  keyPosition = labels.find(key);
+  consumeChars = labels.find("MSEC") - keyPosition - key.length();
+  iString exposure (labels.substr(keyPosition + key.length(), consumeChars));
+  exposure.Trim(" ");
 
   // Create the instrument group
   PvlGroup inst("Instrument");
-  inst += PvlKeyword("SpacecraftName","Mariner10");
-  inst += PvlKeyword("InstrumentId","Camera"+(string)pvl["CCAMERA"]);
+  inst += PvlKeyword("SpacecraftName","Mariner_10");
+  inst += PvlKeyword("InstrumentId","M10_VIDICON_" + ccamera);
 
   // Get the date
-  int year = pvl["YR"];
-  year += 1900;
-  int jday = pvl["DAY"];
-  iString date = iString(year) + "-" + iString(jday);
+  int days = day.ToInteger();
+  iString date = DaysToDate(days);
 
   // Get the time
-  iString time = (string) pvl["GMT"];
-  time = time.Replace("/",":") + ".000";
+  iString time = gmt;
+  time = time.Replace("/",":");
 
   // Construct the Start Time in yyyy-mm-ddThh:mm:ss format
-  string fulltime = date + "T" + time;
-  iTime startTime(fulltime);
-  inst += PvlKeyword("StartTime",startTime.UTC());
+  string fullTime = date + "T" + time + ".000";
+  iTime startTime(fullTime);
 
-  // Get exposure duration
-  inst += PvlKeyword("ExposureDuration",(string)pvl["EXPOSURE"],"milliseconds");
+  // Create the archive group
+  PvlGroup archive ("Archive");
+
+  int year = yr.ToInteger();
+  year += 1900;
+  string fullGMT = iString(year) + ":" + day + ":" + time;
+  archive += PvlKeyword ("GMT", fullGMT);
+  archive += PvlKeyword ("ImageNumber", fds);
 
   // Create the band bin group
   PvlGroup bandBin("BandBin");
-  iString filter = (string)pvl["FILTER"];
-  iString number = filter.Token("(");
-  bandBin += PvlKeyword("FilterNumber",number);
+  iString filter = filterName;
   filter = filter.Replace(")","");
-  bandBin += PvlKeyword("FilterName",filter);
+  bandBin += PvlKeyword("FilterName", filter);
+  iString number = filterNum;
+  bandBin += PvlKeyword("FilterNumber", number);
+  bandBin += PvlKeyword("OriginalBand", "1");
+  iString center = filterCenter;
+  bandBin += PvlKeyword("Center", center);
+  bandBin.FindKeyword("Center").SetUnits("micrometers");
 
   // Dates taken from ASU Mariner website - http://ser.ses.asu.edu/M10/TXT/encounters.html and
   // from Nasa website - http://www.jpl.nasa.gov/missions/missiondetails.cfm?mission_Mariner10
   // under fast facts. Mariner encountered the Moon, Venus, and Mercury three times.
   // Date used for all is two days before date of first encounter on website. Information
   // is important for nominal reseaus used and for Keyword encounter  
-  string encounter = "";
+  string target = "";
   if (startTime < iTime("1974-2-3T12:00:00")) { 
-    encounter = "$mariner10/reseaus/mar10MoonNominal.pvl";
-    inst += PvlKeyword("Encounter", "Moon");
+    target = "$mariner10/reseaus/mar10MoonNominal.pvl";
+    inst += PvlKeyword("TargetName", "Moon");
+    archive += PvlKeyword ("Encounter", "Moon");
   } 
   //Disagreement on the below date between ASU website and NASA website, used earlier of the two - ASU
   else if (startTime < iTime("1974-3-22T12:00:00")) { 
-    encounter = "$mariner10/reseaus/mar10VenusNominal.pvl";
-    inst += PvlKeyword("Encounter", "Venus");
+    target = "$mariner10/reseaus/mar10VenusNominal.pvl";
+    inst += PvlKeyword("TargetName", "Venus");
+    archive += PvlKeyword ("Encounter", "Venus");
   }
   else if (startTime < iTime("1974-9-19T12:00:00")) {
-    encounter = "$mariner10/reseaus/mar10Merc1Nominal.pvl";
-    inst += PvlKeyword("Encounter", "Mercury_1");
+    target = "$mariner10/reseaus/mar10Merc1Nominal.pvl";
+    inst += PvlKeyword("TargetName", "Mercury");
+    archive += PvlKeyword ("Encounter", "Mercury_1");
   }
   // No specific date on ASU website, used NASA date
   else if (startTime < iTime("1975-3-14T12:00:00")) {
-    encounter = "$mariner10/reseaus/mar10Merc2Nominal.pvl";
-    inst += PvlKeyword("Encounter", "Mercury_2");
+    target = "$mariner10/reseaus/mar10Merc2Nominal.pvl";
+    inst += PvlKeyword("TargetName", "Mercury");
+    archive += PvlKeyword ("Encounter", "Mercury_2");
   }
   else {
-    encounter = "$mariner10/reseaus/mar10Merc3Nominal.pvl";
-    inst += PvlKeyword("Encounter", "Mercury_3");
+    target = "$mariner10/reseaus/mar10Merc3Nominal.pvl";
+    inst += PvlKeyword("TargetName", "Mercury");
+    archive += PvlKeyword ("Encounter", "Mercury_3");
   }
   
+  // Place start time and exposure duration in intrument group
+  inst += PvlKeyword("StartTime", fullTime);
+  inst += PvlKeyword("ExposureDuration", exposure, "milliseconds");
+
   // Open nominal positions pvl named by string encounter
-  Pvl nomRx(encounter);
+  Pvl nomRx (target);
 
   // Allocate all keywords within reseaus groups well as the group its self
   PvlGroup rx("Reseaus");
@@ -137,7 +263,7 @@ void UpdateLabels (Cube *cube, const string &labels) {
   
   // Camera dependent information
   string camera = "";
-  if (iString("CameraA") == inst["InstrumentId"][0]) {
+  if (iString("M10_VIDICON_A") == inst["InstrumentId"][0]) {
     templ = "$mariner10/reseaus/mar10a.template.cub";
     naif += "-76110"; 
     camera = "M10_VIDICON_A_RESEAUS";
@@ -180,16 +306,108 @@ void UpdateLabels (Cube *cube, const string &labels) {
   // Get the labels and add the updated labels to them
   Pvl *cubeLabels = cube->Label();
   cubeLabels->FindObject("IsisCube").AddGroup(inst);
+  cubeLabels->FindObject("IsisCube").AddGroup(archive);
   cubeLabels->FindObject("IsisCube").AddGroup(bandBin);
   cubeLabels->FindObject("IsisCube").AddGroup(kernels);
   cubeLabels->FindObject("IsisCube").AddGroup(rx);
+
+  PvlObject original ("OriginalLabel");
+  original += PvlKeyword ("Label", labels);
+  cubeLabels->AddObject(original);
+}
+
+// Translate Isis 2 labels into Isis 3 labels.
+void TranslateIsis2Labels (Filename &labelFile, Cube *oCube) {
+  // Get the directory where the Mariner translation tables are.
+  PvlGroup &dataDir = Preference::Preferences().FindGroup("DataDirectory");
+
+  // Transfer the instrument group to the output cube
+  iString transDir = (string) dataDir["Mariner10"] + "/translations/";
+  Pvl inputLabel (labelFile.Expanded());
+  Filename transFile;
+
+  transFile = transDir + "mariner10isis2.trn";
+
+  // Get the translation manager ready
+  PvlTranslationManager translation (inputLabel, transFile.Expanded());
+  Pvl *outputLabel = oCube->Label();
+  translation.Auto(*(outputLabel));
+
+  //Instrument group
+  PvlGroup &inst = outputLabel->FindGroup("Instrument", Pvl::Traverse);
+
+  PvlKeyword &instrumentId = inst.FindKeyword("InstrumentId");
+  instrumentId.SetValue("M10_VIDICON_" + instrumentId[0]);
+
+  PvlKeyword &targetName = inst.FindKeyword("TargetName");
+  iString targetTail (targetName[0].substr(1));
+  targetTail = targetTail.DownCase();
+  targetName.SetValue( targetName[0].at(0) + targetTail );
+
+  PvlKeyword &startTime = inst.FindKeyword("StartTime");
+  startTime.SetValue( startTime[0].substr(0, startTime[0].size()-1));
+
+  PvlGroup &archive = outputLabel->FindGroup("Archive", Pvl::Traverse);
+  PvlKeyword &imgNo = archive.FindKeyword("ImageNumber");
+  iString ino = imgNo[0];
+  ino.Trim(" ");
+  imgNo.SetValue(ino);
+
+  iTime time (startTime[0]);
+  if (time < iTime("1974-2-3T12:00:00")) { 
+    archive += PvlKeyword ("Encounter", "Moon");
+  } 
+  else if (time < iTime("1974-3-22T12:00:00")) { 
+    archive += PvlKeyword ("Encounter", "Venus");
+  }
+  else if (time < iTime("1974-9-19T12:00:00")) {
+    archive += PvlKeyword ("Encounter", "Mercury_1");
+  }
+  else if (time < iTime("1975-3-14T12:00:00")) {
+    archive += PvlKeyword ("Encounter", "Mercury_2");
+  }
+  else {
+    archive += PvlKeyword ("Encounter", "Mercury_3");
+  }
+
+  inst.FindKeyword("ExposureDuration").SetUnits("milliseconds");
+
+  PvlGroup &bBin = outputLabel->FindGroup ("BandBin", Pvl::Traverse);
+  std::string filter = inputLabel.FindObject("QUBE")["FILTER_NAME"];
+  if (filter != "F") {
+    //Band Bin group
+    bBin.FindKeyword("Center").SetUnits("micrometers");
+  }
+
+  // Kernels group
+  PvlGroup &kernels = outputLabel->FindGroup ("Kernels", Pvl::Traverse);
+  PvlGroup &reseaus = outputLabel->FindGroup ("Reseaus", Pvl::Traverse);
+  PvlKeyword &templ = reseaus.FindKeyword("Template");
+  PvlKeyword &valid = reseaus.FindKeyword("Valid");
+
+  for (int i = 0; i < valid.Size(); i++) {
+    valid[i] = valid[i].substr(0, 1);
+  }
+
+  // Camera dependent information
+  string camera = "";
+  if (iString("M10_VIDICON_A") == inst["InstrumentId"][0]) {
+    templ = "$mariner10/reseaus/mar10a.template.cub";
+    kernels.FindKeyword("NaifFrameCode").SetValue("-76110");
+    camera = "M10_VIDICON_A_RESEAUS";
+  } 
+  else {
+    templ = "$mariner10/reseaus/mar10b.template.cub";
+    kernels.FindKeyword("NaifFrameCode").SetValue("-76120");
+    camera = "M10_VIDICON_B_RESEAUS";
+  }
 }
 
 // FYI, mariner10 original labels are stored in ebcdic, a competitor with ascii,
 // a conversion table is necessary then to get the characters over to ascii. For
 // more info: http://en.wikipedia.org/wiki/Extended_Binary_Coded_Decimal_Interchange_Code
 //! Converts ebsidic Mariner10 labels to ascii
-string ebcdic2ascii (unsigned char *header) {
+string EbcdicToAscii (unsigned char *header) {
   // Table to convert ebcdic to ascii
   unsigned char xlate[] = {
     0x00,0x01,0x02,0x03,0x9C,0x09,0x86,0x7F,0x97,0x8D,0x8E,0x0B,0x0C,0x0D,0x0E,0x0F,
@@ -217,6 +435,47 @@ string ebcdic2ascii (unsigned char *header) {
 
   // Put in a end of string mark and return
   header[215] = 0;
+  printf("Header: %s\n", header);
   return string((const char *)header);
 }
 
+// Mariner 10 labels provide the number of days since the beginning of the year
+// 1974 in the GMT keyword, but not always a start time.  In order to derive an
+// estimated start time, with an actual date attached, a conversion must be
+// performed.
+string DaysToDate (int days) {
+  int currentMonth = 12;
+  int currentDay = 31;
+  int currentYear = 1973;
+  while (days > 0) {
+    // The Mariner 10 mission took place in the years 1973 through 1975, 
+    // none of which were Leap Years, thus February always had 28 days
+    if (currentDay == 28 && currentMonth == 2) {
+      currentMonth = 3;
+      currentDay = 1;
+    }
+    else if (currentDay == 30 &&
+             (currentMonth == 4 || currentMonth == 6 ||
+              currentMonth == 9 || currentMonth == 11)) {
+      currentMonth++;
+      currentDay = 1;
+    }
+    else if (currentDay == 31 && currentMonth == 12) {
+      currentMonth = 1;
+      currentDay = 1; 
+      currentYear++;
+    }
+    else if (currentDay == 31) {
+      currentMonth++;
+      currentDay = 1;
+    }
+    else {
+      currentDay++;
+    }
+    days--;
+  }
+  iString year = currentYear;
+  iString month = (currentMonth < 10) ? "0" + iString(currentMonth) : iString(currentMonth);
+  iString day = (currentDay < 10) ? "0" + iString(currentDay) : iString(currentDay);
+  return year + "-" + month + "-" + day;
+}

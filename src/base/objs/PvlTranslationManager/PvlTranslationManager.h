@@ -2,8 +2,8 @@
 #define PvlTranslationManager_h
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/07/10 17:55:36 $
+ * $Revision: 1.6 $
+ * $Date: 2010/01/04 18:01:31 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -62,14 +62,18 @@ namespace Isis {
  *           other groups if a group has been found, but the keyword does not
  *           exist in that group.
  *  @history 2008-07-10 Steven Lambright - Changed to use new accessors
+ *  @history 2010-01-04 Steven Lambright - Added InputKeyword method and removed
+ *                                         InputSize, InputUnits, InputValue.
+ *                                         Renamed private Translate method to
+ *                                         DoTranslation to remove ambiguity
+ *                                         with a parent method, instead of
+ *                                         using a dummy parameter.
  *  @todo 2005-02-15 Stuart Sides - add coded example and implementation example  
  *                                  to class documentation, and finish 
  *                                  documentation 
  */                                                                       
   class PvlTranslationManager : public PvlTranslationTable {
     public:
-  
-      // constructor
       PvlTranslationManager (const std::string &transFile);
 
       PvlTranslationManager (Isis::Pvl &inputLabel,
@@ -81,8 +85,6 @@ namespace Isis {
       //! Destroys the TranslationManager object.
       ~PvlTranslationManager () {};
   
-      // Members
-  
       // Attempt to translate the requested output name to output value
       // using the input name and value/default value
       std::string Translate (const std::string nName, int findex = 0);
@@ -91,27 +93,18 @@ namespace Isis {
       void Auto (Isis::Pvl &outputLabel);
   
       // Return the ith input value associated with a output name
-      std::string InputValue (const std::string nName, int findex = 0);
-  
-      // Return the ith input value units associated with a output name
-      std::string InputUnits (const std::string nName, int findex = 0);
-  
-      // Return the number of input values associated with a output name
-      int InputSize (const std::string nName);
+      const PvlKeyword &InputKeyword (const std::string nName) const;
   
       // Return true if the input lable contains the translated group and key names
       bool InputHasKeyword (const std::string nName);
-  
-      // Return true if the input label contains the translated group name
-//      bool InputHasGroup (const std::string nName);
 
       void SetLabel(Isis::Pvl &lab) { p_fLabel = lab; }
     private:
   
       Isis::Pvl p_fLabel; //!<A Pvl object for the input label file
   
-      Isis::PvlKeyword Translate (const std::string nName, double dummy);
-      Isis::PvlContainer *GetContainer (const std::string &inputGroup);
+      Isis::PvlKeyword DoTranslation (const std::string nName);
+      const Isis::PvlContainer *GetContainer (const PvlKeyword &inputGroup) const;
       Isis::PvlContainer *CreateContainer (const std::string nName, Isis::Pvl &pvl);
   };
 };

@@ -2,8 +2,8 @@
 #define PvlTokenizer_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2009/03/13 16:22:03 $
+ * $Revision: 1.5 $
+ * $Date: 2010/01/09 02:09:23 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -50,29 +50,42 @@ namespace Isis {
   * @internal
   *  @history 2003-02-25 Stuart Sides - Modified the way END is checked for. It 
   *                                     was not working for embedded labels.
+  *
   *  @history 2003-05-16 Stuart Sides - Modified schema from astrogeology... 
   *                                     isis.astrogeology...
+  *
   *  @history 2003-05-28 Stuart Sides - Modified so single quotes work the same 
   *                                     as double quotes
-  *  @history 2003-10-28 Jeff Anderson - Fixed bug in order to allow for  
+  *  
+  *  @history 2003-10-28 Jeff Anderson - Fixed bug in order to allow for
   *                                      whitespace inside of arrays of strings
-  *  @history 2004-01-22 Jeff Anderson - Removed single quotes when the occur as 
+  *
+  *  @history 2004-01-22 Jeff Anderson - Removed single quotes when the occur as
   *                                      delimeters inside of array keywords.
-  *  @history 2005-02-16 Jeff Anderson - Modified parsing of comma separated 
+  *
+  *  @history 2005-02-16 Jeff Anderson - Modified parsing of comma separated
   *                                      lists to not remove parens or squiggly
   *                                      brackets.
-  *  @history 2005-02-18 Elizabeth Ribelin - Modified file to support Doxygen 
+  *
+  *  @history 2005-02-18 Elizabeth Ribelin - Modified file to support Doxygen
   *                                          documentation
+  *
   *  @history 2006-05-31 Elizabeth Miller - Fixed bug in Load method when a
   *                                         keyword is loaded without a value
-  *                                                                        
-  *  @todo 2005-02-14 Jeff Anderson - finish class documentation and add coded 
-  *                                   and implementation examples                                               
+  *
+  *  @todo 2005-02-14 Jeff Anderson - finish class documentation and add coded
+  *                                   and implementation examples
+  *
   *  @history 2007-04-13 Stuart Sides - Fixed bug where quoted strings broken
   *                                     over more than two lines were not being
-  *                                     read correctly.                                          
+  *                                     read correctly.
+  *
   *  @history 2009-03-13 Steven Lambright - Inline comments now correctly
   *           correlate to the keywords before them on the same line.
+  *
+  *  @history 2010-01-08 Eric Hyer - PvlTokenizer.cpp used EOF without including
+  *                                  fstream, breaking this class on recent
+  *                                  compilers (I added #include <fstream>).
   */                                                                       
   class PvlTokenizer {
   

@@ -45,6 +45,11 @@
     <change name="Brendan George" date="2006-09-28">
         Documentation fixes
     </change>
+    <change name="Kris Becker" date="2009-11-27">
+        Changed the call to Application to provide compatability withg Qt 
+        startup requirements.
+    </change>
+
   </history>
 
   <groups>

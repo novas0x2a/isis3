@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.36 $
- * $Date: 2009/09/16 13:40:47 $
+ * $Revision: 1.39 $
+ * $Date: 2010/03/16 20:51:27 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -42,9 +42,10 @@ namespace Isis {
    *                                      isis.astrogeology...
    *   @history 2006-05-17 Elizabeth Miller - Removed .xml file and added
    *                                          documentation to .h file
+   *   @history 2009-03-16 Tracie Sucharski - Updated for release 3.2.0. 
    */
 
-  const std::string version("3.1.21 | 2009-09-16");
+  const std::string version("3.2.0 | 2009-03-16");
 
   const double E(2.7182818284590452354);   //!<The mathematical constant E
   const double PI(3.14159265358979323846); //!<The mathematical constant PI

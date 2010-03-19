@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/07/29 22:22:47 $
+ * $Revision: 1.5 $
+ * $Date: 2009/11/27 23:28:25 $
 
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
@@ -62,13 +62,16 @@ namespace Isis {
  *                       history file causing the program to crash
  *  @history 2008-07-29  Steven Lambright Fixed memory leaks and naming
  *                       convention
+ *  @history 2009-11-19 Kris Becker - Made argc pass by reference since Qt's
+ *           QApplication/QCoreApplication requires it
+
  */
 
   class Gui : public QMainWindow {
     Q_OBJECT
 
     public:
-      static Gui *Create (Isis::UserInterface &ui, int argc, char *argv[]);
+      static Gui *Create (Isis::UserInterface &ui, int &argc, char *argv[]);
 
       void ProgressText (const std::string &text);
       void Progress (int percent);

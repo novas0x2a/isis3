@@ -3,28 +3,28 @@ UnitTest for Universal Ground Map
 Is Projection? = 0
 
 For (1.0, 1.0) ...
-Universal Latitude = -31.2794677
-Universal Longitude = 171.80999
-Sample = 0.999973612
-Line = 1.00011431
+Universal Latitude = -31.2795097
+Universal Longitude = 171.809885
+Sample = 0.999968238
+Line = 1.00010555
 
 For (1204, 1.0) ...
-Universal Latitude = -13.6624164
-Universal Longitude = 173.660977
-Sample = 1204.00049
-Line = 0.999619081
+Universal Latitude = -13.6617649
+Universal Longitude = 173.660653
+Sample = 1204.00005
+Line = 0.999958049
 
 For (1.0, 1056) ...
-Universal Latitude = -33.1114073
-Universal Longitude = 188.142481
-Sample = 0.999544463
-Line = 1055.99982
+Universal Latitude = -33.1118093
+Universal Longitude = 188.141982
+Sample = 0.999787961
+Line = 1055.99992
 
 For (1204, 1056) ...
-Universal Latitude = -15.7542492
-Universal Longitude = 188.285799
-Sample = 1203.99969
-Line = 1056.00012
+Universal Latitude = -15.7539792
+Universal Longitude = 188.285693
+Sample = 1203.99978
+Line = 1056.0001
 
   Testing Projection...
 Is Projection? = 1

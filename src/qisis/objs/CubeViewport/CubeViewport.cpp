@@ -1,7 +1,7 @@
 /**
  * @file
- * $Date: 2009/05/13 19:26:07 $
- * $Revision: 1.33 $
+ * $Date: 2009/10/23 19:16:12 $
+ * $Revision: 1.34 $
  *
  *  Unless noted otherwise, the portions of Isis written by the USGS are public domain. See
  *  individual third-party library and package descriptions for intellectual property information,
@@ -1085,6 +1085,10 @@ namespace Qisis {
     for (int i=0; i < p_toolList.size(); i++) {
       p_toolList[i]->updateTool();
     }
+
+    if(p_camera) {
+      p_camera->SetBand(band);
+    }
   }
 
 
@@ -1117,6 +1121,10 @@ namespace Qisis {
 
     for (int i=0; i < p_toolList.size(); i++) {
       p_toolList[i]->updateTool();
+    }
+
+    if(p_camera) {
+      p_camera->SetBand(rband);
     }
   }
 

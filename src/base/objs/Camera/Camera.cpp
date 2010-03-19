@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.27 $
- * $Date: 2009/09/23 22:10:35 $
+ * $Revision: 1.28 $
+ * $Date: 2009/12/14 23:36:29 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -661,8 +661,8 @@ namespace Isis {
   void Camera::BasicMapping (Isis::Pvl &pvl) {
     Isis::PvlGroup map("Mapping");
     map += Isis::PvlKeyword("TargetName",Target());
-    map += Isis::PvlKeyword("EquatorialRadius",p_radii[0]*1000.0,"<meters>");
-    map += Isis::PvlKeyword("PolarRadius",p_radii[2]*1000.0,"<meters>");
+    map += Isis::PvlKeyword("EquatorialRadius",p_radii[0]*1000.0,"meters");
+    map += Isis::PvlKeyword("PolarRadius",p_radii[2]*1000.0,"meters");
     map += Isis::PvlKeyword("LatitudeType","Planetocentric");
     map += Isis::PvlKeyword("LongitudeDirection","PositiveEast");
     map += Isis::PvlKeyword("LongitudeDomain","360");

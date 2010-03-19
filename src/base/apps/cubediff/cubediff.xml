@@ -94,6 +94,10 @@
     <change name="Steven Koechle" date="2009-05-14">
         Changed output, if no valid pixel differences, output zero instead of 
         NULL8
+    </change> 
+      <change name="Sharmila Prasad" date="2010-02-26">
+        Incuded keywords MaxDifference Line, Sample and Band in the output to 
+        indicate the line, sample, band where the max cube difference occured
     </change>
   </history>
 

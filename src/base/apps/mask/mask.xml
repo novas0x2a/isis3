@@ -11,7 +11,7 @@
     NULLed using a mask cube.  This is done by specifying a minimum/maximum
     pixel range in the mask cube.  Pixels which fall outside the range in
     the mask will be set to NULL in the output cube.  Pixels inside the range
-    will be propogated from the input cube to the output.  An option exists to
+    will be propagated from the input cube to the output.  An option exists to
     reverse the masking process so that pixels outside the range are preserved,
     and pixels inside the range are NULLed.
   </description>

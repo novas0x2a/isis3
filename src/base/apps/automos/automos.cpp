@@ -2,7 +2,6 @@
 
 #include "Isis.h"
 #include "ProcessMapMosaic.h"
-#include "ProcessByLine.h"
 #include "FileList.h"
 #include "iException.h"
 #include "SpecialPixel.h"
@@ -11,28 +10,37 @@
 using namespace std; 
 using namespace Isis;
 
-void calcRange(double &minLat, double &maxLat,
-               double &minLon, double &maxLon);
+void calcRange(double &minLat, double &maxLat, double &minLon, double &maxLon);
 void helperButtonCalcRange ();
 
-map <string,void*> GuiHelpers(){
+map <string,void*> GuiHelpers()
+{
   map <string,void*> helper;
   helper ["helperButtonCalcRange"] = (void*) helperButtonCalcRange;
   return helper;
 }
-void IsisMain() {
-  // Get the list of cubes to mosaic
-  Process p;
+
+void IsisMain() 
+{  
   FileList list;
-  UserInterface &ui = Application::GetUserInterface();
+  UserInterface &ui = Application::GetUserInterface();  
+
+	// Get the list of cubes to mosaic
   list.Read(ui.GetFilename("FROMLIST"));
   if (list.size() < 1) {
-    string msg = "The list file [" + ui.GetFilename("FROMLIST") +
-                 "does not contain any data";
+    string msg = "The list file [" + ui.GetFilename("FROMLIST") +	"does not contain any data";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
 
-  ProcessMapMosaic m;
+  ProcessMapMosaic m;  
+
+  // Set the create flag-mosaic is always created in automos
+  m.SetCreateFlag(true);
+
+	// Get the Track Flag
+  bool bTrack = ui.GetBoolean("TRACK");
+  m.SetTrackFlag(bTrack);
+
   CubeAttributeOutput &oAtt = ui.GetOutputAttribute("MOSAIC");
   if (ui.GetString("GRANGE") == "USER") {
     m.SetOutputCube(list, 
@@ -45,35 +53,73 @@ void IsisMain() {
   }
 
   // Set up the mosaic priority, either the input cubes will be
-  // placed ontop of each other in the mosaic or beneath each other
-  ui = Application::GetUserInterface();
+  // placed ontop of each other in the mosaic or beneath each other or
+  // placed based on band with "Lesser" or "Greater" criteria
+  // Set up the mosaic priority, either the input cube will be
+  // placed ontop of the mosaic or beneath it   
   MosaicPriority priority;
+  string sType;	
   if (ui.GetString("PRIORITY") == "BENEATH") {
     priority = mosaic;
   }
-  else {
-    priority = input;
+  else if (ui.GetString("PRIORITY") == "ONTOP") {
+		priority = input;
   }
+  else {	
+    priority = band;	
+		sType = ui.GetString("TYPE");
+		if (sType=="BANDNUMBER") {		
+			m.SetBandNumber(ui.GetInteger("NUMBER"));
+		}
+		else { 
+			// Key name & value
+			m.SetBandKeyWord(ui.GetString("KEYNAME"), ui.GetString("KEYVALUE")); 		
+		}
+		// Band Criteria
+		BandCriteria eCriteria = Lesser;
+		if (ui.GetString("CRITERIA") == "GREATER")
+			eCriteria = Greater;						    	  
+		m.SetBandCriteria(eCriteria);
+  }
+  
+  // Priority
+  m.SetPriority(priority);
+
+	m.SetHighSaturationFlag(ui.GetBoolean("HIGHSATURATION"));
+	m.SetLowSaturationFlag (ui.GetBoolean("LOWSATURATION"));
+	m.SetNullFlag(ui.GetBoolean("NULL")); 
 
   // Loop for each input file and place it in the output mosaic
-  PvlGroup outsiders("Outside");
+  
   m.SetBandBinMatch(ui.GetBoolean("MATCHBANDBIN"));
 
-  CubeAttributeInput inAtt;
-
   for (unsigned int i=0; i<list.size(); i++) {
-    if(!m.StartProcess(list[i], priority)) {
+    if(!m.StartProcess(list[i])) {
+			PvlGroup outsiders("Outside");
       outsiders += PvlKeyword("File", list[i]); 
+			Application::Log(outsiders); 
     }
+		else {
+			PvlGroup imgPosition("ImageLocation");
+			int iStartLine   = m.GetInputStartLine();
+			int iStartSample = m.GetInputStartSample();
+			imgPosition += PvlKeyword("File", list[i]);
+			imgPosition += PvlKeyword("StartSample", iStartSample);
+			imgPosition += PvlKeyword("StartLine", iStartLine);
+			Application::Log(imgPosition);
+		}
+		if (!i) {
+			// Mosaic is already created, use the existing mosaic
+			m.SetCreateFlag(false);
+		}
   }
 
-  m.EndProcess();
-  Application::Log(outsiders); 
+  m.EndProcess();  
 }
 
 // Function to calculate the ground range from multiple inputs (list of images)
-void calcRange(double &minLat, double &maxLat, 
-               double &minLon, double &maxLon) {
+void calcRange(double &minLat, double &maxLat, double &minLon, double &maxLon) 
+{
   UserInterface &ui = Application::GetUserInterface();
   FileList list(ui.GetFilename("FROMLIST"));
   minLat = DBL_MAX;
@@ -98,8 +144,7 @@ void calcRange(double &minLat, double &maxLat,
       firstProj = proj;
     }
     else if (*proj != *firstProj) {
-      string msg = "Mapping groups do not match between cubes [" + 
-                   list[0] + "] and [" + list[i] + "]";
+      string msg = "Mapping groups do not match between cubes [" + list[0] + "] and [" + list[i] + "]";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
 
@@ -112,12 +157,14 @@ void calcRange(double &minLat, double &maxLat,
 
     // Cleanup
     cube.Close();
-    if (proj != firstProj) delete proj;
+    if (proj != firstProj) 
+			delete proj;
   }
 }
 
-//Helper function to run calcRange function.
-void helperButtonCalcRange () {
+// Helper function to run calcRange function.
+void helperButtonCalcRange () 
+{
   UserInterface &ui = Application::GetUserInterface();
   double minLat;
   double maxLat;

@@ -2,8 +2,8 @@
 #define Qisis_AdvancedTrackTool_h
 /**
  * @file
- * $Revision: 1.9 $
- * $Date: 2008/12/24 17:14:29 $
+ * $Revision: 1.16 $
+ * $Date: 2010/03/08 23:09:31 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -26,7 +26,7 @@
 
 class QAction;
 
-namespace Qisis {
+namespace Qisis {	
   /**
    * @brief Tool to display info for a point on a cube
    *
@@ -44,7 +44,12 @@ namespace Qisis {
    *  @history 2008-10-14 Noah Hilt - Added Projected X and Y values to the table.
    *  @history 2008-10-17 Noah Hilt - Added tooltips to certain items in the table
    *           that did not have descriptive names.
-   *
+   *  @history 2010-02-17 Sharmila Prasad -Added the attributes
+   *           TRACK_MOSAIC_INDEX, TRACK_MOSAIC_FILENAME,
+   *           TRACK_MOSAIC_SERIAL_NUM to track mosaic origin
+   *  @history 2010-03-08 Jeannie Walldren - Added
+   *           record() slot to be able to record a
+   *           QPoint passed from the FindTool to the current row.
    */
   class AdvancedTrackTool : public Tool {
     Q_OBJECT
@@ -58,6 +63,7 @@ namespace Qisis {
     public slots:
       virtual void mouseMove(QPoint p);
       virtual void mouseLeave();
+      void record(QPoint p);
      
     protected:
       /**
@@ -73,55 +79,59 @@ namespace Qisis {
       void updateRow(CubeViewport *cvp, QPoint p, int row);
       void record();
       void updateID();
+			void TrackMosaicOrigin(CubeViewport *cvp, int piLine, int piSample, int & piOrigin, std::string & psSrcFileName, std::string & psSrcSerialNum);
 
     private:
       /**
        * Enum for column values
        */
       enum {
-        ID, //!< The record ID
-        SAMPLE, //!< The current sample
-        LINE, //!< The current line
-        BAND, //!< The current band
-        PIXEL, //!< The current pixel
-        PLANETOCENTRIC_LAT, //!< The planetocentric latitude for this point
-        PLANETOGRAPHIC_LAT, //!< The planetographic latitude for this point
-        EAST_LON_360, //!< The 360 east longitude for this point
-        WEST_LON_360, //!< The 360 west longitude for this point
-        EAST_LON_180, //!< The 180 east longitude for this point
-        WEST_LON_180, //!< The 180 west longitude for this point
-        PROJECTED_X, //!< Projected X value for valid projections
-        PROJECTED_Y, //!< Projected Y value for valid projections
-        RADIUS, //!< The radius for this point
-        POINT_X, //!< The x value for this point
-        POINT_Y, //!< The y value for this point
-        POINT_Z, //!< The z value for this point
-        RIGHT_ASCENSION, //!< The right ascension for this point
-        DECLINATION, //!< The declination for this point
-        RESOLUTION,//!< The resoultion for this point
-        PHASE,//!< The phase for this point 
-        INCIDENCE, //!< The incidence for this point
-        EMISSION, //!< The emission for this point
-        NORTH_AZIMUTH, //!< The north azimuth for this cube
-        SUN_AZIMUTH, //!< The sun azimuth for this cube
-        SOLAR_LON, //!< The solar longitude for this point
-        SPACECRAFT_X, //!< The spacecraft x position for this cube
-        SPACECRAFT_Y, //!< The spacecraft y position for this cube
-        SPACECRAFT_Z, //!< The spacecraft z position for this cube
-        SPACECRAFT_AZIMUTH, //!< The spacecraft azimuth for this cube
-        SLANT, //!< The slant for this cube
-        EPHEMERIS_TIME, //!< The ephemeris time for this cube
-        SOLAR_TIME,//!< The local solar time for this cube
-        UTC, //!< The UTC for this cube
-        PATH, //!< The path for this cube
-        FILENAME,//!< The filename for this cube
-        SERIAL_NUMBER, //!< The serial number for this cube
-        NOTES //!< Any notes for this record
+        ID,                     //!< The record ID
+        SAMPLE,                 //!< The current sample
+        LINE,                   //!< The current line
+        BAND,                   //!< The current band
+        PIXEL,                  //!< The current pixel
+        PLANETOCENTRIC_LAT,     //!< The planetocentric latitude for this point
+        PLANETOGRAPHIC_LAT,     //!< The planetographic latitude for this point
+        EAST_LON_360,           //!< The 360 east longitude for this point
+        WEST_LON_360,           //!< The 360 west longitude for this point
+        EAST_LON_180,           //!< The 180 east longitude for this point
+        WEST_LON_180,           //!< The 180 west longitude for this point
+        PROJECTED_X,            //!< Projected X value for valid projections
+        PROJECTED_Y,            //!< Projected Y value for valid projections
+        RADIUS,                 //!< The radius for this point
+        POINT_X,                //!< The x value for this point
+        POINT_Y,                //!< The y value for this point
+        POINT_Z,                //!< The z value for this point
+        RIGHT_ASCENSION,        //!< The right ascension for this point
+        DECLINATION,            //!< The declination for this point
+        RESOLUTION,             //!< The resoultion for this point
+        PHASE,                  //!< The phase for this point 
+        INCIDENCE,              //!< The incidence for this point
+        EMISSION,               //!< The emission for this point
+        NORTH_AZIMUTH,          //!< The north azimuth for this cube
+        SUN_AZIMUTH,            //!< The sun azimuth for this cube
+        SOLAR_LON,              //!< The solar longitude for this point
+        SPACECRAFT_X,           //!< The spacecraft x position for this cube
+        SPACECRAFT_Y,           //!< The spacecraft y position for this cube
+        SPACECRAFT_Z,           //!< The spacecraft z position for this cube
+        SPACECRAFT_AZIMUTH,     //!< The spacecraft azimuth for this cube
+        SLANT,                  //!< The slant for this cube
+        EPHEMERIS_TIME,         //!< The ephemeris time for this cube
+        SOLAR_TIME,             //!< The local solar time for this cube
+        UTC,                    //!< The UTC for this cube
+        PATH,                   //!< The path for this cube
+        FILENAME,               //!< The filename for this cube
+        SERIAL_NUMBER,          //!< The serial number for this cube
+				TRACK_MOSAIC_INDEX,     //!< Track the origin of the Mosaic, display the zero based index 
+				TRACK_MOSAIC_FILENAME,  //!< Track the origin of the Mosaic, display file name		
+				TRACK_MOSAIC_SERIAL_NUM,//!< Track the origin of the Mosaic, display file name		
+        NOTES                   //!< Any notes for this record
       };
-      QAction *p_action; //!< Action to bring up the track tool
-      int p_numRows; //!< The number of rows in the table
-      int p_id; //!< The record id 
-      Qisis::TableMainWindow *p_tableWin; //!< The table window
+      QAction *p_action;                   //!< Action to bring up the track tool
+      int p_numRows;                       //!< The number of rows in the table
+      int p_id;                            //!< The record id 
+      Qisis::TableMainWindow *p_tableWin;  //!< The table window
  
   };
 

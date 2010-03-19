@@ -93,14 +93,14 @@ namespace Isis {
 
     // Otherwise determine the interval to interpolate
     std::vector<double>::iterator pos;
-    pos = upper_bound(p_times.begin(),p_times.end(),p_et);
+    pos = upper_bound(p_times.begin(),p_times.end(),p_et); // returns the nearest endpoint if outside range
     
     int index=0;
     double soc0, soc1, soc2, soc3, loc0, loc1, loc2, loc3;
     soc0=soc1=soc2=soc3=loc0=loc1=loc2=loc3=0.;
     if (pos != p_times.end() && pos > (p_times.begin()+1) ) {
       index = distance(p_times.begin(),pos);
-      index--;
+      index--;  //lower bound
       soc3 = p_samples[index+2] - p_samples[index+1] - p_samples[index-1] + p_samples[index];
       soc2 = p_samples[index-1] - p_samples[index] - soc3;
       soc1 = p_samples[index+1] - p_samples[index-1];
@@ -109,22 +109,32 @@ namespace Isis {
       loc2 = p_lines[index-1] - p_lines[index] - loc3;
       loc1 = p_lines[index+1] - p_lines[index-1];
       loc0 = p_lines[index];
-    } else if (pos == p_times.begin()+1) {
+//    } else if (pos == p_times.begin()+1) {
+    } else if (pos <= p_times.begin()+1) { // Extrapolates
       // Since values for index cacheIndex-1 do not exist, make up one based on slope from segment
       // at index to index+1.  Replace p_samps[index-1] with 
       // p_samps[index] - (p_samps[index+1 - p_samps[index] )
-      index = distance(p_times.begin(),pos);
-      index--;
-      soc3 = p_samples[index+2] - p_samples[index];
+//      index = distance(p_times.begin(),pos);
+//      index--;
+      index = 0;
+/*      soc3 = p_samples[index+2] - p_samples[index];
       soc2 = p_samples[index] - p_samples[index+1] - soc3;
       soc1 = 2.*(p_samples[index+1] - p_samples[index]);
       soc0 = p_samples[index];
       loc3 = p_lines[index+2] - p_lines[index];
       loc2 = p_lines[index] - p_lines[index+1] - loc3;
       loc1 = 2.*(p_lines[index+1] - p_lines[index]);
-      loc0 = p_lines[index];
+      loc0 = p_lines[index];*/
+      soc3 = p_samples[2] - p_samples[0];
+      soc2 = 2*p_samples[0] - p_samples[1] - p_samples[2];
+      soc1 = 2.*(p_samples[1] - p_samples[0]);
+      soc0 = p_samples[0];
+      loc3 = p_lines[2] - p_lines[0];
+      loc2 = 2.*p_lines[0] - p_lines[1] - p_lines[2];
+      loc1 = 2.*(p_lines[1] - p_lines[0]);
+      loc0 = p_lines[0];
     }
-    else if (pos == p_times.end()) {
+/*    else if (pos == p_times.end()) {
     // Since values for index cacheIndex+2 do not exist, make up one based on slope from segment
     // at index to index+1.  Replace p_samps[index+2] with 
     // p_samps[index] - (p_samps[index+1 - p_samps[index] )
@@ -139,14 +149,28 @@ namespace Isis {
     loc2 = p_lines[index-1] - p_lines[index] - loc3;
     loc1 = p_lines[index+1] - p_lines[index-1];
     loc0 = p_lines[index];
+    }*/
+    else if (pos == p_times.end()) {
+    // Since values for index cacheIndex+2 do not exist, make up one based on slope from segment
+    // at index to index+1.  Replace p_samps[index+2] with 
+    // p_samps[index] - (p_samps[index+1 - p_samps[index] )
+    index = p_times.size() - 2;
+    soc3 = p_samples[index+1] - p_samples[index-1];
+    soc2 = 2.*p_samples[index-1] - p_samples[index] - p_samples[index+1];
+    soc1 = p_samples[index+1] - p_samples[index-1];
+    soc0 = p_samples[index];
+    loc3 = p_lines[index+1] - p_lines[index-1];
+    loc2 = 2.*p_lines[index-1] - p_lines[index] - p_lines[index+1];
+    loc1 = p_lines[index+1] - p_lines[index-1];
+    loc0 = p_lines[index];
     }
-    else if (pos == p_times.begin()) {
+/*    else if (pos == p_times.begin()) {
       index = 0;
       soc3 = soc2 = soc1 = 0.;
       soc0 = p_samples[index];
       loc3 = loc2 = loc1 = 0.;
       loc0 = p_lines[index];
-    }
+    }*/
 //    else if (WHAT DOES upper_bound DO IF VALUE IS GREATER THAN TOP OF INTERVAL?????) {
 //    }
     if (index < 0) index = 0;

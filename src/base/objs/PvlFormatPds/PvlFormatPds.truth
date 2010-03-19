@@ -188,11 +188,11 @@ Group = Group2
   myfloat     = 1.234567e+93
   myarray     = (12345,"a short string",1.234)
   binkey16    = 32769
-  wrapword    = "The quick brown fox jumped over the lazy duck. Repunzel 
-                Repunzel let down your hair. The little toy dog is covered 
-                with dust, but sturdy and staunch he stands; and the little 
-                toy soldier is red with rust."
-  array       = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890, 
+  wrapword    = "The quick brown fox jumped over the lazy duck. Repunzel
+                 Repunzel let down your hair. The little toy dog is covered
+                 with dust, but sturdy and staunch he stands; and the little
+                 toy soldier is red with rust."
+  array       = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890,
                  12345, 67890, 12345, 67890, 12345, 67890, 12345)
 End_Group
 End
@@ -250,11 +250,11 @@ GROUP = GROUP2
   MYFLOAT     = 1.234567e+93
   MYARRAY     = (12345,"a short string",1.234)
   BINKEY16    = 2#1000000000000001#
-  WRAPWORD    = "The quick brown fox jumped over the lazy duck. Repunzel 
-                Repunzel let down your hair. The little toy dog is covered 
-                with dust, but sturdy and staunch he stands; and the little 
-                toy soldier is red with rust."
-  ARRAY       = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890, 
+  WRAPWORD    = "The quick brown fox jumped over the lazy duck. Repunzel
+                 Repunzel let down your hair. The little toy dog is covered
+                 with dust, but sturdy and staunch he stands; and the little
+                 toy soldier is red with rust."
+  ARRAY       = (12345, 67890, 12345, 67890, 12345, 67890, 12345, 67890,
                  12345, 67890, 12345, 67890, 12345, 67890, 12345)
 END_GROUP = GROUP2
 End

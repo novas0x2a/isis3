@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/06/26 21:29:20 $
+ * $Revision: 1.4 $
+ * $Date: 2009/12/17 21:13:17 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -32,7 +32,6 @@
 #include "iException.h"
 #include "LineManager.h"
 #include "Pvl.h"
-#include "PvlTokenizer.h"
 #include "PixelType.h"
 #include "SpecialPixel.h"
 #include "iString.h"
@@ -62,13 +61,33 @@ namespace Isis {
   
     // Read the LBLSIZE from Vicar file
     try {
-      Isis::PvlTokenizer vicLab;
-      vicLab.Load (vicFile,"FORMAT");
-    
       //  Convert the LBLSIZE to an integer
-      vector<Isis::PvlToken> tokens = vicLab.GetTokenList ();
-      Isis::iString temp = tokens[0].GetValue ();
-      int lblSize = temp.ToInteger ();
+      // theoretically this value is always size 4....
+      char *lblSizeValue = new char [1024];
+      vicFile.seekg (string("LBLSIZE=").size());
+
+      for(int pos = 0; pos < 1024-1; pos++) {
+        if(!vicFile.good())
+          break;
+
+        if(vicFile.peek() == ' ') 
+          break;
+
+        lblSizeValue[pos] = vicFile.get();
+        lblSizeValue[pos+1] = '\0';
+
+        // we're totally lost at this point
+        if(pos == 1023) {
+          string msg = "Cannot read vicar file [" + vicarFile + "]";
+          throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
+        }
+      }
+
+      int lblSize = iString(lblSizeValue).ToInteger();
+
+      delete [] lblSizeValue;
+      lblSizeValue = NULL;
+
       char *buf = new char[lblSize+1];
     
       //  Read all of VICAR labels
@@ -77,10 +96,24 @@ namespace Isis {
       buf[lblSize] = '\0';
       vicFile.close ();
   
+      // Transform the vicar labels into valid pvl labels
+      iString vicLabels = buf;
+
+      bool inQuote = false;
+      for(unsigned int pos = 0; pos < vicLabels.size(); pos++) {
+        if(vicLabels[pos] == '\'' ||
+           vicLabels[pos] == '"') {
+          inQuote = !inQuote;
+        }
+
+        if(!inQuote && vicLabels[pos] == ' ') {
+          vicLabels[pos] = '\n';
+        }
+      }
+
       // Fill temp Pvl label for Isis::ProcessImport startprocess
-      temp = buf;
       stringstream lbl;
-      lbl << temp << " End" << endl;
+      lbl << vicLabels << " End" << endl;
       Isis::Pvl vLab;
       lbl >> vLab;
       vicarLab = vLab;

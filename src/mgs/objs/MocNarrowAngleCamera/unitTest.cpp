@@ -21,6 +21,8 @@ void TestLineSamp(Isis::Camera *cam, double samp, double line);
  *            was 1.93E-10.  Changed Center Lon tolerance from
  *            1E-10 to 1.1E-10 since the difference on Darwin powerpc
  *            was 1.03E-10.
+ *   @history 2010-02-24 Christopher Austin - Changed the knowLat/Lon
+ *            in accordence with the system changes
  */
 
 int main (void)
@@ -36,8 +38,14 @@ int main (void)
     //    double knownLon = 286.6184572896669;
     //    double knownLat = -9.931519304671058;
     //    double knownLon = 286.6184572896659;
-    double knownLat = -9.931519304119526;
-    double knownLon = 286.6184572896647;
+    //  blackflag
+    //    double knownLat = -9.931519304119526;
+    //    double knownLon = 286.6184572896647;
+    //  deet (current)
+    //    double knownLat = -9.931519304735847;
+    //    double knownLon = 286.6184572896974;
+    double knownLat = -9.931519304735847;
+    double knownLon = 286.6184572896974;
 
     //Isis::Pvl p("$mgs/testData/lub0428b.cub");
     Isis::Pvl p("$mgs/testData/fha00491.lev1.cub");

@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Date: 2009/05/13 19:26:07 $
- * $Revision: 1.20 $
+ * $Date: 2009/10/23 19:16:12 $
+ * $Revision: 1.21 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -74,6 +74,8 @@ namespace Qisis {
  *  @history 2009-03-27 Noah Hilt/Steven Lambright - Removed old rubber band
  *           methods and variables. Added new ViewportBuffer to read and store
  *           visible dn values in the viewport.
+ *  @history 2009-10-23 Steven Lambright - Camera::SetBand is now called when
+ *           switching the band being shown.
  */
 
   class Tool;

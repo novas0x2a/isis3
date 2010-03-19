@@ -2,8 +2,8 @@
 #define SerialNumberList_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/10/30 16:24:00 $
+ * $Revision: 1.6 $
+ * $Date: 2009/11/05 18:42:56 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -26,6 +26,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include "Progress.h"
 
 namespace Isis {
 /**
@@ -64,15 +65,20 @@ namespace Isis {
  *                          ObservationNumber when you give it
  *                          an index
  *  @history 2008-01-10 Christopher Austin - Adapted for the new
- *           ObservationNumber class.
+ *                          ObservationNumber class.
  *   @history 2008-10-30 Steven Lambright - Fixed problem with definition
- *            of struct Pair, pointed out by "novus0x2a" (Support Board Member)
+ *                          of struct Pair, pointed out by "novus0x2a" (Support Board Member)
+ *   @history 2009-10-20 Jeannie Walldren - Added Progress flag
+ *                          to Constructor
+ *   @history 2009-11-05 Jeannie Walldren - Modified number
+ *                          of maximum steps for Progress flag
+ *                          in Constructor
  */
 
   class SerialNumberList {
     public:
       SerialNumberList (bool checkTarget=true);
-      SerialNumberList (const std::string &list, bool checkTarget=true);
+      SerialNumberList (const std::string &list, bool checkTarget=true, Progress *progress=NULL);
       virtual ~SerialNumberList ();
 
       void Add (const std::string &filename);

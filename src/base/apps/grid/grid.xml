@@ -40,6 +40,9 @@
     <change name="Steven Lambright" date="2008-06-12">
       Added outline option
     </change>
+    <change name="Steven Lambright" date="2009-01-06">
+      Changed how mode=ground works
+    </change>
   </history>
 
   <groups>

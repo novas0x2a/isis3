@@ -1,7 +1,7 @@
 #include <iostream>
 
-//#include <QMap>
-//#include <QString>
+#include <QVector>
+#include <QString>
 
 #include "GroupedStatistics.h"
 #include "Statistics.h"
@@ -15,28 +15,35 @@ using namespace Isis;
 int main ()
 {
   Isis::Preference::Preferences(true);
-  cout << "GroupedStatistics unitTest\n";
+  cerr << "GroupedStatistics unitTest!!!\n\n";
 
   // test constructor
-  cout << "testing constructor...\n";
-  GroupedStatistics * groupStats = new GroupedStatistics();
+  cerr << "testing constructor...\n\n";
+  GroupedStatistics * groupedStats = new GroupedStatistics();
   
   // test AddStatistic
-  cout << "testing AddStatistic...\n";
-  groupStats->AddStatistic("Height", 71.5);
+  cerr << "testing AddStatistic...\n\n";
+  groupedStats->AddStatistic("Height", 71.5);
   
   // test copy constructor
-  cout << "testing copy constructor...\n";
-  GroupedStatistics * groupStats2 = new GroupedStatistics(*groupStats);
+  cerr << "testing copy constructor...\n\n";
+  GroupedStatistics * groupedStats2 = new GroupedStatistics(*groupedStats);
   
   // test GetStatistics
-  cout << "testing GetStatistics...\n";
-  Statistics stats = groupStats2->GetStatistics("Height");
-  cout << stats.Average() << "\n";
+  cerr << "testing GetStatistics...\n";
+  Statistics stats = groupedStats2->GetStatistics("Height");
+  cerr << "    " << stats.Average() << "\n\n";
+  
+  // test GetStatisticTypes
+  cerr << "testing GetStatisticTypes...\n";
+  QVector< QString > statTypes = groupedStats->GetStatisticTypes();
+  for (int i = 0; i < statTypes.size(); i++)
+    cerr << "    " << statTypes[i].toStdString() << "\n";
+  cerr << "\n";
 
   // test destructor
-  delete groupStats;
-  delete groupStats2;
+  delete groupedStats;
+  delete groupedStats2;
   
   return 0;
 }

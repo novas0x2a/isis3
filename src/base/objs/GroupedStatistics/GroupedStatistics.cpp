@@ -2,6 +2,7 @@
 #include "Statistics.h"
 
 #include <QMap>
+#include <QVector>
 #include <QString>
 
 namespace Isis
@@ -80,6 +81,29 @@ namespace Isis
   }
   
   
+  /**
+   *  Return a list of all the different statistic tyes that this
+   *  GroupedStatistics has
+   *
+   *  @returns A list of statistic types that this GroupedStatistics has
+   */
+  const QVector< QString > GroupedStatistics::GetStatisticTypes()
+      const
+  {
+    QVector< QString > statTypes;
+    
+    // for each key in the groupedStats QMap add the key to a vector    
+    QMap< QString, Statistics >::const_iterator i = groupedStats->constBegin();
+    while (i != groupedStats->constEnd())
+    {
+      statTypes.push_back(i.key());
+      i++;
+    }
+    
+    return statTypes;
+  }
+  
+    
   /**
    *  Assign a GroupedStatistics with another GroupedStatistics using =
    *

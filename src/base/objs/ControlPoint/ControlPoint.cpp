@@ -84,7 +84,10 @@ namespace Isis {
   *
   * @return The PvlObject created
   *
-  * @throws Isis::iException::Programmer - Invalid Point Enumeration
+  * @throws Isis::iException::Programmer - Invalid Point Enumeration 
+  * @internal 
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
   */
   PvlObject ControlPoint::CreatePvlObject() {
     PvlObject p("ControlPoint");
@@ -95,11 +98,11 @@ namespace Isis {
       p += PvlKeyword("PointType", "Tie");
     }
     else {
-      std::string msg = "Invalid Point Enumeration, [" + iString(p_type) + "]";
+      std::string msg = "Invalid Point Enumeration, [" + iString(p_type) + "] for ControlPoint [" + Id() + "].";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
     }
 
-    p += PvlKeyword("PointId", p_id);
+    p += PvlKeyword("PointId", Id());
     if (p_latitude != Isis::Null && p_longitude != Isis::Null && p_radius != Isis::Null) {
        p += PvlKeyword("Latitude", p_latitude);
        p += PvlKeyword("Longitude", p_longitude);
@@ -125,6 +128,9 @@ namespace Isis {
   * @param measure The ControlMeasure to add
   * @param forceBuild Forces the Control Measure to be added reguardless of
   *                   validity
+  * @internal 
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
   */
   void ControlPoint::Add(const ControlMeasure &measure, bool forceBuild) {
     for (int i=0; i<Size(); i++) {
@@ -134,8 +140,8 @@ namespace Isis {
           break;
         }
         else {
-          std::string msg = "The SerialNumber [";
-          msg += measure.CubeSerialNumber() + "] is not unique, another ControlMeasure shares this SerialNumber";
+          std::string msg = "The SerialNumber is not unique. A measure with serial number [";
+          msg += measure.CubeSerialNumber() + "] already exists for ControlPoint [" + Id() + "].";
           throw iException::Message(iException::Programmer,msg,_FILEINFO_);
         }
       }
@@ -165,40 +171,46 @@ namespace Isis {
     }
   }
 
-  /**
-   *  Return the measurement for the given serial number
-   *
-   *  @param serialNumber The serial number
-   *
-   *  @return The ControlMeasure corresponding to the give serial number
-   */
+ /**
+  *  Return the measurement for the given serial number
+  *
+  *  @param serialNumber The serial number
+  *
+  *  @return The ControlMeasure corresponding to the give serial number
+  * @internal 
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
+  */
   ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) {
     for (int m=0; m<this->Size(); m++) {
       if (this->operator[](m).CubeSerialNumber() == serialNumber) {
         return this->operator [](m);
       }
     }
-    std::string msg = "Requested serial number [" + serialNumber + "] ";
-    msg += "does not exist in this ControlPoint";
+    std::string msg = "Requested measurement serial number [" + serialNumber + "] ";
+    msg += "does not exist in ControlPoint [" + Id() + "].";
     throw iException::Message(iException::User,msg,_FILEINFO_);
 
   }
 
-  /**
-   *  Return the measurement for the given serial number
-   *
-   *  @param serialNumber The serial number
-   *
-   *  @return The ControlMeasure corresponding to the give serial number
-   */
+ /**
+  *  Return the measurement for the given serial number
+  *
+  *  @param serialNumber The serial number
+  *
+  *  @return The ControlMeasure corresponding to the give serial number
+  * @internal 
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
+  */
   const ControlMeasure &ControlPoint::operator[](const std::string &serialNumber) const{
     for (int m=0; m<this->Size(); m++) {
       if (this->operator[](m).CubeSerialNumber() == serialNumber) {
         return this->operator [](m);
       }
     }
-    std::string msg = "Requested serial number [" + serialNumber + "] ";
-    msg += "does not exist in this ControlPoint";
+    std::string msg = "Requested measurement serial number [" + serialNumber + "] ";
+    msg += "does not exist in ControlPoint [" + Id() + "].";
     throw iException::Message(iException::User,msg,_FILEINFO_);
 
   }
@@ -220,15 +232,18 @@ namespace Isis {
   }
   
   
-  /**
-   *  Obtain a string representation of a given PointType
-   *
-   *  @param type PointType to get a string representation of
-   *
-   *  @returns A string representation of type
-   *
-   *  @throws iException::Programmer When unable to translate type
-   */
+ /**
+  *  Obtain a string representation of a given PointType
+  *
+  *  @param type PointType to get a string representation of
+  *
+  *  @returns A string representation of type
+  *
+  *  @throws iException::Programmer When unable to translate type
+  * @internal 
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
+  */
   const std::string ControlPoint::PointTypeToString(ControlPoint::PointType
       type) const {
     std::string str = "";
@@ -241,7 +256,8 @@ namespace Isis {
         str = "Tie";
         break;
       default:
-        str = "Unable to translate PointType inside PointTypeToString";
+        str = "Unable to translate PointType [" + iString(type) 
+        + "] inside PointTypeToString for ControlPoint [" + Id() + "].";
         throw iException::Message(iException::Programmer, str, _FILEINFO_);
     }
     
@@ -325,15 +341,18 @@ namespace Isis {
     throw iException::Message(iException::Programmer,msg,_FILEINFO_);
   }
 
-  /**
-   * This method computes the apriori lat/lon for a point.  It computes this
-   * by determining the average lat/lon of all the measures.  Note that this
-   * does not change held, ignored, or ground points.  Also, it does not
-   * use unmeasured or ignored measures when computing the lat/lon.
-   *
-   * @history 2008-06-18  Tracie Sucharski/Jeannie Walldren, Changed error
-   *                               messages for Held/Ground points.
-   */
+ /**
+  * This method computes the apriori lat/lon for a point.  It computes this
+  * by determining the average lat/lon of all the measures.  Note that this
+  * does not change held, ignored, or ground points.  Also, it does not
+  * use unmeasured or ignored measures when computing the lat/lon.
+  * @internal 
+  *   @history 2008-06-18  Tracie Sucharski/Jeannie Walldren,
+  *                               Changed error messages for
+  *                               Held/Ground points.
+  *   @history 2009-10-13 Jeannie Walldren - Added detail to
+  *            error message.
+  */
   void ControlPoint::ComputeApriori() {
     // Should we ignore the point altogether?
     if (Ignore()) return;
@@ -406,7 +425,7 @@ namespace Isis {
           if (Type() == ControlPoint::Ground || Held()) continue;
 
           // TODO: What do we do
-          std::string msg = "Cannot compute lat/lon for control point [" +
+          std::string msg = "Cannot compute lat/lon for ControlPoint [" +
             Id() + "], measure [" + m.CubeSerialNumber() + "]";
           throw iException::Message(iException::User,msg,_FILEINFO_);
 

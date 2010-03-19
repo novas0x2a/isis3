@@ -57,7 +57,7 @@ int main (void) {
     trnsStrm << "  OutputName = Lines" << endl;
     trnsStrm << "  OutputPosition = (\"Object\",\"IsisCube\",";
     trnsStrm <<                      "\"Group\",\"Dimensions\")" << endl;
-    trnsStrm << "  InputGroup = Image,Size" << endl;
+    trnsStrm << "  InputPosition = (Image,Size)" << endl;
     trnsStrm << "  InputKey = NL" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
@@ -67,7 +67,7 @@ int main (void) {
     trnsStrm << "  OutputName = Bands" << endl;
     trnsStrm << "  OutputPosition = (\"Object\",\"IsisCube\",";
     trnsStrm <<                      "\"Group\",\"Dimensions\")" << endl;
-    trnsStrm << "  InputGroup = Image,Size" << endl;
+    trnsStrm << "  InputPosition = (Image,Size)" << endl;
     trnsStrm << "  InputKey = Nb" << endl;
     trnsStrm << "  InputDefault = 1" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
@@ -75,22 +75,22 @@ int main (void) {
     trnsStrm << "Group = Bonus" << endl;
     trnsStrm << "  Auto" << endl;
     trnsStrm << "  Optional" << endl;
-    trnsStrm << "  InputGroup = Image,Pixel" << endl;
+    trnsStrm << "  InputPosition = (Image,Pixel)" << endl;
     trnsStrm << "  InputKey = Bonus" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = Extra" << endl;
     trnsStrm << "  Auto" << endl;
     trnsStrm << "  Optional" << endl;
-    trnsStrm << "  InputGroup = Image,Bogus" << endl;
+    trnsStrm << "  InputPosition = (Image,Bogus)" << endl;
     trnsStrm << "  InputKey = Extra" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = BytesPerPixel" << endl;
     trnsStrm << "  Auto" << endl;
-    trnsStrm << "  InputGroup = Size" << endl;
-    trnsStrm << "  InputGroup = Image,Size" << endl;
-    trnsStrm << "  InputGroup = Image,Pixel" << endl;
+    trnsStrm << "  InputPosition = Size" << endl;
+    trnsStrm << "  InputPosition = (Image,Size)" << endl;
+    trnsStrm << "  InputPosition = (Image,Pixel)" << endl;
     trnsStrm << "  InputKey = Bits" << endl;
     trnsStrm << "  InputDefault = 8" << endl;
     trnsStrm << "  OutputName = PixelBytes" << endl;
@@ -100,13 +100,13 @@ int main (void) {
     trnsStrm << "  Translation = (4,32)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = PixelResolution" << endl;
-    trnsStrm << "  InputGroup = Image,Pixel" << endl;
+    trnsStrm << "  InputPosition = (Image,Pixel)" << endl;
     trnsStrm << "  InputKey = Resolution" << endl;
     trnsStrm << "  InputDefault = 1" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = Sign" << endl;
-    trnsStrm << "  InputGroup = Image,Pixel" << endl;
+    trnsStrm << "  InputPosition = (Image,Pixel)" << endl;
     trnsStrm << "  InputKey = Signed" << endl;
     trnsStrm << "  InputDefault = True" << endl;
     trnsStrm << "  Translation = (True,True)" << endl;
@@ -119,20 +119,20 @@ int main (void) {
     trnsStrm << "  OutputName = Band" << endl;
     trnsStrm << "  OutputPosition = (\"Object\",\"IsisCube\",";
     trnsStrm <<                      "\"Object\",\"BandBin\")" << endl;
-    trnsStrm << "  InputGroup = Image,BandInfo" << endl;
+    trnsStrm << "  InputPosition = (Image,BandInfo)" << endl;
     trnsStrm << "  InputKey = Band" << endl;
     trnsStrm << "  Translation = (Red,r)" << endl;
     trnsStrm << "  Translation = (Green,g)" << endl;
     trnsStrm << "  Translation = (Blue,b)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = BadGroup" << endl;
-    trnsStrm << "  InputGroup = Bad1,Bad2,Bad3" << endl;
+    trnsStrm << "  InputPosition = (Bad1,Bad2,Bad3)" << endl;
     trnsStrm << "  InputKey = BadKey" << endl;
     trnsStrm << "  InputDefault = 1" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
     trnsStrm << "Group = GoodGroupBadKey" << endl;
-    trnsStrm << "  InputGroup = Image,Pixel" << endl;
+    trnsStrm << "  InputPosition = (Image,Pixel)" << endl;
     trnsStrm << "  InputKey = BadKey" << endl;
     trnsStrm << "  InputDefault = 1" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
@@ -142,9 +142,9 @@ int main (void) {
     trnsStrm << "  Auto" << endl;
     trnsStrm << "  OutputPosition = (\"Group\",\"Mapping\")" << endl;
     trnsStrm << "  OutputName = CenterLongitude" << endl;
-    trnsStrm << "  InputGroup = IMAGE_MAP_PROJECTION" << endl;
-    trnsStrm << "  InputGroup = QUBE,IMAGE_MAP_PROJECTION" << endl;
-    trnsStrm << "  InputGroup = SPECTRAL_QUBE,IMAGE_MAP_PROJECTION" << endl;
+    trnsStrm << "  InputPosition = IMAGE_MAP_PROJECTION" << endl;
+    trnsStrm << "  InputPosition = (QUBE,IMAGE_MAP_PROJECTION)" << endl;
+    trnsStrm << "  InputPosition = (SPECTRAL_QUBE,IMAGE_MAP_PROJECTION)" << endl;
     trnsStrm << "  InputKey = CENTER_LONGITUDE" << endl;
     trnsStrm << "  Translation = (*,*)" << endl;
     trnsStrm << "EndGroup" << endl;
@@ -156,20 +156,20 @@ int main (void) {
     cout << "Testing Isis::PvlTranslationManager object" << endl;
 
     cout << "  Testing InputValue member" << endl;
-    cout << "    DataFileName    = " << transMgr.InputValue ("DataFileName") << endl;
-    cout << "    StartByte       = " << transMgr.InputValue ("ImageStartByte", 1) << endl;
-    cout << "    NumberOfBands   = " << transMgr.InputValue ("NumberOfBands") << endl;
-    cout << "    PixelResolution = " << transMgr.InputValue ("PixelResolution") << endl;
+    cout << "    DataFileName    = " << transMgr.InputKeyword("DataFileName")[0] << endl;
+    cout << "    StartByte       = " << transMgr.InputKeyword("ImageStartByte")[1] << endl;
+    cout << "    NumberOfBands   = " << transMgr.InputKeyword("NumberOfBands")[0] << endl;
+    cout << "    PixelResolution = " << transMgr.InputKeyword("PixelResolution")[0] << endl;
     cout << "    Error messages:" << endl;
     try {
-      transMgr.InputValue ("BadGroup");
+      transMgr.InputKeyword ("BadGroup");
     }
     catch (Isis::iException &e) {
       cerr << "    ";
       e.Report(false);
     }
     try {
-      transMgr.InputValue ("GoodGroupBadKey");
+      transMgr.InputKeyword ("GoodGroupBadKey");
     }
     catch (Isis::iException &e) {
       cerr << "    ";
@@ -178,18 +178,18 @@ int main (void) {
     cout << endl;
 
     cout << "  Testing InputUnits member" << endl;
-    cout << "    PixelResolution = " << transMgr.InputUnits ("PixelResolution") << endl;
-    cout << "    NumberOfBands   = " << transMgr.InputUnits ("NumberOfBands") << endl;
+    cout << "    PixelResolution = " << transMgr.InputKeyword("PixelResolution").Unit() << endl;
+    cout << "    NumberOfBands   = " << transMgr.InputKeyword("NumberOfBands").Unit() << endl;
     cout << "    Error messages:" << endl;
     try {
-      transMgr.InputUnits ("BadGroup");
+      transMgr.InputKeyword ("BadGroup").Unit();
     }
     catch (Isis::iException &e) {
       cerr << "    ";
       e.Report(false);
     }
     try {
-      transMgr.InputUnits ("GoodGroupBadKey");
+      transMgr.InputKeyword ("GoodGroupBadKey").Unit();
     }
     catch (Isis::iException &e) {
       cerr << "    ";
@@ -198,18 +198,18 @@ int main (void) {
     cout << endl;
 
     cout << "  Testing InputSize member" << endl;
-    cout << "    BandName        = " << transMgr.InputSize ("BandName") << endl;
-    cout << "    PixelResolution = " << transMgr.InputSize ("PixelResolution") << endl;
+    cout << "    BandName        = " << transMgr.InputKeyword("BandName").Size() << endl;
+    cout << "    PixelResolution = " << transMgr.InputKeyword("PixelResolution").Size() << endl;
     cout << "    Error messages:" << endl;
     try {
-      transMgr.InputSize ("BadGroup");
+      transMgr.InputKeyword("BadGroup").Size();
     }
     catch (Isis::iException &e) {
       cerr << "    ";
       e.Report(false);
     }
     try {
-      transMgr.InputSize ("GoodGroupBadKey");
+      transMgr.InputKeyword("GoodGroupBadKey").Size();
     }
     catch (Isis::iException &e) {
       cerr << "    ";

@@ -2,8 +2,8 @@
 #define PvlGroup_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/10/01 01:15:11 $
+ * $Revision: 1.5 $
+ * $Date: 2009/12/17 21:22:17 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -53,8 +53,9 @@ namespace Isis {
     public:
       PvlGroup();
       PvlGroup(const std::string &name);
-      PvlGroup (std::vector<Isis::PvlToken> &token, 
-                    std::vector<Isis::PvlToken>::iterator &pos);
+
+      friend std::istream& operator>>(std::istream &is, PvlGroup &result);
+      friend std::ostream& operator<<(std::ostream &os, PvlGroup &group);
 
       /**
        * Whenever the '==' operator is used on a PvlGroup object, it will call
@@ -67,7 +68,5 @@ namespace Isis {
         return PvlKeyword::StringEqual(group.Name(),this->Name());
       };
   };
-
-  std::ostream& operator<<(std::ostream &os, PvlGroup &group);
 }
 #endif

@@ -7,7 +7,7 @@ commands:
 	$(APPNAME) INPUTTYPE=list \
 	FROMLIST=$(OUTPUT)/list.lis \
 	TO=$(OUTPUT)/testReplace.pvl \
-	DUPLICATEPOINTS=replace \
+	DUPLICATEPOINTS=merge \
 	REPORT=$(OUTPUT)/report.txt \
 	ID=testReplaceMerge DESCRIPTION=NewTextCtl \
 	> /dev/null;

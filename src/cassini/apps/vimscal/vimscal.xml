@@ -45,6 +45,16 @@
     <change name="Steven Lambright" date="2009-08-03">
       The solar distance calculation is now much more likely to succeed
     </change>
+    <change name="Steven Lambright" date="2009-12-16">
+      Better error handling - fewer temporary files left around
+    </change>
+    <change name="Steven Lambright" date="2009-12-17">
+      Sped up program by not searching a pvl much more than necessary,
+      improved error messages
+    </change>
+    <change name="Steven Lambright" date="2010-02-19">
+      Now closing calibration files when done with them
+    </change>
   </history>
 
   <category>

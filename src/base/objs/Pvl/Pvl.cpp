@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/10/02 23:39:45 $
+ * $Revision: 1.9 $
+ * $Date: 2009/12/17 21:16:28 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -19,15 +19,13 @@
  *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
  *   http://www.usgs.gov/privacy.html.
  */                                                               
+#include "Pvl.h"
 
 #include "Filename.h"
-#include "iException.h"
 #include "iException.h"
 #include "Message.h"
 #include "PvlTokenizer.h"
 #include "PvlFormat.h"
-
-#include "Pvl.h"
 
 using namespace std;
 namespace Isis {
@@ -36,7 +34,8 @@ namespace Isis {
   Pvl::Pvl() : Isis::PvlObject("Root") {
     Init();
   }
-  
+
+
  /** 
   * Constructs a Pvl from a file 
   * 
@@ -46,14 +45,16 @@ namespace Isis {
     Init();
     Read(file);
   }
-  
+
+
   //! Initializes the class
   void Pvl::Init() {
     p_filename = "";
     p_terminator = "End";
     p_internalTemplate = false;
   }
-  
+
+
  /** 
   * Loads PVL information from a stream
   * 
@@ -85,7 +86,8 @@ namespace Isis {
     }
     istm.close();
   }
-  
+
+
   /** 
    * Opens and writes PVL information to a file and handles the end of line 
    * sequence 
@@ -135,7 +137,8 @@ namespace Isis {
     // Close the file
     ostm.close();
   }
-  
+
+
  /** 
   * Appends PVL information to a file and handles the end of line sequence
   * 
@@ -199,6 +202,7 @@ namespace Isis {
     p_formatTemplate = new Isis::Pvl(file);
   }  
 
+
   /**
    * This stream will not handle the end of line sequence
    * 
@@ -208,7 +212,6 @@ namespace Isis {
    * @return ostream& 
    */
   ostream& operator<<(std::ostream &os, Pvl &pvl) {
-
     // Set up a Formatter
     bool removeFormatter = false;
     if (pvl.GetFormat() == NULL) {
@@ -353,6 +356,7 @@ namespace Isis {
     return os;
   }
 
+
   /**
    * Reads keywords from the instream and appends them to the Pvl object.
    * 
@@ -362,69 +366,102 @@ namespace Isis {
    * @return Returns the entered instream after reading from it.
    */
   istream& operator>>(std::istream &is, Pvl &pvl) {
+    if(!is.good()) {
+      string msg = "Tried to read input stream with an error state into a Pvl";
+      throw iException::Message(iException::Programmer, msg, _FILEINFO_);
+    }
+
     try {
-      // Read in the tokens from the stream
-      Isis::PvlTokenizer tzr;
-      tzr.Load(is,pvl.Terminator());
+      PvlKeyword termination("End");
   
-      // Stuff to traverse the pvl
-      vector<Isis::PvlToken> toks = tzr.GetTokenList();
-      vector<Isis::PvlToken>::iterator pos;
+      PvlKeyword errorKeywords[] = {
+        PvlKeyword("EndGroup"),
+        PvlKeyword("EndObject")
+      };
   
-      // Cleanup the keywords 
-      Isis::iString key;
-      for (pos=toks.begin(); pos != toks.end(); pos++) {
-        key = pos->GetKey();
-        key.ConvertWhiteSpace();
-        key.Compress();
-        key.Trim(" ");
-        pos->SetKey(key);
-        if (PvlKeyword::StringEqual (key, pvl.Terminator())) {
-          toks.erase(pos);
+      PvlKeyword readKeyword;
+      istream::pos_type beforeKeywordPos = is.tellg();
+  
+      is >> readKeyword;
+      
+      while(readKeyword != termination) {
+        for(unsigned int errorKey = 0; 
+             errorKey < sizeof(errorKeywords)/sizeof(PvlKeyword);
+             errorKey++) {
+          if(readKeyword == errorKeywords[errorKey]) {
+            is.seekg(beforeKeywordPos, ios::beg);
+
+            string msg = "Unexpected [";
+            msg += readKeyword.Name();
+            msg += "] in Object [ROOT]";
+            throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+          }
+        }
+  
+        if(readKeyword == PvlKeyword("Group")) {
+          is.seekg(beforeKeywordPos);
+          PvlGroup newGroup;
+          is >> newGroup;
+          pvl.AddGroup(newGroup); 
+        }
+        else if(readKeyword == PvlKeyword("Object")) {
+          is.seekg(beforeKeywordPos);
+          PvlObject newObject;
+          is >> newObject;
+          pvl.AddObject(newObject); 
+        }
+        else {
+          pvl.AddKeyword(readKeyword);
+        }
+  
+        readKeyword = PvlKeyword();
+        beforeKeywordPos = is.tellg();
+
+        // non-whitespace non-ascii says we're done
+        if(is.good() && (is.peek() < 32 || is.peek() > 126)) {
+          // fake eof (binary data)
+          break;
+        }
+
+        if(is.good()) {
+          is >> readKeyword;
+        }
+        else {
+          // eof
           break;
         }
       }
-  
-      // Loop and parse
-      pos = toks.begin();
-      vector<Isis::PvlToken>::iterator curPos = pos;
-      while (pos != toks.end()) {
-        // Grab the keyword
-        key = pos->GetKey();
-        
-        // Is the key the start of a group
-        if (PvlKeyword::StringEqual (key, "GROUP")) {
-          Isis::PvlGroup group(toks,curPos);
-          pvl.AddGroup(group);
-          pos = curPos;
-        }
-  
-        // If the key is the start of a new object
-        else if (PvlKeyword::StringEqual (key, "OBJECT")) {
-          Isis::PvlObject object(toks,curPos);
-          pvl.AddObject(object);
-          pos = curPos;
-        }
-  
-        // Do we have a comment
-        else if (PvlKeyword::StringEqual (key, "_COMMENT_")) {
-          pos++;
-        }
 
-        // We have a keyword
-        else {
-          Isis::PvlKeyword keyword(toks,curPos);
-          pvl.AddKeyword(keyword);
-          pos = curPos;
-        } 
-      } 
+      return is;
     }
-    catch (Isis::iException &e) {
-      string message = "Invalid PVL format";
-      throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
+    catch(iException &e) {
+      if(is.eof() && !is.bad()) {
+        is.clear();
+        is.unget();
+      }
+
+      istream::pos_type errorPos = is.tellg();
+      if((int)errorPos == -1) throw;
+
+      is.seekg(0, ios::beg);
+      long lineNumber = 1;
+
+      if((int)is.tellg() == -1) throw;
+
+      while(is.good() && is.tellg() < errorPos) {
+        if(is.get() == '\n') {
+          lineNumber ++;
+        }
+      }
+
+      string msg;
+      if(lineNumber > 0) {
+        msg = "Error in pvl on line [";
+        msg += iString((Isis::BigInt)lineNumber);
+        msg += "]";
+      }
+
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
     }
-  
-    return is;
   }
-
 } //end namespace isis

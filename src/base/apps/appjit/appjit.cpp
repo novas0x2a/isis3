@@ -76,7 +76,7 @@ void IsisMain() {
 
     if (tol < 0.) {
       // Alternative calculation of .01*ground resolution of a pixel
-      tol = cam->PixelPitch()*cam->SpacecraftAltitude()/cam->FocalLength()/1000./100.;
+      tol = cam->PixelPitch()*cam->SpacecraftAltitude()*1000./cam->FocalLength()/100.;
     }
     LineScanCameraRotation crot(frameCode, *(cube.Label()), cam->InstrumentRotation()->GetFullCacheTime(), tol );
     crot.SetPolynomialDegree(ui.GetInteger("DEGREE"));

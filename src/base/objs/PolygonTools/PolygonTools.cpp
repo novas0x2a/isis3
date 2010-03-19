@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.24 $                                                             
- * $Date: 2009/07/17 16:13:46 $                                                                 
+ * $Revision: 1.26 $                                                             
+ * $Date: 2010/02/24 01:11:52 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -36,7 +36,7 @@
 #include "geos/geom/Polygon.h"
 #include "geos/operation/distance/DistanceOp.h"
 #include "geos/opOverlay.h"
-#include "geos/precision/GeometrySnapper.h"
+#include "geos/operation/overlay/snap/GeometrySnapper.h"
 
 #include "SpecialPixel.h"
 #include "PolygonTools.h"
@@ -925,7 +925,7 @@ namespace Isis {
     geos::geom::Geometry *geomFirst  = MakeMultiPolygon(geom1);
     geos::geom::Geometry *geomSecond = MakeMultiPolygon(geom2);
 
-    geos::precision::GeometrySnapper snap(*geomFirst);
+    geos::operation::overlay::snap::GeometrySnapper snap(*geomFirst);
     geos::geom::Geometry *geomSnapped = snap.snapTo(*geomSecond, 1.0e-10)->clone();
     if(!geomSnapped->isValid()) {
       delete geomSnapped;

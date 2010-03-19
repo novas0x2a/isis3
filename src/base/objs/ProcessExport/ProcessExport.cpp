@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2009/07/27 17:54:55 $
+ * $Revision: 1.10 $
+ * $Date: 2010/03/05 17:47:10 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -49,6 +49,7 @@ namespace Isis {
 
     p_endianSwap = NULL;
 
+    SetFormat( BSQ );
     SetOutputEndian(Isis::IsLsb()? Isis::Lsb : Isis::Msb);
     SetOutputType(Isis::Real);
 
@@ -59,8 +60,6 @@ namespace Isis {
     p_Hrs_Set = false;
 
     p_progress->SetText ("Exporting");
-
-    SetFormat( BSQ );
   }
 
 
@@ -569,6 +568,9 @@ namespace Isis {
   * SetOutputRange method is invoked, all pixel values received in the Buffer
   * of the export function will be in the range of 0.0 to 1.0.
   *
+  * NOTE: You must set the format type of the output data with SetFormat before 
+  * calling this method. Otherwise, you will get an error.
+  *
   * @param pixelIn this is an enumeration of the different pixel
   *                types. The only values that are recognized as valid
   *                are Isis::UnsignedByte, Isis::SignedWord,
@@ -580,6 +582,11 @@ namespace Isis {
   void ProcessExport::SetOutputType(Isis::PixelType pixelIn) {
     p_pixelType = pixelIn;
 
+    if (p_format < 0 || p_format > 3) {
+      string message =
+        "Format of the output file must be set prior to calling this method [ProcessExport::SetOutputType]";
+      throw Isis::iException::Message(Isis::iException::Programmer,message,_FILEINFO_);
+    }
     if (pixelIn == Isis::UnsignedByte)
       SetOutputRange((double)VALID_MIN1, (double)VALID_MAX1);
     else if (pixelIn == Isis::UnsignedWord)
@@ -587,7 +594,13 @@ namespace Isis {
     else if (pixelIn == Isis::SignedWord)
       SetOutputRange((double)VALID_MIN2, (double)VALID_MAX2);
     else if (pixelIn == Isis::Real)
-      SetOutputRange(-DBL_MAX, DBL_MAX);
+      if (p_format == JP2) {
+        string message =
+          "Unsupported bit type for JP2 formatted files [ProcessExport::SetOutputType]";
+        throw Isis::iException::Message(Isis::iException::Programmer,message,_FILEINFO_);
+      } else {
+        SetOutputRange(-DBL_MAX, DBL_MAX);
+      }
     else{
       string message =
         "Unsupported bit type [ProcessExport::SetOutputType]";
@@ -700,7 +713,7 @@ namespace Isis {
     if ( p_format == BSQ ) {
       buff = new Isis::LineManager(*InputCubes[0]);
     }
-    else if( p_format == BIL ) {
+    else if( p_format == BIL || p_format == JP2 ) {
       buff = new Isis::LineManager(*InputCubes[0],true);
     }
     else if( p_format == BIP ) {
@@ -750,7 +763,7 @@ namespace Isis {
     if ( p_format == BSQ ) {
       StartProcessBSQ( funct );
     }
-    else if( p_format == BIL ) {
+    else if( p_format == BIL || p_format == JP2 ) {
       StartProcessBIL( funct );
     }
     else if( p_format == BIP ) {
@@ -976,7 +989,7 @@ namespace Isis {
       buff = new Isis::BandManager(*InputCubes[0]);
     }
     else {
-      string m = "Invalid storage order.";
+      string m = "Output stream cannot be generated for requested storage order type.";
       throw Isis::iException::Message(Isis::iException::Programmer,m,_FILEINFO_);
     }
 

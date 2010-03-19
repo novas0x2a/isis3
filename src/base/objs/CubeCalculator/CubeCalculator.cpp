@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $                                                             
- * $Date: 2009/03/03 17:15:59 $                                                                 
+ * $Revision: 1.5 $                                                             
+ * $Date: 2010/02/23 17:03:08 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -200,6 +200,16 @@ namespace Isis {
       // Minimum
       else if(token == "min") {
         AddMethodCall(&Isis::Calculator::Minimum);
+      }
+  
+      // Minimum
+      else if(token == "min2") {
+        AddMethodCall(&Isis::Calculator::Minimum2);
+      }
+  
+      // Maximum
+      else if(token == "max2") {
+        AddMethodCall(&Isis::Calculator::Maximum2);
       }
   
       // Maximum

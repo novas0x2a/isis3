@@ -27,9 +27,10 @@ int main (int argc, char *argv[]) {
     temp += Isis::PvlKeyword("Line",501);
     error.AddGroup(temp);
 
-    char *argv[] = {"unitTest","num=a", "den=b", "to=bogus"};
+    char *s_argv[] = {"unitTest","num=a", "den=b", "to=bogus"};
+    int s_argc(4);
     try {
-      Isis::Application app(4,argv);
+      Isis::Application app(s_argc,s_argv);
       Isis::SessionLog &log = Isis::SessionLog::TheLog(true);
       log.AddResults(results);
       std::cout << log << std::endl;
@@ -39,7 +40,7 @@ int main (int argc, char *argv[]) {
     }
 
     try {
-      Isis::Application app(4,argv);
+      Isis::Application app(s_argc,s_argv);
       Isis::SessionLog &log = Isis::SessionLog::TheLog(true);
       log.AddResults(results);
       log.AddError(error);

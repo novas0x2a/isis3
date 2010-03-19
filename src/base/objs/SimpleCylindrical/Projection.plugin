@@ -1,5 +1,5 @@
 Group = SimpleCylindrical
-  Library = SimpleCylindrical 
+  Library = SimpleCylindrical
   Routine = SimpleCylindricalPlugin
   Keyword = CenterLongitude
 EndGroup

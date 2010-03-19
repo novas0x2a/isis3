@@ -2,8 +2,8 @@
 #define ControlMeasure_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2009/09/01 17:53:05 $
+ * $Revision: 1.9 $
+ * $Date: 2009/10/30 17:52:59 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -26,7 +26,6 @@
 #include <string>
 
 template< class A> class QVector;
-template< class A, class B > class QPair;
 class QString;
 
 namespace Isis {
@@ -53,6 +52,11 @@ namespace Isis {
    *                                    use iTime class, instead of Application class
    *   @history 2008-06-23 Steven Lambright - The ZScore keyword is now supported
    *   @history 2008-06-25 Steven Koechle - Added get methods for ZScore values.
+   *   @history 2009-09-01 Eric Hyer - Added the methods GetMeasureData and
+   *                                   GetMeasureDataNames.  Also fixed include
+   *                                   issues.
+   *   @history 2009-09-22 Eric Hyer - Removed forward declaration for QPair
+   *   @history 2009-10-30 Eric Hyer - GetMeasurDataNames is now static
    */
   class ControlMeasure {
     public:
@@ -282,7 +286,7 @@ namespace Isis {
       double ComputedEphemerisTime() const { return p_computedEphemerisTime; };
       
       const double GetMeasureData(QString type) const;
-      const QVector< QString > GetMeasureDataNames() const;
+      static const QVector< QString > GetMeasureDataNames();
 
     private:
       MeasureType p_measureType;

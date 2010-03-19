@@ -36,6 +36,7 @@ documentation:
 
 clean:
 	for i in $(PACKAGES); do \
+	  echo "  Working on Package [$$i]"; \
 	  cd $$i; $(MAKE) clean; cd ..; \
 	done
 	cd docsys; $(MAKE) clean; cd ..;

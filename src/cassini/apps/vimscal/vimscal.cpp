@@ -67,7 +67,6 @@ void IsisMain(){
 
   ProcessByLine p;
   Cube *icube = p.SetInputCube("FROM");
-  p.SetOutputCube("TO");
 
   bool isVims = true;
 
@@ -89,15 +88,18 @@ void IsisMain(){
     throw iException::Message(iException::User, msg, _FILEINFO_);
   }
 
+  // done first since it's likely to cause an error if one exists
+  calculateSolarRemove(icube, &p);
+
   calculateDarkCurrent(icube);
   chooseFlatFile(icube, &p);
   calculateSpecificEnergy(icube);
-  calculateSolarRemove(icube, &p);
 
   calibInfo += PvlKeyword("OutputUnits", ((iof)? "I/F" : "Specific Energy"));
 
   Application::Log(calibInfo);
 
+  p.SetOutputCube("TO");
   p.StartProcess(calibrate);
   p.EndProcess();
 
@@ -118,11 +120,14 @@ void calibrate(vector<Buffer *> &inBuffers, vector<Buffer *> &outBuffers) {
   Buffer *inBuffer = inBuffers[0];
   Buffer *flatFieldBuffer = inBuffers[1];
   Buffer *solarRemoveBuffer = NULL; // this is optional
-  Buffer *outBuffer = outBuffers[0];
 
   if(inBuffers.size() > 2) {
-    solarRemoveBuffer = inBuffers[2];
+    inBuffer = inBuffers[0];
+    solarRemoveBuffer = inBuffers[1];
+    flatFieldBuffer = inBuffers[2];
   }
+
+  Buffer *outBuffer = outBuffers[0];
 
   for(int i = 0; i < inBuffer->size(); i++) {
     (*outBuffer)[i] = (*inBuffer)[i];
@@ -223,9 +228,11 @@ void calculateSolarRemove(Cube *icube, ProcessByLine *p) {
   }
 
   if(solarRemoveCoefficient < 0) {
-    throw iException::Message(iException::Camera, 
-                              "Unable to calculate the Solar Distance for [" + 
-                              icube->Filename() + "]", _FILEINFO_);
+    string msg = "Unable to project image at four corners, center of edges or ";
+    msg += "at center. The solar distance can not be calculated, try using";
+    msg += " [UNITS=SPECENERGY] on [";
+    msg += icube->Filename() + "]";
+    throw iException::Message(iException::Camera, msg, _FILEINFO_);
   }
 
   bool vis = (icube->Label()->FindGroup("Instrument", Pvl::Traverse)["Channel"][0] != "IR");
@@ -382,6 +389,9 @@ void calculateVisDarkCurrent(Cube *icube) {
 
   double visExposure = inst["ExposureDuration"][1];
 
+  int sampleOffset, lineOffset;
+  GetOffsets(*icube->Label(), sampleOffset, lineOffset);
+
   /**
    * Reading in one parameter at a time: 
    *   parameter 1 = constant coefficient
@@ -401,8 +411,6 @@ void calculateVisDarkCurrent(Cube *icube) {
           throw iException::Message(iException::Io, msg, _FILEINFO_);
         }
 
-        int sampleOffset, lineOffset;
-        GetOffsets(*icube->Label(), sampleOffset, lineOffset);
         int associatedSample = sample - sampleOffset + 1;
 
         calData = swapper.Float(&calData);
@@ -418,6 +426,8 @@ void calculateVisDarkCurrent(Cube *icube) {
       }
     }
   }
+
+  fclose(calFilePtr);
 
   // If spectral summing is on, go in sets of 8 and set darks to the average
   /*

@@ -19,6 +19,9 @@
 using namespace std; 
 using namespace Isis;
 
+void ExtractPointList( ControlNet & outNet, PvlKeyword & nonListedPoints );
+void ExtractLatLonRange( ControlNet & outNet, PvlKeyword & noLatLonPoints,
+                         PvlKeyword & cannotGenerateLatLonPoints, map<iString,iString> sn2filename );
 bool NotInLatLonRange( double lat, double lon, double minlat,
                        double maxlat, double minlon, double maxlon );
 void WriteCubeOutList( ControlNet cnet, map<iString,iString> sn2file );
@@ -27,23 +30,35 @@ void WriteCubeOutList( ControlNet cnet, map<iString,iString> sn2file );
 void IsisMain() {
   UserInterface &ui = Application::GetUserInterface();
 
+  if( !ui.WasEntered("FROMLIST") && ui.WasEntered("TOLIST") ) {
+    std::string msg = "To create a [TOLIST] the [FROMLIST] parameter must be provided.";
+    throw iException::Message(iException::User,msg,_FILEINFO_);
+  }
+
   // Gets the input parameters
-  FileList inList( ui.GetFilename("FROMLIST") );
-  ControlNet inNet( ui.GetFilename("CNET") );
+  ControlNet outNet( ui.GetFilename("CNET") );
+  FileList inList;
+  if( ui.WasEntered("FROMLIST") ) {
+    inList = ui.GetFilename("FROMLIST");
+  }
 
-  bool noIgnore        = ui.GetBoolean("NOIGNORE");
-  bool noHeld          = ui.GetBoolean("NOHELD");
-  bool noSingleMeasure = ui.GetBoolean("NOSINGLEMEASURE");
-  bool reference       = ui.GetBoolean("REFERENCE");
-  bool cubePoints      = ui.WasEntered("CUBEPOINTS");
-  bool cubeMeasures    = ui.GetBoolean("CUBEMEASURES");
-  bool pointsEntered   = ui.WasEntered("POINTLIST");
-  bool latLon          = ui.GetBoolean("LATLON");
+  bool noIgnore          = ui.GetBoolean("NOIGNORE");
+  bool noHeld            = ui.GetBoolean("NOHELD");
+  bool noSingleMeasure   = ui.GetBoolean("NOSINGLEMEASURES");
+  bool noMeasureless     = ui.GetBoolean("NOMEASURELESS");
+  bool noTolerancePoints = ui.GetBoolean("TOLERANCE");
+  bool reference         = ui.GetBoolean("REFERENCE");
+  bool ground            = ui.GetBoolean("GROUND");
+  bool cubePoints        = ui.WasEntered("CUBEPOINTS");
+  bool cubeMeasures      = ui.GetBoolean("CUBEMEASURES");
+  bool pointsEntered     = ui.WasEntered("POINTLIST");
+  bool latLon            = ui.GetBoolean("LATLON");
 
-  if( !(noIgnore || noHeld || noSingleMeasure || reference || cubePoints || pointsEntered || latLon) ) {
+  if( !(noIgnore || noHeld || noSingleMeasure || noMeasureless || noTolerancePoints ||
+        reference || ground || cubePoints || pointsEntered || latLon) ) {
     std::string msg = "At least one filter must be selected [";
-    msg += "NOIGNORE,NOHELD,NOSINGLEMEASURE,REFERENCE,CUBEPOINTS,CUBEMEASURES,";
-    msg += "POINTLIST,LATLON]";
+    msg += "NOIGNORE,NOHELD,NOSINGLEMEASURE,TOLERANCE,REFERENCE,GROUND,CUBEPOINTS,";
+    msg += "CUBEMEASURES,POINTLIST,LATLON]";
     throw iException::Message(iException::User,msg,_FILEINFO_);
   }
   else if( cubeMeasures  &&  !cubePoints ) {
@@ -61,15 +76,18 @@ void IsisMain() {
 
 
   Progress progress;
-  progress.SetMaximumSteps(inNet.Size());
+  progress.SetMaximumSteps(outNet.Size());
   progress.CheckStatus();
 
   // Set up verctor records of how points/measures are removed
   PvlKeyword ignoredPoints( "IgnoredPoints" );
   PvlKeyword ignoredMeasures( "IgnoredMeasures" );
   PvlKeyword heldPoints( "HeldPoints" );
-  PvlKeyword singlePoints( "SingleMeasurePoints" );
+  PvlKeyword singleMeasurePoints( "SingleMeasurePoints" );
+  PvlKeyword measurelessPoints( "MeasurelessPoints" );
+  PvlKeyword tolerancePoints( "TolerancePoints" );
   PvlKeyword nonReferenceMeasures( "NonReferenseMeasures" );
+  PvlKeyword nonGroundPoints( "NonGroundPoints" );
   PvlKeyword nonCubePoints( "NonCubePoints" );
   PvlKeyword nonCubeMeasures( "NonCubeMeasures" );
   PvlKeyword noMeasurePoints( "NoMeasurePoints" );
@@ -87,78 +105,104 @@ void IsisMain() {
     }
   }
 
-  // Set up output values
-  ControlNet outNet;
-  outNet.SetType( inNet.Type() );
-  outNet.SetTarget( inNet.Target() );
+  double tolerance = 0.0;
+  if( noTolerancePoints ) {
+    tolerance = ui.GetDouble("PIXELTOLERANCE");
+  }
 
+  // Set up extracted network values
   if( ui.WasEntered("NETWORKID") )
     outNet.SetNetworkId( ui.GetString("NETWORKID") );
-  else
-    outNet.SetNetworkId( inNet.NetworkId() );
 
   outNet.SetUserName( Isis::Application::UserName() );
   outNet.SetDescription( ui.GetString("DESCRIPTION") );
 
-  for(int cp=0; cp < inNet.Size(); cp ++) {
+
+  for(int cp=outNet.Size()-1; cp >= 0; cp --) {
     progress.CheckStatus();
 
     // Do preliminary exclusion checks
-    if( noIgnore && inNet[cp].Ignore() ) {
-      ignoredPoints += inNet[cp].Id();
+    if( noIgnore && outNet[cp].Ignore() ) {
+      ignoredPoints += outNet[cp].Id();
+      outNet.Delete(cp);
       continue;
     }
-    else if( noHeld && inNet[cp].Held() ) {
-      heldPoints += inNet[cp].Id();
+    if( noHeld && outNet[cp].Held() ) {
+      heldPoints += outNet[cp].Id();
+      outNet.Delete(cp);
       continue;
     }
-    else if( noSingleMeasure ) {
+    if( ground && !(outNet[cp].Type() == ControlPoint::Ground) ) {
+      nonGroundPoints += outNet[cp].Id();
+      outNet.Delete(cp);
+      continue;
+    }
+
+    if( noSingleMeasure ) {
       bool invalidPoint = false;
-      invalidPoint |= noIgnore && (inNet[cp].NumValidMeasures() < 2);
-      invalidPoint |= inNet[cp].Size() < 2 && (inNet[cp].Type() != ControlPoint::Ground);
+      invalidPoint |= noIgnore && (outNet[cp].NumValidMeasures() < 2);
+      invalidPoint |= outNet[cp].Size() < 2 && (outNet[cp].Type() != ControlPoint::Ground);
 
       if( invalidPoint ) {
-        singlePoints+= inNet[cp].Id();
+        singleMeasurePoints += outNet[cp].Id();
+        outNet.Delete(cp);
         continue;
       }
     }
 
-    // Begin constructing the new Control Point
-    ControlPoint outPoint = inNet[cp];
+    // Change the current point into a new point by manipulation of its control measures
+    ControlPoint & newPoint = outNet[cp];
 
-    // Build the new Control Point
-    for( int cm = outPoint.Size()-1; cm >= 0; cm --) {
-      if(noIgnore && outPoint[cm].Ignore()) {
-        ignoredMeasures += "(" + outPoint.Id() + "," + outPoint[cm].CubeSerialNumber() + ")";
-        outPoint.Delete( cm );
+    for( int cm = newPoint.Size()-1; cm >= 0; cm --) {
+      if(noIgnore && newPoint[cm].Ignore()) {
+        ignoredMeasures += "(" + newPoint.Id() + "," + newPoint[cm].CubeSerialNumber() + ")";
+        newPoint.Delete( cm );
       }
-      else if( reference && !outPoint[cm].IsReference() ) {
-        nonReferenceMeasures += "(" + outPoint.Id() + "," + outPoint[cm].CubeSerialNumber() + ")";
-        outPoint.Delete( cm );
+      else if( reference && !newPoint[cm].IsReference() ) {
+        nonReferenceMeasures += "(" + newPoint.Id() + "," + newPoint[cm].CubeSerialNumber() + ")";
+        newPoint.Delete( cm );
       }
       else if( cubeMeasures ) {
         bool hasSerialNumber = false;
 
         for( unsigned int sn = 0; sn < serialNumbers.size() && !hasSerialNumber; sn ++) {
-          if(serialNumbers[sn] == outPoint[cm].CubeSerialNumber()) hasSerialNumber = true;
+          if(serialNumbers[sn] == newPoint[cm].CubeSerialNumber()) hasSerialNumber = true;
         }
 
         if( !hasSerialNumber ) { 
-          nonCubeMeasures += "(" + outPoint.Id() + "," + outPoint[cm].CubeSerialNumber() + ")";
-          outPoint.Delete( cm );
+          nonCubeMeasures += "(" + newPoint.Id() + "," + newPoint[cm].CubeSerialNumber() + ")";
+          newPoint.Delete( cm );
         }
       }
     }
 
+    // Check for line/sample errors above provided tolerance
+    if( noTolerancePoints ) {
+      bool hasLowTolerance = true;
+
+      for( int cm = 0; cm < newPoint.Size() && hasLowTolerance; cm ++ ) {
+        if( newPoint[cm].SampleError() >= tolerance ||
+            newPoint[cm].LineError() >= tolerance ) {
+          hasLowTolerance = false;
+        }
+      }
+
+      if( hasLowTolerance ) {
+        tolerancePoints += newPoint.Id();
+        outNet.Delete(cp);
+        continue;
+      }
+    }
 
     // Do not add outPoint if it has too few measures
     if( noSingleMeasure ) {
       bool invalidPoint = false;
-      invalidPoint |= noIgnore && (outPoint.NumValidMeasures() < 2);
-      invalidPoint |= outPoint.Size() < 2 && outPoint.Type() != ControlPoint::Ground;
+      invalidPoint |= noIgnore && (newPoint.NumValidMeasures() < 2);
+      invalidPoint |= newPoint.Size() < 2 && newPoint.Type() != ControlPoint::Ground;
 
       if( invalidPoint ) {
-        singlePoints += inNet[cp].Id();
+        singleMeasurePoints += outNet[cp].Id();
+        outNet.Delete(cp);
         continue;
       }
     }
@@ -167,171 +211,42 @@ void IsisMain() {
     if( cubePoints && !cubeMeasures ) {
       bool hasSerialNumber = false;
 
-      for( int cm = 0; cm < outPoint.Size() && !hasSerialNumber; cm ++) {
+      for( int cm = 0; cm < newPoint.Size() && !hasSerialNumber; cm ++) {
         for( unsigned int sn = 0; sn < serialNumbers.size() && !hasSerialNumber; sn ++) {
-          if(serialNumbers[sn] == outPoint[cm].CubeSerialNumber()) hasSerialNumber = true;
+          if(serialNumbers[sn] == newPoint[cm].CubeSerialNumber()) hasSerialNumber = true;
         }
       }
 
       if( !hasSerialNumber ) {
-        nonCubePoints += outPoint.Id();
+        nonCubePoints += newPoint.Id();
+        outNet.Delete(cp);
         continue;
       }
     }
 
-    if( outPoint.Size() == 0 ) {
-      noMeasurePoints += outPoint.Id();
+    if( noMeasureless && newPoint.Size() == 0 ) {
+      noMeasurePoints += newPoint.Id();
+      outNet.Delete(cp);
       continue;
     }
-
-    outNet.Add( outPoint );
-  }
+  } //! Finished with simple comparisons
 
 
   /**
-   * Use another pass to check for Ids, since string comparisons are expensive
+   * Use another pass to check for Ids
    */
   if( pointsEntered ) {
-    FileList listedPoints( ui.GetFilename("POINTLIST") );
-
-    for( int cp = outNet.Size()-1; cp >= 0; cp -- ) {
-      bool isInList = false;
-      for( int pointId = 0; pointId < (int)listedPoints.size()  &&  !isInList; pointId ++ ) {
-        isInList = outNet[cp].Id().compare( listedPoints[pointId] ) == 0;
-      }
-
-      if( !isInList ) {
-        nonListedPoints += outNet[cp].Id();
-        outNet.Delete( cp );
-      }
-    }
+    ExtractPointList( outNet, nonListedPoints );
   }
 
 
   /** 
    *  Use another pass on outNet, because this is by far the most time consuming
-   *  process, and time could be saved by using the usually smaller outNet instead
-   *  of inNet
+   *  process, and time could be saved by using the reduced size of outNet
    */
   if( latLon ) {
-    double minlat = ui.GetDouble("MINLAT");
-    double maxlat = ui.GetDouble("MAXLAT");
-    double minlon = ui.GetDouble("MINLON");
-    double maxlon = ui.GetDouble("MAXLON");
-
-    Progress progress;
-    progress.SetText("Calculating lat/lon");
-    progress.SetMaximumSteps(outNet.Size());
-    progress.CheckStatus();
-
-    CubeManager manager;
-    manager.SetNumOpenCubes( 50 ); //Should keep memory usage to around 1GB
-
-    for( int cp = outNet.Size()-1; cp >= 0; cp --) {
-      progress.CheckStatus();
-
-      if( outNet[cp].Type() == Isis::ControlPoint::Ground ) {
-        if( NotInLatLonRange( outNet[cp].UniversalLatitude(),
-                              outNet[cp].UniversalLongitude(),
-                              minlat, maxlat, minlon, maxlon ) ) {
-          nonLatLonPoints += outNet[cp].Id();
-          outNet.Delete( cp );
-        }
-      }
-
-      /** 
-       * If the point is not a Ground Point then we need to calculate lat/lon on our own
-       */
-      else {
-
-        // Find a cube in the Control Point to get the lat/lon from
-        int cm = 0;
-        iString sn = "";
-        double lat = 0.0;
-        double lon = 0.0;
-        double radius = 0.0;
-  
-        // First check the reference Measure
-        if( outNet[cp].HasReference() ) {
-          cm = outNet[cp].ReferenceIndex();
-          if( !sn2filename[outNet[cp][cm].CubeSerialNumber()].empty() ) {
-            sn = outNet[cp][cm].CubeSerialNumber();
-          }
-        }
-  
-        // Search for other Control Measures if needed
-        if( sn.empty() ) {
-          // Find the Serial Number if it exists
-          for( int cm = 0; (cm < outNet[cp].Size()) && sn.empty(); cm ++ ) {
-            if( !sn2filename[outNet[cp][cm].CubeSerialNumber()].empty() ) {
-              sn = outNet[cp][cm].CubeSerialNumber();
-            }
-          }
-        }
-  
-        // Connot fine a cube to get the lat/lon from
-        if( sn.empty() ) {
-          cannotGenerateLatLonPoints += outNet[cp].Id();
-          outNet.Delete( cp );
-        }
-        
-        // Calculate the lat/lon and check for validity
-        else {
-          bool remove = false;
-
-          Cube *cube = manager.OpenCube( sn2filename[sn] );
-          Camera *camera = cube->Camera();
-
-          if (camera == NULL) {
-            try {
-              Projection *projection = ProjectionFactory::Create( (*(cube->Label())) );
-
-              if(!projection->SetCoordinate(outNet[cp][cm].Sample(),outNet[cp][cm].Line())) {
-                nonLatLonPoints += outNet[cp].Id();
-                remove = true;
-              }
-
-              lat = projection->Latitude();
-              lon = projection->Longitude();
-              radius = projection->LocalRadius();
-
-              delete projection;
-              projection = NULL;
-            } catch ( iException &e ) {
-              remove = true;
-              e.Clear();
-            }
-          }
-          else {
-            if(!camera->SetImage(outNet[cp][cm].Sample(),outNet[cp][cm].Line())) {
-              nonLatLonPoints += outNet[cp].Id();
-              remove = true;
-            }
-
-            lat = camera->UniversalLatitude();
-            lon = camera->UniversalLongitude();
-            radius = camera->LocalRadius();
-
-            camera = NULL;
-          }
-
-          cube = NULL;
-  
-          if( remove  ||  NotInLatLonRange( lat, lon, minlat, maxlat, minlon, maxlon ) ) {
-            nonLatLonPoints += outNet[cp].Id();
-            outNet.Delete( cp );
-          }
-          else { // Add the reference lat/lon/radius to the Control Point
-            outNet[cp].SetUniversalGround( lat, lon, radius );
-          }
-        }
-      }
-
-    }
-
-    manager.CleanCubes();
+    ExtractLatLonRange( outNet, nonLatLonPoints, cannotGenerateLatLonPoints, sn2filename );
   }
-
 
 
   // Write the filenames associated with outNet
@@ -373,12 +288,24 @@ void IsisMain() {
     results.AddKeyword( heldPoints );
   }
   if( noSingleMeasure ) {
-    summary.AddKeyword( PvlKeyword( "SingleMeasurePoints", singlePoints.Size() ) ); 
-    results.AddKeyword( singlePoints );
+    summary.AddKeyword( PvlKeyword( "SingleMeasurePoints", singleMeasurePoints.Size() ) ); 
+    results.AddKeyword( singleMeasurePoints );
+  }
+  if( noMeasureless ) {
+    summary.AddKeyword( PvlKeyword( "MeasurelessPoints", measurelessPoints.Size() ) ); 
+    results.AddKeyword( measurelessPoints );
+  }
+  if( noTolerancePoints ) {
+    summary.AddKeyword( PvlKeyword( "TolerancePoints", tolerancePoints.Size() ) ); 
+    results.AddKeyword( tolerancePoints );
   }
   if( reference ) {
     summary.AddKeyword( PvlKeyword( "NonReferenceMeasures", nonReferenceMeasures.Size() ) ); 
     results.AddKeyword( nonReferenceMeasures );
+  }
+  if( ground ) {
+    summary.AddKeyword( PvlKeyword( "NonGroundPoints", nonGroundPoints.Size() ) ); 
+    results.AddKeyword( nonGroundPoints );
   }
   if( cubePoints ) {
     summary.AddKeyword( PvlKeyword( "NonCubePoints", nonCubePoints.Size() ) ); 
@@ -413,9 +340,183 @@ void IsisMain() {
   Application::Log(results);
 
   outProgress.CheckStatus();
-
 }
 
+
+/**
+ * Removes control points not listed in POINTLIST
+ * 
+ * @param outNet The output control net being removed from
+ * @param nonListedPoints The keyword recording all of the control points 
+ *                        removed due to not being listed
+ */
+void ExtractPointList( ControlNet & outNet, PvlKeyword & nonListedPoints ) {
+  UserInterface &ui = Application::GetUserInterface();
+
+  FileList listedPoints( ui.GetFilename("POINTLIST") );
+
+  for( int cp = outNet.Size()-1; cp >= 0; cp -- ) {
+    bool isInList = false;
+    for( int pointId = 0; pointId < (int)listedPoints.size()  &&  !isInList; pointId ++ ) {
+      isInList = outNet[cp].Id().compare( listedPoints[pointId] ) == 0;
+    }
+
+    if( !isInList ) {
+      nonListedPoints += outNet[cp].Id();
+      outNet.Delete( cp );
+    }
+  }
+}
+
+
+/**
+ * Removes control points not in the lat/lon range provided in the unput 
+ * parameters. 
+ * 
+ * @param outNet The output control net being removed from
+ * @param noLanLonPoint The keyword recording all of the control points removed
+ *                      due to the provided lat/lon range
+ * @param noLanLonPoint The keyword recording all of the control points removed
+ *                      due to the inability to calculate the lat/lon for that
+ *                      point
+ */
+void ExtractLatLonRange( ControlNet & outNet, PvlKeyword & nonLatLonPoints,
+                         PvlKeyword & cannotGenerateLatLonPoints,  map<iString,iString> sn2filename ) {
+  if( outNet.Size() == 0 ) { return; }
+
+  UserInterface &ui = Application::GetUserInterface();
+
+  // Get the lat/lon and fix the range for the internal 0/360
+  double minlat = ui.GetDouble("MINLAT");
+  double maxlat = ui.GetDouble("MAXLAT");
+  double minlon = ui.GetDouble("MINLON");
+  if( minlon < 0.0 ) { minlon += 360; }
+  double maxlon = ui.GetDouble("MAXLON");
+  if( maxlon < 0.0 ) { minlon += 360; }
+
+  bool useNetwork = ui.GetBoolean("USENETWORK");
+
+  Progress progress;
+  progress.SetText("Calculating lat/lon");
+  progress.SetMaximumSteps(outNet.Size());
+  progress.CheckStatus();
+
+  CubeManager manager;
+  manager.SetNumOpenCubes( 50 ); //Should keep memory usage to around 1GB
+
+  for( int cp = outNet.Size()-1; cp >= 0; cp --) {
+    progress.CheckStatus();
+
+    // If the Contorl Network takes priority, use it
+    double pointLat = outNet[cp].UniversalLatitude();
+    double pointLon = outNet[cp].UniversalLongitude();
+    bool useControlNet = useNetwork && pointLat > -1000 && pointLon > -1000;
+    if( outNet[cp].Type() == Isis::ControlPoint::Ground || useControlNet ) {
+      if( NotInLatLonRange( outNet[cp].UniversalLatitude(),
+                            outNet[cp].UniversalLongitude(),
+                            minlat, maxlat, minlon, maxlon ) ) {
+        nonLatLonPoints += outNet[cp].Id();
+        outNet.Delete( cp );
+      }
+    }
+
+    /** 
+     * If the lat/lon cannot be determined from the point, then we need to calculate
+     * lat/lon on our own 
+     */
+    else if( ui.WasEntered("FROMLIST") ) {
+
+      // Find a cube in the Control Point to get the lat/lon from
+      int cm = 0;
+      iString sn = "";
+      double lat = 0.0;
+      double lon = 0.0;
+      double radius = 0.0;
+
+      // First check the reference Measure
+      if( outNet[cp].HasReference() ) {
+        cm = outNet[cp].ReferenceIndex();
+        if( !sn2filename[outNet[cp][cm].CubeSerialNumber()].empty() ) {
+          sn = outNet[cp][cm].CubeSerialNumber();
+        }
+      }
+
+      // Search for other Control Measures if needed
+      if( sn.empty() ) {
+        // Find the Serial Number if it exists
+        for( int cm = 0; (cm < outNet[cp].Size()) && sn.empty(); cm ++ ) {
+          if( !sn2filename[outNet[cp][cm].CubeSerialNumber()].empty() ) {
+            sn = outNet[cp][cm].CubeSerialNumber();
+          }
+        }
+      }
+
+      // Connot fine a cube to get the lat/lon from
+      if( sn.empty() ) {
+        cannotGenerateLatLonPoints += outNet[cp].Id();
+        outNet.Delete( cp );
+      }
+
+      // Calculate the lat/lon and check for validity
+      else {
+        bool remove = false;
+
+        Cube *cube = manager.OpenCube( sn2filename[sn] );
+        Camera *camera = cube->Camera();
+
+        if (camera == NULL) {
+          try {
+            Projection *projection = ProjectionFactory::Create( (*(cube->Label())) );
+
+            if(!projection->SetCoordinate(outNet[cp][cm].Sample(),outNet[cp][cm].Line())) {
+              nonLatLonPoints += outNet[cp].Id();
+              remove = true;
+            }
+
+            lat = projection->Latitude();
+            lon = projection->Longitude();
+            radius = projection->LocalRadius();
+
+            delete projection;
+            projection = NULL;
+          } catch ( iException &e ) {
+            remove = true;
+            e.Clear();
+          }
+        }
+        else {
+          if(!camera->SetImage(outNet[cp][cm].Sample(),outNet[cp][cm].Line())) {
+            nonLatLonPoints += outNet[cp].Id();
+            remove = true;
+          }
+
+          lat = camera->UniversalLatitude();
+          lon = camera->UniversalLongitude();
+          radius = camera->LocalRadius();
+
+          camera = NULL;
+        }
+
+        cube = NULL;
+
+        if( remove  ||  NotInLatLonRange( lat, lon, minlat, maxlat, minlon, maxlon ) ) {
+          nonLatLonPoints += outNet[cp].Id();
+          outNet.Delete( cp );
+        }
+        else { // Add the reference lat/lon/radius to the Control Point
+          outNet[cp].SetUniversalGround( lat, lon, radius );
+        }
+      }
+    }
+    else {
+      cannotGenerateLatLonPoints += outNet[cp].Id();
+      outNet.Delete( cp );
+    }
+
+  }
+
+  manager.CleanCubes();
+}
 
 
 /**
@@ -465,36 +566,39 @@ bool NotInLatLonRange( double lat, double lon, double minlat,
 void WriteCubeOutList( ControlNet cnet, map<iString,iString> sn2file ) {
   UserInterface &ui = Application::GetUserInterface();
 
-  Progress p;
-  p.SetText("Writing Cube List");
-  try {
-    p.SetMaximumSteps(cnet.Size());
-    p.CheckStatus();
-  } catch( iException &e ) {
-    e.Clear();
-    string msg = "The provided filters have resulted in an empty Control Network.";
-    throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
-  }
+  if( ui.WasEntered("TOLIST") ) {
 
-  set<iString> outputsn;
-  for( int cp = 0; cp < cnet.Size(); cp ++ ) {
-    for( int cm = 0; cm < cnet[cp].Size(); cm ++ ) {
-      outputsn.insert( cnet[cp][cm].CubeSerialNumber() );
+    Progress p;
+    p.SetText("Writing Cube List");
+    try {
+      p.SetMaximumSteps(cnet.Size());
+      p.CheckStatus();
+    } catch( iException &e ) {
+      e.Clear();
+      string msg = "The provided filters have resulted in an empty Control Network.";
+      throw Isis::iException::Message(Isis::iException::User,msg, _FILEINFO_);
     }
-    p.CheckStatus();
-  }
 
-  std::string toList = ui.GetFilename("TOLIST");
-  ofstream out_stream;
-  out_stream.open(toList.c_str(), std::ios::out);
-  out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
-
-  for( set<iString>::iterator sn = outputsn.begin(); sn != outputsn.end(); sn ++ ) {
-    if( !sn2file[(*sn)].empty() ) {
-      out_stream << sn2file[(*sn)] << endl;
+    set<iString> outputsn;
+    for( int cp = 0; cp < cnet.Size(); cp ++ ) {
+      for( int cm = 0; cm < cnet[cp].Size(); cm ++ ) {
+        outputsn.insert( cnet[cp][cm].CubeSerialNumber() );
+      }
+      p.CheckStatus();
     }
-  }
 
-  out_stream.close();
+    std::string toList = ui.GetFilename("TOLIST");
+    ofstream out_stream;
+    out_stream.open(toList.c_str(), std::ios::out);
+    out_stream.seekp(0,std::ios::beg); //Start writing from beginning of file
+
+    for( set<iString>::iterator sn = outputsn.begin(); sn != outputsn.end(); sn ++ ) {
+      if( !sn2file[(*sn)].empty() ) {
+        out_stream << sn2file[(*sn)] << endl;
+      }
+    }
+
+    out_stream.close();
+  }
 }
 

@@ -14,10 +14,21 @@ STR :=$(AWK) -v str=$(DIR) 'BEGIN { pos=index( str, \"/isis/\" ); print substr( 
 ISIS_PATH := $(shell $(AWK) -v str=$(DIR) 'BEGIN { pos=index( str, "/isis/" ); print substr( str, pos, length( str ) - pos + 1 ) }' )
 TESTDATA_PATH := $(ISIS3TESTDATA)$(ISIS_PATH)
 
+ifneq ("$(shell echo $(ISIS_PATH) | cut -d '/' -f2,3,5,7)", "isis/src/apps/tsts")
+  ifneq ("$(shell echo $(ISIS_PATH) | cut -d '/' -f2,3,5)", "isis/src/tsts")
+    $(error Your directory structure is not a legal isis structure!)
+  endif
+endif
+
 # define local test folders
 LOCAL_INPUT := input
 LOCAL_TRUTH := truth
-LOCAL_OSTRUTH := $(LOCAL_TRUTH).$(HOST_ARCH).$(HOST_PROC)
+
+ifeq ($(HOST_OS),"")
+  LOCAL_OSTRUTH := $(LOCAL_TRUTH).$(HOST_ARCH).$(HOST_PROC)
+else
+  LOCAL_OSTRUTH := $(LOCAL_TRUTH).$(HOST_ARCH).$(HOST_PROC).$(HOST_OS)
+endif
 
 # Sets the TRUTH variable to point to the truth directory to use
 # This works by seeing if a local truth dir exists, and if it does
@@ -235,11 +246,14 @@ truthdata:
 # OS the test is being run on doesn't exist it is created.
 #----------------------------------------------------------------------------
 ostruthdata:
-	osdir="$(TRUTH)";\
-	if [ "$(TRUTH)" = "truth" ]; \
-	then \
-	  osdir="$(TRUTH).$(HOST_ARCH).$(HOST_PROC)"; \
-	fi;\
+	osdir="$(TRUTH)"; \
+	if [ "$(TRUTH)" = "truth" ]; then \
+	  if [ "$(HOST_OS)" = "" ]; then \
+	    osdir="$(TRUTH).$(HOST_ARCH).$(HOST_PROC)"; \
+	  else \
+	    osdir="$(TRUTH).$(HOST_ARCH).$(HOST_PROC).$(HOST_OS)"; \
+	  fi; \
+	fi; \
 	$(MKDIR) $$osdir; \
 	$(RSYNC) -rt --delete $(OUTPUT)/ $$osdir;
 
@@ -586,7 +600,7 @@ checkin:
 # directory in DEST.
 #----------------------------------------------------------------------------
 copyInTruth:
-	for i in $(filter-out CVS Makefile print.prt input output, $(wildcard *)); do \
+	for i in $(wildcard truth*); do \
 	  $(MKDIR) -m2775 $(DEST)$$i; \
 	  files=`$(LS) $$i`; \
 	  if [ "$$files" != "" ]; \
@@ -647,7 +661,7 @@ checkout:
 # to the one in the test.
 #----------------------------------------------------------------------------
 copyOutTruth:
-	for i in $(notdir $(filter-out CVS Makefile print.prt $(INPUT) input $(OUTPUT), $(wildcard $(DEST)/*))); do \
+	for i in $(notdir $(wildcard $(DEST)/truth*) ); do \
 	  $(MKDIR) $$i; \
 	  files=`$(LS) $(DEST)/$$i`; \
 	  if [ "$$files" != "" ]; \
@@ -656,88 +670,54 @@ copyOutTruth:
 	  fi; \
 	done;
 
-#----------------------------------------------------------------------------
-# Target = release
-# Dependencies = clean
-#
-# Deletes the input, output, and truth directories.  To be used
-# after checkin to clear the test of data.  If any of the folders
-# in the test do not exist in the system (testdata are) then the 
-# user is warned are deleting the files and is asked if to 
-# delete anyway.  If the files for the test are different than the
-# one in the system the user is told and also asked if to delete 
-# or not.  If the user says yes to either message all folders
-# are deleted.  If the user types any other letter than y the 
-# folders are not deleted.
-#----------------------------------------------------------------------------
-release: clean
-	remove="";\
-	for i in $(notdir $(filter-out CVS Makefile print.prt  $(OUTPUT), $(wildcard *))); do \
-	  if [ -d "$(TESTDATA_PATH)/$$i" ]; \
-	  then \
-	    $(DIFF) -r $$i $(TESTDATA_PATH)/$$i > /dev/null; \
-	     if [ "$$?" != "0" ];  \
-	     then \
-	       if [ "$$remove" = "" ]; \
-	       then \
-   	         command='$(PRINTF) %-6s "folder $$i does not match system files, delete anyway Y/N? "'; \
-	         eval $$command; \
-	         read temp; \
-	         result=`$(AWK) -v str=$$temp 'BEGIN { print substr( str, 0, 1 ) }'`; \
-	         if [ "$$result" = "y" ]; \
-	         then \
-	           remove="true"; \
-	         elif [ "$$result" = "Y" ]; \
-	         then \
-	           remove="true"; \
-	         else \
-	           remove="false"; \
-	         fi \
-	       fi \
-	     fi \
-	  else \
-	    if [ "$$remove" = "" ]; \
-	    then \
-	      command='$(PRINTF) %-6s "folder $$i does exist in the system, delete anyway Y/N? "'; \
-	       eval $$command; \
-	       read temp; \
-	       result=`$(AWK) -v str=$$temp 'BEGIN { print substr( str, 0, 1 ) }'`; \
-	       if [ "$$result" = "y" ]; \
-	       then \
-	         remove="true"; \
-	       elif [ "$$result" = "Y" ]; \
-	       then \
-	         remove="true"; \
-	       else \
-	         remove="false"; \
-	       fi \
-	     fi \
-	  fi \
-	done; \
-	if [ "$$remove" = "" -o "$$remove" = "true" ]; \
-	then \
-	  $(MAKE) removeTruth; \
-	  if [ -d $(LOCAL_INPUT) ]; \
-	  then \
-	    $(RM) -r $(LOCAL_INPUT)/*; \
-	    $(RMDIR) $(LOCAL_INPUT); \
-	  fi; \
-	  $(RM) print.prt; \
-	fi;
 
-#----------------------------------------------------------------------------
-# Target = removeTruth
-# Dependencies = 
-#
-# Removes all of the truth folders from the test.  Iterates
-# over the folders in the test and removes the files and then 
-# the folder for all the truth directories.
-#----------------------------------------------------------------------------
-removeTruth:
-	for i in $(filter-out CVS Makefile print.prt input output, $(wildcard *)); do \
-	  $(RM) $$i/*; \
-	  $(RMDIR) $$i; \
-	done;
+#----------------------------------------------------------------------------#
+# Target = release                                                           #
+# Dependencies = clean                                                       #
+#                                                                            #
+# Deletes all extraneous files and folders inside the current directory.     #
+# If any of these files or folders do not exist or don't match the ones      #
+# in $ISIS3TESTDATA then the user is prompted before continuing.             #
+#----------------------------------------------------------------------------#
+release: clean
+	proceedWithRelease="true";                                           \
+	                                                                     \
+	for i in $(notdir $(filter-out CVS Makefile print.prt  $(OUTPUT),    \
+	    $(wildcard *))); do                                              \
+	                                                                     \
+	  $(DIFF) -r $$i $(TESTDATA_PATH)/$$i >& /dev/null;                  \
+	                                                                     \
+	  if [ "$$?" != "0" ]; then                                          \
+	    continueAnyway="invalidAnswer";                                  \
+	                                                                     \
+	    until [ "$$continueAnyway" = "y" -o                              \
+	            "$$continueAnyway" = "yes" -o                            \
+	            "$$continueAnyway" = "n" -o                              \
+	            "$$continueAnyway" = "no" ]; do                          \
+	                                                                     \
+	      $(PRINTF) %-6s                                                 \
+	          "$$i was not checked in!    Delete anyway? (y/n) ";        \
+	      read continueAnyway;                                           \
+	      continueAnyway=`echo $$continueAnyway | tr '[:upper:]'         \
+	                                                 '[:lower:]'`;       \
+	                                                                     \
+	    done;                                                            \
+	                                                                     \
+	    if [ "$$continueAnyway" = "n" -o                                 \
+	         "$$continueAnyway" = "no" ]; then                           \
+	      proceedWithRelease="false";                                    \
+	      break;                                                         \
+	    fi                                                               \
+	  fi                                                                 \
+	done;                                                                \
+	                                                                     \
+	if [ "$$proceedWithRelease" = "true" ]; then                         \
+	  for i in $(notdir $(filter-out CVS Makefile print.prt  $(OUTPUT),  \
+	      $(wildcard *))); do                                            \
+	    $(RM) -r $$i;                                                    \
+	  done;                                                              \
+	fi
+
 
 #----------------------------------------------------------------------------
 # Target = dirs

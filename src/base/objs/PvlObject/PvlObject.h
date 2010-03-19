@@ -2,8 +2,8 @@
 #define PvlObject_h
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/08/18 00:01:54 $
+ * $Revision: 1.15 $
+ * $Date: 2009/12/28 16:49:00 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -42,25 +42,29 @@ namespace Isis {
    *  @history 2006-04-21 Jacob Danton Added format templates abilities.
    *  @history 2006-05-18 Jacob Danton Added DeleteGroup by index @history
    *  @history 2006-09-11 Stuart Sides Added formatting ability
-   *  @history 2007-08-11 Stuart Sides Added recursive FindKeyword and HasKeyword
-   *  @history 2007-08-14 Steven Koechle Fixed missing pointers in
-   *           FindKeyword and HasKeyword
+   *  @history 2007-08-11 Stuart Sides Added recursive FindKeyword and
+   *                      HasKeyword
+   *  @history 2007-08-14 Steven Koechle Fixed missing pointers in FindKeyword
+   *                      and HasKeyword
    *  @history 2008-06-18 Steven Lambright Fixed documentation
    *  @history 2008-07-03 Steven Lambright Added const functionality and fixed +=
    *  @history 2008-07-10 Steven Lambright Compensated for PvlKeyword no longer
-   *           being a parent
+   *                      being a parent
    *  @history 2008-09-30 Christopher Austin Replaced all std::endl in the <<
-   *           operator with PvlFormat.FormatEOL()
-   * 
-   *  @todo 2005-02-14 Needs coded example                                                     
+   *                      operator with PvlFormat.FormatEOL()
+   *  @history 2009-10-28 Travis Addair Fixed bug causing a format
+   *                      template's object comments to not appear in the output
+   *  @history 2009-12-17 Steven Lambright Added reading methods
+   *  @history 2009-12-28 Steven Lambright Implemented const FindObject
+   *
    */                                                                       
   class PvlObject : public Isis::PvlContainer {
     public:
       PvlObject();
       PvlObject(const std::string &name);
-      PvlObject (std::vector<Isis::PvlToken> &token, 
-                     std::vector<Isis::PvlToken>::iterator &pos);
 
+      friend std::ostream& operator<<(std::ostream &os, Isis::PvlObject &object);
+      friend std::istream& operator>>(std::istream &is, PvlObject &result);
 
       /**
        * Returns the number of groups contained.
@@ -315,12 +319,9 @@ namespace Isis {
     private:
       std::vector<PvlObject> p_objects;    /**<A vector of PvlObjects contained 
                                                 in the current PvlObject. */
-      std::vector<Isis::PvlGroup> p_groups;/**<A vector of PvlGroups contained 
+      std::vector<PvlGroup> p_groups;/**<A vector of PvlGroups contained 
                                                 in the current PvlObject. */ 
   };
-
-  std::ostream& operator<<(std::ostream &os, Isis::PvlObject &object);
 }
-
 
 #endif

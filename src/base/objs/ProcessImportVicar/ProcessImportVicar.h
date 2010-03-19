@@ -2,8 +2,8 @@
 #define ProcessImportVicar_h
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2008/06/26 21:29:20 $
+ * $Revision: 1.3 $
+ * $Date: 2009/12/17 21:13:17 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -59,7 +59,10 @@ namespace Isis {
  *                                   documentation                                                     
  *  @todo 2005-05-23 Jeff Anderson - Currently VICAR files can not exceed 2GB
  *                   however, they may in the future so we should remember to
- *                   look at this
+ *                   look at this                                                
+ *  @todo 2009-12-14 Steven Lambright - No longer using PvlTokenizer and now
+ *                   creating a valid Pvl from the label before creating a Pvl
+ *                   from it
  */                                                                       
 
   class ProcessImportVicar : public ProcessImport {

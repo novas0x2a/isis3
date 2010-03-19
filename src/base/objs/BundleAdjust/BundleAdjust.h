@@ -2,8 +2,8 @@
 #define BundleAdjust_h
 /**
  * @file
- * $Revision: 1.19 $
- * $Date: 2009/08/14 05:14:31 $
+ * $Revision: 1.23 $
+ * $Date: 2009/12/15 01:57:07 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -55,6 +55,9 @@
  *                          instead of the camera.
  *   @history 2009-08-13 Debbie A. Cook Corrected calculations of cudx and cudy so that they use the signed focal length
  *                          also
+ *   @history 2009-10-14 Debbie A. Cook Modified AddPartials method to use new CameraGroundMap method, GetXY 
+ *   @history 2009-10-30 Debbie A. Cook Improved error message in AddPartials 
+ *   @history 2009-12-14 Debbie A. Cook Updated SpicePosition enumerated partial type constants
  */
 
 #include "ControlNet.h"

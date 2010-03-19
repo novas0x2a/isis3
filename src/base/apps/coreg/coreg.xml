@@ -149,6 +149,10 @@
     <change name="Travis Addair" date="2009-08-10">
         Auto registration parameters are now placed into the print file.
     </change>
+    <change name="Eric Hyer" date="2010-02-09">
+        Auto registration parameters now placed into the print file before
+        potential throwing of exceptions.
+    </change>
   </history>
 
   <groups>

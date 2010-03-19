@@ -2,8 +2,8 @@
 #define CSVReader_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.4 $
- * $Date: 2008/06/18 22:29:34 $
+ * $Revision: 1.5 $
+ * $Date: 2009/12/22 02:09:54 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "tnt_array1d.h"
+#include "tnt/tnt_array1d.h"
 #include "iString.h"
 #include "CollectorMap.h"
 #include "iException.h"

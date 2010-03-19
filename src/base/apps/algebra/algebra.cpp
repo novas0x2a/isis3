@@ -16,7 +16,7 @@ void div  (vector<Buffer *> &in,
            vector<Buffer *> &out);
 void unary (Buffer &in, Buffer &out);
 
-double a,b,c,d,e;
+double Isisa,Isisb,Isisc,Isisd,Isise;
 
 void IsisMain() {
   // We will be processing by line
@@ -30,11 +30,11 @@ void IsisMain() {
   p.SetOutputCube ("TO");
 
   // Get the coefficients
-  a = ui.GetDouble ("A");
-  b = ui.GetDouble ("B");
-  c = ui.GetDouble ("C");
-  d = ui.GetDouble ("D");
-  e = ui.GetDouble ("E");
+  Isisa = ui.GetDouble ("A");
+  Isisb = ui.GetDouble ("B");
+  Isisc = ui.GetDouble ("C");
+  Isisd = ui.GetDouble ("D");
+  Isise = ui.GetDouble ("E");
   
   // Start the processing based on the operator
   string op = ui.GetString ("OPERATOR");
@@ -63,7 +63,7 @@ void add (vector<Buffer *> &in, vector<Buffer *> &out) {
       outp[i] = NULL8;
     }
     else {
-      outp[i] = ((inp1[i] - d) * a) + ((inp2[i] - e) * b) + c;
+      outp[i] = ((inp1[i] - Isisd) * Isisa) + ((inp2[i] - Isise) * Isisb) + Isisc;
     }
   }
 }
@@ -83,7 +83,7 @@ void sub (vector<Buffer *> &in, vector<Buffer *> &out) {
       outp[i] = NULL8;
     }
     else {
-      outp[i] = ((inp1[i] - d) * a) - ((inp2[i] - e) * b) + c;
+      outp[i] = ((inp1[i] - Isisd) * Isisa) - ((inp2[i] - Isise) * Isisb) + Isisc;
     }
   }
 }
@@ -103,7 +103,7 @@ void mult (vector<Buffer *> &in, vector<Buffer *> &out) {
       outp[i] = NULL8;
     }
     else {
-      outp[i] = ((inp1[i] - d) * a) * ((inp2[i] - e) * b) + c;
+      outp[i] = ((inp1[i] - Isisd) * Isisa) * ((inp2[i] - Isise) * Isisb) + Isisc;
     }
   }
 }
@@ -123,11 +123,11 @@ void div (vector<Buffer *> &in, vector<Buffer *> &out) {
       outp[i] = NULL8;
     }
     else {
-      if ((inp2[i] - e) * b  == 0.0) {
+      if ((inp2[i] - Isise) * Isisb  == 0.0) {
         outp[i] = NULL8; 
       }
       else {
-        outp[i] = ((inp1[i] - d) * a) / ((inp2[i] - e) * b) + c;
+        outp[i] = ((inp1[i] - Isisd) * Isisa) / ((inp2[i] - Isise) * Isisb) + Isisc;
       }
     }
   }
@@ -141,7 +141,7 @@ void unary (Buffer &in, Buffer &out) {
       out[i] = in[i];
     }
     else {
-      out[i] = in[i] * a + c;
+      out[i] = in[i] * Isisa + Isisc;
     }
   }
 }

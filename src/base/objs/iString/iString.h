@@ -2,8 +2,8 @@
 #define iString_h
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2008/07/16 17:40:46 $
+ * $Revision: 1.13 $
+ * $Date: 2010/01/27 15:51:55 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -101,7 +101,17 @@ namespace Isis {
  *  @history 2008-07-14 Steven Lambright - Made some members const
  *  @history 2008-07-16 Steven Lambright - Added support for double nans and
  *                                      inifinities
- *  @todo  The Token member should consider single and double quotes seperatly
+ *  
+ *  @history 2009-11-02 Mackenzie Boyd - Modified Token method
+ *                                       to ignore any quote
+ *                                       groupings. Problems
+ *                                       arose with current
+ *                                       method and unclosed
+ *                                       quotes.
+ *  
+ *  @todo  The Token member should consider single and double
+ *         quotes seperatly *as of 10/28/09* Token no longer
+ *         considers quotes at all, so this todo is irrelevant?
  */ 
   class iString : public std::string {
     public:
@@ -110,8 +120,8 @@ namespace Isis {
       iString (const std::string &str);
       iString (const iString &str);
       iString (const char *str);
-      iString (const int &num);
-      iString (const double &num);
+      iString (const int &num);	 
+      iString (const double &num, const int piPrecision=14);
       iString (const BigInt &num);
       iString (const QString &str);
   
@@ -225,10 +235,10 @@ namespace Isis {
       static std::string ToStd(const QString &str);
   
       static QStringList ToQt(const std::vector<std::string> &sl);
-      static std::vector<std::string> ToStd(const QStringList &sl);
+      static std::vector<std::string> ToStd(const QStringList &sl);	  
   
   private:
-      void SetDouble(const double &value);
+      void SetDouble(const double &value, const int piPrecision=14);	 
   };
 };
 #endif

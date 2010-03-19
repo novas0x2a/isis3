@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <application name="mar102isis" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://isis.astrogeology.usgs.gov/Schemas/Application/application.xsd">
+
   <brief>
     Convert Mariner10 images to Isis cubes.
   </brief>
@@ -27,6 +28,15 @@
     <change name="Mackenzie Boyd" date="2009-08-03">
       Made several additions to labels including reseaus, and NaifFrameCode, 
       added to repository.
+    </change>
+    <change name="Travis Addair" date="2009-12-22">
+      Added compatibility for importing Isis 2 cubes.
+    </change>
+    <change name="Travis Addair" date="2009-12-23">
+      Fixed consistency errors between RAW and Isis2 imports.
+    </change>
+    <change name="Tracie Sucharski" date="2010-02-03">
+      Changed SpacecraftName from Mariner10 to Mariner_10.
     </change>
   </history>
 

@@ -1,5 +1,5 @@
 Group = TransverseMercator
-  Library = TransverseMercator 
+  Library = TransverseMercator
   Routine = TransverseMercatorPlugin
   Keyword = CenterLongitude
   Keyword = CenterLatitude

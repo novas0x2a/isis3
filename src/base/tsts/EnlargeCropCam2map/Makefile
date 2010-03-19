@@ -17,4 +17,4 @@ commands:
 	$(APP3NAME) from= $(OUTPUT)/EnlargeCropTruth.cub \
 	  to= $(OUTPUT)/EnlargeCropCam2mapTruth.cub \
 	  > /dev/null;
-	catlab from=$(OUTPUT)/EnlargeCropCam2mapTruth.cub > $(OUTPUT)/labels.txt;
+	catlab from=$(OUTPUT)/EnlargeCropCam2mapTruth.cub > $(OUTPUT)/labels.pvl;

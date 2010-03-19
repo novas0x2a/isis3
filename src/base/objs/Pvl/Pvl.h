@@ -1,9 +1,10 @@
-#if !defined(Pvl_h)
+#ifndef Pvl_h
 #define Pvl_h
+
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2008/10/02 23:39:45 $
+ * $Revision: 1.6 $
+ * $Date: 2009/12/17 21:16:29 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -26,9 +27,9 @@
 #include "PvlObject.h"
 
 namespace Isis {
- /**                                                                       
+ /**
   * @brief Container for cube-like labels                
-  *                                                                        
+  *
   * This class is used for creating, reading, and writing grouped labels 
   * generally from a file. An example of a label is:
   *   @code
@@ -119,17 +120,20 @@ namespace Isis {
   *           PvlKeyword::StringEqual
   *  @history 2008-10-2 Christopher Austin - Replaced all std::endl in the <<
   *           operator, Write() and Append() with PvlFormat.FormatEOL()
-  *                                                                        
+  *  @history 2009-12-17 Steven Lambright - Rewrote read (istream operator)
+  *
   *  @todo 2005-02-14 add coded example to class documentation.                                                      
   */                                                                         
   class Pvl : public Isis::PvlObject {
-    friend std::istream& operator>>(std::istream &is, Pvl &pvl);
-    
     public:
+
       Pvl();
       Pvl(const std::string &file);
 
-      ~Pvl() {if (p_internalTemplate) delete p_formatTemplate;};
+      friend std::istream& operator>>(std::istream &is, Pvl &pvl);
+      friend std::ostream& operator<<(std::ostream &os, Isis::Pvl &pvl);
+
+      ~Pvl() { if (p_internalTemplate) delete p_formatTemplate; };
 
       void Read(const std::string &file);
 
@@ -160,7 +164,5 @@ namespace Isis {
       std::string p_terminator; /**<Terminator used to signify the end of the 
                                     PVL informationDefaults to "END"*/
   };
-
-  std::ostream& operator<<(std::ostream &os, Isis::Pvl &pvl);
 };
 #endif

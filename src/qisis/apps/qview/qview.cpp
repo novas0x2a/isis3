@@ -11,6 +11,7 @@
 #include <sys/un.h>   
 #include <fcntl.h>
 
+#include "Filename.h"
 #include "ViewportMainWindow.h"
 #include "Workspace.h"
 #include "FileTool.h"
@@ -99,6 +100,10 @@ int main (int argc, char *argv[]) {
   QApplication::setApplicationName("qview");
   app->setStyle("windows");
 
+  // Add the Qt plugin directory to the library path
+  Isis::Filename qtpluginpath ("$ISISROOT/3rdParty/plugins");
+  QCoreApplication::addLibraryPath(qtpluginpath.Expanded().c_str());
+
   Qisis::ViewportMainWindow *vw = new Qisis::ViewportMainWindow("qview");
 
   Qisis::Tool *rubberBandTool = Qisis::RubberBandTool::getInstance(vw);
@@ -183,6 +188,8 @@ int main (int argc, char *argv[]) {
   QObject::connect(ftool, SIGNAL(discardChanges(CubeViewport *)), edittool, SLOT(undoAll(CubeViewport *)));
   QObject::connect(edittool, SIGNAL(save()), ftool, SLOT(confirmSave()));
   QObject::connect(edittool, SIGNAL(saveAs()), ftool, SLOT(saveAs()));
+  //Connect the FindTool to the AdvancedTrackTool to record the point if the "record" button is clicked
+  QObject::connect(findtool, SIGNAL(recordPoint(QPoint)), attool, SLOT(record(QPoint)));
 
   //Connect the viewport's close signal to the file tool's exit method
   QObject::connect(vw , SIGNAL(closeWindow()), ftool, SLOT(exit()));

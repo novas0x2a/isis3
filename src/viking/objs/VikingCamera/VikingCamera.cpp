@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.5 $                                                             
- * $Date: 2009/08/31 15:12:32 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/12/28 21:37:00 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -27,9 +27,9 @@
 #include "CameraGroundMap.h"
 #include "CameraSkyMap.h"
 #include "iString.h"
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 #include "Filename.h"
 
 

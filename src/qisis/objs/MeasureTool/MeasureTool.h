@@ -30,8 +30,15 @@ namespace Qisis {
   *                      TableMainWindow class.
   *   @history 2008-08-18 Christopher Austin
   *                      Upgraded to geos3.0.0
-
   *   @history 2008-09-26 Steven Lambright Added Segmented line
+  *   @history 2009-02-12 Steven Lambright Fixed bug where measure tool would
+  *                      not measure pixels for non-camera, non-projection
+  *                      cubes.
+  *   @history 2010-02-17 Sharmila Prasad Fixed bug where the
+  *            distance was calculated twice for a cube with both
+  *            camera and projection
+  *            Also made changes to save the most recent selection
+  *           (km,m,pixels) when different tool is selected
   */
   class MeasureTool : public Tool {
     Q_OBJECT
@@ -60,13 +67,15 @@ namespace Qisis {
       void updateDistEdit();
 
     private:
-      QAction *p_action; //!< Measure tool's action
-      QLineEdit *p_distLineEdit; //!< Distance line edit
-      QComboBox *p_unitsComboBox; //!< Units selection
-      
+      QAction *p_action;          //!< Measure tool's action
+      QLineEdit *p_distLineEdit;  //!< Distance line edit
+      QComboBox *p_unitsComboBox; //!< Units selection      
+      int miComboUnit;            // Store the previous unit chosen
+
       void updateDist(CubeViewport *cvp, int row);
       void updateRow(int row);
       void updateRows(int row);
+      void initData(void);
 
       /**
        * Enum for all possible table columns.

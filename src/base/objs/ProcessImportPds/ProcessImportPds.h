@@ -2,8 +2,8 @@
 #define ProcessImportPds_h
 /**
  * @file
- * $Revision: 1.18 $
- * $Date: 2009/07/16 18:13:59 $
+ * $Revision: 1.24 $
+ * $Date: 2010/02/22 02:26:11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -161,6 +161,10 @@ namespace Isis {
   *                          longitude and maximum longitude are swapped).
   *  @history 2009-07-16 Steven Lambright - Fixed bug where the longitude is
   *                          misordered
+  *  @history 2009-12-15 Steven Lambright - Hard-coded translation table is now
+  *                          a valid Pvl
+  *  @history 2009-12-18 Janet Barrett - Added capability to process JPEG2000
+  *                          files with a detached PDS label
   *  @todo 2005-02-09 Finish documentation-lots of holes with variable
   *                   definitions in .h file and .cpp methods, and  insert
   *                   implementation example
@@ -185,11 +189,19 @@ namespace Isis {
     private:
 
       enum Source { NOSOURCE, PDS, ISIS2 };
+      enum EncodingType { NONE, JP2 };
 
       Isis::Pvl p_pdsLabel;      //!<Internalized PDS label
       std::string p_labelFile;   //!<The filename where the PDS label came from
 
       Isis::iString p_transDir;  //!Base data directory
+
+      // Encoding info
+      EncodingType p_encodingType;       /**<The encoding type of the image data.
+                                            The only encoding type currently
+                                            supported is JP2 (JPEG2000).*/
+      std::string p_jp2File;             /**<The name of the file containing the
+                                            encoded JP2 data.*/
 
       // Projection info
       std::string p_projection;          /**<The name of the projection found in

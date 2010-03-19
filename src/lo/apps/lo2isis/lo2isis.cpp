@@ -49,16 +49,16 @@ void TranslateLunarLabels (Filename &labelFile, Cube *ocube) {
 
   bool hasFiducial = false;
   // Check to see if file is PDS
-  if(inputLabel.HasKeyword("PDS_VERSION_ID", Pvl::None)) {
-    if(inputLabel.FindKeyword("PDS_VERSION_ID", Pvl::None)[0].compare("PDS3")==0) {
-      if(inputLabel.FindKeyword("FIDUCIAL_ID", Pvl::None)[0].compare("NULL")!=0) {
+  if (inputLabel.HasKeyword("PDS_VERSION_ID", Pvl::None)) {
+    if (inputLabel.FindKeyword("PDS_VERSION_ID", Pvl::None)[0] == "PDS3") {
+      if (inputLabel.HasKeyword("LO:FIDUCIAL_ID", Pvl::Traverse)) {
         hasFiducial = true;
-        bandBinTransFile = transDir + "LunarOrbiterFiducial.trn";
+        bandBinTransFile = transDir + "LoPdsFiducialImport.trn";
       }
-      else if (inputLabel.FindKeyword("BORESIGHT_SAMPLE", Pvl::None)[0].compare("NULL")!=0) {
-        bandBinTransFile = transDir + "LunarOrbiterBoresight.trn";
+      else if (inputLabel.HasKeyword("LO:BORESIGHT_SAMPLE", Pvl::Traverse)) {
+        bandBinTransFile = transDir + "LoPdsBoresightImport.trn";
       }
-      else{
+      else {
         string msg = "[" + labelFile.Name() + "] does not contain boresight or fiducial information.";
         throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
       }
@@ -68,19 +68,22 @@ void TranslateLunarLabels (Filename &labelFile, Cube *ocube) {
       throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
     }
   }
-  else { // else input is an ISIS2 cube
-    if(inputLabel.HasKeyword("FIDUCIAL_ID", Pvl::Traverse)){
+  // Else the input is an Isis2 cube
+  else { 
+    if(inputLabel.HasKeyword("FIDUCIAL_ID", Pvl::Traverse)) {
       hasFiducial = true;
-      bandBinTransFile = transDir + "LunarOrbiterFiducial.trn";
-    } else if(inputLabel.HasKeyword("BORESIGHT_SAMPLE", Pvl::Traverse)){
-      bandBinTransFile = transDir + "LunarOrbiterBoresight.trn";
-    } else {
+      bandBinTransFile = transDir + "LoIsis2FiducialImport.trn";
+    } 
+    else if (inputLabel.HasKeyword("BORESIGHT_SAMPLE", Pvl::Traverse)) {
+      bandBinTransFile = transDir + "LoIsis2BoresightImport.trn";
+    } 
+    else {
       string msg = "[" + labelFile.Name() + "] does not contain boresight or fiducial information.";
       throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
     }
   }
 
-  transFile = transDir + "LunarOrbiter.trn";
+  transFile = transDir + "LoGeneralImport.trn";
   // Get the translation manager ready
   PvlTranslationManager commonlabelXlater (inputLabel, transFile.Expanded());
   // Pvl outputLabels;
@@ -93,11 +96,13 @@ void TranslateLunarLabels (Filename &labelFile, Cube *ocube) {
   PvlGroup &inst = outputLabel->FindGroup("Instrument",Pvl::Traverse);
 
   //Creates FiducialCoordinateMicron with the proper units
-  iString fcm = (string) inst.FindKeyword("FiducialCoordinateMicron");
-  iString fcmUnits = fcm;
-  fcmUnits = iString::TrimHead("0123456789.",fcmUnits);
-  fcm = iString::TrimTail("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",fcm);
-  inst.FindKeyword("FiducialCoordinateMicron").SetValue((int)fcm, fcmUnits);
+  if (!inputLabel.HasKeyword("LO:BORESIGHT_SAMPLE", Pvl::Traverse)) {
+    iString fcm = (string) inst.FindKeyword("FiducialCoordinateMicron");
+    iString fcmUnits = fcm;
+    fcmUnits = iString::TrimHead("0123456789.",fcmUnits);
+    fcm = iString::TrimTail("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ",fcm);
+    inst.FindKeyword("FiducialCoordinateMicron").SetValue((int)fcm, fcmUnits);
+  }
 
   // High Resolution & Fiducial Medium Case
   if (hasFiducial) {

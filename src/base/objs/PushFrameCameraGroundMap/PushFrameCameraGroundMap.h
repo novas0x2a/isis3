@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/10/23 15:42:29 $                                                                 
+ * $Revision: 1.6 $                                                             
+ * $Date: 2009/12/07 17:39:26 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -41,7 +41,10 @@ namespace Isis {
    *  
    * @internal
    *   @history 2008-06-18 Steven Lambright Fixed documentation
-   *   @history 2008-10-23 Steven Lambright Added optimizations, fixed misc. bugs
+   *   @history 2008-10-23 Steven Lambright Added optimizations, fixed misc bugs
+   *   @history 2009-11-19 Steven Lambright Removed linear search offset 
+   *   @history 2009-12-07 Steven Lambright Increased liklihood that our
+   *            spacecraft distance correctly minimizes for LRO
    */
   class PushFrameCameraGroundMap : public CameraGroundMap {
     public:
@@ -49,11 +52,11 @@ namespace Isis {
        * This is the constructor for the push frame ground map
        * 
        * @param cam Pointer to the camera
-       * @param evenFramelets True if the image contains even framelets, false for odd
+       * @param evenFramelets True if the image contains even framelets
        */
-      PushFrameCameraGroundMap(Camera *cam, bool evenFramelets) : CameraGroundMap(cam) {
+      PushFrameCameraGroundMap(Camera *cam, bool evenFramelets) : 
+        CameraGroundMap(cam) {
         p_evenFramelets = evenFramelets;
-        p_linearSearchOffset = 0;
       }
   
       //! Destructor
@@ -63,10 +66,11 @@ namespace Isis {
 
     private:
       double FindDistance(int framelet, const double lat, const double lon);
-      double FindSpacecraftDistance(int framelet, const double lat, const double lon);
+      double FindSpacecraftDistance(int framelet, 
+                                    const double lat, 
+                                    const double lon);
 
       bool   p_evenFramelets; //!<True if the file contains even framelets
-      int    p_linearSearchOffset;
   };
 };
 #endif

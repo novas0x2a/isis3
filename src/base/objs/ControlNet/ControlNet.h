@@ -1,9 +1,10 @@
 #ifndef ControlNet_h
 #define ControlNet_h
+
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2009/09/01 17:47:14 $
+ * $Revision: 1.12 $
+ * $Date: 2009/09/26 00:52:11 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -71,6 +72,12 @@ namespace Isis {
    *            'p_pointsHash'. This was done to speed up the Add
    *            method which was essentially slowing down the
    *            reading or creation of Control Networks.
+   *   @history 2009-09-01 Eric Hyer - Added two includes: QVector and QString
+   *   @history 2009-09-25 Travis Addair - Changed methods
+   *            which return the number of control measures in the
+   *            network to compute those values at the time the
+   *            method is called, not when the control network is
+   *            first initialized
    *                              
    */
   class ControlNet {
@@ -174,14 +181,11 @@ namespace Isis {
       //! Return if the control point is invalid
       bool Invalid() const { return p_invalid; }
 
-      //! Return the total number of measures for all control points in the network
-      int NumMeasures() const { return p_numMeasures; };
+      int NumMeasures();
 
-      //! Return the number of valid (non-ignored) measures
-      int NumValidMeasures() const { return p_numMeasures - p_numIgnoredMeasures; };
+      int NumValidMeasures();
 
-      //! Return the number of ignored measures
-      int NumIgnoredMeasures() const { return p_numIgnoredMeasures; };
+      int NumIgnoredMeasures();
 
       void Add (const ControlPoint &point, bool forceBuild=false);
       void Delete (int index);
@@ -225,7 +229,6 @@ namespace Isis {
       std::string p_description;           //!< Textual Description of network
       std::string p_userName;              //!< The user who created the network
       NetworkType p_type;                  //!< The type of network being used
-      int p_numMeasures;                   //!< Total number of measures in the network
       int p_numIgnoredMeasures;            //!< Number of ignored measures
       std::map<std::string,Isis::Camera *> p_cameraMap;    //!< A map from serialnumber to camera
       std::vector<Isis::Camera *> p_cameraList;            //!< Vector of image number to camera

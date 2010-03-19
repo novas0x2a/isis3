@@ -2,8 +2,8 @@
 #define Camera_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.28 $                                                             
- * $Date: 2009/09/23 22:12:54 $                                                                 
+ * $Revision: 1.29 $                                                             
+ * $Date: 2009/12/14 23:36:29 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -117,6 +117,8 @@ namespace Isis {
  *            returned enumeration value
  *   @history 2009-09-23  Tracie Sucharski - Convert negative longitudes coming
  *            out of reclat when computing azimuths.
+ *   @history 2009-12-14  Steven Lambright - BasicMapping(...) will now populate
+ *            the map Pvl parameter with a valid Pvl
  */
 
   class Camera : public Isis::Sensor {

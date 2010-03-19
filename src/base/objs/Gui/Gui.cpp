@@ -17,6 +17,7 @@
 #include <QFrame>
 #include <QDesktopWidget>
 
+#include "Gui.h"
 #include "UserInterface.h"
 #include "Preference.h"
 #include "iString.h"
@@ -26,12 +27,13 @@
 #include "PvlGroup.h"
 #include "Pvl.h"
 #include "SessionLog.h"
+#include "Filename.h"
 
 namespace Isis {
 
   //! Singleton
   Gui *Gui::p_gui = NULL;
-  Gui *Gui::Create (Isis::UserInterface &ui, int argc, char *argv[]) {
+  Gui *Gui::Create (Isis::UserInterface &ui, int &argc, char *argv[]) {
     // Don't recreate
     if (p_gui != NULL) return p_gui;
 
@@ -41,6 +43,10 @@ namespace Isis {
     // Create the application
     new QApplication (argc, argv);
     QApplication::setQuitOnLastWindowClosed(true);
+
+    Isis::Filename qtpluginpath ("$ISISROOT/3rdParty/plugins");
+    QCoreApplication::addLibraryPath(qtpluginpath.Expanded().c_str());
+
 
     // Set the style (Motif, Windows, ...)
     // Qt 4 docs say this should be set before the application constructor

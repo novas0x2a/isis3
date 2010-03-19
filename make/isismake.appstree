@@ -1,6 +1,9 @@
 include $(ISISROOT)/make/isismake.macros
 
-APPLICATIONS = $(filter-out CVS Makefile , $(wildcard *))
+DIRONLY = $(subst /,,$(shell ls -d */))
+CVS := CVS
+
+APPLICATIONS = $(filter-out $(CVS), $(DIRONLY)) 
 
 applications:
 	for i in $(APPLICATIONS); do \
@@ -14,8 +17,10 @@ documentation:
 	  cd $$i; $(MAKE) docs; cd ..; \
 	done
 
+
 clean:
 	for i in $(APPLICATIONS); do \
+	  echo "    Cleaning [$$i]"; \
 	  cd $$i; $(MAKE) clean; cd ..; \
 	done
 

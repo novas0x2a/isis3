@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2009/01/21 16:09:17 $
+ * $Revision: 1.12 $
+ * $Date: 2009/11/27 23:28:00 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -75,10 +75,12 @@ namespace Isis {
    *            instead of Application deleting them
    *   @history 2008-07-08 Steven Lambright - p_ui is no longer static, which
    *            fixes issues with the mac unit tests.
+   *   @history 2009-11-19 Kris Becker - Made argc pass by reference since Qt's
+   *            QApplication/QCoreApplication requires it
    **/
   class Application {
     public:
-      Application (int argc, char *argv[]);
+      Application (int &argc, char *argv[]);
       ~Application ();
 
       int Exec(void (*funct)());

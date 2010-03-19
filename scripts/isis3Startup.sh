@@ -44,32 +44,3 @@ export PATH
 # Create QT_PLUGIN_PATH env variable
 QT_PLUGIN_PATH="$ISISROOT/3rdParty/plugins"
 export QT_PLUGIN_PATH
-
-Platform=`uname -s`
-
-# Initialize Mac OS X
-if [ $Platform = "Darwin" ]; then
-  if [ "$DYLD_FALLBACK_LIBRARY_PATH" ]; then
-     DYLD_FALLBACK_LIBRARY_PATH="${DYLD_FALLBACK_LIBRARY_PATH}:${ISISROOT}/lib:${ISISROOT}/3rdParty/lib"
- else
-     DYLD_FALLBACK_LIBRARY_PATH="${ISISROOT}/lib:${ISISROOT}/3rdParty/lib"
- fi
-
-  export DYLD_FALLBACK_LIBRARY_PATH
-
-else 
-# Set up other Unixes
-  if [ "$LD_LIBRARY_PATH" ]; then
-    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ISISROOT}/lib"
-  else
-    LD_LIBRARY_PATH=${ISISROOT}/lib:
-  fi
-
-  LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${ISISROOT}/3rdParty/lib"
-
-  if [ "`uname`" = "SunOS" ]; then
-    LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/usr/lib/sparcv9"
-  fi
-
-  export LD_LIBRARY_PATH
-fi

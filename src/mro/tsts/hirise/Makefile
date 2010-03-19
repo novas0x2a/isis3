@@ -3,8 +3,6 @@ APP2NAME = spiceinit
 APP3NAME = campt
 APP4NAME = getsn
 
-PSP_010186_1785_RED3_1.IMG--finalOutput.pvl.IGNORELINES = Filename
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:

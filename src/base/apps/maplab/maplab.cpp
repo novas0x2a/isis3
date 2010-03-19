@@ -23,6 +23,25 @@ void IsisMain(){
   userMap.Read(ui.GetFilename("MAP"));
   PvlGroup &mapGrp = userMap.FindGroup("Mapping",Pvl::Traverse);
 
+  // Error checking to ensure the map projection file provided contains
+  // information pertaining to a target, body radius, and longitude direction
+  if (!mapGrp.HasKeyword("TargetName")) {
+    string msg = "The given MAP [" + userMap.Name() +
+      "] does not have the TargetName keyword.";
+    throw iException::Message( iException::User, msg, _FILEINFO_ );
+  }
+  else if (!mapGrp.HasKeyword("EquatorialRadius") || 
+           !mapGrp.HasKeyword("PolarRadius")) {
+    string msg = "The given MAP [" + userMap.Name() +
+      "] does not have the EquatorialRadius and PolarRadius keywords.";
+    throw iException::Message( iException::User, msg, _FILEINFO_ );
+  }
+  else if (!mapGrp.HasKeyword("LongitudeDomain")) {
+    string msg = "The given MAP [" + userMap.Name() +
+      "] does not have the LongitudeDomain keyword.";
+    throw iException::Message( iException::User, msg, _FILEINFO_ );
+  }
+
   //Read in line and sample inputs
   double line = ui.GetDouble("LINE");
   double samp = ui.GetDouble("SAMPLE");
@@ -32,7 +51,7 @@ void IsisMain(){
 
   //Given x,y coordinates
   if(option=="XY") {
-    //find values for x and y at the origen (upperleftcorner)
+    //find values for x and y at the origin (upperleftcorner)
     double x = ui.GetDouble("X");
     double y = ui.GetDouble("Y");
     //Get Resolution and Scale
@@ -50,7 +69,7 @@ void IsisMain(){
       res = (2.0 * Isis::PI * localRadius) / (360.0 * scale);
     }
     else {
-      string msg = "The given MAP[" + userMap.Name() +
+      string msg = "The given MAP [" + userMap.Name() +
         "] does not have the PixelResolution or Scale keywords.";
       throw iException::Message( iException::User, msg, _FILEINFO_ );
     }

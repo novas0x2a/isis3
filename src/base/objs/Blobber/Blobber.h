@@ -2,8 +2,8 @@
 #define Blobber_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2008/06/18 19:19:11 $
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/12/22 02:09:54 $
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -24,7 +24,7 @@
  */                                                                       
 
 #include <string>
-#include "tnt_array2d.h"
+#include "tnt/tnt_array2d.h"
 
 namespace Isis {
 

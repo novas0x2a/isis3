@@ -1,8 +1,8 @@
 include $(ISISROOT)/make/isismake.macros
 
-TESTS = $(filter-out Makefile CVS, $(wildcard *))
-
-export 
+DIRONLY = $(subst /,,$(shell ls -d */))
+CVS := CVS
+TESTS = $(filter-out $(CVS), $(DIRONLY))
 
 #----------------------------------------------------------------------------
 # Target = help

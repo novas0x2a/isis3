@@ -85,6 +85,10 @@
     <change name="Steven Lambright" date="2009-06-30">
       When an invalid projection exists the proper error should now be thrown.
     </change>
+    <change name="Janet Barrett" date="2009-10-21">
+      Now uses the SubArea class to produce output cube labels 
+      with corrected Mapping, Instrument, and AlphaCube groups.
+    </change>
   </history>
 
   <oldName>

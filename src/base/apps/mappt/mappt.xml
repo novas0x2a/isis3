@@ -17,6 +17,28 @@
     entering a line/sample will cause the program to compute a latitude/longitude
     and x/y.  The output can be sent to a text file using the TO parameter and can
     be read in a script via the "getkey" program.
+
+    Example output:
+    <pre>
+      Group = Results
+        Filename                 = /home/mboyd/mapped.cub
+        Sample                   = 400.0
+        Line                     = 400.0
+        PixelValue               = Null
+        X                        = 36094.582198722
+        Y                        = -2602604.7032335
+
+        # Input map coordinate system
+        PlanetocentricLatitude   = -85.828401770565
+        PositiveEast180Longitude = 26.807891885122
+
+        # Location in other coordinate systems
+        PlanetographicLatitude   = -85.828401770565
+        PositiveEast360Longitude = 26.807891885122
+        PositiveWest360Longitude = 333.19210811488
+        PositiveWest180Longitude = -26.807891885122
+      End_Group
+    </pre>
   </description>
 
   <category>
@@ -45,6 +67,16 @@
     </change>
     <change name="Steven Koechle" date="2008-08-14">
       Added pixel value to the output group
+    </change>
+    <change name="Mackenzie Boyd" date="2010-01-12">
+      Modified output to include all coordinate systems for latitude and 
+      longitude and clearly declare the input files coordinate system. Improved 
+      documentation.
+    </change>
+    <change name="Mackenzie Boyd" date="2010-02-16">
+      Added many parameters accesible when inputing a lat lon, all under 
+      coordinate system. These parameters are to select the input coordinate 
+      system being used. Updated documentation to match.
     </change>
   </history>
 
@@ -140,6 +172,11 @@
               <item>LONGITUDE</item>
               <item>X</item>
               <item>Y</item>
+              <item>COORDSYS</item>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+              <item>MAP</item>
             </exclusions>
           </option>
           <option value="GROUND">
@@ -151,6 +188,7 @@
             <inclusions>
               <item>LATITUDE</item>
               <item>LONGITUDE</item>
+              <item>COORDSYS</item>
             </inclusions>
             <exclusions>
               <item>SAMPLE</item>
@@ -174,6 +212,11 @@
               <item>LINE</item>
               <item>LATITUDE</item>
               <item>LONGITUDE</item>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+              <item>MAP</item>
+              <item>COORDSYS</item>
             </exclusions>
           </option>
         </list>
@@ -210,8 +253,8 @@
         </brief>
         <description>
           This is the latitude value used to compute the other coordinate values. The latitude
-          will be interpreted as either Planetographic or Planetocentric latitude using
-          the information in the Mapping group of the cube. 
+          will be interpreted as either Planetographic or Planetocentric 
+          latitude depending on the option selected under coordinate system. 
         </description>
       </parameter>
 
@@ -222,8 +265,9 @@
         </brief>
         <description>
           This is the longitude value used to compute the other coordinate values.  The longitude
-          will be interpreted as either PositiveEast or PositiveWest longitude using
-          the information in the Mapping group of the cube.
+          will be interpreted as either PositiveEast or PositiveWest longitude 
+          and -180 to 180 or 0 to 360 domain depending on the option selected 
+          under coordinate system.
         </description>
       </parameter>
 
@@ -247,6 +291,220 @@
           This is the y coordinate value used to compute the other coordinate values.  It
            will be a projection Y value in meters.
         </description>
+      </parameter>
+    </group>
+
+    <group name="Coordinate System">
+      <parameter name="COORDSYS">
+        <type>string</type>
+        <brief> 
+          The coordinate system of the input latitude and longitude.
+        </brief>
+        <default><item>INPUTFILESYS</item></default>
+        <description>
+          This is the coordinate system the input latitude and longitude will be 
+          interpreted in. There are eight possible options with the variation of 
+          planetocentric or planetographic, positive east or west, 180 to -180 
+          range or 0 to 360.
+        </description>
+        <list>
+          <option value="INPUTFILESYS">
+            <brief>
+              Use coordinate system of input file
+            </brief>  
+            <description>
+              This option uses the coordinate system of the input cube, this 
+              could be any of eight possibilities. This is the default behavior.
+            </description>
+            <exclusions>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+              <item>MAP</item>
+            </exclusions>
+          </option>
+
+          <option value="UNIVERSAL">
+            <brief>
+              Isis default
+            </brief>
+            <description>
+              The Isis default coordinate system of planetocentric, positive 
+              east, domain 0 to 360. 
+            </description>
+            <exclusions>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+              <item>MAP</item>
+            </exclusions> 
+          </option>
+          
+          <option value="USERDEFINED">
+            <brief>
+              User defined coordinate system  
+            </brief>  
+            <description>
+              Accepts latitude and longitude in a user defined coordinate 
+              system, any of eight possible combinations.
+            </description>
+            <inclusions>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+            </inclusions>
+            <exclusions>
+              <item>MAP</item>
+            </exclusions>
+          </option>
+          
+          <option value="MAP">
+            <brief>
+              Use mapping group from other file
+            </brief>  
+            <description>
+              The mapping group of the given file is read in to convert from its
+              system to universal to be set in the input cube's projection.
+            </description>
+            <inclusions>
+              <item>MAP</item>
+            </inclusions>
+            <exclusions>
+              <item>LATTYPE</item>
+              <item>LONDIR</item>
+              <item>LONDOM</item>
+            </exclusions>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="MAP">
+        <type>filename</type>
+        <fileMode>input</fileMode>
+        <brief>
+          File containing mapping parameters
+        </brief>
+        <description>
+          This file can be a cube or a simple hand produced map file. This file 
+          must contain a maping group and is how the coordinate system will be 
+          determined if selected.
+        </description>
+        <helpers>
+          <helper name="H1">
+            <function>PrintMap</function>
+            <brief>View MapFile</brief>
+            <description>
+              This helper button will cat out the mapping group of the given mapfile to the session log
+               of the application
+             </description>
+            <icon>$ISIS3DATA/base/icons/labels.png</icon>
+          </helper>
+        </helpers>
+        <filter>
+          *.map *.cub
+        </filter>
+      </parameter>
+      
+      <parameter name="LATTYPE">
+        <type>string</type>
+        <brief>
+          Latitude type
+        </brief>
+        <description>
+          The latitude type for the projection.  It can either be Planetocentric or Planetographic.
+           PLANETOCENTRIC is the default.
+        </description>
+        <default>
+          <item>PLANETOCENTRIC</item>
+        </default>
+        <list>
+          <option value="PLANETOCENTRIC">
+            <brief>
+              Planetocentric
+            </brief>
+            <description>
+              Sets the latitude type of the input to be interpreted as
+              Planetocentric.
+            </description>
+          </option>
+          <option value="PLANETOGRAPHIC">
+            <brief>
+              Planetographic
+            </brief>
+            <description>
+              Sets the latitude type of the input to be interpreted as 
+              Planetographic.
+            </description>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="LONDIR">
+        <type>string</type>
+        <brief>
+          Longitude Direction
+        </brief>
+        <description>
+          The longitude direction for the projection.  It can have a direction of Positive East 
+          or Positive West.  POSITIVEEAST is the default.
+        </description>
+        <default>
+          <item>POSITIVEEAST</item>
+        </default>
+        <list>
+          <option value="POSITIVEEAST">
+            <brief>
+              PositiveEast Longitude Direction
+            </brief>
+            <description>
+              Sets the longitude direction of the input  to be interpreted as 
+              PositiveEast.
+            </description>
+          </option>
+          <option value="POSITIVEWEST">
+            <brief>
+              PositiveWest Longitude Direction
+            </brief>
+            <description>
+              Sets the longitude direction of the input to be interpreted as 
+              PositiveWest.
+            </description>
+          </option>
+        </list>
+      </parameter>
+
+      <parameter name="LONDOM">
+        <type>string</type>
+        <brief>
+          Longitude Domain
+        </brief>
+        <description>
+          The longitude domain for the projection. It can either have a domain
+          of 180 or 360. 360 is the default.
+        </description>
+        <default>
+          <item>360</item>
+        </default>
+        <list>
+          <option value="360">
+            <brief>
+              0 to 360 Degree Longitude Domain
+            </brief>
+            <description>
+              Sets the longitude domain of the input to be intrepreted as 0 to 
+              360 degrees.
+            </description>
+          </option>
+          <option value="180">
+            <brief>
+              -180 to 180 Degree Longitude Domain
+            </brief>
+            <description>
+              Sets the longitude domain of the input to be interpreted as 0 to 
+              180 degrees.
+            </description>
+          </option>
+        </list>
       </parameter>
     </group>
   </groups>

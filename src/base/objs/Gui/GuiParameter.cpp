@@ -1,23 +1,54 @@
-#include <QLabel>
-#include <QToolButton>
+/**                                                                       
+ * @file                                                                  
+ * $Revision: 1.5 $ 
+ * $Date: 2009/12/15 20:44:57 $ 
+ *                                                                        
+ *   Unless noted otherwise, the portions of Isis written by the USGS are 
+ *   public domain. See individual third-party library and package descriptions 
+ *   for intellectual property information, user agreements, and related  
+ *   information.                                                         
+ *                                                                        
+ *   Although Isis has been used by the USGS, no warranty, expressed or   
+ *   implied, is made by the USGS as to the accuracy and functioning of such 
+ *   software and related material nor shall the fact of distribution     
+ *   constitute any such warranty, and no responsibility is assumed by the
+ *   USGS in connection therewith.                                        
+ *                                                                        
+ *   For additional information, launch                                   
+ *   $ISISROOT/doc//documents/Disclaimers/Disclaimers.html                
+ *   in a browser or see the Privacy &amp; Disclaimers page on the Isis website,
+ *   http://isis.astrogeology.usgs.gov, and the USGS privacy and disclaimers on
+ *   http://www.usgs.gov/privacy.html.                                    
+ */  
+
+#include <QFileDialog>
 #include <QHBoxLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QToolButton>
 
 #include "GuiParameter.h"
-#include "UserInterface.h"
-#include "Filename.h"
+
 #include "Application.h"
+#include "Filename.h"
 #include "GuiHelperAction.h"
+#include "UserInterface.h"
+
+#include "GuiFilenameParameter.h"
+#include "GuiCubeParameter.h"
 
 namespace Isis {
   //! Constructor
   GuiParameter::GuiParameter(QGridLayout *grid, UserInterface &ui,
                              int group, int param) : QObject() {
-
     p_ui = &ui;
     p_group = group;
     p_param = param;
 
     p_name = ui.ParamName(group, param);
+
+    p_fileButton = new QToolButton();
+    p_lineEdit = new QLineEdit();
 
     p_label = new QLabel((iString)p_ui->ParamName(group, param));
     p_label->setAlignment(Qt::AlignRight | Qt::AlignVCenter);

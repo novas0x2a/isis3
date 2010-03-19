@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/10/23 15:42:29 $
+ * $Revision: 1.6 $
+ * $Date: 2009/12/07 17:39:26 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -64,14 +64,14 @@ namespace Isis {
         biasFactor = -1.0 / biasFactor;
         biasFactor = -(biasFactor + 1) / biasFactor;
 
-        // The bias is about 10% unsure... 
-        biasFactor = std::min(biasFactor + 0.10, 0.0);
+        // The bias is about 50% unsure... sometimes our V is a U
+        biasFactor = std::min(biasFactor + 0.50, 0.0);
       }
       else {
         biasFactor = (biasFactor - 1) / biasFactor;
 
-        // The bias is about 10% unsure... 
-        biasFactor = std::max(biasFactor - 0.10, 0.0);
+        // The bias is about 50% unsure... sometimes our V is a U
+        biasFactor = std::max(biasFactor - 0.50, 0.0);
       }
 
       int middleFramelet = startFramelet + (int)(deltaX + biasFactor*deltaX);
@@ -97,7 +97,7 @@ namespace Isis {
       return false;
     }
 
-    int realFramelet = (int) startFramelet + p_linearSearchOffset;
+    int realFramelet = startFramelet;
     bool frameletEven = (realFramelet % 2 == 0);
     bool timeAscendingFramelets = detectorMap->timeAscendingFramelets();
 
@@ -131,13 +131,6 @@ namespace Isis {
       }
     }
 
-    p_linearSearchOffset = realFramelet - (int) startFramelet;
-
-    // Can only offset 2% of the image to keep us near the right feature
-    if(fabs(p_linearSearchOffset) > (int)(0.02 * detectorMap->TotalFramelets())) {
-      p_linearSearchOffset = (p_linearSearchOffset/abs(p_linearSearchOffset)) * (int)(0.02 * detectorMap->TotalFramelets());
-    }
-    
     detectorMap->SetFramelet(realFramelet);
 
     return CameraGroundMap::SetGround(lat,lon);

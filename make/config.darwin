@@ -32,7 +32,7 @@ ISISCFLAGS =
 #---------------------------------------------------------------------------
 # Linker options
 #---------------------------------------------------------------------------
-ISISLDFLAGS = -headerpad_max_install_names -bind_at_load -Wl,-w
+ISISLDFLAGS = -headerpad_max_install_names -arch i386 -bind_at_load -Wl,-w
 ISISSYSLIBS = -lz -lm -framework ApplicationServices
 ISISSTATIC  = 
 ISISDYNAMIC = 
@@ -76,37 +76,39 @@ QWTINCDIR = -I$(QWTDIR)/include
 QWTLIBDIR = -L$(QWTDIR)/lib 
 QWTLIB    = -lqwt 
 
+#---------------------------------------------------------------------------
 # Set up for Qt
 #---------------------------------------------------------------------------
 QTDARWINFLAGS += -DQT_GUI_LIB -DQT_CORE_LIB -DQT_SHARED
 QTDIR        = $(ISIS3OPT)
-QTINCDIR  = -I$(QTDIR)/share/qt4-mac/mkspecs/macx-g++ 
-QTINCDIR  = -I$(QTDIR)/include/qt4-mac
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/Qt
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtCore
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtAssistant
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtGui
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtNetwork
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtScript
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtSql
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtSvg
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtWebKit
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtXml
-QTINCDIR += -I$(QTDIR)/include/qt4-mac/QtXmlPatterns
-QTLIBDIR = -L$(QTDIR)/lib
-#QTLIB    =  -lQtNetwork -lQtSql -lQtGui -lQtCore
+QTINCDIR  = -I$(QTDIR)/libexec/qt4-mac/mkspecs/macx-g++
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtCore
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtAssistant
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtGui
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtNetwork
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtScript
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtSql
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtSvg
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtWebKit
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtXml
+QTINCDIR += -I$(QTDIR)/libexec/qt4-mac/include/QtXmlPatterns
+QTLIBDIR  = -L$(QTDIR)/libexec/qt4-mac/lib -F$(QTDIR)/libexec/qt4-mac/lib
 
-ISISCPPFLAGS += $(QTDARWINFLAGS)
-QTFRAMEWORKS = -framework Carbon -framework AppKit
-QTLIB        = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore \
-                $(QTFRAMEWORKS)
+ISISCPPFLAGS       += $(QTDARWINFLAGS)
+QTCOMMONFRAMEWORKS  =
+QTFRAMEWORKS        = -framework QtXmlPatterns -framework QtXml -framework QtNetwork \
+                      -framework QtSql -framework QtGui -framework QtCore -framework QtSvg
+QTLIB               = $(QTFRAMEWORKS) $(QTCOMMONFRAMEWORKS)
 
 QTOPENGL     = -framework OpenGL -framework AGL
 
-UIC          = $(QTDIR)/bin/uic
-MOC          = $(QTDIR)/bin/moc
+UIC          = $(QTDIR)/libexec/qt4-mac/bin/uic
+RCC          = $(QTDIR)/libexec/qt4-mac/bin/rcc
+RCCDEFINES   =
+MOC          = $(QTDIR)/libexec/qt4-mac/bin/moc
 MOCDEFINES   += $(QTDARWINFLAGS)
-MOCDEFINES   += $(QTINCDIR) 
+MOCDEFINES   += $(QTINCDIR)
 MOCDEFINES   += -D__APPLE__ -D__GNUC__
 
 #---------------------------------------------------------------------------
@@ -121,7 +123,7 @@ XALAN        = $(ISIS3OPT)/bin/Xalan
 #---------------------------------------------------------------------------
 # Set up for naif
 #---------------------------------------------------------------------------
-NAIFINCDIR = -I$(ISIS3LOCAL)/include/naif
+NAIFINCDIR = -I$(ISIS3LOCAL)/include
 NAIFLIBDIR = -L$(ISIS3LOCAL)/lib
 NAIFLIB    = -lcspice
 
@@ -144,7 +146,7 @@ JAMALIB    =
 #---------------------------------------------------------------------------
 GEOSINCDIR = -I$(ISIS3OPT)/include/geos
 GEOSLIBDIR = -L$(ISIS3OPT)/lib
-GEOSLIB    = -lgeos-3.0.0
+GEOSLIB    = -lgeos
 
 #---------------------------------------------------------------------------
 # Set up for the GNU Scientific Library (GSL).  Note that this setup
@@ -182,35 +184,62 @@ endif
 #---------------------------------------------------------------------------
 # Set up for Google Protocol Buffers (ProtoBuf)
 #---------------------------------------------------------------------------
-PROTOBUFINCDIR = 
-PROTOBUFLIBDIR = -L$(ISIS3LOCAL)/lib
+PROTOBUFINCDIR = -I$(ISIS3OPT)/include/google
+PROTOBUFLIBDIR = -L$(ISIS3OPT)/lib
 PROTOBUFLIB    = -lprotobuf
+
+#---------------------------------------------------------------------------
+# Set up for kakadu
+# The Kakadu library is proprietary. The source files cannot be distributed
+# with ISIS3. If you need to rebuild ISIS3 on your system, then you will
+# need to modify the lines below that pertain to the location of the
+# header files and library on your system. The compilation flag, ENABLEJP2K,
+# should be set to true if you are building with the Kakadu library and
+# you want to use the JPEG2000 specific code in the ISIS3 system. Otherwise,
+# set the ENABLEJP2K flag to false.
+#---------------------------------------------------------------------------
+KAKADUINCDIR = -I$(ISIS3LOCAL)/include/kakadu/v6_3-00967N
+KAKADULIBDIR = -L$(ISIS3LOCAL)/lib
+KAKADULIB    = -lkdu_a63R
+ISISCPPFLAGS += -DENABLEJP2K=1
+
+
+#---------------------------------------------------------------------------
+# Set up for Boost Library
+#---------------------------------------------------------------------------
+BOOSTINCDIR = -I$(ISIS3OPT)/include
+BOOSTLIBDIR = -L$(ISIS3OPT)/lib
+BOOSTLIB   =
 
 #---------------------------------------------------------------------------
 #  Define the third party distribution libraries (patterns)
 #---------------------------------------------------------------------------
 
 #  Libraries
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtXmlPatterns.*dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtXml.*dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtNetwork.*dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtSql.*dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtGui.*dylib"
-THIRDPARTYLIBS    += "$(QTDIR)/lib/libQtCore.*dylib"
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib//QtXmlPatterns.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtXml.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtNetwork.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtSql.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtGui.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtCore.framework
+THIRDPARTYLIBS    += "$(QTDIR)/libexec/qt4-mac/lib/QtSvg.framework
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libqwt.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libcspice*.dylib"
-THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libsuperlu_3.0.dylib"
-THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libprotobuf*.dylib"
+#THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libsuperlu_3.0.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libprotobuf*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libiconv*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libxerces-c*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgsl*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libz*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libssl*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libcrypto*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libpng12.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libpng.dylib"
-THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgeos-*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/libgeos*.dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/postgresql*/libpq.*dylib"
 THIRDPARTYLIBS    += "$(ISIS3OPT)/lib/mysql5/mysql/libmysqlclient_r*.dylib"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libkdu_a63R.dylib"
 
 #  Plugins
-THIRDPARTYPLUGINS +=  "$(ISIS3OPT)/lib/qt4-mac-plugins/"
+THIRDPARTYPLUGINS +=  "$(ISIS3OPT)/libexec/qt4-mac/plugins/"
 

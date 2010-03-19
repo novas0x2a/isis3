@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2009/06/24 20:53:41 $
+ * $Revision: 1.3 $
+ * $Date: 2009/11/25 22:09:21 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -192,7 +192,7 @@ namespace Isis {
         input.resize(p_statsList.size());
         for (int i=0; i<(int)input.size(); i++) input[i] = 0.0;
         input[hold] = 1.0;
-        p_offsetLsq->AddKnown(input,0.0);
+        p_offsetLsq->AddKnown(input,0.0,1e30);
       }
 
       // Solve the least squares and get the offset coefficients to apply to the
@@ -244,7 +244,7 @@ namespace Isis {
         input.resize(p_statsList.size());
         for (int i=0; i<(int)input.size(); i++) input[i] = 0.0;
         input[hold] = 1.0;
-        p_gainLsq->AddKnown(input,0.0);
+        p_gainLsq->AddKnown(input,0.0,1e30);
       }
 
       // Solve the least squares and get the gain coefficients to apply to the

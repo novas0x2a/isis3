@@ -2,7 +2,7 @@
 #include "Filename.h"
 #include "Pvl.h"
 #include "iString.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 #include "qstringlist.h"
 #include "KernelDb.h"
 #include "iException.h"

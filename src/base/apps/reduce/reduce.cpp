@@ -5,6 +5,7 @@
 #include "LineManager.h"
 #include "ProcessByLine.h"
 #include "SpecialPixel.h"
+#include "SubArea.h"
 
 #include <cmath>
 
@@ -55,10 +56,10 @@ void IsisMain() {
     }
   }
 
-  string alg = ui.GetString ("ALGORITHM");
+  string alg = ui.GetString("ALGORITHM");
   vper = ui.GetDouble ("VALIDPER")/100.;
 
-  if (ui.WasEntered ("ONS")) {
+  if (ui.GetString("MODE") == "TOTAL") {
     ons = ui.GetInteger ("ONS");
     onl = ui.GetInteger ("ONL");
     sscale = (double)ins / (double)ons;
@@ -99,37 +100,33 @@ void IsisMain() {
   sb = 0;
   if (alg == "AVERAGE") p.StartProcess(average);
   if (alg == "NEAREST") p.StartProcess(nearest);
-  
-  try {
-    PvlGroup &mapgroup = cube->Label()->FindGroup("Mapping", Pvl::Traverse);
-    
-    if(sscale != lscale) {
-      ocube->DeleteGroup("Mapping");
-    }
-    else {
-      // Update pixel resolution
-      double pixres = mapgroup["PixelResolution"];                        
-      mapgroup["PixelResolution"] = pixres * sscale;      
 
-      double scale = mapgroup["Scale"];
-      mapgroup["Scale"] = scale / sscale;    
-
-      ocube->PutGroup(mapgroup);
-    }
-  }
-  catch(iException &e) {
-    e.Clear();
-    // Update alphacube group
-    AlphaCube alpha(cube->Samples(), cube->Lines(),
-                    ocube->Samples(), ocube->Lines(),
-                    0.5, 0.5, cube->Samples()+0.5, cube->Lines()+0.5);
-    alpha.UpdateGroup(*ocube->Label());
-  }
-      
+  // Construct a label with the results
+  PvlGroup results("Results");
+  results += PvlKeyword ("InputLines", inl);
+  results += PvlKeyword ("InputSamples", ins);
+  results += PvlKeyword ("StartingLine", "1");
+  results += PvlKeyword ("StartingSample", "1");
+  results += PvlKeyword ("EndingLine", inl);
+  results += PvlKeyword ("EndingSample", ins);
+  results += PvlKeyword ("LineIncrement", lscale);
+  results += PvlKeyword ("SampleIncrement", sscale);
+  results += PvlKeyword ("OutputLines", onl);
+  results += PvlKeyword ("OutputSamples", ons);
+ 
+  // Update the Mapping, Instrument, and AlphaCube groups in the output
+  // cube label
+  SubArea s;
+  s.SetSubArea(inl,ins,1,1,inl,ins,lscale,sscale);
+  s.UpdateLabel(cube,ocube,results);
+ 
   // Cleanup
   p.EndProcess();
   delete in;
   cube->Close();
+
+  // Write the results to the log
+  Application::Log(results);
 }
 
 // Line processing routine for averaging algorithm
@@ -187,7 +184,7 @@ void average (Buffer &out) {
           npts[osamp+1] += sdel;
         }
       }
-      isamp ++;
+      isamp++;
     }
     iline++;
   }

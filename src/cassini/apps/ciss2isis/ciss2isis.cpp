@@ -47,15 +47,14 @@ void IsisMain ()
   UserInterface &ui = Application::GetUserInterface();
   Filename in = ui.GetFilename("FROM");
 
+  p.SetPdsFile (in.Expanded(), "", label);
+
   //Checks if in file is rdr
-  label = in.Expanded();
   if( label.HasObject("IMAGE_MAP_PROJECTION") ) {
     string msg = "[" + in.Name() + "] appears to be an rdr file.";
     msg += " Use pds2isis.";
     throw iException::Message(iException::User,msg, _FILEINFO_);
   }
-
-  p.SetPdsFile (in.Expanded(), "", label);
 
   // Set the output bit type to SignedWord
   CubeAttributeOutput &outAtt = ui.GetOutputAttribute("TO");
@@ -69,7 +68,7 @@ void IsisMain ()
   //Save off header (includes vicar labels and binary telemetry header)
   // No need to SetFileHeaderBytes() this is already done by ProcessImportPds automatically
   int vicarLabelBytes = label.FindObject("IMAGE_HEADER").FindKeyword("BYTES");
-  p.SaveFileHeader(); 
+  p.SaveFileHeader();
 
   //Save off line prefix data, always 24 bytes of binary prefix per line,see SIS version 1.1 pg 103
   int linePrefixBytes = label.FindObject("IMAGE").FindKeyword("LINE_PREFIX_BYTES");
@@ -98,7 +97,9 @@ void IsisMain ()
     inst.FindKeyword("BiasStripMean").AddComment("BiasStripMean value converted back to 12 bit.");
     p.Progress()->SetText("Image was converted using 12-to-8 bit table. \nConverting prefix pixels back to 12 bit and saving line prefix data...");
   }
+
   p.StartProcess ();  
+
   // Write line prefix data to table in output cube
   vector<vector<char *> > dataPrefix = p.DataPrefix();
   vector<char *> prefixBand0 = dataPrefix.at(0); //There is only one band so the outside vector only contains 

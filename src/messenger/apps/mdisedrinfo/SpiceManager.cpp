@@ -1,8 +1,8 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.8 $
- * $Date: 2008/07/14 16:17:55 $
- * $Id: SpiceManager.cpp,v 1.8 2008/07/14 16:17:55 skoechle Exp $
+ * $Revision: 1.9 $
+ * $Date: 2009/12/29 23:03:50 $
+ * $Id: SpiceManager.cpp,v 1.9 2009/12/29 23:03:50 ehyer Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -33,7 +33,7 @@
 #include "PvlKeyword.h"
 #include "Pvl.h"
 #include "iException.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 
 using namespace std;
 

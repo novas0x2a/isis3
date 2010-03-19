@@ -2,8 +2,8 @@
 #define Process_h
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/05/14 21:07:11 $
+ * $Revision: 1.10 $
+ * $Date: 2009/10/31 00:19:38 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -27,6 +27,7 @@
 #include "Cube.h"
 #include "Progress.h"
 #include "CubeAttribute.h"
+#include "Statistics.h"
   
 namespace Isis {
   const int SizeMatch = 1;
@@ -125,7 +126,13 @@ namespace Isis {
  *  @history 2007-07-19 Steven Lambright - Fixed memory leak
  *  @history 2007-07-27 Steven Lambright - Updated AllMatchOrOne and BandMatchOrOne
  *                                         error messages
- *  @history 2008-05-12 Steven Lambright - Removed references to CubeInfo  
+ *  @history 2008-05-12 Steven Lambright - Removed references to CubeInfo
+ *  @history 2009-10-29 Travis Addair - Added method calculating
+ *           statistics on all bands of all cubes
+ *  @history 2009-10-30 Travis Addair - Changed method
+ *           calculating statistics to store off its results in
+ *           both p_bandStats and p_cubeStats, and added methods
+ *           to access those results
  * 
  *  @todo 2005-02-08 Jeff Anderson - add an example to the class documentation.
  */ 
@@ -152,6 +159,20 @@ namespace Isis {
        * Flag indicating if original lable is to be propagated to output cubes.
        */
       bool p_propagateOriginalLabel;
+
+      /**
+       * Holds the calculated statistics for each band separately of 
+       * every input cubei after the CalculateStatistics method is 
+       * called. 
+       */
+      std::vector< std::vector< Isis::Statistics* > > p_bandStats;
+
+      /**
+       * Holds the calculated statistics for every band together of 
+       * every input cubei after the CalculateStatistics method is 
+       * called. 
+       */
+      std::vector< Isis::Statistics* > p_cubeStats;
 
      /**
       * A vector of pointers to opened Cube objects. The pointers are 
@@ -214,6 +235,32 @@ namespace Isis {
                           bool highestVersion=false);
 
       void WriteHistory(Cube &cube);
+
+      void CalculateStatistics();
+
+      /**
+       * Get the vector of Statistics objects for each band separately 
+       * of a specified input cube. 
+       *  
+       * @param index The index of the input cube in InputCubes 
+       * 
+       * @return vector<Statistics*> A list of statistics ordered by 
+       *         band
+       */
+      inline std::vector<Isis::Statistics*> BandStatistics (
+        const unsigned index) { return p_bandStats[index]; }
+       
+      /**
+       * Get the Statistics object for all bands of a specified input
+       * cube. 
+       *  
+       * @param index The index of the input cube in InputCubes 
+       * 
+       * @return Statistics* Collections of statistics gathered on all
+       *         bands
+       */
+      inline Isis::Statistics* CubeStatistics (
+        const unsigned index) { return p_cubeStats[index]; }
   };
 }
 

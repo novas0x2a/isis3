@@ -166,8 +166,8 @@ End_Object
 
 Group = Mapping
   TargetName         = Mars
-  EquatorialRadius   = 3396190.0 <<meters>>
-  PolarRadius        = 3376200.0 <<meters>>
+  EquatorialRadius   = 3396190.0 <meters>
+  PolarRadius        = 3376200.0 <meters>
   LatitudeType       = Planetocentric
   LongitudeDirection = PositiveEast
   LongitudeDomain    = 360
@@ -204,8 +204,8 @@ Test Polar Boundary Conditions
 Basic Mapping: 
 Group = Mapping
   TargetName         = Moon
-  EquatorialRadius   = 1737400.0 <<meters>>
-  PolarRadius        = 1737400.0 <<meters>>
+  EquatorialRadius   = 1737400.0 <meters>
+  PolarRadius        = 1737400.0 <meters>
   LatitudeType       = Planetocentric
   LongitudeDirection = PositiveEast
   LongitudeDomain    = 360

@@ -17,8 +17,7 @@
 using namespace std; 
 using namespace Isis;
 
-void compare (vector<Buffer *> &in,
-              vector<Buffer *> &out);
+void compare (vector<Buffer *> &in, vector<Buffer *> &out);
 
 void diffTable (ofstream &target, int precision);
 
@@ -42,6 +41,9 @@ int sigFigLine = 0;
 int sigFigSample = 0;
 int sigFigBand = 0;
 
+int gMaxDiffLine=0, gMaxDiffSample=0, gMaxDiffBand=0;
+double gMaxDiff;
+
 void IsisMain() {
   // Set up the two input cubes
   ProcessByLine p;
@@ -55,7 +57,7 @@ void IsisMain() {
   }
   else {
     tolerance = DBL_EPSILON;
-  }
+  } 
 
   // See if we should output the difference table
   if (ui.GetBoolean("OUTPUTDIFFS")){
@@ -73,6 +75,7 @@ void IsisMain() {
   spCount = 0;
   stats.Reset();
   colWidth = 0;
+  gMaxDiff=tolerance;
   p.StartProcess(compare);
 
   // Write to log indicating if two files are filesEqual.
@@ -96,7 +99,10 @@ void IsisMain() {
       results += PvlKeyword ("StandardDeviation",(double)stats.StandardDeviation());
       results += PvlKeyword ("Variance",(double)stats.Variance());
       results += PvlKeyword ("MinimumDifference",(double)stats.Minimum());
-      results += PvlKeyword ("MaximumDifference",(double)stats.Maximum());
+      results += PvlKeyword ("MaximumDifference",(double)stats.Maximum());      
+      results += PvlKeyword ("MaxDifferenceSample",(int)gMaxDiffSample);
+      results += PvlKeyword ("MaxDifferenceLine",(int)gMaxDiffLine);
+      results += PvlKeyword ("MaxDifferenceBand",(int)gMaxDiffBand);
     }
     results += PvlKeyword ("ValidPixelDifferences",stats.TotalPixels());
     results += PvlKeyword ("SpecialPixelDifferences",spCount);
@@ -127,7 +133,8 @@ void compare (vector<Buffer *> &in,vector<Buffer *> &out) {
   Buffer &input1 = *in[0];
   Buffer &input2 = *in[1];
   int inputSize = input1.size();
-
+  double MaxDiffTemp;
+  
   for (int index = 0; index < inputSize; index ++) {
     bool pixelDifferent = false;
     bool pixelSpecial = false;
@@ -150,12 +157,23 @@ void compare (vector<Buffer *> &in,vector<Buffer *> &out) {
       }
     }
     // We don't have any special pixels, run against tolerance
-    else if(abs(input1[index] - input2[index]) > tolerance) {
-      // This pixel is different.
-      pixelDifferent = true;
+    else {
+      MaxDiffTemp = abs(input1[index] - input2[index]);
+      if(MaxDiffTemp > tolerance) {
+        // This pixel is different.
+        pixelDifferent = true;       
+      
+        // Add the difference in dn to the stats object
+        stats.AddData(MaxDiffTemp);
 
-      // Add the difference in dn to the stats object
-      stats.AddData(abs(input1[index] - input2[index]));
+        // Store line, sample and band of max difference 
+        if (MaxDiffTemp > gMaxDiff) {
+          gMaxDiff = MaxDiffTemp;
+          gMaxDiffLine   = input1.Line(index);
+          gMaxDiffSample = input1.Sample(index);
+          gMaxDiffBand   = input1.Band(index);
+        }
+      }
     }
 
     // If pixels different & neither are special, calculate the significant figure difference

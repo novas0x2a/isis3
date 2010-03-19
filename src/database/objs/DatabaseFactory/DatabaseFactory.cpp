@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $
- * $Date: 2007/06/06 00:33:36 $
+ * $Revision: 1.3 $
+ * $Date: 2009/11/27 23:09:58 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -74,7 +74,7 @@ DatabaseFactory::DatabaseFactory() : _defProfName(""),  _profiles(),
   QCoreApplication *cApp = QCoreApplication::instance();
   if (cApp == 0) {
     static char *argv = { "DatabaseFactory" };
-    int argc  = 1;
+    static int argc  = 1;
     new QCoreApplication(argc, &argv);
   }
 

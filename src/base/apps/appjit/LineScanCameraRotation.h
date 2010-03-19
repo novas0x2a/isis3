@@ -2,8 +2,8 @@
 #define LineScanCameraRotation_h
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2009/08/04 00:08:10 $
+ * $Revision: 1.4 $
+ * $Date: 2009/12/29 23:03:47 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -24,15 +24,17 @@
 
 #include <string>
 #include <vector>
+
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
+
 #include "SpiceRotation.h"
 #include "SpicePosition.h"
 #include "Table.h"
 #include "Quaternion.h"
 #include "PolynomialUnivariate.h"
 #include "PixelOffset.h"
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
 #include "Spice.h"
 
 
@@ -90,6 +92,9 @@ namespace Isis {
    *                        and related methods
    *  @history 2009-07-31  Debbie A. Cook Added new argument, tol, for call to CreateCache
    *                        method of Spice class
+   *  @history 2009-10-01  Debbie A. Cook Modified methods to be compatible with changes made
+   *                        to parent class, SpiceRotation, to separate rotation into a constant
+   *                        rotation and a time-dependent rotation
    */
   class LineScanCameraRotation : public Isis::SpiceRotation {
     public:

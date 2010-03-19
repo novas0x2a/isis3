@@ -182,3 +182,11 @@ Object = Beasts
     Crow    = Null
   End_Group
 End_Object
+Object = Hello
+  Key = Value
+End_Object
+
+Testing Object with no end tag
+**PVL ERROR** Object [Hello] EndObject not found before end of file
+Testing Object with wrong end tag
+**PVL ERROR** Unexpected [EndGroup] in Object [Hello]

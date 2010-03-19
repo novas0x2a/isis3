@@ -24,6 +24,10 @@
     <change name="Steven Lambright" date="2008-05-13">
       Removed references to CubeInfo
     </change>
+    <change name="Janet Barrett" date="2009-10-22">
+      Now uses the SubArea class to produce output cube labels
+      with corrected Mapping, Instrument, and AlphaCube groups.
+    </change>
   </history>
 
   <groups>

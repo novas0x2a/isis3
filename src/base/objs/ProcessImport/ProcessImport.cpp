@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.10 $
- * $Date: 2008/09/16 23:06:36 $
+ * $Revision: 1.13 $
+ * $Date: 2010/02/22 02:24:59 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -37,6 +37,7 @@
 #include "iString.h"
 #include "PixelType.h"
 #include "Application.h"
+#include "JP2Decoder.h"
 
 using namespace std;
 namespace Isis {
@@ -978,7 +979,10 @@ namespace Isis {
 
   //! Process the input file and write it to the output.
   void ProcessImport::StartProcess() {
-    if (p_organization == ProcessImport::BSQ) {
+    if (p_organization == ProcessImport::JP2) {
+      ProcessJp2 ();
+    }
+    else if (p_organization == ProcessImport::BSQ) {
       ProcessBsq ();
     }
     else if (p_organization == ProcessImport::BIL) {
@@ -1004,7 +1008,10 @@ namespace Isis {
    *             organization."
    */
   void ProcessImport::StartProcess(void funct(Isis::Buffer &out)) {
-    if (p_organization == ProcessImport::BSQ) {
+    if (p_organization == ProcessImport::JP2) {
+      ProcessJp2 (funct);
+    }
+    else if (p_organization == ProcessImport::BSQ) {
       ProcessBsq (funct);
     }
     else if (p_organization == ProcessImport::BIL) {
@@ -1724,6 +1731,154 @@ namespace Isis {
     fin.close ();
     delete [] in;
 
+  }
+
+
+ /**
+  * Function to process files containing compressed JPEG2000 data
+  * (which is always BSQ but is processed as BIL with one or more
+  * lines stored sequentially for each band). There is no need to
+  * set up an Isis::EndianSwapper because JP2 data is always
+  * assumed to be in MSB format. The Kakadu library does an
+  * automatic byte swap for the current architecture.
+  *
+  * @param funct Method that accepts Isis::Buffer as an input
+  *              parameter, processes the image, and has no
+  *              return value.
+  * @throws Isis::iException::Message "Cannot open input file."
+  * @throws Isis::iException::Message "Cannot read file.
+  *             Position[]. Byte count[]"
+  */
+  void ProcessImport::ProcessJp2 (void funct(Isis::Buffer &out)) {
+
+    // Set up an Isis::Jp2Decoder object
+    JP2Decoder *JP2_decoder;
+    JP2_decoder = new JP2Decoder(p_inFile);
+
+    // Open JP2 file
+    JP2_decoder->OpenFile();
+
+    // Make sure JP2 file dimensions match PDS labels
+    p_ns = JP2_decoder->GetSampleDimension();
+    p_nl = JP2_decoder->GetLineDimension();
+    p_nb = JP2_decoder->GetBandDimension();
+
+    // Figure out the number of bytes to read for a single line
+    // from all bands
+    int sizeofpixel = Isis::SizeOf (p_pixelType);
+    int startsamp = p_dataPreBytes / sizeofpixel;
+    int endsamp = startsamp + p_ns;
+    int readBytes = sizeofpixel * p_ns * p_nb + p_dataPreBytes + p_dataPostBytes;
+    char **in = new char* [p_nb];
+    for (int i=0; i<p_nb; i++) {
+      in[i] = new char [readBytes];
+    }
+
+    // Construct a line buffer manager
+    Isis::Buffer *out = NULL;
+
+    if(funct != NULL) {
+      out = new Isis::Buffer (p_ns, p_nl, p_nb, p_pixelType);
+    }
+    else {
+      out = new Isis::LineManager (*OutputCubes[0]);
+    }
+
+    // Loop once for each line in the image
+    p_progress->SetMaximumSteps(p_nb*p_nl);
+    p_progress->CheckStatus();
+
+    // Loop for each line
+    for (int line=0; line<p_nl; line++) {
+      if (p_pixelType == Isis::UnsignedByte) {
+        JP2_decoder->Read((unsigned char**)in);
+      } else {
+        JP2_decoder->Read((short int**)in);
+      }
+      // Loop for each band
+      for (int band=0; band<p_nb; band++) {
+        // Set the base multiplier
+        double base,mult;
+        if (p_base.size() > 1) {
+          base = p_base[band];
+          mult = p_mult[band];
+        }
+        else {
+          base = p_base[0];
+          mult = p_mult[0];
+        }
+
+        // Space for storing prefix and suffix data pointers
+        vector<char *> tempPre, tempPost;
+
+
+        // Handle any line prefix bytes
+        if (p_saveDataPre) {
+          tempPre.push_back(new char[p_dataPreBytes]);
+          memcpy(&tempPre[0],in[band],p_dataPreBytes);
+        }
+
+        // Swap the bytes if necessary and convert any out of bounds pixels
+        // to special pixels
+        for (int samp=startsamp; samp<endsamp; samp++) {
+          switch (p_pixelType) {
+            case Isis::UnsignedByte:
+              (*out)[samp] = (double) ((unsigned char *)in[band])[samp];
+              break;
+            case Isis::UnsignedWord:
+              (*out)[samp] = (double) ((unsigned short int *)in[band])[samp];
+              break;
+            case Isis::SignedWord:
+              (*out)[samp] = (double) ((short int *)in[band])[samp];
+              break;
+            default:
+              break;
+          }
+
+          // Sets out to isis special pixel or leaves it if valid
+          (*out)[samp] = TestPixel((*out)[samp]);
+
+          if (Isis::IsValidPixel((*out)[samp])) {
+            (*out)[samp] = mult * ((*out)[samp]) + base;
+          }
+        } // End sample loop
+
+        if(funct == NULL) {
+          //Set the buffer position and write the line to the output file
+          ((Isis::LineManager*)out)->SetLine ((band * p_nl) + line + 1);
+          OutputCubes[0]->Write (*out);
+        }
+        else {
+          funct(*out);
+        }
+
+        p_progress->CheckStatus();
+
+        // Handle any line suffix bytes
+        if (p_saveDataPost) {
+          tempPost.push_back(new char[p_dataPostBytes]);
+          memcpy(&tempPost[0],&in[band][p_dataPreBytes+p_ns*sizeofpixel],p_dataPostBytes);
+        }
+
+        // Save off the prefix bytes vector
+        if (p_saveDataPre) {
+          p_dataPre.push_back(tempPre);
+          tempPre.clear();
+        }
+
+        // Save off the suffix bytes vector
+        if (p_saveDataPost) {
+          p_dataPost.push_back(tempPost);
+          tempPost.clear();
+        }
+
+      } // End band loop
+
+    } // End line loop
+
+    // Close the file and clean up
+    delete JP2_decoder;
+    delete [] in;
   }
 
 

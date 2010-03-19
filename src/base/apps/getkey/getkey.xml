@@ -23,11 +23,9 @@
     <change name="Kim Sides" date="2003-05-13">
       Added application test
     </change>
-
     <change name="Stuart Sides" date="2003-05-16">
       Modified schema location from astogeology... to isis.astrogeology..."
     </change>
-
     <change name="Jeff Anderson" date="2004-03-29">
       Change parameter from GROUP to GRPNAME because of conflicts in the
       print and history files (keyword named GROUP in a GROUP).  Added 
@@ -51,10 +49,13 @@
     <change name="Steven Koechle" date="2007-08-14">
       Added recursive search option
     </change>
-      <change name="Steven Koechle" date="2008-03-05">
-          Changed preferences to not output to terminal, and added  results 
-          group to session log.
-      </change>
+    <change name="Steven Koechle" date="2008-03-05">
+        Changed preferences to not output to terminal, and added  results 
+        group to session log.
+    </change>
+    <change name="Christopher Austin" date="2010-03-03">
+      Made UPPER equal to FALSE by default
+    </change>
   </history>
 
   <groups>
@@ -135,7 +136,7 @@
     <group name="Options">
       <parameter name="UPPER">
         <type>boolean</type>
-        <default><item>True</item></default>
+        <default><item>False</item></default>
         <brief>
           Convert results to uppercase
         </brief>

@@ -33,6 +33,10 @@ namespace Qisis {
     p_groundTab = NULL;
     p_imageTab = NULL;
 
+    p_lat = "";
+    p_lon = "";
+    p_samp = "";
+    p_line = "";
     p_pressed = false;
     p_released = true;
     p_paint = false;
@@ -88,6 +92,9 @@ namespace Qisis {
     QPushButton *okButton = new QPushButton ("Ok");
     connect(okButton, SIGNAL(clicked()), this, SLOT(okAction()));
 
+    QPushButton *recordButton = new QPushButton ("Record Point");
+    connect(recordButton, SIGNAL(clicked()), this, SLOT(recordAction()));//?????
+
     QPushButton *clearButton = new QPushButton("Clear Dot");
     connect(clearButton, SIGNAL(clicked()), this, SLOT(clearPoint()));
 
@@ -98,6 +105,7 @@ namespace Qisis {
     // Put the buttons in a horizontal orientation
     QHBoxLayout *actionLayout = new QHBoxLayout();
     actionLayout->addWidget(okButton);
+    actionLayout->addWidget(recordButton);
     actionLayout->addWidget(clearButton);
     actionLayout->addWidget(cancelButton);
 
@@ -330,8 +338,39 @@ namespace Qisis {
   }
 
   /** 
+   * Slot called when the record button is clicked.  It creates a
+   * QPoint from the current line/sample in the active cube 
+   * viewport and emits the recordPoint() signal. 
+   *  
+   * @return void 
+   * @author Jeannie Walldren 
+   *  
+   * @internal 
+   *  @history 2010-03-08 - Jeannie Walldren - This slot was
+   *           created to connect the recordPoint() signal to the
+   *           AdvancedTrackTool record() slot in qview.
+   */ 
+  void FindTool::recordAction() { 
+    if (p_lat != NULL && p_lon != NULL &&
+        p_samp != NULL && p_line != NULL ){
+
+      int x,y;
+      CubeViewport *cvp = cubeViewport();
+      cvp->cubeToViewport(p_samp.toDouble(),p_line.toDouble(), x, y);
+      QPoint p;
+      p.setX(x);
+      p.setY(y);
+      emit recordPoint(p); 
+    }
+  }
+
+
+  /** 
    *  Gets the lat/lon position the user entered from the dialog box
    *  
+   *  @history 2009-11-10 Tracie Sucharski - Changed emit findPoint to
+   *                         simply a call to findPoint method.  There was
+   *                         no findPoint signal defined.
    *  
    */
   void FindTool::getUserGroundPoint() {
@@ -372,7 +411,16 @@ namespace Qisis {
       double line = d->universalGroundMap()->Line();
       int x,y;
       d->cubeToViewport(sample,line,x,y);
-      emit findPoint(QPoint(x,y));          
+      findPoint(QPoint(x,y));          
+
+          //jw set private variables???????
+    p_lat = QString::number(lat);
+    p_lon = QString::number(lon);
+    p_samp = QString::number(sample);
+    p_line = QString::number(line);
+    p_imageTab->p_sampLineEdit->setText(p_samp);
+    p_imageTab->p_lineLineEdit->setText(p_line);
+//end jw ???????
     }
     else {
       QMessageBox::warning(p_dialog, "Error",
@@ -384,34 +432,52 @@ namespace Qisis {
 
   /** 
    *  Gets the line/sample position the user entered from the dialog box
-   * 
+   *  
+   *  @history 2009-11-10 Tracie Sucharski - Changed emit findPoint to
+   *                         simply a call to findPoint method.  There was
+   *                         no findPoint signal defined.  Fixed error checking.
+   *  
    */
   void FindTool::getUserImagePoint() {
     CubeViewport *d = cubeViewport();
     if (d == NULL) return;
 
-   int line = p_imageTab->p_lineLineEdit->text().toInt();
-   int sample = p_imageTab->p_sampLineEdit->text().toInt();
-   if(sample > d->cubeSamples() || sample < 1) {
-     p_imageTab->p_sampLineEdit->setText("1");
-     QMessageBox::warning(p_dialog, "Error",
+    double line = p_imageTab->p_lineLineEdit->text().toDouble();
+    double sample = p_imageTab->p_sampLineEdit->text().toDouble();
+    if(sample > d->cubeSamples() || sample < 1) {
+      QMessageBox::warning(p_dialog, "Error",
                 "Specified Sample is not in active viewport",
                 QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
+      return;
+    }
 
-   }
-
-   if(line > d->cubeLines() || line < 1) {
-     p_imageTab->p_lineLineEdit->setText("1");
-     QMessageBox::warning(p_dialog, "Error",
+    if(line > d->cubeLines() || line < 1) {
+      QMessageBox::warning(p_dialog, "Error",
                 "Specified Line is not in active viewport",
                 QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
+      return;
+    }
 
-   }
+    int x,y;
+    d->cubeToViewport(sample,line,x,y);
 
-   int x,y;
-   d->cubeToViewport(sample,line,x,y);
+    findPoint(QPoint(x,y));
 
-   emit findPoint(QPoint(x,y));
+    //jw set private variables????????????
+    //??? find lat long and add to "Ground" Tab????
+    if (d->universalGroundMap()->SetImage(sample,line) ) {
+      p_lat = QString::number(d->universalGroundMap()->UniversalLatitude());
+      p_lon = QString::number(d->universalGroundMap()->UniversalLongitude());
+      p_samp = QString::number(sample);
+      p_line = QString::number(line);
+      p_groundTab->p_latLineEdit->setText(p_lat);
+      p_groundTab->p_lonLineEdit->setText(p_lon);
+    }
+    else{
+      QMessageBox::warning(p_dialog, "Error",
+                "Specified Sample/Line position is not in active viewport",
+                QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
+    }
   }
 
   /** 
@@ -460,14 +526,13 @@ namespace Qisis {
     }
 
     // Get the sample line position to report
-    d = cubeViewport();
     double sample,line;
     d->viewportToCube(p.x(),p.y(),sample,line);
 
     // If we are outside of the cube, do nothing
     if(!d->universalGroundMap()->SetImage(sample, line)){
       QMessageBox::warning(p_dialog, "Error",
-                "Specified Line Sample position is not in active viewport",
+                "Specified Line/Sample position is not in active viewport",
                 QMessageBox::Ok,QMessageBox::NoButton,QMessageBox::NoButton);
      return;
     }
@@ -484,18 +549,21 @@ namespace Qisis {
       d->viewport()->repaint();
 
       if (p_tabWidget->tabText(p_tabWidget->currentIndex()) == "Image") {
-        for (int i=0; i<(int)cubeViewportList()->size(); i++) {
-          d = (*(cubeViewportList()))[i];
-          if (d == cubeViewport()) continue;
-          d->setScale(d->scale(),sample,line);
-          x = 0;
-          y = 0;
-          d->cubeToViewport(sample, line, x, y);
-          p_point.setX(x);
-          p_point.setY(y);
-          d->viewport()->repaint();
+        if (d->isLinked()) {
+          for (int i=0; i<(int)cubeViewportList()->size(); i++) {
+            d = (*(cubeViewportList()))[i];
+            if (d == cubeViewport()) continue;
+            d->setScale(d->scale(),sample,line);
+            x = 0;
+            y = 0;
+            d->cubeToViewport(sample, line, x, y);
+            p_point.setX(x);
+            p_point.setY(y);
+            d->viewport()->repaint();
+          }
         }
-      }else {
+      }
+      else {
         if (d->isLinked()) {
           // Get the lat/lon and scale values from the universalGroundMap
           double lat = d->universalGroundMap()->UniversalLatitude();
@@ -551,7 +619,7 @@ namespace Qisis {
         QApplication::beep();
       }
       else {
-        //emit findPoint(p);
+        //findPoint(p);
         //mouseMove(p);
       }
     }*/
@@ -600,11 +668,31 @@ namespace Qisis {
         p_point.setY((int)y);
         d->viewport()->repaint();
 
+
+        //////???????jw
+        double lat=0, lon=0;
+        if (d->universalGroundMap() != NULL) {
+          if (d->universalGroundMap()->SetImage(sample,line)) {
+            lat = d->universalGroundMap()->UniversalLatitude();
+            lon = d->universalGroundMap()->UniversalLongitude();
+            p_lat = QString::number(lat);
+            p_lon = QString::number(lon);
+            p_samp = QString::number(sample);
+            p_line = QString::number(line);
+            p_imageTab->p_sampLineEdit->setText(p_samp);
+            p_imageTab->p_lineLineEdit->setText(p_line);
+            p_groundTab->p_latLineEdit->setText(p_lat);
+            p_groundTab->p_lonLineEdit->setText(p_lon);
+
+          }
+        }
+
+
         /* now convert this lat lon to viewport coordinates for the paintViewport
            method to use.*/
         if(d->isLinked()) {
           /*convert the line,sample to lat,lon*/
-          double lat=0, lon=0;
+          //double lat=0, lon=0;
           double fixedScale = d->universalGroundMap()->Resolution() * d->scale();
 
           if (d->universalGroundMap() != NULL) {

@@ -24,14 +24,26 @@ namespace Isis {
    * @param checkTarget Boolean value that specifies whether or not to check
    *                    to make sure the target names match between files added
    *                    to the serialnumber list
+   * @internal 
+   *   @history 2009-10-20 Jeannie Walldren - Added Progress flag
+   *   @history 2009-11-05 Jeannie Walldren - Modified number
+   *                          of maximum steps for Progress flag
    */
-  SerialNumberList::SerialNumberList (const std::string &listfile, bool checkTarget) {
+  SerialNumberList::SerialNumberList (const std::string &listfile, bool checkTarget, Progress *progress) {
     p_checkTarget = checkTarget;
     p_target.clear();
     try {
-      FileList list(listfile);
-      for (int i=0; i<(int)list.size(); i++) {
-        Add(list[i]);
+      FileList flist(listfile);
+      if (progress != NULL) {
+        progress->SetText("Creating Isis 3 serial numbers from list file.");
+        progress->SetMaximumSteps((int) flist.size()+1);
+        progress->CheckStatus();
+      }
+      for (int i=0; i<(int)flist.size(); i++) {
+        Add(flist[i]);
+        if (progress != NULL){
+          progress->CheckStatus();
+        }
       }
     }
     catch (iException &e) {

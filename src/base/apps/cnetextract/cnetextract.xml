@@ -36,6 +36,40 @@
       Fixed TOLIST blank lines, added the POINTLIST option, and changed the
       CUBEPOINTS parameter to take a filename instead of a boolean.
     </change>
+    <change name="Christopher Austin" date="2009-09-29">
+      Added the TOLERANCE parameter.
+    </change>
+    <change name="Christopher Austin" date="2009-10-02">
+      Changed the TOLERANCE keyword to extract points with an error greater
+      than or equal to the TOLERANCE, instead of less than or eqaul to.
+    </change>
+    <change name="Christopher Austin" date="2009-10-15">
+      Fixed the TOLERANCE code.
+    </change>
+    <change name="Christopher Austin" date="2009-11-02">
+      Fixed the interface to be more clear.
+    </change>
+    <change name="Christopher Austin" date="2009-11-09">
+      Added the GROUND parameter.
+    </change>
+    <change name="Christopher Austin" date="2010-01-20">
+      Added the USENETWORK parameter to avoid the need for spiceinit prior
+      to knowing which cubes are necessary for the extracted control network.
+    </change>
+    <change name="Christopher Austin" date="2010-02-01">
+      FROMLIST is now an option parameter, however, to be able to generate a
+      TOLIST, the FROMLIST must be provided. Also did some code cleanup.
+    </change>
+    <change name="Christopher Austin" date="2010-03-01">
+      Changed NOSINGLEMEASURES to NOMEASURELESS and fixed a simple progress
+      bug.
+    </change>
+    <change name="Christopher Austin" date="2010-03-03">
+      Fixed min/max lat/lon bounding issues.
+    </change>
+    <change name="Christopher Austin" date="2010-03-08">
+      Brought back NOSINGLEMEASURES while leaving NOMEASURELESS as is.
+    </change>
   </history>
 
   <category>
@@ -49,6 +83,7 @@
       <parameter name="FROMLIST">
           <type>filename</type>
           <fileMode>input</fileMode>
+          <internalDefault>No input cube list</internalDefault>
           <brief>List of ISIS3 input cubes in the Control Network</brief>
           <description>
           A text file containing one column of ISIS3 cube file names. Every file
@@ -72,6 +107,17 @@
           </filter>
         </parameter>
 
+        <parameter name="USENETWORK">
+          <type>boolean</type>
+          <default><item>False</item></default>
+          <brief>Any data in the network holds priority</brief>
+          <description>
+            When true, all data found in the input Control Net (eg Latitude,
+            Longitude) take priority. This allows for such information to be
+            absent in the input cube list (spiceinit is unnecessary).
+          </description>
+        </parameter>
+
     </group>
 
     <group name="Output">
@@ -79,6 +125,7 @@
       <parameter name="TOLIST">
           <type>filename</type>
           <fileMode>output</fileMode>
+          <internalDefault>No input cube list</internalDefault>
           <brief>List of ISIS3 output cubes</brief>
           <description>
           This text file contains one column of ISIS3 cube file names associated
@@ -130,10 +177,11 @@
       <parameter name="NOIGNORE">
         <type>boolean</type>
         <default><item>False</item></default>
-        <brief>Remove ignored points when extracting the Control Net</brief>
+        <brief>Do not extract ignored points</brief>
         <description>
           When true, all ignored Control Points and all ignored Control
-          Measures provided by the Control Net will be removed.
+          Measures provided by the input Control Net will not be included in
+          the output Control Network.
 
           The keywords IgnoredPoints and IgnoredMeasures will be logged when
           using this option. They depict which Control Points and Control Measures
@@ -144,24 +192,38 @@
       <parameter name="NOHELD">
         <type>boolean</type>
         <default><item>False</item></default>
-        <brief>Remove held points when extracting the Control Net</brief>
+        <brief>Do not extract held points</brief>
         <description>
-          When true, all held Control Points in the Control Net will be
-          removed.
+          When true, all held Control Points in the Control Net will not be
+          included in the output Control Network.
 
           The keyword HeldPoints will be logged when using this option. Each
           Control Point it contains was not extracted due to this filter.
         </description>
       </parameter>
 
-      <parameter name="NOSINGLEMEASURE">
+      <parameter name="NOMEASURELESS">
         <type>boolean</type>
         <default><item>False</item></default>
-        <brief>Remove Control Points with one Control Measure</brief>
+        <brief>Do not extract Control Points with zero Control Measures</brief>
         <description>
-  	       When true, all Control Points that are reduced to zero or one Control
-           Measure (from other selected filters) will not be included in the
-           output Control Network.
+  	       When true, all Control Points that are reduced to zero Control
+           Measures (from other selected filters or have zero on input)
+           will not be included in the output Control Network.
+
+          The keyword MeasurelessPoints will be logged when using this option. Each
+          Control Point it contains was not extracted due to this filter.
+        </description>
+      </parameter>
+
+      <parameter name="NOSINGLEMEASURES">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Do not extract Control Points with one Control Measure</brief>
+        <description>
+  	       When true, all Control Points that are reduced to one Control
+           Measure (from other selected filters or only have one on input)
+           will not be included in the output Control Network.
 
           The keyword SingleMeasurePoints will be logged when using this option. Each
           Control Point it contains was not extracted due to this filter.
@@ -185,15 +247,53 @@
           Each Control Measure it contains was not extracted due to this filter.
         </description>
         <exclusions>
-          <item>NOSINGLEMEASURE</item>
+          <item>NOSINGLEMEASURES</item>
         </exclusions>
+      </parameter>
+
+      <parameter name="GROUND">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Extract ground Control Points</brief>
+        <description>
+          When true, only ground Control Points will be extracted into the
+          output Control Net. 
+
+          The keyword NonGroundPoints will be logged when using this option.
+          Each Control Point it contains was not extracted due to this filter.
+        </description>
+      </parameter>
+
+      <parameter name="TOLERANCE">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Extract Control Points with line or sample errors greater than PIXELTOLERANCE</brief>
+        <description>
+          When true, extract all Control Points which have a line or a sample
+          error greater than or equal to the PIXELTOLERANCE value.
+
+          The keyword TolerancePoints will be logged when using this option. Each
+          Control Point it contains was not extracted due to this filter.
+        </description>
+        <inclusions>
+          <item>PIXELTOLERANCE</item>
+        </inclusions>
+      </parameter>
+      <parameter name="PIXELTOLERANCE">
+        <type>double</type>
+        <default><item>10.0</item></default>
+        <brief>Extract Control Points with a line or sample error greater than this value</brief>
+        <description>
+          Control Points which contain at least one Control Measure with a line
+          or a sample error greater than or equal to this value will be extracted.
+        </description>
       </parameter>
 
       <parameter name="CUBEPOINTS">
         <type>filename</type>
         <fileMode>input</fileMode>
         <internalDefault>None</internalDefault>
-        <brief>Extract Control Points containing these input cube</brief>
+        <brief>Extract Control Points containing the listed cubes</brief>
         <description>
           Use this parameter to select the filename which contains a list of
           cubes. All the Control Points which contain at least on of these
@@ -212,7 +312,7 @@
       <parameter name="CUBEMEASURES">
         <type>boolean</type>
         <default><item>False</item></default>
-        <brief>Extract Control Measures containing an input cube</brief>
+        <brief>Extract Control Measures containing a cube in CUBEPOINTS</brief>
         <description>
           When true, remove all Control Measures from extracted Control Points
           which do not contain a cube from the CUBEPOINTS list.
@@ -276,6 +376,8 @@
       <parameter name="MINLAT">
         <type>double</type>
         <default><item>-90.0</item></default>
+        <minimum inclusive="yes">-90.0</minimum>
+        <maximum inclusive="yes">90.0</maximum>
         <brief>Minimum Control Point Latitude</brief>
         <description>
           Any Control Point with a latitude less than LATMIN will be removed.
@@ -284,6 +386,8 @@
       <parameter name="MAXLAT">
         <type>double</type>
         <default><item>90.0</item></default>
+        <minimum inclusive="yes">-90.0</minimum>
+        <maximum inclusive="yes">90.0</maximum>
         <brief>Maximum Control Point Latitude</brief>
         <description>
           Any Control Point with a latitude greater than LATMAX will be removed.
@@ -292,6 +396,8 @@
       <parameter name="MINLON">
         <type>double</type>
         <default><item>0.0</item></default>
+        <minimum inclusive="yes">-180.0</minimum>
+        <maximum inclusive="yes">360.0</maximum>
         <brief>Minimum Control Point Longitude</brief>
         <description>
           Any Control Point with a longitude less than LONMIN will be removed.
@@ -304,6 +410,8 @@
       <parameter name="MAXLON">
         <type>double</type>
         <default><item>360.0</item></default>
+        <minimum inclusive="yes">-180.0</minimum>
+        <maximum inclusive="yes">360.0</maximum>
         <brief>Maximum Control Point Longitude</brief>
         <description>
           Any Control Point with a longitude greater than LONMAX will be removed.

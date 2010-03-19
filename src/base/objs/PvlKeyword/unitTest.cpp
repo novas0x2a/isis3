@@ -1,39 +1,193 @@
-#include <iostream>
-#include "iException.h"
 #include "PvlKeyword.h"
+#include "iException.h"
 #include "PvlSequence.h"
 #include "Preference.h"
 
+#include <iostream>
+#include <sstream>
+
 using namespace std;
+using namespace Isis;
+
 int main () {
   Isis::Preference::Preferences(true);
 
+  string keywordsToTry[] = {
+    "KEYWORD",
+    "KEYWORD X",
+    "KEYWORD =",
+    "KEYWORD = SOME_VAL",
+    "KEYWORD = \"  val  \"",
+    "KEYWORD = \" 'val' \"",
+    "KEYWORD = (VAL",
+    "KEYWORD = (VAL1,VAL2",
+    "KEYWORD = (A B,C,D)",
+    "KEYWORD = ((A B),(C),(D",
+    "KEYWORD = (SOME_VAL)",
+    "KEYWORD = (SOME_VAL) <a>",
+    "KEYWORD=(SOME_VAL)<a>",
+    "KEYWORD = (A, )",
+    "KEYWORD = ()",
+    "KEYWORD = (A,B)",
+    "KEYWORD = {A, B}",
+    "KEYWORD = (A,B) #comment this",
+    "KEYWORD = ( A , B )",
+    "KEYWORD = (A, B,C,D,E))",
+    "KEYWORD = ((1, 2), {3,  4}, (5), 6)",
+    "KEYWORD = { \"VAL1\" ,   \"VAL2\", \"VAL3\"}",
+    "KEYWORD = { \"VAL1\" , \"VAL2\", \"VAL3\")",
+    "KEYWORD = { \"VAL1\" ,",
+    "KEYWORD = \"(A,B,\"",
+    "KEYWORD = ',E)'",
+    "KEYWORD = (A <a>, B <b>, C, D <d>)",
+    "KEYWORD = (A <a>, B <b>, C, D <d>) <e>",
+    "KEYWORD = ',E) <unit>",
+    "KEYWORD = ,E) <unit>",
+    "#SOMECOMMENT\nKEYWORD = SOME_VAL",
+    "#SOMECOMMENT1\n#SOMECOMMENT2\nKEYWORD = SOME_VAL",
+    "//SOMECOMMENT1\n#SOMECOMMENT2\nKEYWORD = SOME_VAL"
+  };
+
+  cout << endl << endl;
+  cout << "----- Testing Basic Read/Write -----" << endl;
+  PvlKeyword keyword;
+  for(unsigned int key = 0; 
+      key < sizeof(keywordsToTry) / sizeof(string); 
+      key++) {
+    string keywordCpy = keywordsToTry[key];
+    while(keywordCpy.find("\n") != string::npos) {
+      cout << keywordCpy.substr(0, keywordCpy.find("\n")+1);
+      keywordCpy = keywordCpy.substr(keywordCpy.find("\n")+1);
+    }
+
+    cout << "'" << keywordCpy << "' ";
+
+    for(int pad = keywordCpy.size(); pad < 30; pad++) {
+      cout << "-";
+    }
+
+    cout << "> ";
+
+    vector< string > keywordComments;
+    string keywordName;
+    vector< pair<string, string> > keywordValues;
+
+    bool result = false;
+
+    try {
+      result = keyword.ReadCleanKeyword(keywordsToTry[key], 
+                                        keywordComments, 
+                                        keywordName, 
+                                        keywordValues);
+
+      if(result) cout << "VALID" << endl;
+      else cout << "INCOMPLETE" << endl;
+    }
+    catch(iException &e) {
+      cout << "INVALID" << endl;
+      cout << "    ";
+      cout.flush();
+      e.Report(false);
+    }
+    
+    if(result) {
+      for(unsigned int comment = 0; comment < keywordComments.size(); comment++)
+        cout << "    COMMENT: " << keywordComments[comment] << endl; 
+
+      cout << "    NAME: " << keywordName << endl; 
+
+      for(unsigned int value = 0; value < keywordValues.size(); value++) {
+        cout << "    VALUE: " << keywordValues[value].first;
+        
+        if(!keywordValues[value].second.empty()) {
+          cout << " <" << keywordValues[value].second << ">";
+        }
+
+        cout << endl;
+      }
+    }
+
+  }
+
+  cout << endl << endl;
+  cout << "----- Testing Stream Read/Write -----" << endl;
+  for(unsigned int key = 0;
+                   key < sizeof(keywordsToTry) / sizeof(string);
+                   key ++) {
+    stringstream stream;
+    PvlKeyword someKey;
+
+    cout << "Input:\n" << keywordsToTry[key] << endl;
+
+    cout << endl << "Output: " << endl;
+    try {
+      stream.write(keywordsToTry[key].c_str(), keywordsToTry[key].size());
+      stream >> someKey;
+      cout << someKey << endl;
+    }
+    catch(iException &e) {
+      e.Report(false);
+    }
+
+    cout << endl;
+  }
+  
+  cout << "----- Testing Difficult Cases Read/Write -----\n";
+  
+
   try {
+
     const Isis::PvlKeyword keyN("THE_INTERNET", 
                           "Seven thousand eight hundred forty three million seventy four nine seventy six forty two eighty nine sixty seven thirty five million jillion bajillion google six nine four one two three four five six seven eight nine ten eleven twelve thirteen fourteen", 
                           "terrabytes");
-    cout << keyN <<endl;
+    PvlKeyword keyNRead;
+    stringstream streamN;
+    streamN << keyN;
+    streamN >> keyNRead;
+    cout << keyNRead <<endl;
 
     const Isis::PvlKeyword keyZ("BIG_HUGE_LONG_NAME_THAT_SHOULD_TEST_OUT_PARSING", 
                           "Seven thousand eight hundred forty three million seventy four", 
                           "bubble baths");
-    cout << keyZ <<endl;
+    PvlKeyword keyZRead;
+    stringstream streamZ;
+    streamZ << keyZ;
+    streamZ >> keyZRead;
+    cout << keyZRead <<endl;
 
     Isis::PvlKeyword keyU("ARRAY_TEST", 5.87, "lightyears");
     keyU.AddValue(5465.6, "lightyears");
     keyU.AddValue(574.6, "lightyears");
-    keyU.AddValue(42, "dogs");
 
-    cout << keyU << endl;
+    PvlKeyword keyURead;
+    stringstream streamU;
+    streamU << keyU;
+    streamU >> keyURead;
+    cout << keyURead <<endl;
 
     const Isis::PvlKeyword keyV("FIRST_100_DIGITS_OF_PI", "3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679");
-
-    cout << keyV << endl;
+    PvlKeyword keyVRead;
+    stringstream streamV;
+    streamV << keyV;
+    streamV >> keyVRead;
+    cout << keyVRead <<endl;
+    cout << "Raw Data -->" << endl;
+    cout << keyVRead[0] << endl << endl;
 
 
     const Isis::PvlKeyword keyJ("A", "XXXXXXXXXXxxxxxxxxxxXXXXXXXXXXxxxxxxxxxxXXXXXXXXXXxxxxxxxxxxXXXXXXXXXXxxxx");
+    PvlKeyword keyJRead;
+    stringstream streamJ;
+    streamJ << keyJ;
+    streamJ >> keyJRead;
+    cout << keyJRead <<endl;
 
-    cout << keyJ << endl;
+    string keyB = "TREE = {   \"MAPLE\"   ,\n \"ELM\" \n, \"PINE\"   }";
+    PvlKeyword keyBRead;
+    stringstream streamB;
+    streamB << keyB;
+    streamB >> keyBRead;
+    cout << keyBRead <<endl;
 
     Isis::PvlKeyword keyW("UGHHHHHHHHHHHH");
     keyW += 59999.0;
@@ -48,7 +202,12 @@ int main () {
     keyW += 59999.0;
     keyW += 59999.0;
     keyW += 59999.0;
-    cout << keyW << endl;
+
+    PvlKeyword keyWRead;
+    stringstream streamW;
+    streamW << keyW;
+    streamW >> keyWRead;
+    cout << keyWRead <<endl;
 
     const Isis::PvlKeyword key("NAME",5.2,"meters");
 
@@ -71,39 +230,12 @@ int main () {
     key2[1] = 88;
     cout << key2 << endl;
 
-    class MyKeyword : public Isis::PvlKeyword {
-    public:
-      MyKeyword(vector<Isis::PvlToken> toks, vector<Isis::PvlToken>::iterator &it) :
-      Isis::PvlKeyword(toks,it) {
-      }
-    };
-
-    vector<Isis::PvlToken> toks;
-
-    Isis::PvlToken t;
-    t.SetKey("dog"); t.AddValue("Big");
-    toks.push_back(t);
-
-    t.SetKey("_COMMENT_");
-    toks.push_back(t);
-
-    t.SetKey("Cat"); t.AddValue("Tabby");
-    cout << (const string)t.GetValue(0) << (const string)t.GetValue(1) << endl;
-    toks.push_back(t);
-
-    t.SetKey("<Fish>");
-    toks.push_back(t);
-
-    vector<Isis::PvlToken>::iterator it = toks.begin();
-
-    cout << "1 ... " << endl;
-    cout << MyKeyword(toks,it) << endl << endl;
-    cout << "2 ... " << endl;
-    cout << MyKeyword(toks,it) << endl << endl;
-
     Isis::PvlSequence seq;
+    cout.flush();
     seq += "(a,b,c)";
+    cout.flush();
     seq += "(\"Hubba Hubba\",\"Bubba\")";
+    cout.flush();
     Isis::PvlKeyword k("key");
     k = seq;
     cout << k << endl;
@@ -138,6 +270,7 @@ int main () {
   } catch (...) {
     cout << "Unknown error" << endl;
   }
+
   try {
     Isis::PvlKeyword key(" Test_key_2 ","Might work");
     cout << key << endl;
@@ -146,4 +279,11 @@ int main () {
     e.Report(false);
   }
 
+
+  try {
+    Isis::PvlKeyword key(" Test_key_3 ","Might'not work");
+    cerr << key << endl;
+  } catch (Isis::iException &e) {
+    e.Report(false);
+  }
 }

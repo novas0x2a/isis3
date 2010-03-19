@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $                                                             
- * $Date: 2008/04/16 23:57:20 $                                                                 
+ * $Revision: 1.2 $                                                             
+ * $Date: 2010/02/23 17:07:00 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -80,7 +80,9 @@ namespace Isis {
     p_operators.push_back(new InfixFunction("log",    1));
     p_operators.push_back(new InfixFunction("log10",  1));
     p_operators.push_back(new InfixFunction("ln",     1));
+    p_operators.push_back(new InfixFunction("min", "min2", 2));
     p_operators.push_back(new InfixFunction("min",    1));
+    p_operators.push_back(new InfixFunction("max", "max2", 2));
     p_operators.push_back(new InfixFunction("max",    1));
     p_operators.push_back(new InfixFunction("line",   0));
     p_operators.push_back(new InfixFunction("sample", 0));
@@ -178,7 +180,7 @@ namespace Isis {
         if(IsFunction(data)) {
           // For a general check, zero single argument functions the
           //   same as an operand.
-          if(((InfixFunction*)FindOperator(data))->numArguments == 0) {
+          if(((InfixFunction*)FindOperator(data))->ArgumentCount() == 0) {
             numConsecutiveOperators = 0;
             numConsecutiveOperands ++;
           }
@@ -221,7 +223,7 @@ namespace Isis {
     }
 
     while(!theStack.empty()) {
-      iString op = theStack.top().representation;
+      iString op = theStack.top().OutputString();
 
       // Any opening parentheses here are invalid at this point
       if(op == "(") {
@@ -252,7 +254,7 @@ namespace Isis {
    */
   bool InfixToPostfix::IsKnownSymbol(iString representation) {
     for(int i = 0; i < p_operators.size(); i++) {
-      if(representation.compare(p_operators[i]->representation) == 0) {
+      if(representation.compare(p_operators[i]->InputString()) == 0) {
         return true;
       }
     }
@@ -269,7 +271,7 @@ namespace Isis {
    */
   bool InfixToPostfix::IsFunction(iString representation) {
     if(IsKnownSymbol(representation)) {
-      return FindOperator(representation)->isFunction;
+      return FindOperator(representation)->IsFunction();
     }
     else {
       return false;
@@ -289,17 +291,17 @@ namespace Isis {
       InfixOperator top = theStack.top();
       theStack.pop();
 
-      if(top.representation.compare("(") == 0) {
+      if(top.InputString().compare("(") == 0) {
         theStack.push(top);
         break;
       }
 
-      if(top.precedence < op.precedence) {
+      if(top.Precedence() < op.Precedence()) {
         theStack.push(top);
         break;
       }
       else {
-        postfix += ' ' + top.representation + ' ';
+        postfix += ' ' + top.OutputString() + ' ';
       }
     }
 
@@ -319,12 +321,12 @@ namespace Isis {
       InfixOperator op = theStack.top();
       theStack.pop();
 
-      if(op.representation.compare("(") == 0) {
+      if(op.InputString().compare("(") == 0) {
         openingFound = true;
         break;
       }
       else {
-        postfix += ' ' + op.representation + ' ';
+        postfix += ' ' + op.OutputString() + ' ';
       }
     }
 
@@ -346,7 +348,7 @@ namespace Isis {
    */
   InfixOperator *InfixToPostfix::FindOperator(iString representation) {
     for(int i = 0; i < p_operators.size(); i++) {
-      if(representation.compare(p_operators[i]->representation) == 0) {
+      if(representation.compare(p_operators[i]->InputString()) == 0) {
         return p_operators[i];
       }
     }
@@ -485,10 +487,10 @@ namespace Isis {
 
         // We want to wrap the entire thing in parentheses, and it's argument string.
         //   So sin(.5)^2 becomes (sin(.5))^2
-        output += " ( " + func->representation + " (";
+        output += " ( " + func->InputString() + " (";
 
         // Deal with 0-argument functions
-        if(func->numArguments == 0) {
+        if(func->ArgumentCount() == 0) {
           iString next = equation.Token(" ");
 
           // If they didn't add parentheses around the zero-argument
@@ -505,7 +507,7 @@ namespace Isis {
             //   Make sure the next thing is a close or we have a problem.
             if(equation.Token(" ") != ")") {
               throw iException::Message(iException::User,
-                                        "The function " + func->representation + " should not have any arguments.",
+                                        "The function " + func->InputString() + " should not have any arguments.",
                                         _FILEINFO_);
             }
 
@@ -517,23 +519,23 @@ namespace Isis {
           // Deal with 1+ argument functions by parsing out the arguments
 
           // Make sure the user put parentheses around these, otherwise we're left in the dark.
-          if(func->numArguments > 1 && equation.Token(" ") != "(") {
+          if(func->ArgumentCount() > 1 && equation.Token(" ") != "(") {
             throw iException::Message(iException::User, 
-                                      "Missing parenthesis after " + func->representation,
+                                      "Missing parenthesis after " + func->InputString(),
                                       _FILEINFO_); 
           }
 
           // Single argument missing parenthesis?
-          else if(func->numArguments == 1) {
+          else if(func->ArgumentCount() == 1) {
             iString argument = equation.Token(" ");
 
             if(argument != "(") {
               // We might have a problem. They're calling a function without adding parentheses....
               //   unless it's a negate, because we insert those, tell them their mistake. It's not
               //   my job to figure out what they mean!
-              if(func->representation != "--") {
+              if(func->InputString() != "--") {
                 throw iException::Message(iException::User,
-                                         "Missing parenthesis after " + func->representation,
+                                         "Missing parenthesis after " + func->InputString(),
                                           _FILEINFO_);
               }
 
@@ -595,13 +597,13 @@ namespace Isis {
           iString argument = "";
           int numParens = 0;
           int argNum = 0;
-          while(argNum < func->numArguments) {
+          while(argNum < func->ArgumentCount()) {
             iString elem = equation.Token(" ");
 
             // Ran out of data, the function call is not complete.
             if(elem == "") {
               throw iException::Message(iException::User,
-                         "The definition of '" + func->representation + "' is not complete.",
+                         "The definition of '" + func->InputString() + "' is not complete.",
                                         _FILEINFO_);
             }
 
@@ -618,16 +620,16 @@ namespace Isis {
               }
             }
             else if(elem == "," && numParens == 0) {
-              CheckArgument(func->representation, argNum, argument);
+              CheckArgument(func->InputString(), argNum, argument);
               argument = FormatFunctionCalls(argument);
               output += " ( " + argument + " ) , ";
               argNum++;
               argument = "";
 
               // Too many arguments? We don't expect a comma delimiter on the last argument.
-              if(argNum == func->numArguments) {
+              if(argNum == func->ArgumentCount()) {
                 throw iException::Message(iException::User,
-                         "There were too many arguments supplied to the function '" + func->representation + "'.",
+                         "There were too many arguments supplied to the function '" + func->InputString() + "'.",
                                           _FILEINFO_);
               }
             }
@@ -635,8 +637,8 @@ namespace Isis {
               argument += " " + elem;
             }
 
-            if(argNum == func->numArguments - 1 && numParens == -1) {
-              CheckArgument(func->representation, argNum, argument);
+            if(argNum == func->ArgumentCount() - 1 && numParens == -1) {
+              CheckArgument(func->InputString(), argNum, argument);
               argument = FormatFunctionCalls(argument);
               // close function call & function wrap
               output += " " + argument + " ) ) ";
@@ -646,7 +648,7 @@ namespace Isis {
             // Closed the function early?
             else if(numParens == -1) {
               throw iException::Message(iException::User,
-                         "There were not enough arguments supplied to the function '" + func->representation + "'.",
+                         "There were not enough arguments supplied to the function '" + func->InputString() + "'.",
                                         _FILEINFO_);
             }
           }

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.12 $
- * $Date: 2009/09/11 17:24:06 $
+ * $Revision: 1.16 $
+ * $Date: 2010/02/04 22:37:31 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -36,18 +36,22 @@ namespace Isis {
     Init();
   }
 
+
   /**
-   * Constructs a PvlKeyword object with a name.
-   * @param name The keyword name.
+   * Constructs a PvlKeyword object with a name. 
+   *  
+   * @param name The keyword name
    */
   PvlKeyword::PvlKeyword(const std::string &name) {
     Init();
     SetName(name);
   }
 
+
   /**
    * Constructs a PvlKeyword object with a name, value and units. 
    * Defaults to unit="". 
+   *  
    * @param name The keyword name.
    * @param value The keyword values.
    * @param unit The units the values are given in.
@@ -79,6 +83,7 @@ namespace Isis {
   /**
    * Decides whether a value is null or not at a given index. 
    * Defaults to index = 0. 
+   *  
    * @param index The value index
    * @return <B>bool</B> True if the value is null, false if it's 
    *         not.
@@ -87,7 +92,9 @@ namespace Isis {
     if (Size() == 0) return true;
     if (index < 0 || index >= (int)p_values.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
     if (StringEqual("NULL",p_values[index])) return true;
     if (StringEqual("",p_values[index])) return true;
@@ -97,7 +104,8 @@ namespace Isis {
   }
 
   /**
-   * Sets the keyword name.
+   * Sets the keyword name. 
+   *  
    * @param name The new keyword name.
    */
   void PvlKeyword::SetName(const std::string &name) {
@@ -112,7 +120,8 @@ namespace Isis {
   }
 
   /**
-   * @brief Sets new values. 
+   * Sets new values. 
+   *  
    * If no current value exists, this method sets the given value 
    * to the PvlKeyword.  Otherwise, it clears any existing values 
    * and resets to the value given using AddValue(). Defaults to 
@@ -132,10 +141,9 @@ namespace Isis {
   
   
   /**
-   * @brief Sets the unit of measure for all current values if any exist
+   * Sets the unit of measure for all current values if any exist
    *  
-   * @param units New units to be assigned.
-   *  
+   * @param units New units to be assigned. 
    */
   void PvlKeyword::SetUnits(const iString & units) {
     p_units.clear();
@@ -146,12 +154,12 @@ namespace Isis {
 
   
   /**
-   * @brief Sets the unit of measure for a given value
+   * Sets the unit of measure for a given value
    *  
+   * @param value The value to match
    * @param units New units to be assigned.
    *
-   * @throws Isis::iException::Programmer - Given value must exist
-   *  
+   * @throws Isis::iException::Programmer - Given value must exist 
    */
   void PvlKeyword::SetUnits(const iString & value, const iString & units) {
 
@@ -165,7 +173,7 @@ namespace Isis {
     
     if (found) {
       ASSERT(i < (int) p_units.size());
-      
+
       p_units[i] = units;
     }
     else {
@@ -175,12 +183,13 @@ namespace Isis {
     }
   }
 
-
-  /** @brief Sets new values.
-   * Overwrites the '=' operator to add a new value using 
-   * AddValue(). Like SetValue(), this method clears any 
-   * previously existing values and resets to the given value with 
-   * unit = "" (empty string). 
+  /** 
+   *  
+   * Sets new values. 
+   *  
+   * Overwrites the '=' operator to add a new value using AddValue(). Like 
+   * SetValue(), this method clears any previously existing values and resets to 
+   * the given value with unit = "" (empty string). 
    *  
    * @param value The value to be added. 
    * @return <B>PvlKeyword&</B> Reference to PvlKeyword object.
@@ -196,7 +205,7 @@ namespace Isis {
   }
 
   /**
-   * @brief Adds a value with units. 
+   * Adds a value with units. 
    *  
    * If no current value exists, this method sets the given value. 
    * Otherwise, it retains any current values and adds the value 
@@ -216,7 +225,8 @@ namespace Isis {
   }
 
   /** 
-   * @brief  Adds a value. 
+   * Adds a value.
+   *  
    * Overwrites the '+=' operators to add a new value. Like 
    * AddValue(), this method keeps any previously existing values 
    * and adds the new value with unit = "" (empty string) to the 
@@ -241,47 +251,55 @@ namespace Isis {
   }
 
   /** 
-   * @brief Gets value for this object at specified index. 
+   * Gets value for this object at specified index.
+   *  
    * Overrides the '[]' operator to return the element in the 
    * array of values at the specified index. 
    * 
    * @param index The index of the value.
    * @return <B>iString</B> The value at the index.
-   * @throws iException ArraySubscriptNotInRange (index) Index out of bounds. 
+   * @throws iException ArraySubscriptNotInRange (index) Index out of bounds.
+   *  
    * @see const operator[] 
    */
   Isis::iString &PvlKeyword::operator[](const int index) {
     if (index < 0 || index >= (int)p_values.size()) {
       string msg = (Isis::Message::ArraySubscriptNotInRange (index)) + 
                     "for Keyword [" + p_name + "]";
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
     return p_values[index];
   }
 
   /**
-   * @brief Gets value for this object at specified index. 
+   * Gets value for this object at specified index.
+   *  
    * Overrides the '[]' operator to return the element in the 
    * array of values at the specified index. 
    * 
    * @param index The index of the value.
    * @return <b>iString</b> The value at the index.
-   * @throws iException ArraySubscriptNotInRange (index) Index out of bounds.
+   * @throws iException ArraySubscriptNotInRange (index) Index out of bounds. 
+   *  
    * @see operator[] 
    */
   const Isis::iString &PvlKeyword::operator[](const int index) const {
     if (index < 0 || index >= (int)p_values.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
     return p_values[index];
   }
 
-  /** 
-   * @brief Get units. 
+  /**
    * Returns the units of measurement of the element of the array 
    * of values for the object at the specified index. Defaults to 
    * index = 0. 
+   *  
    * @param index The index of the unit.
    * @return <B>string</B> The unit at the index.
    * @throws iException ArraySubscriptNotInRange (index) Index out of bounds.
@@ -289,17 +307,21 @@ namespace Isis {
   string PvlKeyword::Unit(const int index) const {
     if (index < 0 || index >= (int)p_units.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
     return p_units[index];
   }
 
   /**
-   * Add a comment to the PvlKeyword.
+   * Add a comment to the PvlKeyword. 
+   *  
    * @param comment The new comment. 
-   * @see AddCommentWrapped() 
-   * @see AddComments() 
-   * @see ClearComments() 
+   *  
+   * @see AddCommentWrapped()
+   * @see AddComments()
+   * @see ClearComments()
    */
   void PvlKeyword::AddComment(const std::string &comment) {
     if (comment.size() == 0) {
@@ -323,8 +345,10 @@ namespace Isis {
   }
 
   /**
-   * Automatically wraps and adds long comments to the PvlKeyword
+   * Automatically wraps and adds long comments to the PvlKeyword 
+   *  
    * @param comment The new comment to add 
+   *  
    * @see AddComment() 
    * @see AddComments() 
    * @see ClearComments() 
@@ -360,7 +384,9 @@ namespace Isis {
   string PvlKeyword::Comment (const int index) const { 
     if (index < 0 || index >= (int)p_comments.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
     return p_comments[index]; 
   };
@@ -378,8 +404,9 @@ namespace Isis {
     static bool iPVL = true;
     if (firstTime) {
       firstTime = false;
-      Isis::PvlGroup &g = Isis::Preference::Preferences().FindGroup("UserInterface",
-                                                                    Isis::Pvl::Traverse);
+      Isis::PvlGroup &g = Isis::Preference::Preferences().FindGroup(
+          "UserInterface", Isis::Pvl::Traverse);
+
       Isis::iString s = (string) g["PvlFormat"];
       s.UpCase();
       if (s == "PVL") iPVL = false;
@@ -439,65 +466,6 @@ namespace Isis {
     }
     return out;
   }
-
-  /**
-   * Add a comment from a vector, using an interator to keep track.
-   * @param tokens The vector of PvlTokens.
-   * @param pos The counter (vector index).
-   * @see AddComment() 
-   * @see AddCommentWrapped() 
-   * @see ClearComments() 
-   */
-  void PvlKeyword::AddComments(std::vector<Isis::PvlToken> &tokens, 
-                               std::vector<Isis::PvlToken>::iterator &pos) {
-    while (pos != tokens.end() && StringEqual(pos->GetKey(),"_COMMENT_")) {
-      AddComment(pos->GetValue());
-      pos++;
-    }
-  }
-
-  /**
-   * Construct a PvlKeyword object with a name, values with units, and comments.
-   * @param tokens The vector of PvlTokens.
-   * @param pos The counter (vector index).
-   */
-  PvlKeyword::PvlKeyword(std::vector<Isis::PvlToken> &tokens, 
-                         std::vector<Isis::PvlToken>::iterator &pos) {
-    // Set the comments and keyword name
-    Init();
-    AddComments(tokens,pos);
-    SetName(pos->GetKey());
-  
-    // Move in the values
-    for (int i=0; i<pos->ValueSize(); i++) {
-      string value = pos->GetValue(i);
-      std::string::size_type p1, p2;
-      if (((p1=value.find("<")) != string::npos) &&
-          ((p2=value.find(">")) != string::npos)) {
-        AddValue(value.substr(0,p1),value.substr(p1+1,p2-p1-1));
-      }
-      else {
-        AddValue(value);
-      }
-    }
-    pos++;
-    
-    // Take a look at the next keyword to see if it is a unit
-    if (pos != tokens.end()) {
-      string key = pos->GetKey();
-      if (key[0] == '<' && key[key.length()-1] == '>') {
-        for (unsigned int i=0; i<p_units.size(); i++) {
-          if (p_units[i] != "") {
-            string message = "Duplicate units for keyword not allowed [" 
-                             + Name() + "]";
-            throw Isis::iException::Message(Isis::iException::Pvl,message,_FILEINFO_);
-          }
-          p_units[i] = key.substr(1,key.size()-2);
-        }
-        pos++;
-      }
-    }
-  }
   
   /**
    * Checks to see if two strings are equal. Each is converted to uppercase
@@ -537,7 +505,9 @@ namespace Isis {
   bool PvlKeyword::IsEquivalent (const std::string &string1, int index) const {
     if (index < 0 || index >= (int)p_values.size()) {
       string msg = Isis::Message::ArraySubscriptNotInRange (index);
-      throw Isis::iException::Message(Isis::iException::Programmer,msg,_FILEINFO_);
+      throw Isis::iException::Message(Isis::iException::Programmer,
+                                      msg,
+                                      _FILEINFO_);
     }
   
     return StringEqual(p_values[index],string1);
@@ -565,80 +535,283 @@ namespace Isis {
       temp += ")";
       this->operator+=(temp);
     }
+
     return *this;
   }
 
   /**
-   * Wraps output so that length doesn't exceed 80. 
-   * Used as a helper method for output of PvlKeyword.
+   * Wraps output so that length doesn't exceed the character 
+   * limit.  By default, the character limit is set to 80, and can
+   * be changed with the method SetCharLimit.  Used as a helper 
+   * method for output of PvlKeyword. 
+   *  
    * @param os Designated output stream
-   * @param texttowrite The text to be written
+   * @param textToWrite The text to be written
    * @param startColumn The starting column after the "=" sign.
-   * @param charsLeft Counts the number of characters left. 
+   * @param endOfLine The EOL character
+   *  
    * @return <B>ostream&</B> Reference to ostream.
    * @see operator<< 
    */
-  ostream& PvlKeyword::WriteWithWrap(std::ostream &os, const std::string &texttowrite, 
-                                     int startColumn, int &charsLeft, PvlFormat *tempFormat) const {
+  ostream& PvlKeyword::WriteWithWrap(std::ostream &os, 
+                                     const std::string &textToWrite, 
+                                     int startColumn, 
+                                     PvlFormat &format) const {
+
+    /*
+http://pds.jpl.nasa.gov/tools/standards-reference.shtml 
+ 
+pds.jpl.nasa.gov/documents/sr/Chapter12.pdf
+
+Object Description Language Specification and Usage 
+The following provides a complete specification for Object Description Language 
+(ODL), the language used to encode data labels for the Planetary Data System 
+(PDS) and other NASA data systems. This standard contains a formal definition of 
+the grammar semantics of the language. PDS specific implementation notes and 
+standards are referenced in separate sections. 
+
+12.5.3.1 Implementation of String Values 
+A text string read in from a label is reassembled into a string of characters. 
+The way in which the string is broken into lines in a label does not affect the 
+format of the string after it has been reassembled. The following rules are used
+          when reading text strings: If a format effector or a sequence of
+          format effectors is encountered within a text string,
+          the effector (or sequence of effectors) is replaced by a single space
+          character, unless the last character is a hyphen (dash) character. Any
+          spacing characters at the end of the line are removed and any spacing
+          characters at the beginning of the following line are removed. This
+          allows a text string in a label to appear with the left and right
+          margins set at arbitrary points without changing the string value. For
+                   example, the following two strings are the same: "To be or
+                   not to be" and
+                   "To be or
+                   not to be"
+          If the last character on a line prior to a format effector is a hyphen
+          (dash) character, the hyphen is removed with any spacing characters at
+          the beginning of the following line. This follows the standard
+          convention in English of using a hyphen to break a word across lines.
+          For example, the following two strings are the same:
+                    "The planet Jupiter is very big" and
+                   "The planet Jupi-
+                   ter is very big"
+          Control codes, other than the horizontal tabulation character and
+          format effectors, appearing within a text string are removed.
+    */
+
+    /*
+      We will be adding a condition for human-readable purposes:
+        If a quoted string of text does not fit on the current line,
+        but will fit on the next line, use the next line.
+    */
+
     // Position set
-    int pos = charsLeft - 1;
-    string tempText = texttowrite;
+    string remainingText = textToWrite;
+    int spaceForText = format.CharLimit() - 1 - format.FormatEOL().length() - startColumn;
 
-    //If there's less than 1 character left, go ahead and skip to a new line.
-    if (charsLeft < 1) {
-      os << tempFormat->FormatEOL();
-      for (int k=0; k < startColumn; ++k) {
-        os << " "; 
-      }
-      charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
-      pos = charsLeft - 1;
+    // find quote positions to better determine which line to put the
+    //  string on. Data structure: vector< startPos, endPos > where 
+    //  remainingText[startPos] and remainingText[endPos] must both be quotes.
+    vector< pair<int, int> > quotedAreas;
+    char endQuoteChar = '\0';
+    int  quoteStart = -1;
+
+    // if its an array, indent subsequent lines 1 more
+    if(textToWrite[0] == '(' || textToWrite[0] == '"') {
+      startColumn ++;
     }
 
-    // If it's quoted, see if we must break it up internally
-    if (tempText.length() > 0 && tempText[0] == '"' || 
-        (tempText.length() > 1 && tempText[0] == '(' && tempText[1] == '"')) {
-      while ((int) tempText.length() > charsLeft) {
-        //look for these symbols
-        while (pos > 0 && tempText[pos] != ' ' && tempText[pos] != ',') {
-          --pos;
-        }
-        if (pos <= 0) {
-          break;
-        }
+    /* Standard 12.3.3.1 ->
+      A quoted text string may not contain the quotation mark, which is reserved
+      to be the text string delimiter.
 
-        os << tempText.substr(0, (pos+1));
-        os << tempFormat->FormatEOL();
-        for (int k=0; k < startColumn; ++k) {
-          os << " "; 
-        }
+      So we don't have to worry about escaped quotes.
+    */
 
-        tempText = tempText.substr(pos+1, tempText.length()-(pos+1));
-        charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
-        pos = charsLeft - 1;
+    vector< pair<char,char> > quoteStartEnds;
+    quoteStartEnds.push_back( pair<char,char>('"', '"') );
+    quoteStartEnds.push_back( pair<char,char>('\'', '\'') );
+    quoteStartEnds.push_back( pair<char,char>('<', '>') );
+
+    // clean up any EOL characters, they mustn't interfere, remove sections of
+    //   multiple spaces (make them into one), and find quoted areas
+    for(unsigned int pos = 0; pos < remainingText.size(); pos++) {
+      // remove \r and \n from string
+      if(remainingText[pos] == '\n' || remainingText[pos] == '\r') {
+        if(pos != remainingText.length()-1) {
+          remainingText = remainingText.substr(0, pos) + 
+            remainingText.substr(pos+1);
+        }
+        else {
+          remainingText = remainingText.substr(0, pos);
+        }
       }
-    } 
 
-    // Should we linefeed?
-    if ((charsLeft != 80 - 1 - (int)(tempFormat->FormatEOL().length()) - startColumn ) && 
-        ((int)tempText.length() > charsLeft)) {
-      os << tempFormat->FormatEOL();
-      for (int k=0; k < startColumn; ++k) {
-        os << " "; 
+      // convert "      " to " " if not quoted
+      if(quoteStart == -1) {
+        while(pos > 0 && 
+              remainingText[pos-1] == ' ' && 
+              remainingText[pos] == ' ') {
+          remainingText = remainingText.substr(0, pos) + 
+                          remainingText.substr(pos+1);
+        }
       }
-      charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
 
-      // The text was too long for this line with no spaces, so we started a new line.
-      // tempText might still not fit, use a recursive call to do our best to fit it.
-      // The code wont get here if nothing is changed, so a recursive loop will not happen.
-      WriteWithWrap(os, tempText, startColumn, charsLeft, tempFormat);
+      // Find quotes
+      for(unsigned int i = 0; 
+           (quoteStart < 0) && i < quoteStartEnds.size();
+           i++) {
+        if(quoteStartEnds[i].first == remainingText[pos]) {
+          endQuoteChar = quoteStartEnds[i].second;
+          quoteStart = pos;
+        }
+      }
+      
+
+      //bool mismatchQuote = false;
+
+      // Check to see if we're ending a quote if we didn't just
+      //   start the quote and we are inside a quote
+      if(quoteStart != (int)pos && quoteStart != -1) {
+        for(unsigned int i = 0; i < quoteStartEnds.size(); i++) {
+          if(quoteStartEnds[i].second == remainingText[pos]) {
+            if(quoteStartEnds[i].first != remainingText[quoteStart]) {
+              continue;
+            //  mismatchQuote = true;
+            }
+
+            quotedAreas.push_back(pair<int,int>(quoteStart, pos));
+
+            quoteStart = -1;
+            endQuoteChar = '\0';
+          }
+        }
+      }
+
+      //if(mismatchQuote) {
+      //  iString msg = "Pvl keyword values [" + textToWrite + 
+      //    "] can not have embedded quotes";
+      //  throw iException::Message(iException::Programmer, msg, _FILEINFO_); 
+      //}
     }
-    else {
-      // Write the remaining text
-      os << tempText;
-      charsLeft -= tempText.length();
+
+    int charsLeft = spaceForText;
+    int printedSoFar = 0;
+
+    // while we have something to write, keep going
+    while (!remainingText.empty()) {
+      // search backwards for the last space or comma *in the limit* (80 chars)
+      int lastSpacePosition = charsLeft;
+
+      // if everything fits into our remaining space, consider the last 
+      //   spot in the string to be printed still the split position.
+      if(lastSpacePosition >= (int)remainingText.length()) {
+        lastSpacePosition = remainingText.length();
+      }
+      else {
+        // Everything does not fit; use good space for mediocre splits (inside
+        //  quoted strings), and excellent space for good splits (between array 
+        //  values for example)
+        int goodSpace = -1;
+        int excellentSpace = -1;
+        int searchPosition = lastSpacePosition;
+        bool doneSearching = false;
+
+        while(!doneSearching) {
+          bool currentPosQuoted = false;
+
+          for(unsigned int i = 0; i < quotedAreas.size(); i++) {
+            if(searchPosition+printedSoFar >= quotedAreas[i].first &&
+               searchPosition+printedSoFar <= quotedAreas[i].second) {
+              currentPosQuoted = true;
+            }
+          }
+
+          if(remainingText[searchPosition] == ' ') {
+            bool validSpace = true;
+
+            // this really isn't a good space if the previous character is a 
+            // '-' though - then it would be read wrong when re-imported.
+            if(searchPosition > 0 && remainingText[searchPosition - 1] == '-') {
+              validSpace = false;
+            }
+
+            if(validSpace && goodSpace < 0) {
+              goodSpace = searchPosition;
+            }
+
+            // An excellent space is the prefential break - not quoted and
+            //   not units next.
+            // we were already done if we had an excellent space
+            if(validSpace && !currentPosQuoted) {
+              if((unsigned)searchPosition < remainingText.size()-1 &&
+                 remainingText[searchPosition+1] != '<') {
+                excellentSpace = searchPosition;
+              }
+            }
+          }
+
+          doneSearching = (excellentSpace >= 0 || searchPosition <= 1);
+          searchPosition --;
+        }
+
+        // Use the best breaking point we have
+        if(excellentSpace > 0) {
+          lastSpacePosition = excellentSpace;
+        }
+        else if(goodSpace > 0) {
+          lastSpacePosition = goodSpace;
+        }
+        else {
+          lastSpacePosition = -1;
+        }
+      }
+
+      // we found a space or comma in our limit, write to that chatacter
+      //   and repeat the loop
+      if(lastSpacePosition >= 0) {
+        os << remainingText.substr(0, lastSpacePosition);
+
+        remainingText = remainingText.substr(lastSpacePosition);
+        printedSoFar += lastSpacePosition;
+      }
+      // we failed to find a space or a comma in our limit, 
+      //   use a hyphen (-)
+      else {
+        os << remainingText.substr(0, charsLeft-1);
+        os << "-";
+        remainingText = remainingText.substr(charsLeft-1);
+        printedSoFar += charsLeft-1;
+      }
+
+      // we wrote as much as possible, do a newline and repeat
+      if(!remainingText.empty()) {
+        os << format.FormatEOL();
+        WriteSpaces(os, startColumn);
+
+        // dont allow spaces to begin the next line inside what we're printing
+        if(remainingText[0] == ' ') {
+          remainingText = remainingText.substr(1);
+          printedSoFar += 1;
+        }
+      }
+
+      charsLeft = spaceForText;
     }
 
     return os;
+  }
+
+
+  /**
+   * This writes numSpaces spaces to the ostream. 
+   * 
+   * @param os Stream to write to
+   * @param numSpaces number of spaces to write
+   */
+  void PvlKeyword::WriteSpaces(std::ostream &os, int numSpaces) const {
+    for (int space = 0; space < numSpaces; space ++) {
+      os << " "; 
+    }
   }
 
 
@@ -662,6 +835,694 @@ namespace Isis {
   PvlFormat* PvlKeyword::GetFormat() {
     return p_formatter;
   };
+
+  /**
+   * Read in a keyword 
+   *  
+   * http://pds.jpl.nasa.gov/tools/standards-reference.shtml  
+   * 
+   * @param is The input stream
+   * @param result The keyword to read into (OUTPUT)
+   * 
+   */
+  std::istream& operator>>(std::istream &is, PvlKeyword &result) {
+    result = PvlKeyword();
+    string line;
+    iString keywordString;
+    
+    bool keywordDone = false;
+    bool error = !is.good();
+    while(!error && !keywordDone) {
+      istream::pos_type beforeLine = is.tellg();
+
+      line = PvlKeyword::ReadLine(is);
+
+      // We read an empty line (failed to read next non-empty line) 
+      // and didnt complete our keyword, essentially we hit the implicit
+      // keyword named "End"
+      if(line.empty() && !is.good()) {
+        if(keywordString.empty() || 
+           keywordString[keywordString.size()-1] == '\n') {
+          line = "End";
+        }
+        else {
+          error = true;
+        }
+      }
+
+      bool comment = false;
+
+      if(line.size() > 0 && line[0] == '#') {
+        comment = true;
+      }
+
+      if(line.size() > 1 && line[0] == '/' && 
+         (line[1] == '*' || line[1] == '/')) {
+        comment = true;
+      }
+
+      if(line.empty()) {
+        continue;
+      }
+      // comment line
+      else if(comment) {
+        keywordString += line + '\n';
+        continue;
+      }
+      // first line of keyword data
+      else if(keywordString.empty()) {
+        keywordString = line; 
+      }
+      // concatenation
+      else if(!comment && keywordString[keywordString.size()-1] == '-') {
+        keywordString = keywordString.substr(0, keywordString.size()-1) + line;
+      }
+      // Non-commented and non-concatenation -> put in the space
+      else {
+        keywordString += " " + line;
+      }
+      // if this line concatenates with the next, read the next
+      if(line[line.size()-1] == '-') {
+        continue;
+      }
+
+      // if the next line start with '<' then it should be read too... 
+      //   it should be units
+      if(is.good() && is.peek() == '<') {
+        continue;
+      }
+
+      std::vector< std::string > keywordComments;
+      std::string keywordName;
+      std::vector< std::pair<std::string, std::string> > keywordValues;
+
+      bool attemptedRead = false;
+
+      try {
+        attemptedRead = PvlKeyword::ReadCleanKeyword(keywordString, 
+                                                     keywordComments, 
+                                                     keywordName, 
+                                                     keywordValues);
+      }
+      catch(iException &e) {
+        if(is.eof() && !is.bad()) {
+          is.clear();
+          is.unget();
+        }
+
+        is.seekg(beforeLine, ios::beg);
+
+        string msg = "Unable to read keyword [";
+        msg += keywordString;
+        msg += "]";
+
+        throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+      }
+
+      // Result valid?
+      if(attemptedRead) {
+        result.SetName(keywordName);
+        result.AddComments(keywordComments);
+
+        for(unsigned int value = 0; value < keywordValues.size(); value++) {
+          result.AddValue(keywordValues[value].first, 
+                   keywordValues[value].second);
+        }
+
+        keywordDone = true;
+      }
+
+      if(!attemptedRead) {
+        error = error || !is.good();
+      }
+      // else we need to keep reading
+    }
+
+    if(error) {
+      // skip comments
+      while(keywordString.find('\n') != string::npos)
+        keywordString = keywordString.substr(keywordString.find('\n')+1);
+
+      string msg;
+
+      if(keywordString.empty()) {
+        msg = "Input contains no Pvl Keywords";
+      }
+      else {
+        msg = "The keyword [" + keywordString + "] does not appear to be";
+        msg += " a valid Pvl Keyword";
+      }
+
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    if(!keywordDone) {
+      // skip comments
+      while(keywordString.find('\n') != string::npos)
+        keywordString = keywordString.substr(keywordString.find('\n')+1);
+
+      string msg;
+
+      if(keywordString.empty()) {
+        msg = "Error reading keyword";
+      }
+      else {
+        msg = "The keyword [" + keywordString + "] does not appear to be";
+        msg += " complete";
+      }
+
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    return is;
+  }
+
+  /**
+   * This method adds multiple comments at once by calling AddComments on each 
+   * element in the vector. 
+   * 
+   * @param comments Comments to associate with this keyword
+   */
+  void PvlKeyword::AddComments(const std::vector<std::string> &comments) {
+    for(unsigned int i = 0; i < comments.size(); i++) {
+      AddComment(comments[i]);
+    }
+  }
+
+  /**
+   * This reads a keyword compressed back to 1 line of data (excluding comments, 
+   * which are included on separate lines of data before the keyword). Line 
+   * concatenations must have already been handled. This returns the data of the 
+   * keyword (if valid) and its status. 
+   * 
+   * @param keyword Pvl "#COMMENT\n//COMMENT\nKeyword = (Value1,Value2,...)" 
+   *                string
+   * @param keywordComments Output: Lines of data that are comments 
+   * @param keywordName Output: Name of keyword 
+   * @param keywordValues Output: vector< pair<Value, Units> > 
+   * 
+   * @return bool false if it is invalid but could become valid given more data,
+   *              true if it is a valid keyword and successful
+   */
+  bool PvlKeyword::ReadCleanKeyword(std::string keyword, 
+           std::vector< std::string > &keywordComments, 
+           std::string &keywordName, 
+           std::vector< std::pair<std::string, std::string> > &keywordValues) {
+    // Reset outputs
+    keywordComments.clear();
+    keywordName = "";
+    keywordValues.clear();
+
+    // This is in case a close quote doesn't exist
+    bool explicitIncomplete = false;
+
+    // Possible (known) comment starts in pvl
+    iString comments[] = {
+      "#",
+      "//",
+      "/*"
+    };
+
+    // Need more data if nothing is here!
+    if(keyword.empty()) return 0;
+
+    /*
+      Step 1: Read Comments 
+       
+      Theoretically, we should have an input that looks like this: 
+        #Comment
+        //Comment
+        / *Comment
+        Keyword = Data
+       
+      So we could just grab all of the first lines; however, this method 
+      needs to be as error-proof as possible (it is the basis of reading 
+      all PVLs after all), so verify we have things that look like comments 
+      first, strip them & store them.
+     */
+
+    // While we have newlines, we have comments
+    while(keyword.find("\n") != string::npos) {
+      // Make sure we strip data every loop of comment types; otherwise we 
+      // have no comment and need to error out.
+      bool noneStripped = true;
+
+      // Check every comment type now and make sure this line (it isn't the last 
+      // line since a newline exists) starts in a comment
+      string keywordStart = keyword.substr(0, 2);
+      for(unsigned int commentType = 0; 
+           commentType < sizeof(comments)/sizeof(iString); 
+           commentType++) {
+        
+        if(keywordStart.find(comments[commentType]) == 0) {
+          // Found a comment start; strip this line out and store it as a 
+          // comment!
+          string comment = keyword.substr(0, keyword.find("\n"));
+          keywordComments.push_back(iString(comment).Trim(" \r\n\t"));
+
+          noneStripped = false;
+  
+          if(keyword.find("\n") != string::npos) {
+            keyword = iString(
+                keyword.substr(keyword.find("\n")+1)
+                ).Trim(" \r\n\t");
+          }
+        }
+      }
+
+      if(noneStripped) {
+        string msg = "Expected a comment but found [";
+        msg += keyword;
+        msg += "]";
+        throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+      }
+    }
+
+    // Do we have a keyword at all?
+    if(keyword.empty()) {
+      return 0; // need more data
+    }
+
+    /*
+      Step 2: Determine Keyword Format
+       
+      Make sure we have a keyword after the comments first. We expect 
+      one of three formats:
+        KEYWORD                             PROCESSED IN STEP 3.1
+        KEYWORD = (VALUE,VALUE,...)         PROCESSED IN STEP 3.2
+        KEYWORD = VALUE                     PROCESSED IN STEP 3.3
+     */
+
+    // Get the keyword name
+    keywordName = ReadValue(keyword, explicitIncomplete);
+
+    // we have taken the name; if nothing remains then it is value-less 
+    // and we are done.
+    if(keyword.empty()) {
+      /*
+        Step 3.1 
+         
+        Format is determined to be: 
+          KEYWORD
+         
+        Well, no value/units may exist so we're done processing this keyword.
+       */
+      return 1; // Valid & Successful
+    }
+
+    // if we don't have an equal, then we have a problem - an invalid symbol. 
+    // Our possible remaining formats both are KEYWORD = ...
+    if(keyword[0] != '=') {
+      string msg = "Expected an assignemnt operator [=], but found [";
+      msg += keyword[0];
+      msg += "]";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    keyword = iString(keyword.substr(1)).Trim(" ");
+
+    if(keyword.empty()) return 0; // need more data
+
+    // now we need to split into two possibilities: array or non-array
+    if(keyword[0] == '(' || keyword[0] == '{') {
+      /*
+        Step 3.2 
+         
+        Our format is confirmed as: 
+          KEYWORD = (...)
+         
+        We need to read each value/unit in the array.
+      */
+
+      char closingParen = ((keyword[0] == '(')? ')' : '}');
+      char wrongClosingParen = ((keyword[0] == '(')? '}' : ')');
+      bool closedProperly = false;
+
+      vector< pair<char, char> > extraDelims;
+      extraDelims.push_back( pair<char, char>('(', ')') );
+      extraDelims.push_back( pair<char, char>('{', '}') );
+
+      // strip '(' - onetime, this makes every element in the array the same 
+      // (except the last)
+      keyword = iString(keyword.substr(1)).Trim(" ");
+
+      // handle empty arrays: KEYWORD = ()
+      if(!keyword.empty() && keyword[0] == closingParen) {
+        closedProperly = true;
+      }
+
+      // Each iteration of this loop should consume 1 value in the array, 
+      // including the comma, i.e. we should start out with:
+      //  'VALUE,VALUE,...)' until we hit ')' (our exit condition)
+      while(!keyword.empty() && keyword[0] != closingParen) {
+        // foundComma delimits the end of this element in the array (remains
+        //  false for last value which has no comma at the end)
+        bool foundComma = false;
+        // keyword should be of the format: VALUE <UNIT>,....)
+        // Read VALUE from it
+        string nextItem = ReadValue(keyword, explicitIncomplete, extraDelims);
+
+        if(!keyword.empty() && keyword[0] == wrongClosingParen) {
+
+          string msg = "Incorrect array close; expected [";
+          msg += closingParen;
+          msg += "] but found [";
+          msg += wrongClosingParen;
+          msg += "] in keyword named [";
+          msg += keywordName;
+          msg += "]";
+          throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+        }
+
+        // This contains <VALUE, UNIT>
+        pair<string, string> keywordValue;
+
+        // Store VALUE
+        keywordValue.first = nextItem;
+
+        // Now there's 2 possibilities: units or no units ->
+        //   if we have units, read them
+        if(!keyword.empty() && keyword[0] == '<') {
+          string unitsValue = ReadValue(keyword, explicitIncomplete);
+          keywordValue.second = unitsValue;
+        }
+
+        // Now we should* have a comma, strip it
+        if(!keyword.empty() && keyword[0] == ',') {
+          foundComma = true;
+          keyword = iString(keyword.substr(1)).Trim(" ");
+        }
+
+        // No comma and nothing more in string - we found
+        //  KEYWORD = (VALUE,VALUE\0
+        //  we need more information to finish this keyword
+        if(!foundComma && keyword.empty()) {
+          return false; // could become valid later
+        }
+
+        bool foundCloseParen = (!keyword.empty() && keyword[0] == closingParen);
+
+        if(foundCloseParen) {
+          closedProperly = true;
+        }
+
+        // Check for the condition of:
+        //  keyword = (VALUE,VALUE,)
+        // which is unrecoverable
+        if(foundComma && foundCloseParen) {
+          string msg = "Unexpected close of keyword-value array";
+          throw iException::Message(iException::Pvl, msg, _FILEINFO_); 
+        }
+
+        // Check for (VALUE VALUE
+        if(!foundComma && !foundCloseParen) {
+          // We have ("VALUE VALUE
+          if(explicitIncomplete) return false;
+
+          // We have (VALUE VALUE
+          string msg = "Found extra data after [";
+          msg += nextItem;
+          msg += "] in array";
+          throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+        }
+
+        // we're good with this element of the array, remember it
+        keywordValues.push_back(keywordValue);
+      }
+
+      if(!closedProperly) {
+        return false;
+      }
+
+      // Trim off the closing paren
+      if(!keyword.empty()) {
+        keyword = iString(keyword.substr(1)).Trim(" ");
+      }
+
+      // Read units here if they exist and apply them
+      //  case: (A,B,C) <unit>
+      if(!keyword.empty() && keyword[0] == '<') {
+        string units = ReadValue(keyword, explicitIncomplete);
+        for(unsigned int val = 0; val < keywordValues.size(); val++) {
+          if(keywordValues[val].second.empty()) {
+             keywordValues[val].second = units;
+          }
+        }
+      }
+    }
+    else {
+      /*
+        Step 3.3
+         
+        Our format is confirmed as: 
+          "KEYWORD = VALUE <UNIT>"
+         
+        We need to read the single value/unit in the keywordValues array.
+       */
+      pair<string, string> keywordValue;
+      keywordValue.first = ReadValue(keyword, explicitIncomplete);
+
+      if(!keyword.empty() && keyword[0] == '<') {
+        keywordValue.second = ReadValue(keyword, explicitIncomplete);
+      }
+
+      keywordValues.push_back(keywordValue);
+    }
+
+    /*
+      This is set when a quote is opened somewhere and never closed, it means 
+      we need more information 
+     */
+    if(explicitIncomplete) {
+      return false; // unclosed quote at end... need more information
+    }
+
+    /*
+      See if we have a comment at the end of the keyword...
+     */
+    if(!keyword.empty()) {
+      // if the data left is a comment, we can handle it probably
+      if(keyword[0] == '#' ||
+         ((keyword.size() > 1 && keyword[0] == '/') && 
+          (keyword[1] == '/' || keyword[1] == '*'))) {
+        keywordComments.push_back(keyword);
+        keyword = "";
+      }
+    }
+
+    /*
+      If more data remains, it is unrecognized.
+    */
+    if(!keyword.empty()) {
+      string msg = "Keyword has extraneous data [";
+      msg += keyword;
+      msg += "] at the end";
+      throw iException::Message(iException::Pvl, msg, _FILEINFO_);
+    }
+
+    // We've parsed this keyword! :)
+    return true;
+  }
+
+
+  std::string PvlKeyword::ReadValue(std::string &keyword, bool &quoteProblem) {
+    std::vector< std::pair<char, char> > otherDelims;
+
+    return ReadValue(keyword, quoteProblem, otherDelims);
+  }
+
+  /**
+   * This method looks for a data element in the string. A data element is a 
+   * quoted string, a units value, or one value of an array (not including 
+   * units). As an example, each value in the following string is quoted: 
+   *  
+   * 'VALUE' '=' ('VALUE','VALUE',  'VALUE' '<VALUE>') 
+   *  
+   *  The returned values of each of these elements is VALUE. Explicitly defined
+   *  quotes (', ", <>) are stripped from the return value.
+   * 
+   * @param keyword Input/Output: The keyword to get the next value from 
+   *                (DESTRUCTIVE)
+   * @param quoteProblem Output: The string has an unclosed quote character 
+   * 
+   * @return std::string The stripped out token.
+   */
+  std::string PvlKeyword::ReadValue(std::string &keyword, bool &quoteProblem,
+                                    const std::vector< std::pair<char, char> > &
+                                    otherDelimiters) {
+    string value = "";
+
+    // This method ignores spaces except as delimiters; let's trim the string
+    // to start
+    keyword = iString(keyword).Trim(" ");
+
+    if(keyword.empty()) {
+      return "";
+    }
+
+    // An implied quote is one that is started without a special character, for
+    //  example HELLO WORLD has HELLO and WORLD separately as implied quotes for
+    //  PVLs. However, "HELLO WORLD" has an explicit (not implied) double quote.
+    //  We do consider <> as quotes.
+    bool impliedQuote = true;
+    char quoteEnd = ' ';
+    bool keepQuotes = false;
+    size_t currentDelimPos = string::npos;
+
+    if(keyword[0] == '\'' || keyword[0] == '"'){
+      quoteEnd = keyword[0];
+      impliedQuote = false;
+      currentDelimPos = 0;
+    }
+    else if(keyword[0] == '<') {
+      quoteEnd = '>';
+      impliedQuote = false;
+      currentDelimPos = 0;
+    }
+    else {
+      // we're not quoted, look for alternative delimiters.
+      char implicitQuotes[] = {
+        ')',
+        '}',
+        ',',
+        ' ',
+        '<',
+        '='
+      };
+
+      bool foundImplicitQuote = false;
+
+      unsigned int currentPos = 0;
+      while(!foundImplicitQuote && currentPos != keyword.size()) {
+        for(unsigned int quote = 0;
+             quote < sizeof(implicitQuotes) / sizeof(char); 
+             quote ++) {
+          if(keyword[currentPos] == implicitQuotes[quote]) {
+            currentDelimPos = currentPos;
+            quoteEnd = implicitQuotes[quote];
+            foundImplicitQuote = true;
+          }
+        }
+
+        if(!foundImplicitQuote) {
+          currentPos ++;
+        }
+      }
+    }
+
+    for(unsigned int delim = 0; delim < otherDelimiters.size(); delim ++) {
+      if(keyword[0] == otherDelimiters[delim].first) {
+        currentDelimPos = 0;
+        quoteEnd = otherDelimiters[delim].second;
+        keepQuotes = true;
+        impliedQuote = false;
+      }
+    }
+
+    string startQuote;
+    // non-implied delimeters need the opening delimiter ignored. Remember
+    //  startQuote in case of error later on we can reconstruct the original
+    //  string.
+    if(!impliedQuote) {
+      startQuote += keyword[0];
+      keyword = keyword.substr(1);
+    }
+
+    // Do we have a known quote end?
+    size_t quoteEndPos = keyword.find(quoteEnd);
+    if(quoteEndPos != string::npos) {
+      value = keyword.substr(0, quoteEndPos);
+
+      // Trim keyword 1 past end delimiter (if end delimiter is last, this 
+      // results in empty string). If the close delimiter is ')' or ',' then 
+      // leave it be however, since we need to preserve that to denote this was
+      //  an end of a valuein array keyword.
+      if(!impliedQuote) {
+        keyword = keyword.substr(quoteEndPos+1);
+      }
+      else {
+        keyword = keyword.substr(quoteEndPos);
+      }
+
+      // Make sure we dont have padding
+      keyword = iString(keyword).Trim(" ");
+
+      if(keepQuotes) {
+        value = startQuote + value + quoteEnd;
+      }
+
+      return value;
+    }
+    // implied quotes terminate at end of keyword; otherwise we have a problem 
+    //   (which is this condition)
+    else if(!impliedQuote) {
+      // restore the original string
+      keyword = startQuote + keyword;
+      quoteProblem = true;
+
+      return "";
+    }
+
+    // we have an implied quote but no quote character, the rest must be the
+    //  value.
+    value = keyword;
+    keyword = "";
+
+    return value;
+  }
+
+
+  /**
+   * This method reads one line of data from the input stream. 
+   *  
+   * All spaces, newlines, returns and tabs are trimmed from the result. 
+   * Once a newline is encountered, if the line we read is blank, we keep 
+   * reading. Once a line with data is encountered, that is the result. All 
+   * newlines, spaces, returns and tabs are consumed past this line of data 
+   * until the next different character (seeks to next valid data). 
+   * 
+   * @param is The stream to read from
+   * 
+   * @return std::string The first encountered line of data
+   */
+  std::string PvlKeyword::ReadLine(std::istream &is) {
+    iString lineOfData;
+
+    while(is.good() && lineOfData.empty()) {
+
+      // read until \n (works for both \r\n and \n)
+      while(is.good() && (!lineOfData.size() || lineOfData[lineOfData.size() - 1] != '\n')) {
+        char next = is.get();
+
+        // if non-ascii found then we're done... immediately
+        if(next < 0) {
+          is.seekg(0, ios::end);
+          return lineOfData;
+        }
+
+        // if any errors (i.e. eof) happen in the get operation then don't
+        //   store this data
+        if(is.good()) {
+          lineOfData += next;
+        }
+      }
+
+      // Trim off non-visible characters from this line of data
+      lineOfData = lineOfData.Trim(" \r\n\t");
+
+      // read up to next non-whitespace in input stream
+      while(is.good() && 
+              (is.peek() == ' ' || 
+               is.peek() == '\r' || 
+               is.peek() == '\n')) {
+        is.get();
+      }
+
+      // if lineOfData is empty (line was empty), we repeat
+    }
+
+    return lineOfData;
+  }
 
 
   /**
@@ -711,12 +1572,15 @@ namespace Isis {
     }
 
     // Loop and write each array value
-    int charsLeft = 80 - 1 - tempFormat->FormatEOL().length() - startColumn;
-    for (int i=0; i<keyword.Size(); i++) {
-      string val = tempFormat->FormatValue(keyword, i);
-      keyword.WriteWithWrap(os, val, startColumn, charsLeft, tempFormat);
-      if ((i==0) && keyword.Size() > 1) startColumn++;
+    string stringToWrite;
+    for (int i = 0; i < keyword.Size(); i ++) {
+      stringToWrite += tempFormat->FormatValue(keyword, i);
     }
+
+    keyword.WriteWithWrap(os, 
+                          stringToWrite,
+                          startColumn, 
+                          *tempFormat);
 
     if (removeFormatter) delete tempFormat;
 

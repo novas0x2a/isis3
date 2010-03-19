@@ -1,7 +1,7 @@
 /* @file                                                                  
- * $Revision: 1.15 $
- * $Date: 2009/08/25 01:37:55 $
- * $Id: CamTools.cpp,v 1.15 2009/08/25 01:37:55 kbecker Exp $
+ * $Revision: 1.16 $
+ * $Date: 2009/12/29 23:03:47 $
+ * $Id: CamTools.cpp,v 1.16 2009/12/29 23:03:47 ehyer Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -40,7 +40,7 @@
 #include "iString.h"
 #include "iException.h"
 #include "Statistics.h"
-#include "SpiceUsr.h"
+#include "naif/SpiceUsr.h"
 #include "ProjectionFactory.h"
 #include "PolygonTools.h"
 

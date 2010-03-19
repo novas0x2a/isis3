@@ -30,7 +30,13 @@ int main () {
   }
 
   {
-    Isis::PvlKeyword key("myarray", "(12345,\"a short string\",1.234)");
+    Isis::PvlKeyword key("myarray", "(12345, \"a short string\", 1.234)");
+    cout << key << endl;
+  }
+
+
+  {
+    Isis::PvlKeyword key("myarray", "{12345, \"a short string\", 1.234}");
     cout << key << endl;
   }
 
@@ -85,6 +91,10 @@ int main () {
     cout << key << endl;
   }
 
-
+  {
+    Isis::PvlKeyword key("mycommas");
+    key += ",,,";
+    cout << key << endl;
+  }
 }
 

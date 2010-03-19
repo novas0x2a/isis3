@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QToolBar>
 #include "iException.h"
+#include "Filename.h"
 #include "ViewportMainWindow.h"
 #include "QnetFileTool.h"
 #include "QnetNavTool.h"
@@ -26,6 +27,10 @@ int main (int argc, char *argv[]) {
     QApplication *app = new QApplication(argc,argv);
     QApplication::setApplicationName("qnet");
     app->setStyle("windows");
+
+    // Add the Qt plugin directory to the library path
+    Isis::Filename qtpluginpath ("$ISISROOT/3rdParty/plugins");
+    QCoreApplication::addLibraryPath(qtpluginpath.Expanded().c_str());
 
     Qisis::Qnet::g_vpMainWindow = new Qisis::ViewportMainWindow("qnet");
 

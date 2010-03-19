@@ -1,9 +1,9 @@
 MODULE ISIS
-DESCRIPTION ISIS 3.1.21 IDL DLM interface
+DESCRIPTION ISIS 3.2.0  IDL DLM interface
 
 VERSION 0.3
 SOURCE U.S. Geological Survey, Astrogeology Team
-BUILD_DATE September 16 2009
+BUILD_DATE March 08, 2010
 
 #  Query functions
 FUNCTION ISIS_QUERY             0 0 KEYWORDS

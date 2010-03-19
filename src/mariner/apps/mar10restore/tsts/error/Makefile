@@ -9,5 +9,5 @@ commands:
 	  true; \
 	fi;
 	$(CAT) $(OUTPUT)/output.txt | $(SED) s_\\[.\*\]_\[input/isisTruth.cub\]_ \
-	 | $(SED) 's_in .*__' > $(OUTPUT)/error.txt;
+	 | $(SED) 's_ in .*__' > $(OUTPUT)/error.txt;
 	rm -f $(OUTPUT)/output.txt > /dev/null;

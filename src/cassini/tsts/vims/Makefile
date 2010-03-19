@@ -3,8 +3,6 @@ APP2NAME = spiceinit
 APP3NAME = campt
 APP4NAME = getsn
 
-CM_1477461989_1.cub--finalOutput.pvl.IGNORELINES = Filename
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:

@@ -2,8 +2,8 @@
 #define PvlTranslationTable_h
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2008/07/10 17:59:28 $
+ * $Revision: 1.5 $
+ * $Date: 2010/01/04 17:58:52 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -110,6 +110,14 @@ namespace Isis {
  *                                        when read in
  *  @history 2008-07-10 Steven Lambright - Made trnsTbl member into a
  *           non-pointer
+ *  @history 2010-01-04 Steven Lambright - Now using files instead of streams
+ *                                      where possible to improve errors and
+ *                                      added code that checks the
+ *                                      integrity of translation files. Also
+ *                                      now looking for "InputPosition" keyword
+ *                                      instead of "InputGroup." The InputGroup
+ *                                      method (which needs renamed later) now
+ *                                      returns a PvlKeyword.
  *  @todo 2005-02-15 Stuart Sides - add coded and implementation example to  
  *                                  class documentation and finish documentation  
  *                                  for protected methods and variable
@@ -126,10 +134,10 @@ namespace Isis {
       ~PvlTranslationTable () { };
   
       // Return the associated input group from the trans table
-      std::string InputGroup (const std::string nName, const int inst=0) const;
+      PvlKeyword InputGroup (const std::string nName, const int inst=0) const;
   
       // Return the associated input keyword name from the trans table
-      std::string InputKeyword (const std::string nName) const;
+      std::string InputKeywordName (const std::string nName) const;
       
       // Return the associated input default value from the trans table
       std::string InputDefault (const std::string nName) const;
@@ -143,15 +151,15 @@ namespace Isis {
 
     protected:
       Pvl &TranslationTable() { return p_trnsTbl; }
+      const Pvl &TranslationTable() const { return p_trnsTbl; }
 
       bool IsAuto (const std::string nName);
       bool IsOptional (const std::string nName);
-      Isis::PvlKeyword &OutputPosition (const std::string nName);
+      PvlKeyword &OutputPosition (const std::string nName);
       std::string OutputName (const std::string nName);
 
     private:
       Pvl p_trnsTbl;
-  
   };
 };
 

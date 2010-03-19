@@ -7,8 +7,6 @@
 
   <description>
     This program will display cubes and allow for interactive analysis.
-    It is a prototype version and is still in progress.  More documentation
-    will be forthcoming.
   </description>
 
   <category>
@@ -25,11 +23,17 @@
     <change name="Elizabeth Miller" date="2006-07-26">
       Fixed bug with filename expansion and added the MeasureTool
     </change>
-   <change name="Brendan George" date="2006-09-19">
+    <change name="Brendan George" date="2006-09-19">
        Documentation fixes
-   </change>
-   <change name="Steven Lambright" date="2007-09-11">
+    </change>
+    <change name="Steven Lambright" date="2007-09-11">
        Added new rubber band functionality
-   </change>
+    </change>
+    <change name="Jeannie Walldren" date="2010-03-08">
+       Modified FindTool.  If a user enters a line/sample in the Image tab, then 
+       the corresponding lat/lon is displayed in the Ground tab.  Added Record 
+       button to FindTool to record clicked or typed point in the 
+       AdvancedTrackTool window.
+    </change>
   </history>
 </application>

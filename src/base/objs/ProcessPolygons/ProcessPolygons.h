@@ -10,7 +10,16 @@
 #include "geos/geom/Polygon.h"
 
 namespace Isis {
-                                                                        
+                   
+  /**
+   * 
+   * @author 2007-12-07 Stacy Alley  
+   * 
+   * @internal
+   *   @history 2010-02-26 Steven Lambright - Now using a geometry snapper on
+   *             points before testing if they are inside a polygon inside
+   *             DoWork(...).
+   */
   class ProcessPolygons : public Isis::Process {
 
     public:

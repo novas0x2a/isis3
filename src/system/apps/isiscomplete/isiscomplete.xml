@@ -30,6 +30,10 @@
     <change name="Steven Lambright" date="2008-09-12">
       This program now handles isisui properly
     </change>
+    <change name="Kris Becker" date="2009-11-27">
+        Changed the call to Application to provide compatability withg Qt 
+        startup requirements.
+    </change>
   </history>
 </application>
 

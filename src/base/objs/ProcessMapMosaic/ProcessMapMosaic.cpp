@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.7 $
- * $Date: 2008/12/11 22:43:09 $
+ * $Revision: 1.10 $
+ * $Date: 2010/01/15 17:45:59 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -31,12 +31,28 @@
 #include "ProjectionFactory.h"
 
 using namespace std;
+
+//#define _DEBUG_
 namespace Isis {
+  // ***** Debugging *****
+  fstream ostpm;
+  void StartDebugPM(){
+    ostpm.open("Debug.log",std::ios::out | std::ios::app);
+    ostpm << "\n*********** ProcessMapMosaic::StartProcess **************\n";
+  }
+
+  void CloseDebugPM(){      
+    ostpm << "\n*************************\n";
+    ostpm.close();
+  }
+  // ***** End Debugging *****
+
   ProcessMapMosaic::ProcessMapMosaic() {
     p_createMosaic = true;
   }
 
-  bool ProcessMapMosaic::StartProcess (std::string inputFile, const MosaicPriority &priority) {
+  bool ProcessMapMosaic::StartProcess (std::string inputFile) 
+  {             
     if(InputCubes.size() != 0) {
       std::string msg = "Input cubes already exist; do not call SetInputCube when using ";
       msg += "ProcessMosaic::StartProcess(std::string)";
@@ -57,8 +73,7 @@ namespace Isis {
     int nlMosaic = mosaicCube->Lines();
 
     if(*iproj != *oproj) {
-      string msg = "Mapping groups do not match between cube [" + inputFile +
-                   "] and mosaic";
+      string msg = "Mapping groups do not match between cube [" + inputFile + "] and mosaic";
       throw iException::Message(iException::User,msg,_FILEINFO_);
     }
 
@@ -67,7 +82,7 @@ namespace Isis {
     outLine   = (int) (oproj->ToWorldY(iproj->ToProjectionY(1.0)) + 0.5);
 
     outSampleEnd = outSample + InputCubes[0]->Samples();
-    outLineEnd = outLine + InputCubes[0]->Lines();
+    outLineEnd   = outLine + InputCubes[0]->Lines();
   
     bool wrapPossible = iproj->IsEquatorialCylindrical(); 
     int worldSize = 0;
@@ -78,7 +93,7 @@ namespace Isis {
       wrapPossible = wrapPossible && oproj->SetUniversalGround(0, 180);
       int worldEnd = (int)(oproj->WorldX() + 0.5);
     
-      worldSize = abs(worldEnd - worldStart)*2;
+      worldSize = abs(worldEnd - worldStart) * 2;
 
       wrapPossible = wrapPossible && (worldSize > 0);
   
@@ -94,8 +109,7 @@ namespace Isis {
       }
     }
 
-    if(outSampleEnd < 1 || outLineEnd < 1 || 
-       outSample > nsMosaic || outLine > nlMosaic) {
+    if(outSampleEnd < 1 || outLineEnd < 1 || outSample > nsMosaic || outLine > nlMosaic) {
       // Add a PvlKeyword naming which files are not included in output mosaic
       ClearInputCubes();
       return false;
@@ -103,15 +117,24 @@ namespace Isis {
     else {
       // Place the input in the mosaic
       Progress()->SetText("Mosaicking " + Filename(inputFile).Name());
-
-      try {
-        do {
+      #ifdef _DEBUG_
+        StartDebugPM();
+        ostpm << "\nWrapPossible=" << wrapPossible << "  worldSize=" << worldSize << "  nsMosaic=" << nsMosaic << "\n";    
+        CloseDebugPM();
+      #endif
+      try {              
+        do {          
           int outBand = 1;
-          ProcessMosaic::StartProcess(outSample, outLine, outBand, priority);
+          #ifdef _DEBUG_
+            StartDebugPM();
+            ostpm << "Sample="<< outSample << "  Line="<< outLine << " Band=" << outBand << "\n";
+            CloseDebugPM();
+          #endif          
+          ProcessMosaic::StartProcess(outSample, outLine, outBand);
 
           // Increment for projections where occurrances may happen multiple times
           outSample += worldSize;
-          outSampleEnd += worldSize;
+          outSampleEnd += worldSize;          
         }
         while(wrapPossible && outSample < nsMosaic);
       }
@@ -126,9 +149,12 @@ namespace Isis {
     // Don't propagate any more histories now that we've done one
     p_propagateHistory = false;
 
-    ClearInputCubes();
+    ClearInputCubes();    
+
     return true;
   }
+
+  //*************************************************************************************************
 
   Isis::Cube* ProcessMapMosaic::SetOutputCube (FileList &propagationCubes, CubeAttributeOutput &oAtt, 
                                                    const std::string &mosaicFile) {
@@ -196,9 +222,12 @@ namespace Isis {
                          slat, elat, slon, elon, bands, oAtt, mosaicFile);
   }
 
+  //*************************************************************************************************
+
   Isis::Cube* ProcessMapMosaic::SetOutputCube (FileList &propagationCubes,
                                  double slat, double elat, double slon, double elon, 
-                                 CubeAttributeOutput &oAtt, const std::string &mosaicFile) {
+                                 CubeAttributeOutput &oAtt, const std::string &mosaicFile) 
+  {
     if (propagationCubes.size() < 1) {
       string msg = "The list does not contain any data";
       throw iException::Message(iException::Programmer,msg,_FILEINFO_);
@@ -259,6 +288,8 @@ namespace Isis {
                          slat, elat, slon, elon, bands, oAtt, mosaicFile);
   }
 
+  //*************************************************************************************************
+
   Isis::Cube* ProcessMapMosaic::SetOutputCube (const std::string &propagationCube, 
                                  double xmin, double xmax, double ymin, double ymax, 
                                  double slat, double elat, double slon, double elon, int nbands,
@@ -268,8 +299,8 @@ namespace Isis {
 
     mapping["UpperLeftCornerX"] = xmin;
     mapping["UpperLeftCornerY"] = ymax;
-    mapping["MinimumLatitude"] = slat;
-    mapping["MaximumLatitude"] = elat;
+    mapping["MinimumLatitude"]  = slat;
+    mapping["MaximumLatitude"]  = elat;
     mapping["MinimumLongitude"] = slon;
     mapping["MaximumLongitude"] = elon;
 
@@ -292,6 +323,12 @@ namespace Isis {
       p.PropagateTables(false);
       p.PropagatePolygons(false);
       p.PropagateOriginalLabel(false);
+
+      //if track set, create the origin band
+      if (GetTrackFlag()) {
+        nbands += 1;
+      }
+
       Cube *ocube = p.SetOutputCube(mosaicFile,oAtt,samps,lines,nbands);
       p.Progress()->SetText("Initializing mosaic");
       p.ClearInputCubes();
@@ -309,8 +346,10 @@ namespace Isis {
     return mosaicCube;
   }
 
+  //*************************************************************************************************
+
   Isis::Cube* ProcessMapMosaic::SetOutputCube (const std::string &propagationCube, PvlGroup mapping,
-                                                     CubeAttributeOutput &oAtt, const std::string &mosaicFile) {
+                                               CubeAttributeOutput &oAtt, const std::string &mosaicFile) {
     if(OutputCubes.size() != 0) {
       std::string msg = "You can only specify one output cube and projection";
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
@@ -334,6 +373,11 @@ namespace Isis {
       Cube *propCube = p.SetInputCube(propagationCube, inAtt);
       bands = propCube->Bands();
 
+      //if track set, create the origin band
+      if (GetTrackFlag()) {
+        bands += 1;
+      }
+
       p.PropagateHistory(false);
       p.PropagateLabels(false);
       Cube *ocube = p.SetOutputCube(mosaicFile,oAtt,samps,lines,bands);
@@ -352,6 +396,8 @@ namespace Isis {
 
     return mosaicCube;
   }
+  
+  //*************************************************************************************************
 
   Cube *ProcessMapMosaic::SetOutputCube(const std::string &mosaicFile) {
     p_createMosaic = false;
@@ -367,6 +413,7 @@ namespace Isis {
     return ocube;
   }
 
+  //*************************************************************************************************
   void ProcessMapMosaic::FillNull(Buffer &data) {
     for(int i = 0; i < data.size(); i++) data[i] = Isis::Null;
   }

@@ -1,4 +1,4 @@
-//_VER $Id: csspck2spk.cpp,v 1.7 2007/07/10 23:19:35 slambright Exp $
+//_VER $Id: csspck2spk.cpp,v 1.8 2009/12/04 21:58:45 caustin Exp $
 #include "Isis.h"
 #include "Pvl.h"
 #include "PvlGroup.h"
@@ -81,10 +81,16 @@ void IsisMain(){
       string value = (string)grp["File"];
       Filename fnm(value);
       string filename = fnm.Basename();
-      PvlKeyword newfile("File", "$cassini/kernels/pck/"+lookuparray[filename]);
-      grp.AddKeyword(basefile, Pvl::Replace);
-      grp.AddKeyword(newfile);
-      grp.DeleteKeyword("Type");
+      if ( lookuparray[filename] == "" ) {
+        std::string msg = "Spk [" + filename + "] does not exist in [" + pckFilenm.Name() + "]";
+        throw iException::Message(iException::User,msg,_FILEINFO_);
+      }
+      else {
+        PvlKeyword newfile("File", "$cassini/kernels/pck/"+lookuparray[filename]);
+        grp.AddKeyword(basefile, Pvl::Replace);
+        grp.AddKeyword(newfile);
+        grp.DeleteKeyword("Type");
+      }
     }
   }
 

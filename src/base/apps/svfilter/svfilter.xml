@@ -226,7 +226,7 @@
       <parameter name="PROPAGATE">
         <type>boolean</type>
         <default><item>TRUE</item></default>
-        <brief>Propogate special pixels</brief>
+        <brief>Propagate special pixels</brief>
         <description>
           This option is used to define how special pixels are handled.  If the
           center pixel of the boxcar is a special pixel it will be propagated

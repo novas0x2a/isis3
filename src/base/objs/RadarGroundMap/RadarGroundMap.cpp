@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2009/07/09 16:39:33 $
+ * $Revision: 1.4 $
+ * $Date: 2009/11/20 21:55:30 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -58,9 +58,21 @@ namespace Isis {
     SpiceRotation *bodyFrame = p_camera->BodyRotation();
     SpicePosition *spaceCraft = p_camera->InstrumentPosition();
 
-    // Get body fixed spacecraft velocity and position
-    std::vector<double> Vsc = bodyFrame->ReferenceVector(spaceCraft->Velocity());
-    std::vector<double> Xsc = bodyFrame->ReferenceVector(spaceCraft->Coordinate());
+    // Get spacecraft position and velocity to create a state vector
+    std::vector<double> Ssc(6);
+    // Load the state into Ssc
+    vequ_c ( (SpiceDouble *) &(spaceCraft->Coordinate()[0]), &Ssc[0]);
+    vequ_c ( (SpiceDouble *) &(spaceCraft->Velocity()[0]), &Ssc[3]);
+
+    // Rotate state vector to body-fixed
+    std::vector<double> bfSsc(6);
+    bfSsc = bodyFrame->ReferenceVector(Ssc);
+
+    // Extract body-fixed position and velocity
+    std::vector<double> Vsc(3);
+    std::vector<double> Xsc(3);
+    vequ_c ( &bfSsc[0], (SpiceDouble *) &(Xsc[0]) );
+    vequ_c ( &bfSsc[3], (SpiceDouble *) &(Vsc[0]) );
 
     // Compute intrack, crosstrack, and radial coordinate
     SpiceDouble i[3];
@@ -92,6 +104,7 @@ namespace Isis {
     slantRangeSqr = slantRangeSqr*slantRangeSqr;
     SpiceDouble X[3];
 
+    int iter = 0;
     do {
       double normXsc = vnorm_c(&Xsc[0]);
       double alpha = (R*R - slantRangeSqr - normXsc*normXsc) /
@@ -117,8 +130,11 @@ namespace Isis {
       rlat = lat*180.0/Isis::PI;
       rlon = lon*180.0/Isis::PI;
       R = GetRadius(rlat,rlon);
+      iter++;
     }
-    while (fabs(R-lastR) > p_tolerance);
+    while (fabs(R-lastR) > p_tolerance && iter < 30);
+
+    if (fabs(R-lastR) > p_tolerance) return false;
 
     lat = lat*180.0/Isis::PI;
     lon = lon*180.0/Isis::PI;
@@ -226,8 +242,37 @@ namespace Isis {
         SpicePosition *spaceCraft = p_camera->InstrumentPosition();
 
         // Get body fixed spacecraft velocity and position
-        std::vector<double> Vsc = bodyFrame->ReferenceVector(spaceCraft->Velocity());
-        std::vector<double> Xsc = bodyFrame->ReferenceVector(spaceCraft->Coordinate());
+        std::vector<double> Ssc(6);
+
+        // Load the state into Ssc and rotate to body-fixed
+        vequ_c ( (SpiceDouble *) &(spaceCraft->Coordinate()[0]), &Ssc[0]);
+        vequ_c ( (SpiceDouble *) &(spaceCraft->Velocity()[0]), &Ssc[3]);
+        std::vector<double> bfSsc(6);
+        bfSsc = bodyFrame->ReferenceVector(Ssc);
+
+        // Extract the body-fixed position and velocity from the state
+        std::vector<double> Vsc(3);
+        std::vector<double> Xsc(3);
+        vequ_c ( &bfSsc[0], (SpiceDouble *) &(Xsc[0]) );
+        vequ_c ( &bfSsc[3], (SpiceDouble *) &(Vsc[0]) );
+
+        // Determine if focal plane coordinate falls on the correct side of the
+        // spacecraft. Radar has both left and right look directions. Make sure
+        // the coordinate is on the same side as the look direction. This is done
+        // by (X - S) . (V x S) where X=ground point vector, S=spacecraft position
+        // vector, and V=velocity vector. If the dot product is greater than 0, then
+        // the point is on the right side. If the dot product is less than 0, then
+        // the point is on the left side. If the dot product is 0, then the point is
+        // directly under the spacecraft (neither left or right) and is invalid.
+        SpiceDouble vout1[3];
+        SpiceDouble vout2[3];
+        SpiceDouble dp;
+        vsub_c(X,&Xsc[0],vout1);
+        vcrss_c(&Vsc[0],&Xsc[0],vout2);
+        dp = vdot_c(vout1,vout2);
+        if (dp > 0.0 && p_lookDirection == Radar::Left) return false;
+        if (dp < 0.0 && p_lookDirection == Radar::Right) return false;
+        if (dp == 0.0) return false;
 
         // Compute body fixed look direction
         std::vector<double> lookB;
@@ -260,8 +305,21 @@ namespace Isis {
     // coordinates
     SpiceRotation *bodyFrame = p_camera->BodyRotation();
     SpicePosition *spaceCraft = p_camera->InstrumentPosition();
-    std::vector<double> Vsc = bodyFrame->ReferenceVector(spaceCraft->Velocity());
-    std::vector<double> Xsc = bodyFrame->ReferenceVector(spaceCraft->Coordinate());
+
+    std::vector<double> Ssc(6);
+    // Load the state into Ssc
+    vequ_c ( (SpiceDouble *) &(spaceCraft->Coordinate()[0]), &Ssc[0]);
+    vequ_c ( (SpiceDouble *) &(spaceCraft->Velocity()[0]), &Ssc[3]);
+
+    // Rotate the state to body-fixed
+    std::vector<double> bfSsc(6);
+    bfSsc = bodyFrame->ReferenceVector(Ssc);
+
+    // Extract the body-fixed position and velocity
+    std::vector<double> Vsc(3);
+    std::vector<double> Xsc(3);
+    vequ_c ( &bfSsc[0], &Xsc[0] );
+    vequ_c ( &bfSsc[3], &Vsc[0] );
 
     // Compute the slant range
     SpiceDouble lookB[3];

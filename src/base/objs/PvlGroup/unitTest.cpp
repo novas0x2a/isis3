@@ -3,8 +3,11 @@
 #include "PvlGroup.h"
 #include "PvlTokenizer.h"
 #include "Preference.h"
+#include "iException.h"
 
 using namespace std;
+using namespace Isis;
+
 int main () {
   Isis::Preference::Preferences(true);
 
@@ -20,44 +23,58 @@ int main () {
 
   cout << ani << endl; 
 
-  cout << (double) ani["dog"] << endl;
+  cout << (double) ani["dog"] << endl << endl;
 
   ani -= "dog";
-  cout << ani << endl;
+  cout << ani << endl << endl;
 
   ani -= ani[0];
-  cout << ani << endl;
+  cout << ani << endl << endl;
 
   stringstream os;
   os << "# Testing" << endl
      << "/* 123" << endl
-     << "Group=POODLE "
-     << "CAT=\"TABBY\" "
-     << "BIRD=(PARROT) \0"
-     << "REPTILE={SNAKE,LIZARD} \t"
+     << "Group=POODLE " << endl
+     << "CAT=\"TABBY\" " << endl
+     << "BIRD=(PARROT) \0" << endl
+     << "REPTILE={SNAKE,LIZARD} \t" << endl
      << "-VEGGIE \n"
      << " "
      << "    BOVINE    =   (   COW  ,  CAMEL  ) \n  "
-     << "TREE = {   \"MAPLE\"   ,\n \"ELM\" \n, \"PINE\"   }"
+     << "TREE = {   \"MAPLE\"   ,\n \"ELM\" \n, \"PINE\"   }" << endl
      << "FLOWER = \"DAISY & \nTULIP \""
      << "# This is a comment\n"
      << "/* This is another comment\n"
-     << "BIG = (\"  NOT  \",\"REALLY LARGE\")"
+     << "BIG = (\"  NOT  \",\"REALLY LARGE\")" << endl
      << "EndGroup" << endl;
 
-  Isis::PvlTokenizer tizer;
-  tizer.Load (os);
-  vector<Isis::PvlToken> toks = tizer.GetTokenList();
-
-  class MyGroup : public Isis::PvlGroup {
-    public:
-      MyGroup (vector<Isis::PvlToken> &toks, vector<Isis::PvlToken>::iterator &it) :
-               Isis::PvlGroup(toks,it) {};
-  };
-
-  cout << "------------" << endl;
-  vector<Isis::PvlToken>::iterator it = toks.begin();
-  MyGroup g(toks,it);
+  PvlGroup g;
+  os >> g;
   cout << g << endl;
 
+  try {
+    stringstream os2;
+    os2 << "# Testing" << endl
+       << "/* 123" << endl
+       << "Group=POODLE " << endl
+       << "CAT=\"TABBY\" " << endl
+       << "BIRD=(PARROT) \0" << endl
+       << "REPTILE={SNAKE,LIZARD} \t" << endl
+       << "-VEGGIE \n"
+       << " "
+       << "    BOVINE    =   (   COW  ,  CAMEL  ) \n  "
+       << "TREE = {   \"MAPLE\"   ,\n \"ELM\" \n, \"PINE\"   }" << endl
+       << "FLOWER = \"DAISY & \nTULIP \""
+       << "# This is a comment\n"
+       << "/* This is another comment\n"
+       << "BIG = (\"  NOT  \",\"REALLY LARGE\")" << endl;
+
+    PvlGroup g2;
+    os2 >> g2;
+    cout << g2 << endl;
+  }
+  catch(iException &e) {
+    cout.flush();
+    e.Report(false);
+  }
 }

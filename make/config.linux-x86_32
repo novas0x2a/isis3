@@ -29,7 +29,8 @@ ISISCFLAGS =
 RANLIB          = /bin/true
 SHAREDLIBEXT    = so
 
-ISISLDFLAGS = -Wl,-E
+ISISLDFLAGS  = -Wl,-E -Xlinker '-z' -Xlinker 'origin'
+ISISLDFLAGS += -Xlinker "-rpath" -Xlinker "${ISISROOT}/lib:${ISISROOT}/3rdParty/lib"
 ISISSYSLIBS = 
 ISISSTATIC  = -Wl,-Bstatic
 ISISDYNAMIC = -Wl,-Bdynamic
@@ -56,34 +57,40 @@ ISIS3LOCAL  ?= /usgs/pkgs/local/isis$(ISISVERSION)
 #---------------------------------------------------------------------------
 # Set up for cwd
 #---------------------------------------------------------------------------
-CWDINCDIR = -I$(ISIS3LOCAL)/include/libcwd/libcwd-0.99.46
+CWDINCDIR = -I$(ISIS3LOCAL)/include/libcwd/libcwd1.0.3
 CWDLIBDIR = -L$(ISIS3LOCAL)/lib
 CWDLIB    = -lcwd_r
+
 
 #---------------------------------------------------------------------------
 # Set up for Qt
 #---------------------------------------------------------------------------
-QTINCDIR = -I$(ISIS3LOCAL)/include/qt/qt4.4.1
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/Qt
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtCore
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtAssistant
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtGui
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtNetwork
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtScript
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtSql
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtSvg
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtWebKit
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtXml
-QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.4.1/QtXmlPatterns
+QTINCDIR = -I$(ISIS3LOCAL)/include/qt/qt4.6.2
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/Qt
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtCore
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtAssistant
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtGui
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtNetwork
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtScript
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtScriptTools
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtSql
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtSvg
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtWebKit
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtXml
+QTINCDIR += -I$(ISIS3LOCAL)/include/qt/qt4.6.2/QtXmlPatterns
 QTLIBDIR = -L$(ISIS3LOCAL)/lib
-QTLIB    = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore
+QTLIB    = -lQtXmlPatterns -lQtXml -lQtNetwork -lQtSql -lQtGui -lQtCore -lQtSvg
+
+UIC      = $(ISIS3LOCAL)/bin/uic
+MOC      = $(ISIS3LOCAL)/bin/moc
+RCC      = $(ISIS3LOCAL)/bin/rcc
 
 #---------------------------------------------------------------------------
 # Set up for Qwt
 #---------------------------------------------------------------------------
-QWTINCDIR = -I$(ISIS3LOCAL)/include/qwt/qwt5.1.1
+QWTINCDIR = -I$(ISIS3LOCAL)/include/qwt/qwt5.2.0/qwt
 QWTLIBDIR = -L$(ISIS3LOCAL)/lib
-QWTLIB    = -lqwt 
+QWTLIB    = -lqwt
 
 #---------------------------------------------------------------------------
 # Set up for Xerces 
@@ -95,30 +102,30 @@ XERCESLIB    = -lxerces-c
 #---------------------------------------------------------------------------
 # Set up for naif
 #---------------------------------------------------------------------------
-NAIFINCDIR = -I$(ISIS3LOCAL)/include/naif
+NAIFINCDIR = -I$(ISIS3LOCAL)/include/naif/cspice63
 NAIFLIBDIR = -L$(ISIS3LOCAL)/lib
 NAIFLIB    = -lcspice
 
 #---------------------------------------------------------------------------
 # Set up for TNT
 #---------------------------------------------------------------------------
-TNTINCDIR = -I$(ISIS3LOCAL)/include/tnt
+TNTINCDIR = -I$(ISIS3LOCAL)/include/tnt/tnt126
 TNTLIBDIR =
 TNTLIB    = 
 
 #---------------------------------------------------------------------------
 # Set up for JAMA
 #---------------------------------------------------------------------------
-JAMAINCDIR = -I$(ISIS3LOCAL)/include/jama
+JAMAINCDIR = -I$(ISIS3LOCAL)/include/jama/jama125
 JAMALIBDIR =
 JAMALIB    = 
 
 #---------------------------------------------------------------------------
 # Set up for GEOS
 #---------------------------------------------------------------------------
-GEOSINCDIR = -I$(ISIS3LOCAL)/include/geos/geos3.0.0
+GEOSINCDIR = -I$(ISIS3LOCAL)/include/geos/geos3.2.0
 GEOSLIBDIR = -L$(ISIS3LOCAL)/lib
-GEOSLIB    = -lgeos-3.0.0
+GEOSLIB    = -lgeos-3.2.0
 
 #---------------------------------------------------------------------------
 # Set up for the GNU Scientific Library (GSL).  Note that this setup
@@ -136,23 +143,55 @@ GSLLIB    = -lgsl -lgslcblas
 #---------------------------------------------------------------------------
 # Set up for GMM
 #---------------------------------------------------------------------------
-GMMINCDIR = -I$(ISIS3LOCAL)/include
+GMMINCDIR = -I$(ISIS3LOCAL)/include/gmm/gmm3.0.0
 GMMLIBDIR =
 GMMLIB    = 
 
 #---------------------------------------------------------------------------
 # Set up for SuperLU
 #---------------------------------------------------------------------------
-SUPERLUINCDIR = -I$(ISIS3LOCAL)/include/superlu
+SUPERLUINCDIR = -I$(ISIS3LOCAL)/include/superlu/superlu3.0
 SUPERLULIBDIR = -L$(ISIS3LOCAL)/lib
 SUPERLULIB    = -lsuperlu_3.0 -lblas -lgfortran
+
 
 #---------------------------------------------------------------------------
 # Set up for Google Protocol Buffers (ProtoBuf)
 #---------------------------------------------------------------------------
-PROTOBUFINCDIR = 
+PROTOBUFINCDIR = -I$(ISIS3LOCAL)/include/google-protobuf/protobuf2.1.0
 PROTOBUFLIBDIR = -L$(ISIS3LOCAL)/lib
 PROTOBUFLIB    = -lprotobuf
+
+
+#---------------------------------------------------------------------------
+# Set up for kakadu
+# The Kakadu library is proprietary. The source files cannot be distributed
+# with ISIS3. If you need to rebuild ISIS3 on your system, then you will
+# need to modify the lines below that pertain to the location of the
+# header files and library on your system. The compilation flag, ENABLEJP2K,
+# should be set to true if you are building with the Kakadu library and
+# you want to use the JPEG2000 specific code in the ISIS3 system. Otherwise,
+# set the ENABLEJP2K flag to false.
+#---------------------------------------------------------------------------
+KAKADUINCDIR = -I$(ISIS3LOCAL)/include/kakadu/v6_3-00967N
+KAKADULIBDIR = -L$(ISIS3LOCAL)/lib
+KAKADULIB    = -lkdu_a63R
+ISISCPPFLAGS += -DENABLEJP2K=1
+
+
+#---------------------------------------------------------------------------
+# Set up for BOOST
+#---------------------------------------------------------------------------
+BOOSTINCDIR = -I$(ISIS3LOCAL)/include/boost/boost1.41.0
+BOOSTLIBDIR = 
+BOOSTLIB    = 
+#BOOSTLIBDIR = -L$(ISIS3LOCAL)/lib
+#BOOSTLIB    = -lboost_date_time -lboost_filesystem -lboost_graph -lboost_math_c99f \
+#              -lboost_math_c99l -lboost_math_c99 -lboost_math_tr1f -lboost_math_tr1l \
+#              -lboost_math_tr1 -lboost_prg_exec_monitor -lboost_program_options \
+#              -lboost_regex -lboost_serialization -lboost_signals -lboost_system \
+#              -lboost_thread -lboost_unit_test_framework -lboost_wave -lboost_wserialization
+
 
 #---------------------------------------------------------------------------
 #  Define the third party distribution libraries (patterns)
@@ -165,22 +204,25 @@ THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtNetwork.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtSql.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtGui.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtCore.so*"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libQtSvg.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libqwt.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libprotobuf.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libxerces-c.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libgsl*.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libgeos-*.so"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libcspice.so*"
 THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libsuperlu_3.0.a"
+
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libblas.so.*"
 THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libgfortran.so.*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicuuc.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicudata.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libpq.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libmysqlclient_r.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libssl.so*"
-THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libcrypto.so*"
-THIRDPARTYLIBS    += "/lib/libreadline.so*"
+THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libxerces-c.so*"
+THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libgsl*.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicuuc.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libicudata.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libpq.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libmysqlclient_r.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libssl.so*"
+#THIRDPARTYLIBS    += "$(ISIS3SYSLIB)/libcrypto.so*"
+#THIRDPARTYLIBS    += "/lib/libreadline.so*"
+THIRDPARTYLIBS    += "$(ISIS3LOCAL)/lib/libkdu_a63R.so*"
 
 
 #  Plugins

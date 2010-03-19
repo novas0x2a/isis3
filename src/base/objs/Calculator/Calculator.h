@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.8 $
- * $Date: 2008/06/18 20:57:04 $
+ * $Revision: 1.9 $
+ * $Date: 2010/02/23 16:58:28 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -53,6 +53,8 @@ namespace Isis {
  *           (in order to use iterators)
  *  @history 2008-06-18 Christopher Austin - Added as well as fixed
  *           documentation
+ *  @history 2010-02-23 Steven Lambright - Added Minimum2, Maximum2 and all
+ *           min/max operations now ignore special pixels.
  */
   class Calculator {
     public:
@@ -78,6 +80,8 @@ namespace Isis {
       void RightShift();
       void Minimum();
       void Maximum();
+      void Minimum2();
+      void Maximum2();
       void GreaterThan();
       void LessThan();
       void Equal();

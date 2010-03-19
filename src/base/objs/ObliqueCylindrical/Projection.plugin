@@ -1,5 +1,5 @@
 Group = ObliqueCylindrical
-  Library = ObliqueCylindrical 
+  Library = ObliqueCylindrical
   Routine = ObliqueCylindricalPlugin
   Keyword = CenterLongitude
 EndGroup

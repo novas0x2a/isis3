@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.3 $
- * $Date: 2008/07/11 22:23:46 $
+ * $Revision: 1.4 $
+ * $Date: 2010/01/15 01:37:59 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -304,7 +304,8 @@ namespace Isis {
     osec.setf(ios::fixed);
     osec << setprecision(8) << p_second;
     iString sSeconds(osec.str());
-    sSeconds.TrimTail(".0");
+    sSeconds.TrimTail("0");
+    sSeconds.TrimTail(".");
     if ( sSeconds.empty() ) sSeconds = "0";
     return (sSeconds);
   }

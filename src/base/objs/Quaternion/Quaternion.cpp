@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2008/06/18 18:27:50 $                                                                 
+ * $Revision: 1.3 $                                                             
+ * $Date: 2009/12/28 21:09:46 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -26,9 +26,9 @@
 #include <iostream>
 
 #include <vector>
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 #include "Quaternion.h"
 #include "iException.h"
 

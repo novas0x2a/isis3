@@ -50,7 +50,7 @@
                       constant, K, that is used to describe the roughness of a
 		      surface. When the K constant is set to 1.0, then the 
 		      Minnaert model is equivalent to the Lambert model.
-    Moonpr          : This model was developed specifically for use with the
+    LunarLambertMcEwen : This model was developed specifically for use with the
                       Moon. This model was designed to be used in conjunction
 		      with the MoonAlbedo normalization model.
     </pre>
@@ -130,8 +130,8 @@
                       specifically for use on Lunar data. It will compute 
                       normalized albedo for the Moon, normalized to 0 degrees
 		      emission angle and 30 degrees illumination and phase angles.
-		      The Moonpr photometric function was designed to be used with
-		      this normalization model.
+		      The LunarLambertMcEwen photometric function was designed to 
+                      be used with this normalization model.
     NoNormalization : Normalization without atmosphere. No normalization is 
                       performed. Only photometric correction is performed.
     Shade           : Normalization without atmosphere. The surface photometric 
@@ -183,7 +183,7 @@
     LommelSeeliger
     LunarLambert (L)
     Minnaert (K)
-    Moonpr
+    LunarLambertMcEwen
   
     Anisotropic1 (Bha,Bharef,Hnorm,Nulneg,Tau,Tauref,Wha,Wharef)
     Anisotropic2 (Bha,Bharef,Hnorm,Nulneg,Tau,Tauref,Wha,Wharef)
@@ -320,7 +320,7 @@
   
     Object = PhotometricModel
       Group  = Algorithm
-        Name = Moonpr
+        Name = LunarLambertMcEwen
       EndGroup
     EndObject
     Object = NormalizationModel

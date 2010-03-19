@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.4 $
- * $Date: 2009/03/03 17:16:00 $
+ * $Revision: 1.5 $
+ * $Date: 2010/02/23 17:03:08 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -44,6 +44,7 @@ namespace Isis {
  *  @history 2008-05-12 Steven Lambright - Removed references to CubeInfo    
  *  @history 2008-06-18 Steven Lambright - Fixed documentation     
  *  @history 2009-03-03 Steven Lambright - Added missing secant method call
+ *  @history 2010-02-23 Steven Lambright - Added min2,max2
  */
   class CubeCalculator : Calculator {
     public:

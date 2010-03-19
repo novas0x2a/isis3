@@ -74,6 +74,11 @@ namespace Qisis {
    *                          displaying a QMessageBox to the user
    *   @history 2009-03-17 Tracie Sucharski - Added the ability to save the
    *                          registration chips to the Options menu.
+   *   @history 2010-01-27 Jeannie Walldren - Fixed bug in setIgnoreLeftMeasure()
+   *                         and setIgnoreRightMeasure() that caused segmentation
+   *                         faults. Added question box to warn user that they are
+   *                         saving changes to an ignored measure.
+   *   
    */
   class QnetTool : public Qisis::Tool {
     Q_OBJECT

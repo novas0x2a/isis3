@@ -32,7 +32,7 @@
     </change>
     <change name="Steven Koechle" date="2007-05-22">
        Removed "Z" from end of value for StartTime label.
-       Propogated Original Labels
+       Propagated Original Labels
        Added PvlKeywords:
             FocalPlaneTemperature
             ExposureDuration

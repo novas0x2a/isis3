@@ -45,15 +45,20 @@ key1=tok1 key2="t o k 2" key3=(1,2,3,4)
 key1
 tok1
 key2
-"t o k 2"
+"t
+o
+k
+2"
 key3
 (1,2,3,4)
 "abcd","1234"
 "abcd"
 "1234"
 ",1234","ab,cd"
-",1234"
-"ab,cd"
+"
+1234"
+"ab
+cd"
 /this/is/a/long/filename.jnk,seperated/by/a/comma/ending/with/
 /this/is/a/long/filename.jnk
 seperated/by/a/comma/ending/with/

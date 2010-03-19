@@ -2,8 +2,8 @@
 #define SpicePosition_h
 /**
  * @file
- * $Revision: 1.13 $
- * $Date: 2009/08/27 18:40:25 $
+ * $Revision: 1.16 $
+ * $Date: 2009/12/28 19:11:12 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for
@@ -26,9 +26,9 @@
 #include <vector>
 #include "Table.h"
 #include "PolynomialUnivariate.h"
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 
 namespace Isis {
   /**
@@ -91,6 +91,8 @@ namespace Isis {
    *                      software more readable.
    *  @history 2009-08-14 Debbie A. Cook - Corrected loop counter in HermiteIndices
    *  @history 2009-08-27 Jeannie Walldren - Added documentation.
+   *  @history 2009-10-20 Debbie A. Cook - Corrected calculation of extremum in ReloadCache
+   *  @history 2009-11-06 Debbie A. Cook - Added velocity partial derivative method
    */
   class SpicePosition {
     public:
@@ -104,9 +106,10 @@ namespace Isis {
       const std::vector<double> &SetEphemerisTime(double et);
 
 
-      enum PartialType {WRT_X0,WRT_X1,WRT_X2,
-                        WRT_Y0,WRT_Y1,WRT_Y2,
-                        WRT_Z0,WRT_Z1,WRT_Z2};
+//      enum PartialType {WRT_X0,WRT_X1,WRT_X2,
+//                        WRT_Y0,WRT_Y1,WRT_Y2,
+//                        WRT_Z0,WRT_Z1,WRT_Z2};
+      enum PartialType {WRT_X,WRT_Y,WRT_Z};
 
 
       enum Coefficient { A, B, C };
@@ -154,7 +157,9 @@ namespace Isis {
 
       double DPolynomial ( const Coefficient coeffIndex );
 
-      std::vector<double> CoordinatePartial( SpicePosition::PartialType partialVar);
+      std::vector<double> CoordinatePartial( SpicePosition::PartialType partialVar,  int coeffIndex);
+
+      std::vector<double> VelocityPartial( SpicePosition::PartialType partialVar);
 
 
       //??? jw

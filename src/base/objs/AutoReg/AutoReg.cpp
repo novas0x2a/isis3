@@ -33,6 +33,7 @@ namespace Isis {
     SetPatternZScoreMinimum(1.0);
     SetTolerance(Isis::Null);
     SetSubPixelAccuracy(true);
+    SetEccentricityTesting(true);
     SetSurfaceModelDistanceTolerance(1.5);
     SetSurfaceModelWindowSize(5);
     SetSurfaceModelEccentricityRatio(2);  // 2:1
@@ -50,6 +51,9 @@ namespace Isis {
     p_SurfaceModelSolutionInvalid = 0;
     p_SurfaceModelDistanceInvalid = 0;
     p_SurfaceModelEccentricityRatioNotMet = 0;
+
+    p_sampMovement = 0.;
+    p_lineMovement = 0.;
    
     Init();
     Parse(pvl);
@@ -612,8 +616,10 @@ namespace Isis {
       // See if the surface model solution moved too far from our whole pixel
       // solution
       // ---------------------------------------------------------------------
-      if (std::fabs(p_bestSamp - p_chipSample) > p_distanceTolerance ||
-          std::fabs(p_bestLine - p_chipLine) > p_distanceTolerance) {
+      p_sampMovement = std::fabs(p_bestSamp - p_chipSample);
+      p_lineMovement = std::fabs(p_bestLine - p_chipLine);
+      if (p_sampMovement > p_distanceTolerance ||
+          p_lineMovement > p_distanceTolerance) {
         p_SurfaceModelDistanceInvalid++;
         p_status = SurfaceModelDistanceInvalid;
         return SurfaceModelDistanceInvalid;
@@ -777,63 +783,75 @@ namespace Isis {
     // The general quadratic curve
     // dx^2+2exy+fy^2+2bx+2cy+a=0
     // is an ellipse when, after defining
-    // Delta	=	|d    e/2   b|
+    // Delta    =       |d    e/2   b|
     //          |e/2  f/2 c/2|
     //          |b    c/2   a|
-    // J	=	|d   e/2|
+    // J        =       |d   e/2|
     //      |e/2 f/e|
-    // I	=	d + (f/2)
+    // I        =       d + (f/2)
     // Delta!=0, J>0, and Delta/I<0. Also assume the ellipse is
     // nondegenerate (i.e., it is not a circle, so a!=c, and we have already
     // established is not a point, since J=ac-b^2!=0)
     // ---------------------------------------------------------
-    Matrix delta(3, 3);
-    delta[0][0] = d;   delta[0][1] = e/2; delta[0][2] = b/2;
-    delta[1][0] = e/2; delta[1][1] = f; delta[1][2] = c/2;
-    delta[2][0] = b/2;   delta[2][1] = c/2; delta[2][2] = a;
-    if(delta.Determinant() == 0) {
-      p_status = SurfaceModelEccentricityRatioNotMet;
-      p_SurfaceModelEccentricityRatioNotMet++;
-      return false;
-    }
+    if (p_testEccentricity) {
+      bool canComputeEccentricity = true;
 
-    //Make sure J matrix is greater than zero.
-    Matrix J(2, 2);
-    J[0][0] = d;   J[0][1] = e/2;
-    J[1][0] = e/2; J[1][1] = f;
-    if(J.Determinant() <= 0) {
-      p_status = SurfaceModelEccentricityRatioNotMet;
-      p_SurfaceModelEccentricityRatioNotMet++;
-      return false;
-    }
+      Matrix delta(3, 3);
+      delta[0][0] = d;   delta[0][1] = e/2; delta[0][2] = b/2;
+      delta[1][0] = e/2; delta[1][1] = f; delta[1][2] = c/2;
+      delta[2][0] = b/2;   delta[2][1] = c/2; delta[2][2] = a;
+      if(delta.Determinant() == 0) {
+        p_status = SurfaceModelEccentricityRatioNotMet;
+        p_SurfaceModelEccentricityRatioNotMet++;
+        canComputeEccentricity = false;
+      }
+  
+      //Make sure J matrix is greater than zero.
+      Matrix J(2, 2);
+      J[0][0] = d;   J[0][1] = e/2;
+      J[1][0] = e/2; J[1][1] = f;
+      if(J.Determinant() <= 0 && canComputeEccentricity) {
+        p_status = SurfaceModelEccentricityRatioNotMet;
+        p_SurfaceModelEccentricityRatioNotMet++;
+        canComputeEccentricity = false;
+      }
+  
+      double I = d + (f);
+      if(delta.Determinant() / I >= 0 && canComputeEccentricity) {
+        p_status = SurfaceModelEccentricityRatioNotMet;
+        p_SurfaceModelEccentricityRatioNotMet++;
+        canComputeEccentricity = false;
+      }
+  
+      if (canComputeEccentricity) {
+        // If the eccentricity can be computed, go ahead and do so
+        // Begin by calculating the semi-major axis lengths
+        double eA = sqrt((2*(d*(c/2)*(c/2) + f*(b/2)*(b/2) + a*(e/2)*(e/2) - 2*(e/2)*(b/2)*(c/2) - d*f*a)) /
+                         (((e/2)*(e/2) - d*f) * (sqrt((d - f)*(d -f) + 4*(e/2)*(e/2)) - (d + f))));
+    
+        double eB = sqrt((2*(d*(c/2)*(c/2) + f*(b/2)*(b/2) + a*(e/2)*(e/2) - 2*(e/2)*(b/2)*(c/2) - d*f*a)) /
+                         (((e/2)*(e/2) - d*f) * (-sqrt((d - f)*(d -f) + 4*(e/2)*(e/2)) - (d + f))));
+    
+        if(eB > eA) {
+          double tempVar = eB;
+          eB = eA;
+          eA = tempVar;
+        } 
+         
+        // Calculate eccentricity
+        p_surfaceModelEccentricity = sqrt(eA*eA - eB*eB)/eA;
+      }
+      else {
+        // If the eccentricity cannot be computed, assume it to be 0
+        p_surfaceModelEccentricity = 0;
+      }
 
-    double I = d + (f);
-    if(delta.Determinant() / I >= 0) {
-      p_status = SurfaceModelEccentricityRatioNotMet;
-      p_SurfaceModelEccentricityRatioNotMet++;
-      return false;
-    }
-
-    // -------------------------------------------
-    // Now we can calculate a prime and b prime
-    // -------------------------------------------
-    double eA = sqrt((2*(d*(c/2)*(c/2) + f*(b/2)*(b/2) + a*(e/2)*(e/2) - 2*(e/2)*(b/2)*(c/2) - d*f*a)) /
-                     (((e/2)*(e/2) - d*f) * (sqrt((d - f)*(d -f) + 4*(e/2)*(e/2)) - (d + f))));
-
-    double eB = sqrt((2*(d*(c/2)*(c/2) + f*(b/2)*(b/2) + a*(e/2)*(e/2) - 2*(e/2)*(b/2)*(c/2) - d*f*a)) /
-                     (((e/2)*(e/2) - d*f) * (-sqrt((d - f)*(d -f) + 4*(e/2)*(e/2)) - (d + f))));
-
-    if(eB > eA) {
-      double tempVar = eB;
-      eB = eA;
-      eA = tempVar;
-    }
-    // Compute eccentricity
-    p_surfaceModelEccentricity = sqrt(eA*eA - eB*eB)/eA;
-    if(p_surfaceModelEccentricity > p_surfaceModelEccentricityTolerance) {
-      p_status = SurfaceModelEccentricityRatioNotMet;
-      p_SurfaceModelEccentricityRatioNotMet++;
-      return false;
+      // Ensure that the eccentricity is less than or equal to the tolerance
+      if(p_surfaceModelEccentricity > p_surfaceModelEccentricityTolerance) {
+        p_status = SurfaceModelEccentricityRatioNotMet;
+        p_SurfaceModelEccentricityRatioNotMet++;
+        return false;
+      }
     }
 
     // Compute the determinant
@@ -1042,15 +1060,15 @@ namespace Isis {
     if(p_template.HasGroup("SurfaceModel")) {
       PvlGroup &smodel = p_template.FindGroup("SurfaceModel", Pvl::Traverse);
       if(smodel.HasKeyword("DistanceTolerance")) {
-	reg += PvlKeyword("DistanceTolerance", smodel["DistanceTolerance"][0]);
+        reg += PvlKeyword("DistanceTolerance", smodel["DistanceTolerance"][0]);
       }
 
       if(smodel.HasKeyword("WindowSize")) {
-	reg += PvlKeyword("WindowSize", smodel["WindowSize"][0]);
+        reg += PvlKeyword("WindowSize", smodel["WindowSize"][0]);
       }
 
       if(smodel.HasKeyword("EccentricityRatio")) {
-	reg += PvlKeyword("EccentricityRatio", smodel["EccentricityRatio"][0]);
+        reg += PvlKeyword("EccentricityRatio", smodel["EccentricityRatio"][0]);
       }
     }
 

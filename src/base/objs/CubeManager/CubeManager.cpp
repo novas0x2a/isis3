@@ -1,6 +1,10 @@
-#include "CubeManager.h"
 #include "Cube.h"
+#include "CubeAttribute.h"
+#include "CubeManager.h"
 #include "Filename.h"
+#include "iString.h"
+
+#include <iostream>
 
 namespace Isis {
   CubeManager CubeManager::p_instance;
@@ -35,12 +39,24 @@ namespace Isis {
    *         to and may delete at any time
    */
   Cube *CubeManager::OpenCube(const std::string &cubeFilename) {
-    QString fileName((iString)Filename(cubeFilename).Expanded());
+    CubeAttributeInput attIn(cubeFilename);
+    iString attri = attIn.BandsStr();
+    iString expName = Filename(cubeFilename).Expanded();
+
+    // If there are attributes, we need a plus sign on the name
+    if (attri.size() > 0) {
+      expName += "+";
+    }
+
+    iString fullName = expName + attri;
+    QString fileName(fullName);
     QMap<QString, Cube *>::iterator searchResult = p_cubes.find(fileName);
 
     if(searchResult == p_cubes.end()) {
       p_cubes.insert(fileName, new Cube());
       searchResult = p_cubes.find(fileName);
+      // Bands are the only thing input attributes can affect
+      (*searchResult)->SetVirtualBands(attIn.Bands());
       (*searchResult)->Open(fileName.toStdString());
     }
 

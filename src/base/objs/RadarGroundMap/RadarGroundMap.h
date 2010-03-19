@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.1 $
- * $Date: 2009/07/09 16:39:33 $
+ * $Revision: 1.4 $
+ * $Date: 2009/11/20 21:55:34 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -56,6 +56,15 @@ namespace Radar {
    *                      coordinate calculations; changed boundary check to use
    *                      radius instead of lat,lon; updated calculation of Doppler
    *                      shift
+   *  @history 2009-10-30 Debbie A. Cook - Fixed rotation of velocity vector in
+   *                      SetFocalPlane, SetGround, and ComputeXv
+   *  @history 2009-11-10 Janet Barrett - Added iteration check to SetFocalPlane
+   *                      to take care of situation where DEM radius does not
+   *                      converge
+   *  @history 2009-11-20 Janet Barrett - Added a check to the SetGround method
+   *                      to determine what side of the spacecraft the focal
+   *                      plane coordinate falls. This fixed the mirror image
+   *                      problem that occurred when projecting the image.
    *
    */
   class RadarGroundMap : public CameraGroundMap {

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.9 $                                                             
- * $Date: 2009/01/07 18:25:27 $                                                                 
+ * $Revision: 1.11 $                                                             
+ * $Date: 2009/10/31 00:19:38 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -33,6 +33,7 @@
 #include "Application.h"
 #include "History.h"
 #include "OriginalLabel.h"
+#include "LineManager.h"
 
 using namespace std;
 namespace Isis {
@@ -611,5 +612,58 @@ namespace Isis {
       }
     }
   }
+
+  /**
+   * Calculates and stores off statistics on every band of every 
+   * cube added to this process via the SetInputCube method. 
+   *  
+   * The newly calculated statistics are stored in two ways: as a 
+   * vector where each entry is a single Statistics object for 
+   * every band of a particular input cube, and as a vector where 
+   * each entry is a vector of Statistics objects, for each band 
+   * separately, of a particular input cube. 
+   */
+  void Process::CalculateStatistics() {
+    for (unsigned cubeNum = 0; cubeNum < InputCubes.size(); cubeNum++) {
+      Cube *cube = InputCubes[cubeNum];
+
+      // Construct a line buffer manager and a statistics object
+      Isis::LineManager line (*cube);
+      Isis::Statistics *cubeStats = new Isis::Statistics();
+  
+      int bandStart = 1;
+      int bandStop = cube->Bands();
+      int maxSteps = cube->Lines() * cube->Bands();
+  
+      iString cubeNumStr ((int)cubeNum+1);
+      iString totalCubes ((int)InputCubes.size());
+      string msg = "Calculating statistics for cube " + cubeNumStr + " of " + totalCubes;
+
+      Isis::Progress progress;
+      progress.SetText(msg);
+      progress.SetMaximumSteps(maxSteps);
+      progress.CheckStatus();
+  
+      // Loop and get the statistics for a good minimum/maximum
+      vector<Statistics*> allBandStats;
+      for (int useBand = bandStart; useBand <= bandStop; useBand++) {
+        Isis::Statistics *bandStats = new Isis::Statistics();
+
+        for (int i = 1; i <= cube->Lines(); i++) {
+          line.SetLine(i, useBand);
+          cube->Read(line);
+          bandStats->AddData(line.DoubleBuffer(), line.size());
+          cubeStats->AddData(line.DoubleBuffer(), line.size());
+          progress.CheckStatus();
+        }
+
+        allBandStats.push_back(bandStats);
+      }
+  
+      p_bandStats.push_back(allBandStats);
+      p_cubeStats.push_back(cubeStats);
+    }
+  }
+
 } // end namespace isis
 

@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.5 $
- * $Date: 2009/06/02 20:00:59 $
+ * $Revision: 1.6 $
+ * $Date: 2009/10/21 18:37:02 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -150,7 +150,8 @@ namespace Isis {
      *  method for the specfic camera is invoked this method should
      *  be called.
      *
-     * @param firstLine
+     * @param firstLine 0-based offset to the first line (first line of 
+     *                  detector = 0)
      */
     void SetBandFirstDetectorLine(int firstLine) { p_bandStartDetector = firstLine;}
 

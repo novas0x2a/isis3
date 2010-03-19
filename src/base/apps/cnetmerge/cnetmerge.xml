@@ -43,6 +43,13 @@
       Added Filename expansion to the listed nets and a few other minor
       readability changes.
     </change>
+    <change name="Christopher Austin" date="2009-11-19">
+      Multiple changes based on user request, including removal of RENAME,
+      replacing REPLACE with MERGE while merging at the Control Measure level.
+    </change>
+    <change name="Christopher Austin" date="2010-03-15">
+      Changed an outdated error message.
+    </change>
   </history> 
   
   <category>
@@ -93,7 +100,7 @@
           This file contains a list of all the Control Nets to be merged
         </description>
         <filter>
-          *.lis, *.list, *.txt
+          *.txt *.lis *.list *.lst
         </filter>
       </parameter>
       
@@ -164,9 +171,7 @@
 
       <parameter name="ID">
         <type>string</type>
-        <brief>
-          The NetworkId for the merged ControlNet
-        </brief>
+        <brief>The NetworkId for the merged ControlNet</brief>
         <description>
           The NetworkId keyword for the new merged ControlNet will be set to the 
           given value.
@@ -175,9 +180,7 @@
 
       <parameter name="DESCRIPTION">
         <type>string</type>
-        <brief>
-          The Description for the merged ControlNet
-        </brief>
+        <brief>The Description for the merged ControlNet</brief>
         <description>
           The Descrition keyword for the new merged ControlNet will be set to the 
           given value.
@@ -205,18 +208,10 @@
                 <item>REPORT</item>
               </exclusions>
             </option>
-           <option value="RENAME">
-              <brief>Renames duplicate Control Points</brief>
+            <option value="MERGE">
+              <brief>Merges duplicate Control Points</brief>
               <description>
-                This option will add the name of Id of the Control Net to each
-                duplicate Control Point while merging.  The other Control
-                Points will be identically transferred.
-              </description>
-            </option>
-            <option value="REPLACE">
-              <brief>Replaces duplicate Control Points</brief>
-              <description>
-                This option will replace all duplicate Control Points in the
+                This option will merge all duplicate Control Points in the
                 following Control Net over the first Control Net.  When
                 INPUTTYPE=CNETS, the FROM2 Control Net will override the
                 duplicate Control Points in FROM1. When INPUTTYPE=LIST, a
@@ -227,6 +222,32 @@
         </list>
       </parameter>
       
+      <parameter name="OVERWRITEPOINTS">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Merge conficting Control Points</brief>
+        <description>
+          Whenever a latitude or a longitude value has been changed on a held
+          or ground Control Point, then the changed values will be merged when
+          this parameter is TRUE. If this parameter is FALSE and a change is
+          found, the change will be noted in the REPORT file, but will not be
+          merged in the final output.
+        </description>
+      </parameter>
+
+      <parameter name="OVERWRITEMEASURES">
+        <type>boolean</type>
+        <default><item>False</item></default>
+        <brief>Merge conficting Control Measures</brief>
+        <description>
+          Whenever a the reference measure has been changed in a held or
+          ground Control Measure, then the change will be merged when this
+          parameter is TRUE. If this parameter is FALSE and a reference measure
+          change is found, the change will be noted in the REPORT file, but
+          will not be merged in the final output.
+        </description>
+      </parameter>
+
     </group>
 
   </groups>

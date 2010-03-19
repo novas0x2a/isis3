@@ -1,8 +1,10 @@
 #include "Isis.h"
+
 #include "ProcessRubberSheet.h"
 #include "enlarge.h"
 #include "iException.h"
 #include "AlphaCube.h"
+#include "SubArea.h"
 
 using namespace std; 
 using namespace Isis;
@@ -15,21 +17,56 @@ void IsisMain() {
   // Open the input cube
   Cube *icube = p.SetInputCube ("FROM");
 
-  // Set up the transform object
+  // Input number of samples, lines, and bands
+  int ins = icube->Samples();
+  int inl = icube->Lines();
+  int inb = icube->Bands();
+
+  // Output samples and lines
+  int ons;
+  int onl;
+
+  // Scaling factors
+  double sscale;
+  double lscale;
+
   UserInterface &ui = Application::GetUserInterface();
-  double lscale = ui.GetDouble("LSCALE");
-  double sscale = ui.GetDouble("SSCALE");
-  Transform *transform = new Enlarge(icube->Samples(), icube->Lines(), sscale, lscale); 
+  if (ui.GetString("MODE") == "SCALE") {
+    // Retrieve the provided scaling factors
+    sscale = ui.GetDouble("SSCALE");
+    lscale = ui.GetDouble("LSCALE");
+
+    // Calculate the output size. If there is a fractional pixel, round up
+    ons = (int)ceil (ins * sscale);
+    onl = (int)ceil (inl * lscale);
+  }
+  else {
+    // Retrieve the provided sample/line dimensions in the output
+    ons = ui.GetInteger("ONS");
+    onl = ui.GetInteger("ONL");
+
+    // Calculate the scaling factors
+    sscale = (double)ons / (double)ins;
+    lscale = (double)onl / (double)inl;
+  }
+
+  // Ensure that the calculated number of output samples and lines is greater
+  // than the input
+  if (ons < ins || onl < inl) {
+    string msg = "Number of output samples/lines must be greater than or equal";
+    msg = msg + " to the input samples/lines.";
+    throw iException::Message(iException::User,msg,_FILEINFO_);
+  }
+
+  // Set up the transform object with the calculated scale and number of
+  // output pixels
+  Transform *transform = new Enlarge(sscale, lscale, ons, onl); 
 
   string from = ui.GetFilename("FROM");
   cube.Open(from);
 
-  // Determine the output size
-  int samples = transform->OutputSamples();
-  int lines = transform->OutputLines();
-
-  // Allocate the output file
-  Cube *ocube = p.SetOutputCube ("TO", samples, lines, icube->Bands());
+  // Allocate the output file, the number of bands does not change in the output
+  Cube *ocube = p.SetOutputCube ("TO", ons, onl, inb);
 
   // Set up the interpolator
   Interpolator *interp;
@@ -49,35 +86,32 @@ void IsisMain() {
   }
   p.StartProcess(*transform, *interp);
 
-  try {
-    PvlGroup &mapgroup = cube.Label()->FindGroup("Mapping", Pvl::Traverse);
+  // Construct a label with the results
+  PvlGroup results("Results");
+  results += PvlKeyword ("InputLines", inl);
+  results += PvlKeyword ("InputSamples", ins);
+  results += PvlKeyword ("StartingLine", "1");
+  results += PvlKeyword ("StartingSample", "1");
+  results += PvlKeyword ("EndingLine", inl);
+  results += PvlKeyword ("EndingSample", ins);
+  results += PvlKeyword ("LineIncrement", 1./lscale);
+  results += PvlKeyword ("SampleIncrement", 1./sscale);
+  results += PvlKeyword ("OutputLines", onl);
+  results += PvlKeyword ("OutputSamples", ons);
 
-    if(sscale != lscale) {
-      ocube->DeleteGroup("Mapping");
-    }
-    else {
-      // Update pixel resolution
-      double pixres = mapgroup["PixelResolution"];                        
-      mapgroup["PixelResolution"] = pixres / sscale;      
+  // Update the Mapping, Instrument, and AlphaCube groups in the output
+  // cube label
+  SubArea s;
+  s.SetSubArea(cube.Lines(),cube.Samples(),1,1,cube.Lines(),cube.Samples(),
+               1./lscale,1./sscale);
+  s.UpdateLabel(&cube,ocube,results);
 
-      double scale = mapgroup["Scale"];
-      mapgroup["Scale"] = scale * sscale;    
-
-      ocube->PutGroup(mapgroup);
-    }
-  }
-  catch(iException &e) {
-    e.Clear();
-    // Update alphacube group
-    AlphaCube alpha(cube.Samples(), cube.Lines(),
-                    ocube->Samples(), ocube->Lines(),
-                    0.5, 0.5, cube.Samples()+0.5, cube.Lines()+0.5);
-    alpha.UpdateGroup(*ocube->Label());
-  }
-  
   p.EndProcess();
 
   delete transform;
   delete interp;
+
+  // Write the results to the log
+  Application::Log(results);
 }
 

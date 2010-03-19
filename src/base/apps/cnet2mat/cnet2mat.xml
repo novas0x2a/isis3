@@ -25,6 +25,13 @@
         Added ability to use ISIS2 keyword IMAGE_NUMBER. Fixed bug where the 
         diameter was being written as an Isis::Null when it had not been set.
     </change>
+    <change name="Christopher Austin" date="2009-09-29">
+      Changed the default point class of 'U' to 'M' to prevent qmatch issues.
+    </change>
+    <change name="Christopher Austin" date="2009-10-07">
+      All Ignored Control Measures as well as all Control Measures inside
+      ignored Control Points will now have the Type Unmeasured.
+    </change>
   </history>
 
   <groups>

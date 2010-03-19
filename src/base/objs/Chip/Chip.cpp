@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2009/09/01 19:23:11 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2010/02/02 15:04:39 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -332,15 +332,20 @@ namespace Isis {
 
         }
       }
-      int inc = (endSamp - startSamp) / 4;
+      int sinc = (endSamp - startSamp) / 4;
       // Ensures that the inc can cause start and end to cross
-      if (inc < 1) {
-        inc = 1;
+      if (sinc < 1) {
+        sinc = 1;
       }
-      startSamp += inc;
-      startLine += inc;
-      endLine -= inc;
-      endSamp -= inc;
+      int linc = (endLine - startLine) / 3;
+      // Ensures that the inc can cause start and end to cross
+      if (linc < 1) {
+        linc = 1;
+      }
+      startSamp += sinc;
+      startLine += linc;
+      endLine -= linc;
+      endSamp -= sinc;
       if (startSamp >= endSamp || startLine >= endLine) {
         std:: string msg = "Cannot find enough points to geom chip";
         throw iException::Message(iException::User,msg,_FILEINFO_);
@@ -706,7 +711,7 @@ namespace Isis {
           else {
             p_buf[line-1][samp-1] = Isis::NULL8;
           }
-	        delete pnt;
+          delete pnt;
         }
       }
     }

@@ -2,8 +2,8 @@
 #define Time_h
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/12/07 22:40:04 $
+ * $Revision: 1.3 $
+ * $Date: 2009/12/28 19:27:12 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -24,9 +24,9 @@
 
 #include <string>
 
-#include "SpiceUsr.h"
-#include "SpiceZfc.h"
-#include "SpiceZmc.h"
+#include "naif/SpiceUsr.h"
+#include "naif/SpiceZfc.h"
+#include "naif/SpiceZmc.h"
 
 #include "Filename.h"
 

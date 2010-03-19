@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.12 $                                                             
- * $Date: 2009/09/01 19:23:12 $                                                                 
+ * $Revision: 1.13 $                                                             
+ * $Date: 2010/02/02 15:04:35 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -75,6 +75,11 @@ namespace Isis {
    *            cube.
    *   @history 2009-09-01  Travis Addair, Added valid Min/Max
    *            pixel value functionality for Statistics method
+   *   @history 2010-01-28  Tracie Sucharski - In the Load method (with match
+   *            chip) when calculating control points away from the corners, added
+   *            a linc to move into the center of the chip in a non-linear fashion
+   *            to prevent control points that fall in a line and cause the matrix
+   *            inversion to fail.
    * 
    * @see AutoReg
    * @see AutoRegFactory

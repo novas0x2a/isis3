@@ -8,7 +8,7 @@ commands:
 	$(APPNAME) fromlist=$(OUTPUT)/sub.lis \
 	seeddef=$(INPUT)/grid.pvl \
 	overlaplist=$(INPUT)/suboverlaps.def \
-	to=$(OUTPUT)/sub.net.pvl\
+	to=$(OUTPUT)/sub.net.pvl \
 	networkid=SubNetwork \
 	pointid="sub????" \
 	description=SubNetwork \

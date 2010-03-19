@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.11 $
- * $Date: 2008/07/16 17:40:46 $
+ * $Revision: 1.14 $
+ * $Date: 2010/01/28 15:50:54 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -22,6 +22,7 @@
 
 #include <string>
 #include <iostream>
+#include <stdio.h>
 #include <cstring>
 #include <sstream>
 #include <cmath>
@@ -103,17 +104,18 @@ namespace Isis {
    *            presented in scientific notation Trailing zeros are removed such  
    *            that 5.000 is presented as 5.0 
    */
-  iString::iString (const double &num) : string() {
-    SetDouble(num);
+  iString::iString (const double &num, const int piPrecision) : string() {   
+    SetDouble(num, piPrecision);
   }
 
+  
   /**
    * Performs the conversion necessary to represent a floating-point value as a
    * string. See iString (const double &num) for details
    * 
    * @param num The input value to be stored
    */
-  void iString::SetDouble(const double &num) {
+  void iString::SetDouble(const double &num, const int piPrecision) {
     // This is the original code and was replaced by the good stuff below
     //  ostringstream str;
     //  str << num;
@@ -147,8 +149,14 @@ namespace Isis {
     // 0.00ABCEFEG and so on are not considered to have a leading digit
     // (pre = 0).
 
+    //cout << "istring\n";
+    //printf("%.15f\n",num); 
+
     double temp = abs(num);
     int pre = (int) (log10 (temp)) + 1;
+
+    //printf("%.15f\n",temp); 
+    //cout << "tempI " << iString(temp) << endl;
 
     // If preceding number of digits is too large then we will need to create a
     // scientific notation string.  We will need 14 spaces for numbers, 2 spaces
@@ -166,8 +174,10 @@ namespace Isis {
     char dblstr[22];
 
     if ((log10 (temp) > 13.0) || (log10 (temp) < -3.0)) {
-      char fmt[8];
-      strcpy (fmt,"%21.14e");
+      char fmt[8], buff[8];
+      sprintf (buff, "%de", piPrecision);
+      strcpy (fmt,"%21.");
+      strcat (fmt, buff);
       sprintf (dblstr, fmt, num);
 
       char *e = strchr (dblstr,'e');
@@ -192,7 +202,7 @@ namespace Isis {
 
     else {
       if (temp < 1.0) pre--;
-      int post = 14 - pre;
+      int post = piPrecision - pre;
 
       char tempstr[3], fmt[8];
       strcpy (fmt,"%17.");
@@ -563,41 +573,21 @@ namespace Isis {
    * @return iString
    */
   iString iString::Token (const iString &separator) {
-    iString retstr;
+    iString retstr = "" ;
 
-    int pos = 0;
-    int quote = find_first_of ("\"\'");
+    for (unsigned int i = 0; i < size(); i++) {
+      for (unsigned int sep = 0; sep < separator.size(); sep++) {
+        if (separator[sep] == at(i)) {
+          retstr = substr(0,i);
+          replace(0,i+1,"");
+          return retstr;
+        }
+      }
+    }
 
-    while ((pos = (int)find_first_of(separator, pos)) >= 0 || pos == (int)npos) {
-      int nextquote = find_first_of ("\"\'", quote+1);
-
-      // No separators in string
-      if (pos == (int)npos) {
-        retstr = substr (0, pos);
-        replace (0, pos, "");
-        break;
-      }
-      // Separator is before first quote
-      else if (pos < quote) {
-        retstr = substr (0, pos);
-        replace (0, pos+1, "");
-        break;
-      }
-      // Separator is between two quotes
-      else if ((pos > quote) && (pos < nextquote)) {
-        pos = nextquote + 1;
-        quote = find_first_of ("\"\'", nextquote + 1);
-      }
-      // No quotes in string
-      else if (quote == (int) npos) {
-        retstr = substr (0, pos);
-        replace (0, pos+1, "");
-        break;
-      }
-      // Separator is after both quotes
-      else {
-        quote = find_first_of ("\"\'", nextquote + 1);
-      }
+    if (retstr == "") {
+      retstr = (*this);
+      replace(0,size(),"");
     }
 
     return retstr;
@@ -645,6 +635,7 @@ namespace Isis {
     }
     return(tokens.size());
   }
+  
 
   /**
    * Collapses multiple spaces into single spaces

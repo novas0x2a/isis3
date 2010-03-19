@@ -1,7 +1,7 @@
 /**
  * @file
- * $Revision: 1.2 $
- * $Date: 2007/07/19 22:49:55 $
+ * $Revision: 1.3 $
+ * $Date: 2010/03/16 18:45:00 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -22,8 +22,12 @@
  */
 
 #include <QLibrary>
+#include <QStringList>
+#include <QCoreApplication>
+#include <ostream>
 #include "iException.h"
 #include "Plugin.h"
+#include "Filename.h"
 
 using namespace std;
 namespace Isis {
@@ -39,18 +43,33 @@ namespace Isis {
  *
  * @param group The group name.
  *
- * @return A void pointer to a C function (i.e., the plugin)
+ * @return A void pointer to a C function (i.e., the plugin) 
+ *  
+ * @history 2010-03-16  Tracie Sucharski,  Added paths to plugin.  First 
+ *                            try to load from current working directory,
+ *                            then from $ISISROOT/lib.
  */
   void *Plugin::GetPlugin (const std::string &group) {
   // Get the library and plugin to load
     Isis::PvlGroup &g = FindGroup(group);
     string library = g["Library"];
+
+    string path = "./";
+    Isis::Filename libraryFile(path + library);
+
     string pluginName = g["Routine"];
 
     // Open the library, resolve the routine name, and return the function
     // address. The function will stay in memory until the application exists
     // so the scope of lib does not matter.
-    QLibrary lib(library.c_str());
+    QLibrary lib(libraryFile.Expanded().c_str());
+    bool loadedOk = lib.load();
+    if (!loadedOk) {
+      path = "$ISISROOT/lib/";
+      libraryFile = path + library;
+    }
+    lib.setFileName(libraryFile.Expanded().c_str());
+
     void *plugin = lib.resolve(pluginName.c_str());
     if (plugin == 0) {
       string msg = "Unable to find plugin [" + pluginName +

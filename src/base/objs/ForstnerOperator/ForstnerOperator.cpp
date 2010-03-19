@@ -1,8 +1,8 @@
 #include "ForstnerOperator.h"
 #include "Chip.h"
 #include "FourierTransform.h"
-#include "tnt_array2d.h"
-#include "jama_lu.h"
+#include "tnt/tnt_array2d.h"
+#include "jama/jama_lu.h"
 #include <complex>
 
 namespace Isis {

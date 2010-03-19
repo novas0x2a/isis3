@@ -2,8 +2,8 @@
 #define ProcessMapMosaic_h
 /**
  * @file
- * $Revision: 1.6 $
- * $Date: 2008/12/11 22:43:10 $
+ * $Revision: 1.7 $
+ * $Date: 2010/01/15 17:45:59 $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are public
  *   domain. See individual third-party library and package descriptions for 
@@ -100,7 +100,7 @@ namespace Isis {
       }
 
       // Mosaic Processing method, returns false if the cube is not inside the mosaic
-      bool StartProcess (std::string inputFile, const MosaicPriority &priority);
+      bool StartProcess (std::string inputFile);
   
     private:
       static void FillNull(Buffer &data);

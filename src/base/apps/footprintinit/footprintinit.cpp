@@ -1,11 +1,13 @@
 #include "Isis.h"
-#include "Progress.h"
-#include "iException.h"
-#include "SerialNumber.h"
-#include "ImagePolygon.h"
-#include "Process.h"
 
+#include "iException.h"
+#include "ImagePolygon.h"
 #include "PolygonTools.h"
+#include "Process.h"
+#include "Progress.h"
+#include "PvlGroup.h"
+#include "SerialNumber.h"
+
 
 using namespace std; 
 using namespace Isis;
@@ -39,7 +41,26 @@ void IsisMain() {
   if( ui.GetString("LIMBTEST") == "ELLIPSOID" ) {
     poly.EllipsoidLimb( true );
   }
-  poly.Create(cube, ui.GetInteger("SINC"), ui.GetInteger("LINC") );
+
+  // Reduce the increment size to find a valid polygon
+  int sinc = ui.GetInteger("SINC");
+  int linc = ui.GetInteger("LINC"); 
+  bool precision = ui.GetBoolean("INCREASEPRECISION");
+  while( true ) {
+    try {
+      poly.Create(cube, sinc, linc);
+      break;
+    } catch( iException &e ) {
+      if( precision && sinc > 1 && linc > 1 ) {
+        sinc = sinc * 2 / 3;
+        linc = linc * 2 / 3;
+        e.Clear();
+      }
+      else {
+        e.Report();
+      }
+    }
+  }
 
 
   if( ui.GetBoolean("TESTXY") ) {
@@ -68,25 +89,43 @@ void IsisMain() {
     if( !mapping.HasKeyword("CenterLongitude") )
       mapping += Isis::PvlKeyword("CenterLongitude",0);
 
-    try {
-      Projection *proj= ProjectionFactory::Create(map, true);
-      geos::geom::MultiPolygon *xyPoly = PolygonTools::LatLonToXY(*poly.Polys(), proj);
+    while( true ) {
+      try {
+        Projection *proj= ProjectionFactory::Create(map, true);
+        geos::geom::MultiPolygon *xyPoly = PolygonTools::LatLonToXY(*poly.Polys(), proj);
 
-      delete proj;
-      proj = NULL;
-      delete xyPoly;
-      xyPoly = NULL;
-    } catch( iException &e ) {
-      e.Clear();
-      iString msg = "The lat/lon polygon could not project into x/y";
-      throw iException::Message(iException::User, msg, _FILEINFO_);
+        delete proj;
+        proj = NULL;
+        delete xyPoly;
+        xyPoly = NULL;
+
+        break;
+      } catch( iException &e ) {
+        if( precision && sinc > 1 && linc > 1 ) {
+          sinc = sinc * 2 / 3;
+          linc = linc * 2 / 3;
+          poly.Create(cube, sinc, linc);
+          e.Clear();
+        }
+        else {
+          e.Report();
+        }
+      }
     }
+
   }
 
 
 
   cube.BlobDelete("Polygon",sn);
   cube.Write(poly);
+
+  if( precision ) {
+    PvlGroup results("Results");
+    results.AddKeyword( PvlKeyword( "SINC", sinc ) ); 
+    results.AddKeyword( PvlKeyword( "LINC", linc ) );
+    Application::Log( results );
+  }
 
   Process p;
   p.SetInputCube("FROM");

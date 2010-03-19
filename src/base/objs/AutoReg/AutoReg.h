@@ -3,8 +3,8 @@
 
 /**
  * @file
- * $Revision: 1.20 $
- * $Date: 2009/09/08 03:56:55 $
+ * $Revision: 1.22 $
+ * $Date: 2010/03/17 00:07:33 $
  *
  *   Unless noted otherwise, the portions of Isis written by the USGS are
  *   public domain. See individual third-party library and package descriptions
@@ -110,8 +110,14 @@ namespace Isis {
    *             fix a bug whereby the extracted subsearch chip valid percent
    *             was divided by 100 - it instead should be passed in as is with
    *             the pattern chip test.
-   *    @history 2009-09-07 Kris Becker - Set the goodness of fit when successful
-   *             Adaptive algorithm.
+   *    @history 2009-09-07 Kris Becker - Set the goodness of fit
+   *             when successful Adaptive algorithm.
+   *    @history 2010-02-22 Tracie Sucharski - Added return
+   *             methods for settings
+   *    @history 2010-03-16 Travis Addair - Added option to skip
+   *             eccentricity testing, and made it so that the
+   *             eccentricity is assumed to be 0 when it cannot
+   *             otherwise be computed.
    *
    */
   class Pvl;
@@ -163,11 +169,28 @@ namespace Isis {
       void SetPatternZScoreMinimum(double minimum);
       void SetSurfaceModelEccentricityRatio(double ratioTolerance);
 
+      //! Determine if eccentricity tests should be performed during registration
+      inline void SetEccentricityTesting(bool test) { p_testEccentricity = test; };
+
       //! Return pattern valid percent
       double PatternValidPercent() const { return p_patternValidPercent; };
 
       //! Return match algorithm tolerance
       inline double Tolerance () const { return p_tolerance; };
+
+      //! Return distance tolerance
+      double DistanceTolerance () const { return p_distanceTolerance; };
+
+      /**
+       * Return the distance point moved 
+       *  
+       * @param sampMovement 
+       * @param lineMovement 
+       */
+      void Distance(double &sampDistance,double &lineDistance) {
+        sampDistance = p_sampMovement;
+        lineDistance = p_lineMovement;
+      }
 
       AutoReg::RegisterStatus Register();
 
@@ -188,6 +211,9 @@ namespace Isis {
       //! Return the search chip cube line that best matched
       inline double CubeLine() const { return p_cubeLine; };
 
+      //! Return minimumPatternZScore
+      double MinimumZScore() const { return p_minimumPatternZScore; };
+
       /**
        * Return the ZScores of the pattern chip
        *
@@ -198,6 +224,11 @@ namespace Isis {
         score1=p_ZScore1;
         score2=p_ZScore2;
       }
+
+      //! Return eccentricity tolerance
+      double EccentricityTolerance() const { 
+        return p_surfaceModelEccentricityTolerance;
+      };
 
       Pvl RegistrationStatistics();
 
@@ -309,6 +340,7 @@ namespace Isis {
       Chip p_reducedFitChip;
 
       bool p_subpixelAccuracy;
+      bool p_testEccentricity;
 
       //TODO: remove these after control points are refactored.
       int p_Total;
@@ -341,6 +373,8 @@ namespace Isis {
       double p_bestFit;
       int p_bestSamp;
       int p_bestLine;
+      double p_sampMovement;
+      double p_lineMovement;
       int p_reduceFactor;
       Isis::AutoReg::RegisterStatus p_status;
 

@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.2 $                                                             
- * $Date: 2009/09/14 05:51:06 $                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2010/03/05 23:15:52 $                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -39,6 +39,7 @@ namespace Isis {
    * 
    */
   CameraPointInfo::CameraPointInfo() {
+    usedCubes = NULL;
     outsideAccepted = false;
     usedCubes = new CubeManager();
     usedCubes->SetNumOpenCubes(50);
@@ -51,8 +52,10 @@ namespace Isis {
    * 
    */
   CameraPointInfo::~CameraPointInfo() {
-    delete usedCubes;
-    usedCubes = NULL;
+    if (usedCubes) {
+      delete usedCubes;
+      usedCubes = NULL;
+    }
   }
 
 
@@ -85,9 +88,7 @@ namespace Isis {
 
       return GetPointInfo();
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
  
   /**
@@ -102,9 +103,7 @@ namespace Isis {
 
       return GetPointInfo();
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
 
@@ -121,9 +120,7 @@ namespace Isis {
 
       return GetPointInfo();
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
 
@@ -140,9 +137,7 @@ namespace Isis {
 
       return GetPointInfo();
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
 
@@ -164,9 +159,7 @@ namespace Isis {
 
       return GetPointInfo();
     }
-    else {
-      return NULL;
-    }
+    return NULL;
   }
 
 
@@ -182,9 +175,7 @@ namespace Isis {
       throw iException::Message(iException::Programmer, msg, _FILEINFO_);
       return false;
     }
-    else {
-      return true;
-    }
+    return true;
   }
 
   /**
@@ -204,7 +195,6 @@ namespace Isis {
     b.SetBasePosition(intSamp, intLine, 1);
     currentCube->Read(b);
 
-    //wtf going on here?!
     double pB[3], spB[3], sB[3];
     string utc;
     double ssplat, ssplon, sslat, sslon, pwlon, oglat;
@@ -218,7 +208,8 @@ namespace Isis {
       gp->AddKeyword(PvlKeyword("PixelValue",PixelToString(b[0])));
       gp->AddKeyword(PvlKeyword("RightAscension",camera->RightAscension()));
       gp->AddKeyword(PvlKeyword("Declination",camera->Declination()));
-      gp->AddKeyword(PvlKeyword("PlanetocentricLatitude",camera->UniversalLatitude()));
+      gp->AddKeyword(PvlKeyword("PlanetocentricLatitude",
+                                camera->UniversalLatitude()));
   
       // Convert lat to planetographic
       double radii[3];
@@ -226,12 +217,23 @@ namespace Isis {
       oglat = Isis::Projection::ToPlanetographic(camera->UniversalLatitude(),
                                                  radii[0],radii[2]);
       gp->AddKeyword(PvlKeyword("PlanetographicLatitude",oglat));
-      gp->AddKeyword(PvlKeyword("PositiveEastLongitude",camera->UniversalLongitude()));
+      
+      gp->AddKeyword(PvlKeyword("PositiveEast360Longitude",
+                                camera->UniversalLongitude()));
   
+      //Convert lon to -180 - 180 range
+      gp->AddKeyword(PvlKeyword("PositiveEast180Longitude",
+                                Isis::Projection::To180Domain(
+                                  camera->UniversalLongitude())));
+
       //Convert lon to positive west
-      pwlon = -camera->UniversalLongitude();
-      while (pwlon < 0.0) pwlon += 360.0;
-      gp->AddKeyword(PvlKeyword("PositiveWestLongitude",pwlon));
+      pwlon = Isis::Projection::ToPositiveWest(camera->UniversalLongitude(),
+                                               360);
+      gp->AddKeyword(PvlKeyword("PositiveWest360Longitude",pwlon));
+
+      //Convert pwlon to -180 - 180 range
+      gp->AddKeyword(PvlKeyword("PositiveWest180Longitude",
+                                Isis::Projection::To180Domain(pwlon)));
   
       camera->Coordinate(pB);
       PvlKeyword coord("BodyFixedCoordinate");

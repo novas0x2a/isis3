@@ -28,7 +28,14 @@
     <change name="Travis Addair" date="2009-02-24">
       Original version
     </change>
-
+    <change name="Janet Barrett" date="2009-10-22">
+      Now uses the SubArea class to produce output cube labels
+      with corrected Mapping, Instrument, and AlphaCube groups.
+    </change>
+    <change name="Travis Addair" date="2010-01-06">
+      Changed Progress to tell the user when the program is finding the 
+      perimeter and when it is removing special pixels from the image.
+    </change>
   </history>
 
   <groups>

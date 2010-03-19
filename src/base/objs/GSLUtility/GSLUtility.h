@@ -2,9 +2,9 @@
 #define GSLUtility_h
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.1 $
- * $Date: 2009/08/21 01:04:57 $
- * $Id: GSLUtility.h,v 1.1 2009/08/21 01:04:57 kbecker Exp $
+ * $Revision: 1.2 $
+ * $Date: 2009/12/22 02:09:54 $
+ * $Id: GSLUtility.h,v 1.2 2009/12/22 02:09:54 ehyer Exp $
  * 
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -30,10 +30,10 @@
 #include <vector>
 #include <algorithm>
 
-#include "tnt_array1d.h"
-#include "tnt_array1d_utils.h"
-#include "tnt_array2d.h"
-#include "tnt_array2d_utils.h"
+#include "tnt/tnt_array1d.h"
+#include "tnt/tnt_array1d_utils.h"
+#include "tnt/tnt_array2d.h"
+#include "tnt/tnt_array2d_utils.h"
 
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_matrix.h>

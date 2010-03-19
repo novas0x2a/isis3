@@ -2,8 +2,6 @@ APP1NAME = crop
 APP2NAME = reduce
 APP3NAME = cam2map
 
-labels.txt.IGNORELINES = ByteOrder StartByte Bytes
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
@@ -13,8 +11,10 @@ commands:
 	  line=50 nlines=200 > /dev/null;
 	$(APP2NAME) from= $(OUTPUT)/cropTruth.cub \
 	  to= $(OUTPUT)/CropReduceTruth.cub \
+	  mode=total \
 	  ons=150 onl=150 > /dev/null;
 	$(APP3NAME) from= $(OUTPUT)/CropReduceTruth.cub \
 	  to= $(OUTPUT)/CropReduceCam2mapTruth.cub \
 	  > /dev/null;
-	catlab from=$(OUTPUT)/CropReduceCam2mapTruth.cub > $(OUTPUT)/labels.txt;
+	catlab from=$(OUTPUT)/CropReduceCam2mapTruth.cub \
+	  > $(OUTPUT)/labels.pvl;

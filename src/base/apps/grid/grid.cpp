@@ -1,42 +1,44 @@
 #include "Isis.h"
+
+#include <cmath>
+
 #include "ProcessByLine.h"
 #include "Projection.h"
 #include "ProjectionFactory.h"
 #include "Camera.h"
 #include "CameraFactory.h"
-#include <cmath>
+#include "GroundGrid.h"
+#include "UniversalGroundMap.h"
 
 using namespace std; 
 using namespace Isis;
 
 void imageGrid(Buffer &in, Buffer &out);
 void groundGrid(Buffer &in, Buffer &out);
-void computeRemainders(vector<double> &buff, int line);
+
+void createGroundImage(Camera *cam, Projection *proj);
 
 bool outline;
-int numLines;
 int baseLine, baseSample, lineInc, sampleInc;  
 double baseLat, baseLon, latInc, lonInc;
-Projection *proj; 
-Camera *cam;
 
-vector<double> topLine; 
-vector<double> bottomLine;
+int inputSamples, inputLines;
+GroundGrid *latLonGrid;
 
 void IsisMain() {
+  latLonGrid = NULL;
+
   // We will be processing by line
   ProcessByLine p;
   Cube *icube = p.SetInputCube("FROM");
-  
-  // Avoid segfault
-  proj = NULL;
-  cam = NULL;
 
   UserInterface &ui = Application::GetUserInterface();
   string mode = ui.GetString("MODE");
 
   outline = ui.GetBoolean("OUTLINE");
-  numLines = icube->Lines();
+
+  inputSamples = icube->Samples();
+  inputLines   = icube->Lines();
 
   // Line & sample based grid
   if(mode == "IMAGE") { 
@@ -48,34 +50,33 @@ void IsisMain() {
     p.StartProcess(imageGrid);
     p.EndProcess();
   }
-  // Lat & lon based grid
+  // Lat/Lon based grid
   else {
     CubeAttributeOutput oatt("+32bit");
     p.SetOutputCube (ui.GetFilename("TO"), oatt, icube->Samples(), 
                      icube->Lines(), icube->Bands());
-    try {
-      proj = icube->Projection();
-    }
-    catch(iException &e) {
-      e.Clear();
-      try {
-        cam = icube->Camera();
-      }
-      catch(iException &e) {
-        string msg = "Input file does not have a projection or camera";
-        throw iException::Message(iException::User, msg, _FILEINFO_);
-      }
-    }
-    
+  
     baseLat = ui.GetDouble("BASELAT");
     baseLon = ui.GetDouble("BASELON");
     latInc = ui.GetDouble("LATINC");
     lonInc = ui.GetDouble("LONINC");
-    
-    topLine.resize(icube->Samples()+1); 
-    bottomLine.resize(icube->Samples()+1); 
+
+    UniversalGroundMap *gmap = new UniversalGroundMap(*icube);
+    latLonGrid = new GroundGrid(gmap, icube->Samples(), icube->Lines());
+
+    Progress progress;
+    progress.SetText("Calculating Grid");
+
+    latLonGrid->CreateGrid(baseLat, baseLon, latInc, lonInc, &progress);
+
     p.StartProcess(groundGrid);
     p.EndProcess();
+
+    delete latLonGrid;
+    latLonGrid = NULL;
+
+    delete gmap;
+    gmap = NULL;
   }
 }
 
@@ -102,7 +103,7 @@ void imageGrid(Buffer &in, Buffer &out) {
 
   // draw outline
   if(outline) {
-    if(in.Line() == 1 || in.Line() == numLines) {
+    if(in.Line() == 1 || in.Line() == inputLines) {
       for(int i = 0; i < in.size(); i++) {
         out[i] = Isis::Hrs; 
       }
@@ -116,84 +117,12 @@ void imageGrid(Buffer &in, Buffer &out) {
 
 // Line processing routine
 void groundGrid(Buffer &in, Buffer &out) {
-  // Get remainders for gradient computation
-  if(in.Line() == 1) {
-    computeRemainders(topLine, 1);
-  }
-  else {
-    topLine = bottomLine;
-  }
-
-  computeRemainders(bottomLine, in.Line() + 1);
-
-  // Loop and compute gradient on remainders 
-  for(int i = 0; i < in.size(); i++) {
-    double gradient;
-    if(topLine[i] == Isis::Null || topLine[i+1] == Isis::Null ||
-       bottomLine[i] == Isis::Null || bottomLine[i+1] == Isis::Null) {
-      gradient = 0.0;
+  for(int samp = 1; samp <= in.SampleDimension(); samp++) {
+    if(latLonGrid->PixelOnGrid(samp - 1, in.Line() - 1)) {
+      out[samp-1] = Isis::Hrs;
     }
     else {
-      gradient = abs(topLine[i] - bottomLine[i+1]) + abs(bottomLine[i] - topLine[i+1]);
+      out[samp-1] = in[samp-1];
     }
-
-    double tolerance = (lonInc < latInc) ? lonInc*0.75 : latInc*0.75;
-    if(gradient < tolerance) {
-      out[i] = in[i];
-    }
-    else {
-      out[i] = Isis::Hrs;
-    }
-  }
-
-  // draw outline
-  if(outline) {
-    if(in.Line() == 1 || in.Line() == numLines) {
-      for(int i = 0; i < in.size(); i++) {
-        out[i] = Isis::Hrs; 
-      }
-    }
-    else {
-      out[0] = Isis::Hrs;
-      out[out.size()-1] = Isis::Hrs; 
-    }
-  }
-}
-
-// Takes the lat/lon coordinates at center of pixel and get the remainder
-// after dividing by latInc and lonInc.  These results will allow a gradient
-// algorithm to highlight exactly where a gridline should be.
-void computeRemainders(vector<double> &buff, int line) {
-
-  for(int i = 0; i < (int)buff.size(); i++) {
-    buff[i] = Isis::Null;
-    
-    double lat, lon;
-    if(proj != NULL) {
-      bool hasCoords = proj->SetWorld(i+1, line);
-      if(!hasCoords) continue;
-
-      lat = proj->Latitude();
-      lon = proj->Longitude();
-
-      // This excludes areas outside of the projection
-      if(proj->Has360Domain() && (lon < 0 || lon > 360)) continue;
-      if(proj->Has180Domain() && (lon < -180 || lon > 180)) continue;
-    }
-    // Use camera to get coordinates instead
-    else {
-      bool hasCoords = cam->SetImage(i+1, line);
-      if(!hasCoords) continue;
-      lat = cam->UniversalLatitude();
-      lon = cam->UniversalLongitude();
-    }
-
-    double latRemainder = fmod(lat - baseLat, latInc);
-    double lonRemainder = fmod(lon - baseLon, lonInc); 
-    buff[i] = latRemainder + lonRemainder;
-
-    // This fixes problems when crossing the 0 lat or 0 lon boundary
-    if(lat < baseLat) buff[i] += latInc;
-    if(lon < baseLon) buff[i] += lonInc;
   }
 }

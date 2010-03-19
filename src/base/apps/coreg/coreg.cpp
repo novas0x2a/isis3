@@ -176,9 +176,40 @@ void IsisMain() {
       prog.CheckStatus();
     }
   }
+  
+  // Write translation to log
+  PvlGroup results("Translation");
+  double sMin = (int)(sStats.Minimum() * 100.0) / 100.0;
+  double sTrans = (int)(sStats.Average() * 100.0) / 100.0;
+  double sMax = (int)(sStats.Maximum() * 100.0) / 100.0;
+  double sDev = (int)(sStats.StandardDeviation() * 100.0) / 100.0;
+  double lMin = (int)(lStats.Minimum() * 100.0) / 100.0;
+  double lTrans = (int)(lStats.Average() * 100.0) / 100.0;
+  double lMax = (int)(lStats.Maximum() * 100.0) / 100.0;
+  double lDev = (int)(lStats.StandardDeviation() * 100.0) / 100.0;
+
+  results += PvlKeyword ("SampleMinimum", sMin);
+  results += PvlKeyword ("SampleAverage", sTrans);
+  results += PvlKeyword ("SampleMaximum", sMax);
+  results += PvlKeyword ("SampleStandardDeviation", sDev);
+  results += PvlKeyword ("LineMinimum", lMin);
+  results += PvlKeyword ("LineAverage", lTrans);
+  results += PvlKeyword ("LineMaximum", lMax);
+  results += PvlKeyword ("LineStandardDeviation", lDev);
+  Application::Log(results);
+
+  Pvl arPvl = ar->RegistrationStatistics();
+
+  for(int i = 0; i < arPvl.Groups(); i++) {
+    Application::Log(arPvl.Group(i));
+  }
+
+  // add the auto registration information to print.prt
+  PvlGroup autoRegTemplate = ar->RegTemplate(); 
+  Application::Log(autoRegTemplate);
 
   // If none of the points registered, throw an error
-  if (sStats.TotalPixels() <1) {
+  if (sStats.TotalPixels() < 1) {
     string msg = "Coreg was unable to register any points. Check your algorithm definition.";
     throw Isis::iException::Message(Isis::iException::User,msg,_FILEINFO_);
   }
@@ -212,37 +243,6 @@ void IsisMain() {
          << cmTrans.GoodnessOfFit() << endl;
     }
   }
-
-  // Write translation to log
-  PvlGroup results("Translation");
-  double sMin = (int)(sStats.Minimum() * 100.0) / 100.0;
-  double sTrans = (int)(sStats.Average() * 100.0) / 100.0;
-  double sMax = (int)(sStats.Maximum() * 100.0) / 100.0;
-  double sDev = (int)(sStats.StandardDeviation() * 100.0) / 100.0;
-  double lMin = (int)(lStats.Minimum() * 100.0) / 100.0;
-  double lTrans = (int)(lStats.Average() * 100.0) / 100.0;
-  double lMax = (int)(lStats.Maximum() * 100.0) / 100.0;
-  double lDev = (int)(lStats.StandardDeviation() * 100.0) / 100.0;
-
-  results += PvlKeyword ("SampleMinimum", sMin);
-  results += PvlKeyword ("SampleAverage", sTrans);
-  results += PvlKeyword ("SampleMaximum", sMax);
-  results += PvlKeyword ("SampleStandardDeviation", sDev);
-  results += PvlKeyword ("LineMinimum", lMin);
-  results += PvlKeyword ("LineAverage", lTrans);
-  results += PvlKeyword ("LineMaximum", lMax);
-  results += PvlKeyword ("LineStandardDeviation", lDev);
-  Application::Log(results);
-
-  Pvl arPvl = ar->RegistrationStatistics();
-
-  for(int i = 0; i < arPvl.Groups(); i++) {
-    Application::Log(arPvl.Group(i));
-  }
-
-  // add the auto registration information to print.prt
-  PvlGroup autoRegTemplate = ar->RegTemplate(); 
-  Application::Log(autoRegTemplate); 
 
   // If a TO parameter was specified, apply the average translation found to the
   // second input image

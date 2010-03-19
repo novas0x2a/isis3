@@ -16,7 +16,7 @@ namespace Qisis {
    * MeasureTool constructor
    * 
    * 
-   * @param parent 
+   * @param parent  
    */
   MeasureTool::MeasureTool (QWidget *parent) : Qisis::Tool(parent) {
     p_rubberBand = NULL;
@@ -44,7 +44,7 @@ namespace Qisis {
     p_tableWin->addToTable (false,"Pixel\nDistance","Pixel Distance");
     p_tableWin->addToTable (false,"Degree\nAngle","Degree Angle");
     p_tableWin->addToTable (false,"Radian\nAngle","Radian Angle");
-    p_tableWin->addToTable(false,"Kilometer\nArea","Kilometer Area");
+    p_tableWin->addToTable (false,"Kilometer\nArea","Kilometer Area");
     p_tableWin->addToTable (false,"Meter\nArea","Meter Area");
     p_tableWin->addToTable (false,"Pixel\nArea","Pixel Area");
     p_tableWin->addToTable (false,"Segments Sum\nkm","Segments Sum", -1, Qt::Horizontal, "Sum of Segment lengths in kilometers");
@@ -141,9 +141,12 @@ namespace Qisis {
 
     p_unitsComboBox = new QComboBox(hbox);
     p_unitsComboBox->setSizeAdjustPolicy(QComboBox::AdjustToContents);
+        
     updateUnitsCombo();
     connect(p_unitsComboBox,SIGNAL(activated(int)),this,SLOT(updateDistEdit()));
     connect(RubberBandTool::getInstance(),SIGNAL(modeChanged()),this,SLOT(updateUnitsCombo()));
+
+    miComboUnit=-1;
 
     QHBoxLayout *layout = new QHBoxLayout(hbox);
     layout->setMargin(0);
@@ -162,35 +165,46 @@ namespace Qisis {
    * Updates the units combo box.
    * 
    */
-  void MeasureTool::updateUnitsCombo() {
-    p_unitsComboBox->clear();
+  void MeasureTool::updateUnitsCombo(void) {   
+    // get the previous index if not initializing
+    if (miComboUnit >= 0) {
+      miComboUnit = p_unitsComboBox->currentIndex();
+    }    
 
-    if(RubberBandTool::getMode() == RubberBandTool::SegmentedLine) { 
-      p_showAllSegments->setEnabled(true);
-    } else {
-      p_showAllSegments->setEnabled(false);
-    }
-   
-   
+    p_unitsComboBox->clear();       
+    p_showAllSegments->setEnabled(false);
 
     if(RubberBandTool::getMode() == RubberBandTool::Line || 
        RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {
+      
+      if(RubberBandTool::getMode() == RubberBandTool::SegmentedLine) { 
+        p_showAllSegments->setEnabled(true);
+      } 
+        
       p_unitsComboBox->addItem("km");
       p_unitsComboBox->addItem("m");
       p_unitsComboBox->addItem("pixels");
-      p_unitsComboBox->setCurrentIndex(2);
+      if (miComboUnit < 0 || miComboUnit > 2) {  // default && error checking
+        miComboUnit = 2;
+      }                 
     }
     else if(RubberBandTool::getMode() == RubberBandTool::Angle) {
       p_unitsComboBox->addItem("degrees");
-      p_unitsComboBox->addItem("radians");
-      p_unitsComboBox->setCurrentIndex(0);
+      p_unitsComboBox->addItem("radians");      
+      if (miComboUnit > 1 || miComboUnit < 0) {  // default && error checking
+        miComboUnit = 0;
+      }     
     }
     else {
       p_unitsComboBox->addItem("km^2");
       p_unitsComboBox->addItem("m^2");
       p_unitsComboBox->addItem("pix^2");
-      p_unitsComboBox->setCurrentIndex(2);
-    }
+      if (miComboUnit < 0 || miComboUnit > 2) {  // default && error checking
+        miComboUnit = 2;      
+      }                
+    } 
+    
+    p_unitsComboBox->setCurrentIndex(miComboUnit);    
   }
 
 
@@ -459,134 +473,89 @@ namespace Qisis {
     }
   }
 
+  /**
+   * Initialize Class data
+   * 
+   * @author sprasad (10/23/2009)
+   */
+  void MeasureTool::initData(void)
+  {
+    // Initialize the class data 
+    p_startSamp = Isis::Null;
+    p_endSamp   = Isis::Null;
+    p_startLine = Isis::Null;
+    p_endLine   = Isis::Null;
+    p_kmDist    = Isis::Null;
+    p_mDist     = Isis::Null;
+    p_pixDist   = Isis::Null;
+    p_startLon  = Isis::Null;
+    p_startLat  = Isis::Null;
+    p_endLon    = Isis::Null;
+    p_endLat    = Isis::Null;
+    p_radAngle  = Isis::Null;
+    p_degAngle  = Isis::Null;
+    p_pixArea   = Isis::Null;
+    p_kmArea    = Isis::Null;
+    p_mArea     = Isis::Null;
+  }
 
   /**
-   * This method updates the distance variables.
+   * This method updates the distance variables
    * 
    * 
-   * @param cvp 
-   * @param row 
+   * @param cvp - Pointer to CubeViewPort
+   * @param row - row index 
+   *  
+   * @returns void 
    */
-  void MeasureTool::updateDist (CubeViewport *cvp, int row) {
-   
-    p_startSamp = Isis::Null;
-    p_endSamp = Isis::Null;
-    p_startLine = Isis::Null;
-    p_endLine = Isis::Null;
-    p_kmDist = Isis::Null;
-    p_mDist =  Isis::Null;
-    p_pixDist = Isis::Null;
-    p_startLon = Isis::Null;
-    p_startLat = Isis::Null;
-    p_endLon = Isis::Null;
-    p_endLat = Isis::Null;
-    p_radAngle = Isis::Null;
-    p_degAngle = Isis::Null;
-    p_pixArea = Isis::Null;
-    p_kmArea = Isis::Null;
-    p_mArea = Isis::Null;
-
+  void MeasureTool::updateDist (CubeViewport *cvp, int row) 
+  {
+    // Initialize class data
+    initData();
+    
     // Write out col 8 (the file name)
     Isis::Filename fname = Isis::Filename(cvp->cube()->Filename()).Expanded();
-    p_path = fname.Path();
+    p_path  = fname.Path();
     p_fname = fname.Name();
 
-    if(RubberBandTool::getMode() == RubberBandTool::Line || 
-       RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {
+    // reset the distnace gui
+    p_distLineEdit->setText("");
+
+    if (RubberBandTool::getMode() == RubberBandTool::Line || 
+        RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {
+
       p_pixDist = 0;
-      p_mDist = 0;
-      p_kmDist = 0;
+      p_mDist   = 0;
+      p_kmDist  = 0;
+           
+       // Flag to indicate whether distance was calculated
+      bool bDistance=false; 
+      double radius = 0;    
+      double mDist  = 0;
 
       for(int startIndex = 0; startIndex < RubberBandTool::getVertices().size()-1; startIndex++) {
         QPoint start = RubberBandTool::getVertices()[startIndex];
-        QPoint end   = RubberBandTool::getVertices()[startIndex+1];
-    
-        cvp->viewportToCube(start.x(),start.y(),p_startSamp,p_startLine);
-        if (cvp->camera() != NULL) {
-          if (cvp->camera()->SetImage(p_startSamp,p_startLine)) {
-            // Write columns 2-3 (Start lat/lon)
-            p_startLat = cvp->camera()->UniversalLatitude();
-            p_startLon = cvp->camera()->UniversalLongitude();
-          }
-        }
-    
-        if (cvp->projection() != NULL) {
-          if (cvp->projection()->SetWorld(p_startSamp,p_startLine)) {
-            // If our projection is sky, the lat & lons are switched
-            if (cvp->projection()->IsSky()) {
-              p_startLat = cvp->projection()->UniversalLongitude();
-              p_startLon = cvp->projection()->UniversalLatitude();
-            }
-            else {
-              p_startLat = cvp->projection()->UniversalLatitude();
-              p_startLon = cvp->projection()->UniversalLongitude();
-            }
-          }
-        }
+        QPoint end   = RubberBandTool::getVertices()[startIndex+1];                
     
         //  Convert rubber band line to cube coordinates
-        cvp->viewportToCube(start.x(),start.y(),
-                            p_startSamp,p_startLine);
-        cvp->viewportToCube(end.x(), end.y(),
-                            p_endSamp,p_endLine);
+        cvp->viewportToCube(start.x(), start.y(), p_startSamp, p_startLine);
+        cvp->viewportToCube(end.x(), end.y(), p_endSamp, p_endLine);
     
         // Don't write anything if we are outside the cube
-        if ((p_startSamp < 0.5) || (p_endSamp < 0.5)) return;
-        if ((p_startLine < 0.5) || (p_endLine < 0.5)) return;
-        if ((p_startSamp > cvp->cubeSamples() + 0.5) || 
-            (p_endSamp > cvp->cubeSamples() + 0.5)) return;
-        if ((p_startLine > cvp->cubeLines() + 0.5) || 
-            (p_endLine > cvp->cubeLines() + 0.5))return;
-    
-        // Calculate the pixel difference
-        double lineDif = p_startLine - p_endLine;
-        double sampDif = p_startSamp - p_endSamp;
-        double pixDist = sqrt(lineDif * lineDif + sampDif * sampDif);
-        p_pixDist +=  pixDist;
-    
-        // Do we have a camera model?
-        if (cvp->camera() != NULL && p_mDist != Isis::Null) {
-          if (cvp->camera()->SetImage(p_startSamp,p_startLine)) {
-            // Write columns 2-3 (Start lat/lon)
-            p_startLat = cvp->camera()->UniversalLatitude();
-            p_startLon = cvp->camera()->UniversalLongitude();
-            if (cvp->camera()->SetImage(p_endSamp,p_endLine)) {
-              // Write columns 4-5 (End lat/lon)
-              p_endLat = cvp->camera()->UniversalLatitude();
-              p_endLon = cvp->camera()->UniversalLongitude();
-    
-              // Calculate and write out the distance between the two points
-              double radius = cvp->camera()->LocalRadius();
-              double mDist = Isis::Camera::Distance(p_startLat,p_startLon,p_endLat,
-                                               p_endLon,radius);
-
-              p_mDist += mDist;
-              p_kmDist = p_mDist / 1000.0;
-              
-              if(RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {
-                if(pixDist > 16/cvp->scale() && p_distanceSegments.size() < 75) {
-                  p_distanceSegments.append(mDist / 1000.0);
-                  p_pixDistSegments.append(pixDist);
-                  p_startSampSegments.append(p_startSamp);
-                  p_endSampSegments.append(p_endSamp);
-                  p_startLineSegments.append(p_startLine);
-                  p_endLineSegments.append(p_endLine);
-                  p_startLatSegments.append(p_startLat);
-                  p_endLatSegments.append(p_endLat);
-                  p_startLonSegments.append(p_startLon);
-                  p_endLonSegments.append(p_endLon);
-                }
-
-              }
-            }
-          }
-          else {
-            p_mDist = Isis::Null;
-            p_kmDist = Isis::Null;
-          }
+        if ((p_startSamp < 0.5) || (p_endSamp < 0.5) || 
+            (p_startLine < 0.5) || (p_endLine < 0.5) ||
+            (p_startSamp > cvp->cubeSamples() + 0.5) || 
+            (p_endSamp > cvp->cubeSamples() + 0.5) ||
+            (p_startLine > cvp->cubeLines() + 0.5) || 
+            (p_endLine > cvp->cubeLines() + 0.5)) {
+          p_mDist   = Isis::Null;
+          p_kmDist  = Isis::Null;
+          p_pixDist = 0;  
+          return;           
         }
-    
-        if (cvp->projection() != NULL && p_mDist != Isis::Null) {
+            
+        // Check if the image is projected (Projected Images also have camera except for mosaics)
+        if (cvp->projection() != NULL) {          
           if (cvp->projection()->SetWorld(p_startSamp,p_startLine)) {
             // If our projection is sky, the lat & lons are switched
             if (cvp->projection()->IsSky()) {
@@ -607,42 +576,68 @@ namespace Qisis {
               else {
                 p_endLat = cvp->projection()->UniversalLatitude();
                 p_endLon = cvp->projection()->UniversalLongitude();
-              }
-    
-              // Calculate and write out the distance
-              double radius = cvp->projection()->LocalRadius();
-              double mDist = Isis::Camera::Distance(p_startLat,p_startLon,p_endLat,
-                                               p_endLon,radius);
-              p_mDist += mDist;
-              p_kmDist = p_mDist / 1000.0;
-               
-              if(RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {
-                if(pixDist > 16/cvp->scale() && p_distanceSegments.size() < 75) {
-                  p_distanceSegments.append(mDist / 1000.0);
-                  p_pixDistSegments.append(pixDist);
-                  p_startSampSegments.append(p_startSamp);
-                  p_endSampSegments.append(p_endSamp);
-                  p_startLineSegments.append(p_startLine);
-                  p_endLineSegments.append(p_endLine);
-                  p_startLatSegments.append(p_startLat);
-                  p_endLatSegments.append(p_endLat);
-                  p_startLonSegments.append(p_startLon);
-                  p_endLonSegments.append(p_endLon);
-                }
-
-              } 
+              }                                                
             }
-          }
-          else {
-            p_mDist = Isis::Null;
-            p_kmDist = Isis::Null;
-          }
+            // Calculate and write out the distance between the two points
+            radius = cvp->projection()->LocalRadius();
+
+            // distance is calculated
+            bDistance = true;      
+          }          
+        }
+        // Do we have a camera model?
+        else if (cvp->camera() != NULL) {
+          if (cvp->camera()->SetImage(p_startSamp,p_startLine)) {            
+
+            // Write columns 2-3 (Start lat/lon)
+            p_startLat = cvp->camera()->UniversalLatitude();
+            p_startLon = cvp->camera()->UniversalLongitude();
+
+            if (cvp->camera()->SetImage(p_endSamp,p_endLine)) {
+              // Write columns 4-5 (End lat/lon)
+              p_endLat = cvp->camera()->UniversalLatitude();
+              p_endLon = cvp->camera()->UniversalLongitude();             
+
+              radius = cvp->camera()->LocalRadius();
+              
+              // distance is calculated
+              bDistance = true;                           
+            }
+          }          
         }
 
-        if(cvp->camera() == NULL && cvp->projection() == NULL) {
-          p_mDist = Isis::Null;
-          p_kmDist = Isis::Null;
+        // Calculate the pixel difference
+        double lineDif = p_startLine - p_endLine;
+        double sampDif = p_startSamp - p_endSamp;
+        double pixDist = sqrt(lineDif * lineDif + sampDif * sampDif);
+        p_pixDist =  pixDist;
+
+        if (bDistance){             
+          mDist  = Isis::Camera::Distance(p_startLat, p_startLon, p_endLat, p_endLon, radius);
+          p_mDist  += mDist;
+          p_kmDist  = p_mDist / 1000.0;
+
+          if (RubberBandTool::getMode() == RubberBandTool::SegmentedLine) {            
+            if(pixDist > 16/cvp->scale() && p_distanceSegments.size() < 75) {
+              p_distanceSegments.append(mDist / 1000.0);
+              p_pixDistSegments.append(pixDist);
+              p_startSampSegments.append(p_startSamp);
+              p_endSampSegments.append(p_endSamp);
+              p_startLineSegments.append(p_startLine);
+              p_endLineSegments.append(p_endLine);
+              p_startLatSegments.append(p_startLat);
+              p_endLatSegments.append(p_endLat);
+              p_startLonSegments.append(p_startLon);
+              p_endLonSegments.append(p_endLon);
+            }         
+          }
         }
+        bDistance=false;
+      } 
+      // Distance was not calculated
+      if (!p_mDist) {
+        p_mDist   = Isis::Null;
+        p_kmDist  = Isis::Null;
       }
     }
     else if(RubberBandTool::getMode() == RubberBandTool::Angle) {
@@ -677,9 +672,11 @@ namespace Qisis {
     }
 
     updateDistEdit();
+
     if(p_showAllSegments->isChecked()) {
       updateRows(row);
-    } else {
+    } 
+    else {
       updateRow(row);
     }
   }
@@ -706,7 +703,7 @@ namespace Qisis {
         }
       }
       else {
-        p_distLineEdit->setText(QString::number(p_pixDist));
+        p_distLineEdit->setText(QString::number(p_pixDist));        
       }
     }
     else if(RubberBandTool::getMode() == RubberBandTool::Angle) {

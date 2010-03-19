@@ -41,8 +41,28 @@ int main (int argc, char *argv[]) {
   }
   cout << endl;
 
+  // Add the missing keyword "PoleRotation"
+  mapGrp += Isis::PvlKeyword("PoleRotation", 45.7832);
+
+  // testing operator ==
+   cout << "Testing operator == ..." << endl;
   try {
-    mapGrp += Isis::PvlKeyword("PoleRotation", 45.7832);
+    Isis::ObliqueCylindrical p1(lab);
+		Isis::ObliqueCylindrical p2(lab);
+		bool flag = (p1 == p2);
+		if (flag) {
+			cout << "(p1==p2) = True" << endl;
+		}
+		else {
+			cout << "*** Error ****"<< endl;
+		}
+  }
+  catch (Isis::iException &e) {
+    e.Report(false);
+  }
+  cout << endl;
+
+  try {    
   
     Isis::Projection &p = *Isis::ProjectionFactory::Create(lab);
 

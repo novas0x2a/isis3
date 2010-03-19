@@ -1,13 +1,13 @@
 Unit test for Isis::PvlTranslationTable
 
   Test InputGroup :
-    InputGroup ("DataFileName") = Root
+    InputGroup ("DataFileName") = ROOT
     InputGroup ("CoreLines") = IMAGE
     **PROGRAMMER ERROR** Unable to find translation group [tttt1] in file []
 
   Test InputKey :
-    InputKeyword ("DataFileName") = ^IMAGE
-    InputKeyword ("CoreLines") = LINES
+    InputKeywordName ("DataFileName") = ^IMAGE
+    InputKeywordName ("CoreLines") = LINES
     **PROGRAMMER ERROR** Unable to find translation group [tttt2] in file []
 
   Test InputDefault :

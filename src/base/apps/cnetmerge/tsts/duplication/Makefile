@@ -7,7 +7,7 @@ commands:
 	FROM1=$(INPUT)/testNet.ctl \
 	FROM2=$(INPUT)/testNet2.ctl \
 	TO=$(OUTPUT)/testReplace.pvl \
-	DUPLICATEPOINTS=replace \
+	DUPLICATEPOINTS=merge \
 	REPORT=$(OUTPUT)/report.txt \
 	ID=testReplaceMerge DESCRIPTION=NewTextCtl \
 	> /dev/null;

@@ -61,15 +61,18 @@ void IsisMain() {
     p.SetOutputEndian(Isis::Lsb);
 
   if (ui.GetString("LABTYPE") == "FIXED")
-    p.SetExportType( ProcessExportPds::Fixed );
+    p.SetExportType ( ProcessExportPds::Fixed );
 
-  p.StandardPdsLabel(ProcessExportPds::Image);
+  //Set the resolution to  Kilometers  
+  p.SetPdsResolution( ProcessExportPds::Kilometer );
+
+  p.StandardPdsLabel( ProcessExportPds::Image);  
  
   Filename outFile(ui.GetFilename("TO", "img"));
   string outFilename(outFile.Expanded());
   ofstream oCube(outFilename.c_str());
-  p.OutputLabel(oCube);
-  p.StartProcess(oCube);
+  p.OutputLabel(oCube);  
+  p.StartProcess(oCube);  
   oCube.close();
   p.EndProcess();
 
@@ -81,7 +84,7 @@ void IsisMain() {
   results += PvlKeyword( "HIS", p.OutputHis() );
   results += PvlKeyword( "HRS", p.OutputHrs() );
   results += PvlKeyword( "ValidMin", min );
-  results += PvlKeyword( "ValidMax", max );
+  results += PvlKeyword( "ValidMax", max );  
   Application::Log( results );
 
   return;

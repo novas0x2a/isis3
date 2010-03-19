@@ -1,5 +1,4 @@
 APPNAME = mappt
-mappt1.txt.IGNORELINES=Filename
 
 include $(ISISROOT)/make/isismake.tsts
 
@@ -8,4 +7,4 @@ commands:
 	  append=false \
 	  type=image \
 	  sample=41 \
-	  line=181 > $(OUTPUT)/mappt1.txt;
+	  line=181 > $(OUTPUT)/mappt1.pvl;

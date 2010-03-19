@@ -1,7 +1,5 @@
 APPNAME = hiccdstitch
 
-placement.txt.IGNORELINES=File
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
@@ -9,5 +7,5 @@ commands:
 	$(APPNAME) fromlist=$(OUTPUT)/list.temp \
 	  shiftdef=$(INPUT)/shift.txt \
 	  to=$(OUTPUT)/combined.cub \
-	  placement=$(OUTPUT)/placement.txt > /dev/null; \
+	  placement=$(OUTPUT)/placement.pvl > /dev/null; \
 	t=`rm -f $(OUTPUT)/list.temp`;

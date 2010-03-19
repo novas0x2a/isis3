@@ -1,7 +1,7 @@
 /**                                                                       
  * @file                                                                  
- * $Revision: 1.3 $                                                             
- * $Date: 2009/09/12 01:05:52 $                                                                 
+ * $Revision: 1.4 $                                                             
+ * $Date: 2009/09/17 21:03:02 $                                                                 
  *                                                                        
  *   Unless noted otherwise, the portions of Isis written by the USGS are 
  *   public domain. See individual third-party library and package descriptions 
@@ -743,12 +743,15 @@ namespace Isis {
    * 
    * @return bool  True if we have converged, false if convergence is not yet 
    *         reached.
+   *  
+   * @internal 
+   *   @history 2009-09-17 Kris Becker Test should be >= rather than >. 
    */
   bool Gruen::HasConverged(const GSLVector &alpha, const GSLVector &thresh,
                            const GruenResult &results) const {
     int maxholds = std::min(alpha.dim(), thresh.dim());
     for (int nhold = 0 ; nhold < maxholds ; nhold++) {
-      if (fabs(alpha[nhold]) > thresh[nhold]) return (false);
+      if (fabs(alpha[nhold]) >= thresh[nhold]) return (false);
     }
     return (true);
   }

@@ -21,7 +21,9 @@
  *   http://www.usgs.gov/privacy.html.
  */
 
+// Global forward declarations
 template< class A, class B > class QMap;
+template< class A > class QVector;
 class QString;
 
 namespace Isis
@@ -31,17 +33,23 @@ namespace Isis
   class Statistics;
   
   /**
-   * @brief Control Measure statistics
+   * @brief Grouped Statistics
    *
-   * This class is used to store statistics on a group of control measures
+   * This class is used to store statistics on a group of related items.
+   * 
+   * This class is include safe meaning that includers of this class will only
+   * get this class.
    *
-   * @ingroup ControlNetwork
+   * @ingroup Statistics
    *
-   * @author
+   * @author 2009-09-14 Eric Hyer
    *
-   * @see ControlGraph ControlMeasure
+   * @see Statistics
    *
    * @internal
+   *  @history 2009-09-14 Eric Hyer - Original Version
+   *  @history 2009-09-18 Eric Hyer - Fixed some comments / documentation
+   *  @history 2009-10-15 Eric Hyer - Added GetStatisticTypes method
    *                              
    */
   class GroupedStatistics 
@@ -53,6 +61,7 @@ namespace Isis
       
       void AddStatistic(const QString & statType, const double & newStat);
       const Statistics & GetStatistics(const QString & statType) const;
+      const QVector< QString > GetStatisticTypes() const;
 
       GroupedStatistics & operator=(const GroupedStatistics & other);
 

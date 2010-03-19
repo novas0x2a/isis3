@@ -1,7 +1,7 @@
 /**                                                                       
 * @file                                                                  
-* $Revision: 1.35 $                                                             
-* $Date: 2010/02/08 22:46:05 $                                                                 
+* $Revision: 1.36 $                                                             
+* $Date: 2010/02/18 00:03:01 $                                                                 
 *                                                                        
 *   Unless noted otherwise, the portions of Isis written by the USGS are 
 *   public domain. See individual third-party library and package descriptions 
@@ -428,12 +428,12 @@ namespace Isis {
    */
 
   void ImagePolygon::WalkPoly () {
-    vector<geos::geom::Coordinate> *points = new vector<geos::geom::Coordinate>;
+    vector<geos::geom::Coordinate> points;
     double lat, lon, prevLat, prevLon;
 
     // Find the edge of the polygon
     geos::geom::Coordinate firstPoint = FindFirstPoint();
-    points->push_back(firstPoint);
+    points.push_back(firstPoint);
     //************************
     // Start walking the edge
     //************************
@@ -454,7 +454,7 @@ namespace Isis {
       snapToFirstPoint &= (p_sampinc != 1  &&  p_lineinc != 1);
 
       // Prevents catching the first point as the last
-      snapToFirstPoint &= (points->size() > 2);
+      snapToFirstPoint &= (points.size() > 2);
 
       // This method fails for steps larger than line/sample length
       snapToFirstPoint &= (p_sampinc < p_cubeSamps && p_lineinc < p_cubeLines);
@@ -471,8 +471,8 @@ namespace Isis {
       // skip firstPoint. This checks for that case.
       else if(p_sampinc > p_cubeSamps || p_lineinc > p_cubeLines) {
         // This is not expensive because incement must be large
-        for(int pt = 0; pt < (int)points->size(); pt ++) {
-          if( (*points)[pt].equals(tempPoint) ) {
+        for(int pt = 0; pt < (int)points.size(); pt ++) {
+          if( points[pt].equals(tempPoint) ) {
             tempPoint = firstPoint;
             break;
           }
@@ -482,6 +482,8 @@ namespace Isis {
 
       // Failed to find the next point
       if (tempPoint.equals(currentPoint)) {
+        geos::geom::Coordinate oldDuplicatePoint = tempPoint;
+
         // Init vars for first run through the loop
         tempPoint = lastPoint;
         lastPoint = currentPoint;
@@ -489,17 +491,17 @@ namespace Isis {
 
         // Must be 3 (not 2) to prevent the revisit of the starting point,
         // resulting in an infinite loop
-        if (points->size() < 3) {
+        if (points.size() < 3) {
           std::string msg = "Failed to find next point in the image.";
           throw iException::Message(iException::Programmer,msg,_FILEINFO_);
         }
 
         // remove last point from the list
-        points->pop_back();
+        points.pop_back();
 
         tempPoint = FindNextPoint(&currentPoint, lastPoint, 1);
 
-        if (tempPoint.equals(currentPoint)) {
+        if (tempPoint.equals(currentPoint) || tempPoint.equals(oldDuplicatePoint)) {
           std::string msg = "Failed to find next valid point in the image.";
           throw iException::Message(iException::Programmer,msg,_FILEINFO_);
         }
@@ -508,41 +510,78 @@ namespace Isis {
 
       // Check for triangle cycles and try to fix
       if (p_sampinc > 1  ||  p_lineinc > 1) { 
-        if ((*points)[points->size()-3].x == tempPoint.x &&
-            (*points)[points->size()-3].y == tempPoint.y) {
+        if (points[points.size()-3].x == tempPoint.x &&
+            points[points.size()-3].y == tempPoint.y) {
           // Remove the triangle from the list
-          points->pop_back();
-          points->pop_back();
-          points->pop_back();
+          points.pop_back();
+          points.pop_back();
+          points.pop_back();
           // Reset the current (to be last) point
-          currentPoint = (*points)[points->size()-1];
+          currentPoint = points[points.size()-1];
           // change increment to prevent randomly bad pixels in the image
           if(p_sampinc > 1) p_sampinc --;
           if(p_lineinc > 1) p_lineinc --;
         }
+
+        /** 
+         * If we have a very large polygon, look for the inability to find the 
+         * starting point by looking for the first cycle in the polygon
+         *  
+         * "very large" is defined as 250 points 
+         */
+        if (points.size() > 250) {
+          int cycleStart = 0;
+          int cycleEnd = 0;
+
+          for(unsigned int pt = 1; pt < points.size() && cycleStart == 0; pt ++) {
+            for(unsigned int check = pt+1; check < points.size() && cycleStart == 0; check ++) {
+              if(points[pt] == points[check]) {
+                cycleStart = pt;
+                cycleEnd = check;
+              }
+            }
+          }
+
+          // If a cycle was found, make it the polygon
+          if(cycleStart != 0) {
+            vector<geos::geom::Coordinate> cyclePoints;
+            for(int pt = cycleStart; pt <= cycleEnd; pt ++) {
+              cyclePoints.push_back(points[pt]);
+            }
+
+            points = cyclePoints;
+            break;
+          }
+        }
+
       }
 
       lastPoint = currentPoint;
       currentPoint = tempPoint;
-      points->push_back(currentPoint);
+      points.push_back(currentPoint);
 
     } while(!currentPoint.equals(firstPoint));
 
 // Prints out the sample/line polygon; should be removed once the algorithm is "completed"
 /*geos::geom::CoordinateSequence * temp = new geos::geom::CoordinateArraySequence();
-for( unsigned int i = 0; i < points->size(); i ++ ) {
-  temp->add( (*points)[i] );
+for( unsigned int i = 0; i < points.size(); i ++ ) {
+  temp->add( points[i] );
 }
 std::cerr << std::endl;
 std::cerr << temp->toString() << std::endl;
 std::cerr << std::endl;*/
 
+    if(points.size() <= 3) {
+      std::string msg = "Failed to find enough points on the image.";
+      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
+    }
+
     FindSubpixel( points );
 
 // Prints out the sample/line polygon after subpixel adjustments; should be removed once the algorithm is "completed"
 /*geos::geom::CoordinateSequence * temp2 = new geos::geom::CoordinateArraySequence();
-for( unsigned int i = 0; i < points->size(); i ++ ) {
-  temp2->add( (*points)[i] );
+for( unsigned int i = 0; i < points.size(); i ++ ) {
+  temp2->add( points[i] );
 }
 std::cerr << std::endl;
 std::cerr << temp2->toString() << std::endl;
@@ -553,8 +592,8 @@ std::cerr << std::endl;*/
     // this vector stores crossing points, where the image crosses the 
     // meridian. It stores the first coordinate of the pair in its vector
     vector<geos::geom::Coordinate> *crossingPoints = new vector<geos::geom::Coordinate>;
-    for(unsigned int i = 0; i<points->size(); i++) {
-      geos::geom::Coordinate *temp = &(points->at(i));
+    for(unsigned int i = 0; i<points.size(); i++) {
+      geos::geom::Coordinate *temp = &(points.at(i));
       SetImage (temp->x, temp->y);
       lon = p_gMap->UniversalLongitude ();
       lat = p_gMap->UniversalLatitude ();
@@ -567,35 +606,31 @@ std::cerr << std::endl;*/
     }
 
 
-    if(p_pts->size() <= 3) {
-      std::string msg = "Failed to find enough points on the image.";
-      throw iException::Message(iException::Programmer,msg,_FILEINFO_);
-    }
     // Checks for self-intersection and attempts to correct
-    else {
-      geos::geom::CoordinateSequence *tempPts = new geos::geom::CoordinateArraySequence();
+    geos::geom::CoordinateSequence *tempPts = new geos::geom::CoordinateArraySequence();
 
-      // Gets the starting, second, second to last, and last points to check for validity
-      tempPts->add( geos::geom::Coordinate((*p_pts)[0].x, (*p_pts)[0].y) );
-      tempPts->add( geos::geom::Coordinate((*p_pts)[1].x, (*p_pts)[1].y) );
-      tempPts->add( geos::geom::Coordinate((*p_pts)[p_pts->size()-3].x, (*p_pts)[p_pts->size()-3].y) );
-      tempPts->add( geos::geom::Coordinate((*p_pts)[p_pts->size()-2].x, (*p_pts)[p_pts->size()-2].y) );
-      tempPts->add( geos::geom::Coordinate((*p_pts)[0].x, (*p_pts)[0].y) );
+    // Gets the starting, second, second to last, and last points to check for validity
+    tempPts->add( geos::geom::Coordinate((*p_pts)[0].x, (*p_pts)[0].y) );
+    tempPts->add( geos::geom::Coordinate((*p_pts)[1].x, (*p_pts)[1].y) );
+    tempPts->add( geos::geom::Coordinate((*p_pts)[p_pts->size()-3].x, (*p_pts)[p_pts->size()-3].y) );
+    tempPts->add( geos::geom::Coordinate((*p_pts)[p_pts->size()-2].x, (*p_pts)[p_pts->size()-2].y) );
+    tempPts->add( geos::geom::Coordinate((*p_pts)[0].x, (*p_pts)[0].y) );
 
-      geos::geom::Polygon *tempPoly = globalFactory.createPolygon
+    geos::geom::Polygon *tempPoly = globalFactory.createPolygon
                                      (globalFactory.createLinearRing(tempPts),NULL);
 
-      // Remove the last point of the sequence if it produces invalid polygons
-      if(!tempPoly->isValid()) {
-        p_pts->deleteAt(p_pts->size()-2);
-      }
-
-      delete tempPts;
-      tempPts = NULL;
+    // Remove the last point of the sequence if it produces invalid polygons
+    if(!tempPoly->isValid()) {
+      p_pts->deleteAt(p_pts->size()-2);
     }
+
+    delete tempPts;
+    tempPts = NULL;
+    // end self-intersection check
 
     FixPolePoly(crossingPoints);
     delete crossingPoints;
+    crossingPoints = NULL;
    }
 
 
@@ -1272,24 +1307,24 @@ std::cerr << std::endl;*/
    * 
    * @param points The vector of Coordinate to set to subpixel accuracy
    */
-  void ImagePolygon::FindSubpixel( std::vector<geos::geom::Coordinate> * points ) {
+  void ImagePolygon::FindSubpixel( std::vector<geos::geom::Coordinate> & points ) {
     if( p_subpixelAccuracy > 0 ) {
 
       // Fix the polygon with subpixel accuracy
-      geos::geom::Coordinate old = points->at(0);
+      geos::geom::Coordinate old = points.at(0);
       bool didStartingPoint = false;
       for( unsigned int pt = 1; !didStartingPoint; pt ++ ) {
-        if( pt >= points->size()-1 ) {
+        if( pt >= points.size()-1 ) {
           pt = 0;
           didStartingPoint = true;
         }
 
         // Binary Coordinate Search
         double maxStep = std::max(p_sampinc,p_lineinc);
-        double stepY = (old.x - points->at(pt+1).x) / maxStep;
-        double stepX = (points->at(pt+1).y - old.y) / maxStep;
+        double stepY = (old.x - points.at(pt+1).x) / maxStep;
+        double stepX = (points.at(pt+1).y - old.y) / maxStep;
 
-        geos::geom::Coordinate valid = points->at(pt);
+        geos::geom::Coordinate valid = points.at(pt);
         geos::geom::Coordinate invalid( valid.x + stepX, valid.y + stepY );
 
         for( int itt = 0; itt < p_subpixelAccuracy; itt ++ ) {
@@ -1302,15 +1337,15 @@ std::cerr << std::endl;*/
           }
         }
 
-        old = points->at(pt);
+        old = points.at(pt);
 
         // Set new coordinate
-        (*points)[pt] = valid;
+        points[pt] = valid;
 
       }
 
       // Fix starting point
-      (*points)[points->size()-1] = geos::geom::Coordinate( (*points)[0].x, (*points)[0].y );
+      points[points.size()-1] = geos::geom::Coordinate( points[0].x, points[0].y );
 
     }
   }

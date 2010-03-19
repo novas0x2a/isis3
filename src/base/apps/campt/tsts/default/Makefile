@@ -1,12 +1,10 @@
 APPNAME = campt
 
-camptTruth1.txt.IGNORELINES = Filename
-
 include $(ISISROOT)/make/isismake.tsts
 
 commands:
-	cp $(INPUT)/output.txt $(OUTPUT)/camptTruth1.txt
+	cp $(INPUT)/output.txt $(OUTPUT)/camptTruth1.pvl
 	$(APPNAME) \
 	from=$(INPUT)/ab102401.cub \
-	to=$(OUTPUT)/camptTruth1.txt \
+	to=$(OUTPUT)/camptTruth1.pvl \
 	> /dev/null 

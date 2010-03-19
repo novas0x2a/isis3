@@ -6,15 +6,17 @@ Group = Animals
   CATTLE = Meow
 End_Group
 5.2
+
 /* Pets are cool
 Group = Animals
   # Cats shed
   CATTLE = Meow
 End_Group
+
 /* Pets are cool
 Group = Animals
 End_Group
-------------
+
 # Testing
 /* 123
 Group = POODLE
@@ -31,3 +33,4 @@ Group = POODLE
   /* This is another comment
   BIG     = ("  NOT  ", "REALLY LARGE")
 End_Group
+**PVL ERROR** Group [POODLE] EndGroup not found before end of file

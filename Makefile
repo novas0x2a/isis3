@@ -26,7 +26,7 @@ help:
 # After the API is created then the applications can be individually built
 # and installed. Finally create the web documentation for the entire system.
 #----------------------------------------------------------------------------
-all: incs api apps docs thirdParty
+all: incs thirdParty api apps docs
 
 #----------------------------------------------------------------------------
 # Target = incs
@@ -131,11 +131,14 @@ docs:
 # This walks the src tree and removes ".o" files and binary files
 #----------------------------------------------------------------------------
 clean: cleansrc
+	echo "Cleaning Isis"
+	cd src; $(MAKE) clean
 	rm -rf inc
 	rm -rf doc
 	rm -rf bin
 	rm -rf lib
 	cd 3rdParty; $(MAKE) clean
+	echo "Finished Cleaning Isis"
 
 cleansrc:
 	cd src; $(MAKE) clean

@@ -1,4 +1,4 @@
-// $Id: mdis2isis.cpp,v 1.17 2008/09/04 00:28:04 kbecker Exp $
+// $Id: mdis2isis.cpp,v 1.18 2009/12/29 21:45:54 slambright Exp $
 #include "Isis.h"
 
 #include <cfloat>
@@ -237,7 +237,7 @@ Pvl TranslateMdisEdrLabels (Filename &labelFile, const std::string &target) {
  * This routine will determine the true filter wheel from the 
  * MESS:FW_POS in and image EDR keyword.  This routine will 
  * open the file 
- * $Messenger/translations/mdisCalibration????.trn" 
+ * $Messenger/calibration/mdisCalibration????.trn" 
  *  
  * @param filter_code The value of the MESS:FW_POS keyword in 
  *                    the EDR label.
@@ -283,7 +283,7 @@ int CreateFilterSpecs(const std::string &instId, int filter_code,
   }
   else if (instId == "MDIS-WAC") {
    //  Set up WAC calibration file
-    Filename calibFile("$messenger/translations/mdisCalibration????.trn");
+    Filename calibFile("$messenger/calibration/mdisCalibration????.trn");
     calibFile.HighestVersion();
     Pvl config(calibFile.Expanded());
 
@@ -306,8 +306,8 @@ int CreateFilterSpecs(const std::string &instId, int filter_code,
   }
   else {
     //  Not the expected instrument 
-   string msg = "Invalid InstrumentId - its not a MESSENGER/MDIS camera [" 
-                + instId + "]"; 
+   string msg = "Unknown InstrumentId [" + instId + "], image does not " +
+                "appear to be from the MESSENGER/MDIS Camera"; 
    throw iException::Message(iException::Io,msg, _FILEINFO_); 
   }
 
