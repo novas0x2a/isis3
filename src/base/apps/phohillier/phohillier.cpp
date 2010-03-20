@@ -1,6 +1,7 @@
 // $Id: phohillier.cpp,v 1.1 2010/02/24 04:05:19 kbecker Exp $
 #include "Isis.h"
 
+#include <memory>
 #include <string>
 #include "ProcessByLine.h"
 #include "SpecialPixel.h"
