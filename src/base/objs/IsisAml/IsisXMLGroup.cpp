@@ -90,7 +90,7 @@ namespace XERCES = XERCES_CPP_NAMESPACE;
       }
       unsigned int index = group->parameters.size();
       group->parameters.resize(index+1);
-      Isis::iString name = XERCES::XMLString::transcode (attributes.getValue((unsigned int)0));
+      Isis::iString name = XERCES::XMLString::transcode (attributes.getValue((XMLSize_t)0));
 // Taken out after PVL refactor      name.UpCase();
       group->parameters[index].name = name;
       parameterHandler = new IsisXMLParameter (encodingName, expandNamespaces,
